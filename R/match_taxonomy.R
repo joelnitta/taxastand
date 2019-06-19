@@ -4,7 +4,7 @@
 #' database in the [Darwin Core format](https://dwc.tdwg.org/terms/).
 #'
 #' For an example of a taxonomic reference database in Darwin Core format,
-#' run `data(filmy_taxonomy)`.
+#' see \code{\link{filmy_taxonomy}}.
 #'
 #' Fuzzy matching can be used by setting `max_dist` > 0. Fuzzy matching is
 #' particularly useful for full scientific names (including author), as author
@@ -42,16 +42,39 @@
 #' these if `simple` is TRUE.
 #'
 #' @examples
+#' # Load reference taxonomy in Darwin Core format
 #' data(filmy_taxonomy)
-#' example_species <- c("Vandenboschia speciosa", "this species")
-#' match_taxonomy(example_species, filmy_taxonomy, "species")
-#' match_taxonomy(example_species, filmy_taxonomy, "species", max_dist = 5)
+#'
+#' # This taxon matches many names at the species level because
+#' # there are a bunch of varieties.
+#' match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
+#'
+#' # Using the full species name with author can get us a
+#' # more exact match.
+#' match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
+#'
+#' # Fuzzy match helps when the query didn't abbreviate
+#' # the author, but it is abbreviated in the reference.
+#' match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
+#' filmy_taxonomy, "sciname", max_dist = 8)
 #'
 #' @export
 match_taxonomy <- function (query,
                             taxonomic_standard,
                             match_by = c("species", "taxon", "sciname"),
                             max_dist = 0, simple = TRUE) {
+
+  ### Check input ###
+  assertthat::assert_that(is.character(query))
+  assertthat::assert_that(is.data.frame(taxonomic_standard))
+  assertthat::assert_that(assertthat::is.string(match_by))
+  assertthat::assert_that(
+    match_by %in% c("species", "taxon", "sciname"),
+    msg = "'match_by' must be one of 'species', 'taxon', or 'sciname'")
+  assertthat::assert_that(assertthat::is.number(max_dist))
+  assertthat::assert_that(is.logical(simple))
+
+  # (Need to add check on taxonomic_standard to ensure it meets DarwinCore)
 
   ### Setup ###
   # Prepare sets of column names to include in the output.
@@ -128,12 +151,15 @@ match_taxonomy <- function (query,
       dplyr::group_by(query) %>%
       dplyr::mutate(n_hits = length(query)) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(distance = 0) %>%
-      # Add name the query matched to
-      # Note inner_join drops the RHS column after matching
-      dplyr::mutate(match_to = query) %>%
-      # Add match method
-      dplyr::mutate(match_by = match_by)
+      dplyr::mutate(
+        distance = 0,
+        # Add name the query matched to
+        match_to = query,
+        # Add match method
+        match_by = match_by,
+        # Note inner_join drops the RHS column after matching,
+        # so add this back in
+        !!rlang::sym(col_standard) := query)
   }
 
   # Find non-matches
@@ -148,8 +174,10 @@ match_taxonomy <- function (query,
       distance_col = "distance"
     ) %>%
       dplyr::mutate(n_hits = 0) %>%
-      # Add name the query matched to
+      # Add name the query matched to (NA for non-hits)
       dplyr::mutate(match_to = NA_character_) %>%
+      # Add distance to match (NA for non-hits)
+      dplyr::mutate(distance = NaN) %>%
       # Add match method
       dplyr::mutate(match_by = match_by)
 
@@ -162,8 +190,10 @@ match_taxonomy <- function (query,
       by = c(query = col_standard)
     ) %>%
       dplyr::mutate(n_hits = 0) %>%
-      # Add name the query matched to
+      # Add name the query matched to (NA for non-hits)
       dplyr::mutate(match_to = NA_character_) %>%
+      # Add distance to match (NA for non-hits)
+      dplyr::mutate(distance = NaN) %>%
       # Add match method
       dplyr::mutate(match_by = match_by)
 
@@ -172,14 +202,16 @@ match_taxonomy <- function (query,
   # Make sure we didn't miss anything
   assertthat::assert_that(
     all(c(hits$query, missing$query) %in% names_to_resolve$query),
-    msg = "One or more queried names not in `hits` or `missing`"
+    msg = "One or more queried names missing from results"
   )
 
   ### Combine and output results ###
   results <- dplyr::bind_rows(hits, missing) %>%
     dplyr::select(c(match_cols, darwin_original_cols))
 
-  if(isTRUE(simple)) results <- dplyr::select(results, c(match_cols,  darwin_simple_cols))
+  if(isTRUE(simple)) results <- dplyr::select(
+    results, c(match_cols,  darwin_simple_cols)
+  )
 
   results
 

@@ -42,7 +42,7 @@ database in the \href{https://dwc.tdwg.org/terms/}{Darwin Core format}.
 }
 \details{
 For an example of a taxonomic reference database in Darwin Core format,
-run \code{data(filmy_taxonomy)}.
+see \code{\link{filmy_taxonomy}}.
 
 Fuzzy matching can be used by setting \code{max_dist} > 0. Fuzzy matching is
 particularly useful for full scientific names (including author), as author
@@ -61,9 +61,20 @@ and author, e.g., "Iris pallida subsp. cengialti (Ambrosi ex A.Kern.) Foster".
 }
 }
 \examples{
+# Load reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
-example_species <- c("Vandenboschia speciosa", "this species")
-match_taxonomy(example_species, filmy_taxonomy, "species")
-match_taxonomy(example_species, filmy_taxonomy, "species", max_dist = 5)
+
+# This taxon matches many names at the species level because
+# there are a bunch of varieties.
+match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
+
+# Using the full species name with author can get us a
+# more exact match.
+match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
+
+# Fuzzy match helps when the query didn't abbreviate
+# the author, but it is abbreviated in the reference.
+match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
+filmy_taxonomy, "sciname", max_dist = 8)
 
 }
