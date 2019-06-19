@@ -17,3 +17,5 @@ Imports:
     jntools,
     fuzzyjoin,
     assertthat
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.1.1
