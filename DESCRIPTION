@@ -16,6 +16,7 @@ Imports:
     dplyr,
     jntools,
     fuzzyjoin,
-    assertthat
+    assertthat,
+    magrittr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
