@@ -11,3 +11,9 @@ Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports: 
+    tibble,
+    dplyr,
+    jntools,
+    fuzzyjoin,
+    assertthat
