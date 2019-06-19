@@ -89,10 +89,9 @@ match_taxonomy <- function (query,
   # - Selected DarwinCore taxonomy columns to include
   # if results are "simple"
   darwin_simple_cols <- c(
-    "taxonID", "acceptedNameUsageID", "parentNameUsageID",
+    "taxonID", "acceptedNameUsageID",
     "taxonomicStatus", "taxonRank",
-    "scientificName", "genericName", "genus", "specificEpithet", "infraspecificEpithet",
-    "scientificNameAuthorship"
+    "scientificName", "genus", "specificEpithet", "infraspecificEpithet"
   )
 
   # - All colnames in original taxonomic standard dataframe
@@ -110,6 +109,21 @@ match_taxonomy <- function (query,
 
   # Add non-DarwinCore columns to taxonomic_standard that
   # are needed for matching.
+
+  # One gray area is "genericName". "genus" is always the genus of the accepted
+  # name, not the synonym. But for matching we want the genus of the synonym.
+  # Some databases (e.g., CoL) provide this as "genericName".
+  # If "genericName" is not already present in the user-provided database,
+  # add it by using the first part of the scientificName.
+
+  if (!"genericName" %in% colnames(taxonomic_standard)) {
+    taxonomic_standard <-
+      taxonomic_standard %>%
+      dplyr::mutate(
+      genericName = stringr::str_split(scientificName, " ") %>% purrr::map_chr(1)
+    )
+  }
+
   taxonomic_standard <-
     taxonomic_standard %>%
     dplyr::mutate(
