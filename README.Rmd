@@ -72,8 +72,12 @@ Here is a more "real-world" type of example that involves downloading the entire
 
 ```{r taxadb-example}
 library(taxadb)
+library(tictoc)
 
 # The taxa_tbl() function downloads a local copy of a taxonomic database from various providers.
 gbif <- taxa_tbl("gbif")
+
+tic() # set a timer
 match_taxonomy("Hymenophyllum polyanthos", gbif, "species")
+toc() # see how long it took
 ```

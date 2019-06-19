@@ -122,9 +122,12 @@ optimized.)
 
 ``` r
 library(taxadb)
+library(tictoc)
 
 # The taxa_tbl() function downloads a local copy of a taxonomic database from various providers.
 gbif <- taxa_tbl("gbif")
+
+tic() # set a timer
 match_taxonomy("Hymenophyllum polyanthos", gbif, "species")
 #> # A tibble: 11 x 13
 #>    query n_hits distance match_to match_by taxonID acceptedNameUsa…
@@ -143,4 +146,6 @@ match_taxonomy("Hymenophyllum polyanthos", gbif, "species")
 #> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
 #> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
 #> #   infraspecificEpithet <chr>
+toc() # see how long it took
+#> 81.41 sec elapsed
 ```
