@@ -20,7 +20,9 @@ Imports:
     rlang,
     purrr,
     stringr,
-    assertr
+    assertr,
+    glue,
+    checkr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
 Depends: R (>= 2.10)

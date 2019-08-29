@@ -2,4 +2,5 @@
 
 export("%>%")
 export(match_taxonomy)
+export(resolve_hits)
 importFrom(magrittr,"%>%")

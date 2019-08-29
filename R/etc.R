@@ -15,8 +15,10 @@
 #' @return Tibble
 #'
 #' @examples
+#' \dontrun{
 #' data(filmy_taxonomy)
 #' add_non_darwin_core_cols(filmy_taxonomy)
+#' }
 add_non_darwin_core_cols <- function (taxonomic_standard) {
 
   # Genus name (of original taxon, NOT prefered synonym)
@@ -61,7 +63,9 @@ add_non_darwin_core_cols <- function (taxonomic_standard) {
 #'
 #' @return The first two parts of the name separated by space.
 #' @examples
+#' \dontrun{
 #' genus_name_only("Crepidomanes minutum var minutum")
+#' }
 genus_name_only <- function (taxon_name, sep = " ") {
 
   assertthat::assert_that(is.character(taxon_name))
@@ -78,7 +82,9 @@ genus_name_only <- function (taxon_name, sep = " ") {
 #' each element capitalized.
 #'
 #' @examples
+#' \dontrun{
 #' toupper_first(c("hi my name", "is"))
+#' }
 toupper_first <- function (x) {
   assertthat::assert_that(is.character(x))
   paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
