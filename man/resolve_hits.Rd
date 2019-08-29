@@ -5,7 +5,7 @@
 \title{Sort through and resolve hits from taxonomic matching of a single name}
 \usage{
 resolve_hits(hits, col_to_resolve = c("sciname", "taxon", "species"),
-  names_standard, accepted_singles_to_exclude = NULL,
+  taxonomic_standard, accepted_singles_to_exclude = NULL,
   accepted_mults_to_exclude = NULL, synonym_singles_to_exclude = NULL,
   synonym_mults_to_exclude = NULL, mult_syn_selection = NULL,
   exclude = NULL, simple = TRUE)
@@ -16,7 +16,7 @@ match_taxonomy().}
 
 \item{col_to_resolve}{Name of column including taxonomic name to resolve.}
 
-\item{names_standard}{Dataframe of standard names to match to.}
+\item{taxonomic_standard}{Dataframe of standard names to match to.}
 
 \item{accepted_singles_to_exclude}{Character vector; species that
 should be excluded from single, accepted taxa.}
@@ -52,7 +52,7 @@ Sort through and resolve hits from taxonomic matching of a single name
 # Load reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
 
-names_standard <- filmy_taxonomy
+taxonomic_standard <- filmy_taxonomy
 
 # Single accepted name
 tax_matching_results <- match_taxonomy(

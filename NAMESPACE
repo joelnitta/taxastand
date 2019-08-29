@@ -3,4 +3,5 @@
 export("%>%")
 export(match_taxonomy)
 export(resolve_hits)
+export(resolve_names)
 importFrom(magrittr,"%>%")

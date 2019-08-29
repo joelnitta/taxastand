@@ -3,7 +3,7 @@
 #' @param hits Dataframe; hits from taxonomic matching - output of
 #' match_taxonomy().
 #' @param col_to_resolve Name of column including taxonomic name to resolve.
-#' @param names_standard Dataframe of standard names to match to.
+#' @param taxonomic_standard Dataframe of standard names to match to.
 #' @param accepted_singles_to_exclude Character vector; species that
 #' should be excluded from single, accepted taxa.
 #' @param accepted_mults_to_exclude Character vector; species that
@@ -28,7 +28,7 @@
 #' # Load reference taxonomy in Darwin Core format
 #' data(filmy_taxonomy)
 #'
-#' names_standard <- filmy_taxonomy
+#' taxonomic_standard <- filmy_taxonomy
 #'
 #' # Single accepted name
 #' tax_matching_results <- match_taxonomy(
@@ -50,7 +50,7 @@
 #' @export
 resolve_hits <- function (hits,
                           col_to_resolve = c("sciname", "taxon", "species"),
-                          names_standard,
+                          taxonomic_standard,
                           accepted_singles_to_exclude = NULL,
                           accepted_mults_to_exclude = NULL,
                           synonym_singles_to_exclude = NULL,
@@ -88,12 +88,12 @@ resolve_hits <- function (hits,
   # Need to add check here for "normal" Dariwn Core standard
 
   # Add non-standard columns (genericName, speciesName, taxonName)
-  names_standard <- add_non_darwin_core_cols(names_standard)
+  taxonomic_standard <- add_non_darwin_core_cols(taxonomic_standard)
   hits <- add_non_darwin_core_cols(hits)
 
   # Convert ID columns to integer
-  names_standard <- dplyr::mutate_at(
-    names_standard,
+  taxonomic_standard <- dplyr::mutate_at(
+    taxonomic_standard,
     c("taxonID", "acceptedNameUsageID"),
     as.integer)
 
@@ -103,7 +103,7 @@ resolve_hits <- function (hits,
     as.integer)
 
   # Check format of names standard input
-  checkr::check_data(names_standard, values = list(
+  checkr::check_data(taxonomic_standard, values = list(
     taxonID = 1L,
     acceptedNameUsageID = c(1L, NA),
     taxonomicStatus = "a",
@@ -277,7 +277,7 @@ resolve_hits <- function (hits,
     dplyr::left_join(
       dplyr::select(single_synonyms, query, n_hits, distance, match_to, match_by,
                     taxonID = acceptedNameUsageID, taxonomicStatus),
-      dplyr::select(names_standard, -acceptedNameUsageID, -taxonomicStatus)
+      dplyr::select(taxonomic_standard, -acceptedNameUsageID, -taxonomicStatus)
     )
 
   # Combine resolved matches
