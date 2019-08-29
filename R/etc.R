@@ -74,6 +74,27 @@ genus_name_only <- function (taxon_name, sep = " ") {
     purrr::map_chr(., ~magrittr::extract(., 1))
 }
 
+#' Extract only the species name from a longer name.
+#'
+#' It is assumed that the first two parts of the name are genus then
+#' specific epithet. No checking is done for this.
+#'
+#' @param taxon_name Taxon name, e.g. "Crepidomanes minutum var minutum".
+#' @param sep Character separating parts of the name.
+#'
+#' @return The first two parts of the name separated by space.
+#' @examples
+#' sp_name_only("Crepidomanes minutum var minutum")
+#' @export
+sp_name_only <- function (taxon_name, sep = " ") {
+
+  assertthat::assert_that(is.character(taxon_name))
+
+  stringr::str_split(taxon_name, sep) %>%
+    purrr::map_chr(., ~magrittr::extract(., 1:2) %>% jntools::paste3(collapse = sep))
+}
+
+
 #' Convert the first letter of a string to uppercase
 #'
 #' @param x Character vector
