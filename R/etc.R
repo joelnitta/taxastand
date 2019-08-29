@@ -19,6 +19,7 @@
 #' add_non_darwin_core_cols(filmy_taxonomy)
 add_non_darwin_core_cols <- function (taxonomic_standard) {
 
+  # Genus name (of original taxon, NOT prefered synonym)
   if (!"genericName" %in% colnames(taxonomic_standard)) {
     taxonomic_standard <-
       taxonomic_standard %>%
@@ -27,14 +28,27 @@ add_non_darwin_core_cols <- function (taxonomic_standard) {
       )
   }
 
-  taxonomic_standard %>%
-    dplyr::mutate(
-      # Species name (without infrasp. taxon), e.g., "Homo sapiens"
-      speciesName = jntools::paste3(genericName, specificEpithet),
-      # Most specific taxon name (incl. infrasp. taxon if it exists),
-      # e.g. "Trichomanes radicans andrewsii"
-      taxonName = jntools::paste3(genericName, specificEpithet, infraspecificEpithet)
-    )
+  # Species name (without infrasp. taxon), e.g., "Homo sapiens"
+  if (!"speciesName" %in% colnames(taxonomic_standard)) {
+    taxonomic_standard <-
+      taxonomic_standard %>%
+      dplyr::mutate(
+        speciesName = jntools::paste3(genericName, specificEpithet)
+      )
+  }
+
+  # Most specific taxon name (incl. infrasp. taxon if it exists),
+  # e.g. "Trichomanes radicans andrewsii"
+  if (!"taxonName" %in% colnames(taxonomic_standard)) {
+    taxonomic_standard <-
+      taxonomic_standard %>%
+      dplyr::mutate(
+        taxonName = jntools::paste3(genericName, specificEpithet, infraspecificEpithet)
+      )
+  }
+
+  taxonomic_standard
+
 }
 
 #' Extract only the genus name from a longer name.
