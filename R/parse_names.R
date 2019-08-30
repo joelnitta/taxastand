@@ -33,7 +33,7 @@ add_parsed_names <- function (df, sci_name, parsed_species_name, parsed_taxon_na
     dplyr::select(!!sci_name_enq := b, !!parsed_taxon_name := c) %>%
     dplyr::mutate(!!parsed_species_name := sp_name_only(!!parsed_taxon_name))
 
-  dplyr::left_join(df, parsed_names)
+  suppressMessages(dplyr::left_join(df, parsed_names))
 }
 
 #' Parse species names in batch
