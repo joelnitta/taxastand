@@ -3,6 +3,7 @@
 export("%>%")
 export(add_parsed_names)
 export(match_taxonomy)
+export(match_with_gnr)
 export(parse_names_batch)
 export(resolve_hits)
 export(resolve_names)
