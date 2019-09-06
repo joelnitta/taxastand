@@ -1,8 +1,7 @@
 #' Resolve names based on scientific name, taxon, and species name
 #'
 #' @param names_to_resolve Dataframe of taxonomic names to resolve.
-#' @param taxonomic_standard Dataframe of standard names to match to. Here we use
-#' the World Ferns database.
+#' @param taxonomic_standard Dataframe of standard names to match to.
 #' @param match_order Vector designating order in which matching should proceed.
 #' Names in vector must match column names in `names_to_resolve` used for matching.
 #' @param exclude Optional list of taxa vectors to exclude from matches. Names in each vector
