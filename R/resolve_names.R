@@ -4,9 +4,6 @@
 #' matched to their accepted names are retained. These can be excluded using the
 #' exclude list to prevent false positive matches.
 #'
-#' It may be useful to set `return_single_object` to FALSE the first time to
-#' inspect the results of each step to set exclusion lists.
-#'
 #' @param names_to_resolve Vector of taxonomic names to resolve.
 #' @param taxonomic_standard Dataframe of standard names to match to.
 #' @param match_by One of "species", "taxon", or "scientific_name";

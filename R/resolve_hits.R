@@ -1,4 +1,4 @@
-#' Sort through and resolve hits from taxonomic matching of a single name
+#' Resolve hits from taxonomic matching of a single name
 #'
 #' @param hits Dataframe; hits from taxonomic matching - output of
 #' match_taxonomy().
