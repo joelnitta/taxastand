@@ -15,14 +15,21 @@ Must follow \href{https://dwc.tdwg.org/terms/}{Darwin Core format}.}
 Tibble
 }
 \description{
-Adds "speciesName", "taxonName", and "genericName".
+Adds "genericName", "taxonName", and "speciesName".
 }
 \details{
 "genus" is always the genus of the accepted
-name, not the synonym. But for matching we want the genus of the synonym.
+name, not the synonym (original name).
+But for matching we want the genus of the original name
 Some databases (e.g., CoL) provide this as "genericName".
 If "genericName" is not already present in the user-provided database,
 add it by using the first part of the scientificName.
+
+"speciesName" is 'genus specific_epithet',
+e.g. 'Crepidomanes minutum'
+
+"taxonName" is 'genus specific_epithet infraspecific_epithet',
+e.g. 'Crepidomanes minutum flabellatum'
 }
 \examples{
 \dontrun{

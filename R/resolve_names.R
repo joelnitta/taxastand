@@ -52,7 +52,11 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
                            max_dist,
                            exclude = NULL, mult_syn_selection = NULL) {
 
+  # Check format of query
   assertthat::assert_that(is.character(names_to_resolve))
+
+  # Check that format of taxonomic standard meets Darwin Core
+  check_darwin_core_format(taxonomic_standard)
 
   # Do fuzzy match on selected columns
   match_results <- purrr::map_df(

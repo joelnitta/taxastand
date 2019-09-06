@@ -22,7 +22,6 @@ Imports:
     stringr,
     assertr,
     glue,
-    checkr,
     fs,
     processx,
     readr,

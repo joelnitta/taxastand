@@ -74,7 +74,8 @@ match_taxonomy <- function (query,
   assertthat::assert_that(assertthat::is.number(max_dist))
   assertthat::assert_that(is.logical(simple))
 
-  # (Need to add check on taxonomic_standard to ensure it meets DarwinCore)
+  # Check that format of taxonomic standard meets Darwin Core
+  check_darwin_core_format(taxonomic_standard)
 
   ### Setup ###
   # Prepare sets of column names to include in the output.

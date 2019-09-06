@@ -85,46 +85,15 @@ resolve_hits <- function (hits,
 
   col_to_resolve <- as.name(col_to_resolve)
 
-  # Need to add check here for "normal" Dariwn Core standard
-
-  # Add non-standard columns (genericName, speciesName, taxonName)
+  # Check that format of taxonomic standard meets Darwin Core
+  # and add non-standard columns (genericName, speciesName, taxonName)
+  check_darwin_core_format(taxonomic_standard)
   taxonomic_standard <- add_non_darwin_core_cols(taxonomic_standard)
+
+  # Check that format of hits meets Darwin Core
+  # and add non-standard columns (genericName, speciesName, taxonName)
+  check_darwin_core_format(hits)
   hits <- add_non_darwin_core_cols(hits)
-
-  # Convert ID columns to integer
-  taxonomic_standard <- dplyr::mutate_at(
-    taxonomic_standard,
-    c("taxonID", "acceptedNameUsageID"),
-    as.integer)
-
-  hits <- dplyr::mutate_at(
-    hits,
-    c("taxonID", "acceptedNameUsageID"),
-    as.integer)
-
-  # Check format of names standard input
-  checkr::check_data(taxonomic_standard, values = list(
-    taxonID = 1L,
-    acceptedNameUsageID = c(1L, NA),
-    taxonomicStatus = "a",
-    scientificName = "a",
-    genericName = "a",
-    specificEpithet = c("a", NA),
-    infraspecificEpithet = c("a", NA),
-    taxonName = "a"),
-    key = "taxonID")
-
-  # Check format of names standard input
-  checkr::check_data(hits, values = list(
-    taxonID = 1L,
-    acceptedNameUsageID = c(1L, NA),
-    taxonomicStatus = "a",
-    scientificName = "a",
-    genericName = "a",
-    specificEpithet = c("a", NA),
-    infraspecificEpithet = c("a", NA),
-    taxonName = "a"),
-    key = "taxonID")
 
   # Categorize hits
   #

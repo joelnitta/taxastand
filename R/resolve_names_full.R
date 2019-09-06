@@ -55,6 +55,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
                                syn_select = NULL,
                                check_key = TRUE) {
 
+  # Check format of query dataframe
   missing_cols <- match_order[!match_order %in% colnames(names_to_resolve)]
 
   assertthat::assert_that(
@@ -62,23 +63,12 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
     msg = glue::glue("The following columns missing from input: {paste(missing_cols, collapse = ', ')}")
   )
 
+  # Check that format of taxonomic standard meets Darwin Core
+  check_darwin_core_format(taxonomic_standard)
+
   # Add non-DarwinCore columns to taxonomic_standard that
   # are needed for matching.
-  taxonomic_standard <- add_non_darwin_core_cols(taxonomic_standard) %>%
-    # Make sure taxon ID and acceptedNameUsageID are integer
-    dplyr::mutate(taxonID = as.integer(taxonID)) %>%
-    dplyr::mutate(acceptedNameUsageID = as.integer(acceptedNameUsageID))
-
-  checkr::check_data(taxonomic_standard, values = list(
-    taxonID = 1L,
-    acceptedNameUsageID = c(1L, NA),
-    taxonomicStatus = "a",
-    scientificName = "a",
-    genericName = "a",
-    specificEpithet = c("a", NA),
-    infraspecificEpithet = c("a", NA),
-    taxonName = "a"),
-    key = "taxonID")
+  taxonomic_standard <- add_non_darwin_core_cols(taxonomic_standard)
 
   raw_names <- dplyr::select(names_to_resolve, match_order) %>%
     assertr::verify(

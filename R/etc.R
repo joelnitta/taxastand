@@ -1,13 +1,82 @@
+#' Check that data used as taxonomic standard meets Darwin Core format
+#'
+#' @param taxonomic_standard Dataframe, should be meet Darwin Core format
+#'
+#' @return Tibble, or error if taxonomic_standard doesn't meet Darwin Core format
+#'
+#' @examples
+#' \dontrun{
+#'
+#' data(filmy_taxonomy)
+#' check_darwin_core_format(filmy_taxonomy)
+#'
+#' badly_formatted_data <- select(filmy_taxonomy, -taxonRank)
+#' check_darwin_core_format(badly_formatted_data)
+#'
+#' }
+check_darwin_core_format <- function (taxonomic_standard) {
+
+  # Check for presenc of minimal Darwin Core columns
+  dwc_min_cols <- c("taxonID", "acceptedNameUsageID",
+                    "taxonomicStatus", "taxonRank",
+                    "genus",
+                    "scientificName", "specificEpithet", "infraspecificEpithet")
+
+  missing_cols <- setdiff(dwc_min_cols, colnames(taxonomic_standard))
+
+  assertthat::assert_that(
+    length(missing_cols) == 0,
+    msg = glue::glue(
+      "The following columns missing from taxonomic_standard:
+      {paste(missing_cols, collapse = ', ')}")
+  )
+
+  # Check for format of columns
+  # assertr::assert() fails if nrow(df) = 0, so check for types separately
+  assertthat::assert_that(is.numeric(taxonomic_standard$taxonID))
+  assertthat::assert_that(is.numeric(taxonomic_standard$acceptedNameUsageID))
+  assertthat::assert_that(is.character(taxonomic_standard$taxonomicStatus))
+  assertthat::assert_that(is.character(taxonomic_standard$taxonRank))
+  assertthat::assert_that(is.character(taxonomic_standard$genus))
+  assertthat::assert_that(is.character(taxonomic_standard$scientificName))
+  assertthat::assert_that(is.character(taxonomic_standard$specificEpithet))
+  assertthat::assert_that(is.character(taxonomic_standard$infraspecificEpithet))
+
+  # Early exit if zero rows
+  if(nrow(taxonomic_standard) == 0) return(TRUE)
+
+  # If there's data, conduct additional tests
+  taxonomic_standard %>%
+    assertr::assert(
+      assertr::not_na,
+      taxonID, taxonomicStatus, taxonRank,
+           genus, scientificName, specificEpithet
+    ) %>%
+    assertr::assert(
+      assertr::is_uniq,
+      taxonID,
+      success_fun = assertr::success_logical
+    )
+
+}
+
 #' Add non-DarwinCore columns to taxonomic_standard that
 #' are needed for matching.
 #'
-#' Adds "speciesName", "taxonName", and "genericName".
+#' Adds "genericName", "taxonName", and "speciesName".
 #'
 #' "genus" is always the genus of the accepted
-#' name, not the synonym. But for matching we want the genus of the synonym.
+#' name, not the synonym (original name).
+#' But for matching we want the genus of the original name
 #' Some databases (e.g., CoL) provide this as "genericName".
 #' If "genericName" is not already present in the user-provided database,
 #' add it by using the first part of the scientificName.
+#'
+#' "speciesName" is 'genus specific_epithet',
+#' e.g. 'Crepidomanes minutum'
+#'
+#' "taxonName" is 'genus specific_epithet infraspecific_epithet',
+#' e.g. 'Crepidomanes minutum flabellatum'
 #'
 #' @param taxonomic_standard Dataframe of standard names to match to.
 #' Must follow [Darwin Core format](https://dwc.tdwg.org/terms/).

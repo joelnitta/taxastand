@@ -35,10 +35,6 @@ Single hits, the best-matching taxon for multiple hits, and single synonyms
 matched to their accepted names are retained. These can be excluded using the
 exclude list to prevent false positive matches.
 }
-\details{
-It may be useful to set \code{return_single_object} to FALSE the first time to
-inspect the results of each step to set exclusion lists.
-}
 \examples{
 # Load reference taxonomy in Darwin Core format
 data(filmy_taxonomy)

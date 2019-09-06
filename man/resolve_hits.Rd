@@ -2,7 +2,7 @@
 % Please edit documentation in R/resolve_hits.R
 \name{resolve_hits}
 \alias{resolve_hits}
-\title{Sort through and resolve hits from taxonomic matching of a single name}
+\title{Resolve hits from taxonomic matching of a single name}
 \usage{
 resolve_hits(hits, col_to_resolve = c("scientific_name", "taxon",
   "species"), taxonomic_standard, accepted_singles_to_exclude = NULL,
@@ -46,7 +46,7 @@ names (including both accepted named and synonyms); \code{multiple_synonyms} are
 with multiple synonyms that could not be resolved.
 }
 \description{
-Sort through and resolve hits from taxonomic matching of a single name
+Resolve hits from taxonomic matching of a single name
 }
 \examples{
 # Load reference taxonomy in Darwin Core format
