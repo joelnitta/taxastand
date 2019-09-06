@@ -20,7 +20,7 @@
 #' match_with_gnr(c(
 #'   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
 #'   "Crepidomanes minutum var. minutus",
-#'   "Hymenophyllum ×polyanthos ")
+#'   "Hymenophyllum ×polyanthos")
 #' )
 #'
 #' @export
@@ -32,10 +32,10 @@ match_with_gnr <- function (names, data_source_ids = 1) {
   names_to_resolve <- names
 
   # Check for and exclude hybrids
-  hybrids_excluded <- tibble::tibble(query = names_to_resolve) %>%
+  hybrids_excluded <- tibble::tibble(user_supplied_name = names_to_resolve) %>%
     dplyr::mutate(hybrid = dplyr::case_when(
-      stringr::str_detect(query, " x ") ~ TRUE,
-      stringr::str_detect(query, "\\u00d7") ~ TRUE, # unicode for batsu
+      stringr::str_detect(user_supplied_name, " x ") ~ TRUE,
+      stringr::str_detect(user_supplied_name, "\\u00d7") ~ TRUE, # unicode for batsu
       TRUE ~ FALSE
     )) %>%
     dplyr::mutate(fail_reason = "hybrid excluded") %>%
@@ -43,12 +43,12 @@ match_with_gnr <- function (names, data_source_ids = 1) {
     dplyr::select(-hybrid)
 
   hybrid_check <- assertthat::validate_that(
-    length(hybrids_excluded$query) == 0,
-    msg = glue::glue("{length(hybrids_excluded$query)} hybrids detected and excluded"))
+    length(hybrids_excluded$user_supplied_name) == 0,
+    msg = glue::glue("{length(hybrids_excluded$user_supplied_name)} hybrids detected and excluded"))
 
   if(is.character(hybrid_check)) print (hybrid_check)
 
-  names_to_resolve <- names_to_resolve[!names_to_resolve %in% hybrids_excluded$query]
+  names_to_resolve <- names_to_resolve[!names_to_resolve %in% hybrids_excluded$user_supplied_name]
 
   # Parse and match names using Global Name Resolver
   gnr_results_col <- taxize::gnr_resolve(
