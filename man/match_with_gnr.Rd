@@ -2,7 +2,7 @@
 % Please edit documentation in R/match_with_gnr.R
 \name{match_with_gnr}
 \alias{match_with_gnr}
-\title{Match names using the Global Name Resolver}
+\title{Match names using the Global Names Resolver}
 \usage{
 match_with_gnr(names, data_source_ids = 1)
 }
@@ -17,12 +17,16 @@ search. Default = 1, the Catalog of Life. For other data sources, see
 tibble
 }
 \description{
-Attempts to match hybrid names usually don't work, so any names
-that appear to by hybrids (e.g., with " x " in the name) are excluded
+Matches names using the \href{https://resolver.globalnames.org/}{Global Names Resolver}
+API. This requires an internet connection. The GNR combines parsing of names
+with fuzzy matching to match names to a target taxonomic database.
 }
 \details{
-It is not recommended to use more than one data source at a time, and
-default search values are set with this expectation.
+Attempts to match hybrid names usually don't work, so any names
+that appear to by hybrids (e.g., with " x " in the name) are excluded
+
+It is not recommended to use more than one data source at a time, as this may
+complicate resolving synonymy.
 
 Requires \href{https://gitlab.com/gogna/gnparser}{gnparser} to be installed
 and on the user's PATH.

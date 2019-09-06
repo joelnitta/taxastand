@@ -1,10 +1,14 @@
-#' Match names using the Global Name Resolver
+#' Match names using the Global Names Resolver
+#'
+#' Matches names using the [Global Names Resolver](https://resolver.globalnames.org/)
+#' API. This requires an internet connection. The GNR combines parsing of names
+#' with fuzzy matching to match names to a target taxonomic database.
 #'
 #' Attempts to match hybrid names usually don't work, so any names
 #' that appear to by hybrids (e.g., with " x " in the name) are excluded
 #'
-#' It is not recommended to use more than one data source at a time, and
-#' default search values are set with this expectation.
+#' It is not recommended to use more than one data source at a time, as this may
+#' complicate resolving synonymy.
 #'
 #' Requires [gnparser](https://gitlab.com/gogna/gnparser) to be installed
 #' and on the user's PATH.

@@ -70,6 +70,8 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   # are needed for matching.
   taxonomic_standard <- add_non_darwin_core_cols(taxonomic_standard)
 
+  # For resolving taxonomy, only use relevant taxonomic columns
+  # (scientific name, species, and taxon)
   raw_names <- dplyr::select(names_to_resolve, match_order) %>%
     assertr::verify(
       nrow(unique(.)) == nrow(.)
@@ -166,5 +168,10 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
       dplyr::select(-key)
   }
 
-  return(results)
+  # Rearrange so that the original columns come first,
+  # then all the matched/resolved taxonomy
+  original_cols <- colnames(names_to_resolve)[colnames(names_to_resolve) %in% match_order]
+
+  dplyr::select(results, original_cols, dplyr::everything())
+
 }
