@@ -58,12 +58,12 @@ match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
 
 # Using the full species name with author can get us a
 # more exact match.
-match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
+match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific_name")
 
 # Fuzzy match helps when the query didn't abbreviate
 # the author, but it is abbreviated in the reference.
 match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
-filmy_taxonomy, "sciname", max_dist = 8)
+filmy_taxonomy, "scientific_name", max_dist = 8)
 ```
 
 Here is a more "real-world" type of example that involves downloading the entire GBIF database using `taxadb`.

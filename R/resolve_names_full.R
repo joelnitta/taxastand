@@ -20,16 +20,16 @@
 #' data(filmy_taxonomy)
 #'
 #' names_df <- tibble::tibble(
-#'   sciname = c("Lycopodium kinabaluense Ching", "Gonocormus minutus (Blume) Bosch"),
+#'   scientific_name = c("Lycopodium kinabaluense Ching", "Gonocormus minutus (Blume) Bosch"),
 #'   species = c("Lycopodium kinabaluense", "Gonocormus minutus")
 #' )
 #'
 #' resolve_names_full(
 #'   names_to_resolve = names_df,
 #'   taxonomic_standard = filmy_taxonomy,
-#'   match_order = c("sciname", "species"),
+#'   match_order = c("scientific_name", "species"),
 #'   max_dist = c(
-#'     sciname = 0,
+#'     scientific_name = 0,
 #'     species = 0
 #'   )
 #' )
@@ -37,16 +37,16 @@
 #' resolve_names_full(
 #'   names_to_resolve = names_df,
 #'   taxonomic_standard = filmy_taxonomy,
-#'   match_order = c("sciname"),
+#'   match_order = c("scientific_name"),
 #'   max_dist = c(
-#'     sciname = 0
+#'     scientific_name = 0
 #'   )
 #' )
 #'
 #' @export
 resolve_names_full <- function(names_to_resolve, taxonomic_standard,
                                exclude = NULL,
-                               match_order = c("sciname", "taxon", "species"),
+                               match_order = c("scientific_name", "taxon", "species"),
                                max_dist = c(
                                  scientific_name = 7,
                                  taxon = 2,

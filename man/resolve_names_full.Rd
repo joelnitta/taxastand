@@ -5,15 +5,14 @@
 \title{Resolve names based on scientific name, taxon, and species name}
 \usage{
 resolve_names_full(names_to_resolve, taxonomic_standard, exclude = NULL,
-  match_order = c("sciname", "taxon", "species"),
+  match_order = c("scientific_name", "taxon", "species"),
   max_dist = c(scientific_name = 7, taxon = 2, species = 1),
   syn_select = NULL, check_key = TRUE)
 }
 \arguments{
 \item{names_to_resolve}{Dataframe of taxonomic names to resolve.}
 
-\item{taxonomic_standard}{Dataframe of standard names to match to. Here we use
-the World Ferns database.}
+\item{taxonomic_standard}{Dataframe of standard names to match to.}
 
 \item{exclude}{Optional list of taxa vectors to exclude from matches. Names in each vector
 must match names in \code{col_to_resolve} exactly.}
@@ -42,16 +41,16 @@ Resolve names based on scientific name, taxon, and species name
 data(filmy_taxonomy)
 
 names_df <- tibble::tibble(
-  sciname = c("Lycopodium kinabaluense Ching", "Gonocormus minutus (Blume) Bosch"),
+  scientific_name = c("Lycopodium kinabaluense Ching", "Gonocormus minutus (Blume) Bosch"),
   species = c("Lycopodium kinabaluense", "Gonocormus minutus")
 )
 
 resolve_names_full(
   names_to_resolve = names_df,
   taxonomic_standard = filmy_taxonomy,
-  match_order = c("sciname", "species"),
+  match_order = c("scientific_name", "species"),
   max_dist = c(
-    sciname = 0,
+    scientific_name = 0,
     species = 0
   )
 )
@@ -59,9 +58,9 @@ resolve_names_full(
 resolve_names_full(
   names_to_resolve = names_df,
   taxonomic_standard = filmy_taxonomy,
-  match_order = c("sciname"),
+  match_order = c("scientific_name"),
   max_dist = c(
-    sciname = 0
+    scientific_name = 0
   )
 )
 

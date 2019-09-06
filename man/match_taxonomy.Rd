@@ -5,7 +5,7 @@
 \title{Match species names to a reference database}
 \usage{
 match_taxonomy(query, taxonomic_standard, match_by = c("species",
-  "taxon", "sciname"), max_dist = 0, simple = TRUE)
+  "taxon", "scientific_name"), max_dist = 0, simple = TRUE)
 }
 \arguments{
 \item{query}{Character vector; taxonomic names to resolve.}
@@ -13,7 +13,7 @@ match_taxonomy(query, taxonomic_standard, match_by = c("species",
 \item{taxonomic_standard}{Dataframe of standard names to match to.
 Must follow \href{https://dwc.tdwg.org/terms/}{Darwin Core format}.}
 
-\item{match_by}{One of "species", "taxon", or "sciname" (scientific name);
+\item{match_by}{One of "species", "taxon", or "scientific_name";
 the type of standard name to use for matching.
 Should match the type of names in \code{query}.}
 
@@ -70,11 +70,11 @@ match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
 
 # Using the full species name with author can get us a
 # more exact match.
-match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
+match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific_name")
 
 # Fuzzy match helps when the query didn't abbreviate
 # the author, but it is abbreviated in the reference.
 match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
-filmy_taxonomy, "sciname", max_dist = 8)
+filmy_taxonomy, "scientific_name", max_dist = 8)
 
 }

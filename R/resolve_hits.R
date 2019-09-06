@@ -49,7 +49,7 @@
 #' resolve_hits(tax_matching_results, "species", filmy_taxonomy)
 #' @export
 resolve_hits <- function (hits,
-                          col_to_resolve = c("sciname", "taxon", "species"),
+                          col_to_resolve = c("scientific_name", "taxon", "species"),
                           taxonomic_standard,
                           accepted_singles_to_exclude = NULL,
                           accepted_mults_to_exclude = NULL,
@@ -81,7 +81,7 @@ resolve_hits <- function (hits,
   col_to_resolve <- switch(col_to_resolve,
                          species = "speciesName",
                          taxon = "taxonName",
-                         sciname = "scientificName")
+                         scientific_name = "scientificName")
 
   col_to_resolve <- as.name(col_to_resolve)
 

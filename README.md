@@ -92,11 +92,11 @@ match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
 
 # Using the full species name with author can get us a
 # more exact match.
-match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
+match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific_name")
 #> # A tibble: 1 x 13
 #>   query n_hits distance match_to match_by taxonID acceptedNameUsa…
 #>   <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#> 1 Hyme…      1        0 Hymenop… sciname   5.41e7               NA
+#> 1 Hyme…      1        0 Hymenop… scientific_name   5.41e7               NA
 #> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
 #> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
 #> #   infraspecificEpithet <chr>
@@ -104,11 +104,11 @@ match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
 # Fuzzy match helps when the query didn't abbreviate
 # the author, but it is abbreviated in the reference.
 match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
-filmy_taxonomy, "sciname", max_dist = 8)
+filmy_taxonomy, "scientific_name", max_dist = 8)
 #> # A tibble: 1 x 13
 #>   query n_hits distance match_to match_by taxonID acceptedNameUsa…
 #>   <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#> 1 Hyme…      1        8 Hymenop… sciname   5.41e7               NA
+#> 1 Hyme…      1        8 Hymenop… scientific_name   5.41e7               NA
 #> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
 #> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
 #> #   infraspecificEpithet <chr>

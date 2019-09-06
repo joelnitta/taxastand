@@ -23,7 +23,7 @@
 #' @param query Character vector; taxonomic names to resolve.
 #' @param taxonomic_standard Dataframe of standard names to match to.
 #' Must follow [Darwin Core format](https://dwc.tdwg.org/terms/).
-#' @param match_by One of "species", "taxon", or "sciname" (scientific name);
+#' @param match_by One of "species", "taxon", or "scientific_name";
 #' the type of standard name to use for matching.
 #' Should match the type of names in `query`.
 #' @param max_dist Integer; maximum distance to use during fuzzy matching.
@@ -51,17 +51,17 @@
 #'
 #' # Using the full species name with author can get us a
 #' # more exact match.
-#' match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "sciname")
+#' match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific_name")
 #'
 #' # Fuzzy match helps when the query didn't abbreviate
 #' # the author, but it is abbreviated in the reference.
 #' match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
-#' filmy_taxonomy, "sciname", max_dist = 8)
+#' filmy_taxonomy, "scientific_name", max_dist = 8)
 #'
 #' @export
 match_taxonomy <- function (query,
                             taxonomic_standard,
-                            match_by = c("species", "taxon", "sciname"),
+                            match_by = c("species", "taxon", "scientific_name"),
                             max_dist = 0, simple = TRUE) {
 
   ### Check input ###
@@ -69,8 +69,8 @@ match_taxonomy <- function (query,
   assertthat::assert_that(is.data.frame(taxonomic_standard))
   assertthat::assert_that(assertthat::is.string(match_by))
   assertthat::assert_that(
-    match_by %in% c("species", "taxon", "sciname"),
-    msg = "'match_by' must be one of 'species', 'taxon', or 'sciname'")
+    match_by %in% c("species", "taxon", "scientific_name"),
+    msg = "'match_by' must be one of 'species', 'taxon', or 'scientific_name'")
   assertthat::assert_that(assertthat::is.number(max_dist))
   assertthat::assert_that(is.logical(simple))
 
@@ -105,7 +105,7 @@ match_taxonomy <- function (query,
   col_standard <- switch(match_by,
                          species = "speciesName",
                          taxon = "taxonName",
-                         sciname = "scientificName")
+                         scientific_name = "scientificName")
 
   # Add non-DarwinCore columns to taxonomic_standard that
   # are needed for matching.

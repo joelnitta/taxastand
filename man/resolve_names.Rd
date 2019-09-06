@@ -5,7 +5,7 @@
 \title{Resolve a vector of taxonomic names}
 \usage{
 resolve_names(names_to_resolve, taxonomic_standard,
-  match_by = c("species", "taxon", "sciname"), max_dist,
+  match_by = c("species", "taxon", "scientific_name"), max_dist,
   exclude = NULL, mult_syn_selection = NULL)
 }
 \arguments{
@@ -13,7 +13,7 @@ resolve_names(names_to_resolve, taxonomic_standard,
 
 \item{taxonomic_standard}{Dataframe of standard names to match to.}
 
-\item{match_by}{One of "species", "taxon", or "sciname" (scientific name);
+\item{match_by}{One of "species", "taxon", or "scientific_name";
 the type of standard name to use for matching.
 Should match the type of names in \code{query}.}
 
@@ -47,7 +47,7 @@ resolve_names(
   names_to_resolve = c(
     "Cephalomanes atrovirens Presl",
     "Gonocormus minutus (Blume) Bosch"),
-  match_by = "sciname",
+  match_by = "scientific_name",
   taxonomic_standard = filmy_taxonomy,
   max_dist = 2)
 

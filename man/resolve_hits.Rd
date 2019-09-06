@@ -4,8 +4,8 @@
 \alias{resolve_hits}
 \title{Sort through and resolve hits from taxonomic matching of a single name}
 \usage{
-resolve_hits(hits, col_to_resolve = c("sciname", "taxon", "species"),
-  taxonomic_standard, accepted_singles_to_exclude = NULL,
+resolve_hits(hits, col_to_resolve = c("scientific_name", "taxon",
+  "species"), taxonomic_standard, accepted_singles_to_exclude = NULL,
   accepted_mults_to_exclude = NULL, synonym_singles_to_exclude = NULL,
   synonym_mults_to_exclude = NULL, mult_syn_selection = NULL,
   exclude = NULL, simple = TRUE)
