@@ -32,10 +32,12 @@ Requires \href{https://gitlab.com/gogna/gnparser}{gnparser} to be installed
 and on the user's PATH.
 }
 \examples{
-match_with_gnr(c(
+match_with_gnr(
+ c(
   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
   "Crepidomanes minutum var. minutus",
-  "Hymenophyllum ×polyanthos")
+  "Hymenophyllum ×polyanthos",
+  "fizz bazz")
 )
 
 }

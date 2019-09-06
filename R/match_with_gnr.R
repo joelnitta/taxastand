@@ -21,10 +21,12 @@
 #' @return tibble
 #'
 #' @examples
-#' match_with_gnr(c(
+#' match_with_gnr(
+#'  c(
 #'   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
 #'   "Crepidomanes minutum var. minutus",
-#'   "Hymenophyllum ×polyanthos")
+#'   "Hymenophyllum ×polyanthos",
+#'   "fizz bazz")
 #' )
 #'
 #' @export
@@ -35,7 +37,7 @@ match_with_gnr <- function (names, data_source_ids = 1) {
 
   names_to_resolve <- names
 
-  # Check for and exclude hybrids
+  # Check for and exclude hybrids from names to resolve
   hybrids_excluded <- tibble::tibble(user_supplied_name = names_to_resolve) %>%
     dplyr::mutate(hybrid = dplyr::case_when(
       stringr::str_detect(user_supplied_name, " x ") ~ TRUE,
@@ -109,24 +111,36 @@ match_with_gnr <- function (names, data_source_ids = 1) {
     gnr_results_best_match)
 
   # Also make tibble of names with multiple fuzzy matches
-  mult_gnr_match <- gnr_results_col %>%
+  multiple_gnr_match <-
+    # start with results
+    gnr_results_col %>%
+    # exclude resolved matched
     dplyr::anti_join(gnr_results_with_match, by = "user_supplied_name") %>%
-    dplyr::mutate(fail_reason = "multiple matches") %>%
-    dplyr::select(user_supplied_name, fail_reason) %>%
-    unique
+    # filter to those with >1 match
+    dplyr::add_count(user_supplied_name) %>%
+    dplyr::filter(n > 1) %>%
+    dplyr::select(user_supplied_name) %>%
+    unique %>%
+    dplyr::mutate(fail_reason = "multiple matches")
 
   # Also make tibble of names with no matches at all
   no_gnr_match <-
-    gnr_results_col %>%
-    dplyr::filter(!user_supplied_name %in% names_to_resolve) %>%
-    dplyr::mutate(fail_reason = "no match") %>%
-    dplyr::select(user_supplied_name, fail_reason) %>%
-    unique
+    # start with all query names
+    tibble::tibble(user_supplied_name = names) %>%
+    # exclude hybrids
+    dplyr::filter(user_supplied_name %in% names_to_resolve) %>%
+    # anti-join to remove matched names
+    dplyr::anti_join(gnr_results_with_match, by = "user_supplied_name") %>%
+    # anti-join to remove multiple matches
+    dplyr::anti_join(multiple_gnr_match, by = "user_supplied_name") %>%
+    # anything left didn't have a match at all
+    unique %>%
+    dplyr::mutate(fail_reason = "no match")
 
   # Combine into final matching output
   dplyr::bind_rows(
     gnr_results_with_match,
-    mult_gnr_match,
+    multiple_gnr_match,
     no_gnr_match,
     hybrids_excluded) %>%
     dplyr::select(

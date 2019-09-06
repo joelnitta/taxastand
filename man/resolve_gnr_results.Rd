@@ -33,7 +33,9 @@ gnr_match_results <-
 match_with_gnr(c(
   "Cephalomanes oblongifolia",
   "Crepidomanes minutum var. minutus",
-  "Hymenophyllum polyanthos Sw")
+  "Hymenophyllum polyanthos Sw",
+  "Abrodictyum extravagans (Copel.)",
+  "adhga adf")
 )
 
 resolve_gnr_results(gnr_match_results, filmy_taxonomy)

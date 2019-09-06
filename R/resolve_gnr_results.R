@@ -22,7 +22,9 @@
 #' match_with_gnr(c(
 #'   "Cephalomanes oblongifolia",
 #'   "Crepidomanes minutum var. minutus",
-#'   "Hymenophyllum polyanthos Sw")
+#'   "Hymenophyllum polyanthos Sw",
+#'   "Abrodictyum extravagans (Copel.)",
+#'   "adhga adf")
 #' )
 #'
 #' resolve_gnr_results(gnr_match_results, filmy_taxonomy)
@@ -56,6 +58,7 @@ resolve_gnr_results <- function(matched_names, taxonomic_standard) {
       genus,
       specificEpithet,
       infraspecificEpithet,
+      taxonomicStatus,
       fail_reason
     )
 
@@ -67,7 +70,8 @@ resolve_gnr_results <- function(matched_names, taxonomic_standard) {
       scientificName = matched_name,
       genus,
       specificEpithet,
-      infraspecificEpithet
+      infraspecificEpithet,
+      taxonomicStatus
     )
 
   # Replace synonyms with their accepted name
@@ -80,9 +84,11 @@ resolve_gnr_results <- function(matched_names, taxonomic_standard) {
       scientificName,
       genus,
       specificEpithet,
-      infraspecificEpithet
-    )
+      infraspecificEpithet,
+    ) %>%
+    dplyr::mutate(taxonomicStatus = "synonym")
 
   # Combine and return result
-  dplyr::bind_rows(accepted_names, synonyms, not_resolved)
+  dplyr::bind_rows(accepted_names, synonyms, not_resolved) %>%
+    dplyr::rename(query_taxonomic_status = taxonomicStatus)
 }
