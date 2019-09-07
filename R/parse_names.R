@@ -51,9 +51,9 @@ add_parsed_names <- function (df, sci_name, parsed_species_name, parsed_taxon_na
 #' @return Tibble
 #'
 #' @examples
-#' parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")
+#' parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)", gnparser_path = "/Users/joel/Downloads/gnparser")
 #' @export
-parse_names_batch <- function (names, check = TRUE) {
+parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
 
   assertthat::assert_that(is.character(names))
   assertthat::assert_that(all(assertr::not_na(names)))
@@ -74,10 +74,18 @@ parse_names_batch <- function (names, check = TRUE) {
     "20",
     temp_txt
   )
+  
+  # Specify path to gnparser, if given
+  gnparser_command <- "gnparser"
+  
+  if(!is.null(gnparser_path)) {
+    assertthat::assert_that(fs::file_exists(gnparser_path))
+    gnparser_command <- fs::path_abs(gnparser_path)
+  }
 
   results <-
     processx::run(
-      command = "gnparser", args, wd = temp_dir) %>%
+      command = gnparser_command, args, wd = temp_dir) %>%
     magrittr::extract("stdout") %>%
     unlist() %>%
     readr::read_lines() %>%
