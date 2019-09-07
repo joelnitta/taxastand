@@ -1,67 +1,41 @@
-#' Resolve names based on scientific name, taxon, and species name
+#' Resolve names by recursive matching
 #'
-#' @param names_to_resolve Dataframe of taxonomic names to resolve.
+#' The input (`names_to_resolve`) may include species names formatted
+#' with or without author or infraspecific epithet. Names will be matched
+#' recursively in order of scientific name (full name with author), taxon
+#' name (name including infraspecific epithet but no author), then species
+#' (genus plus specific epithet only).
+#'
+#' @param names_to_resolve Character vector; taxonomic names to resolve.
 #' @param taxonomic_standard Dataframe of standard names to match to.
-#' @param match_order Vector designating order in which matching should proceed.
-#' Names in vector must match column names in `names_to_resolve` used for matching.
-#' @param exclude Optional list of taxa vectors to exclude from matches. Names in each vector
-#' must match names in `col_to_resolve` exactly.
-#' @param max_dist Integer; maximum distance to use during fuzzy matching.
-#' @param syn_select List of character vectors. In the case that multiple synonyms
-#' were detected during matching, use the names specified. Names in each vector must match names in
-#' `scientificName` column of `taxonomic_standard` exactly.
-#' @param check_key Logical; should a check performed before joining resolved
-#' and unresolved names that all name keys are unique? TRUE by default. If set
-#' to FALSE, may cause repeat entries, so use with care!
+#' @param max_dist Named integer vector; maximum distance to use during
+#' fuzzy matching by taxonomic rank.
+#' Names of `max_dis` must include 'scientific_name', 'taxon', and 'taxon'.
 #'
 #' @return Tibble
 #' @examples
 #' # Load reference taxonomy in Darwin Core format
 #' data(filmy_taxonomy)
 #'
-#' names_df <- tibble::tibble(
-#'   scientific_name = c("Lycopodium kinabaluense Ching", "Gonocormus minutus (Blume) Bosch"),
-#'   species = c("Lycopodium kinabaluense", "Gonocormus minutus")
+#' resolve_names_full(
+#'   names_to_resolve = c(
+#'     "Hymenophyllum polyanthos Sw.",
+#'     "Crepidomanes minutum var. minutum",
+#'     "Trichomanes crassum Copel.",
+#'     "Hymenophyllum polyanthos Sw.",
+#'     "whoops",
+#'     "Nephrolepis brownii"),
+#'   taxonomic_standard = filmy_taxonomy
 #' )
 #'
-#' resolve_names_full(
-#'   names_to_resolve = names_df,
-#'   taxonomic_standard = filmy_taxonomy,
-#'   match_order = c("scientific_name", "species"),
-#'   max_dist = c(
-#'     scientific_name = 0,
-#'     species = 0
-#'   )
-#' )
-#'
-#' resolve_names_full(
-#'   names_to_resolve = names_df,
-#'   taxonomic_standard = filmy_taxonomy,
-#'   match_order = c("scientific_name"),
-#'   max_dist = c(
-#'     scientific_name = 0
-#'   )
-#' )
 #'
 #' @export
 resolve_names_full <- function(names_to_resolve, taxonomic_standard,
-                               exclude = NULL,
-                               match_order = c("scientific_name", "taxon", "species"),
                                max_dist = c(
-                                 scientific_name = 7,
-                                 taxon = 2,
-                                 species = 1
-                               ),
-                               syn_select = NULL,
-                               check_key = TRUE) {
-
-  # Check format of query dataframe
-  missing_cols <- match_order[!match_order %in% colnames(names_to_resolve)]
-
-  assertthat::assert_that(
-    length(missing_cols) == 0,
-    msg = glue::glue("The following columns missing from input: {paste(missing_cols, collapse = ', ')}")
-  )
+                                 scientific_name = 0,
+                                 taxon = 0,
+                                 species = 0
+                               )) {
 
   # Check that format of taxonomic standard meets Darwin Core
   check_darwin_core_format(taxonomic_standard)
@@ -70,111 +44,96 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   # are needed for matching.
   taxonomic_standard <- add_non_darwin_core_cols(taxonomic_standard)
 
-  # For resolving taxonomy, only use relevant taxonomic columns
-  # (scientific name, species, and taxon)
-  raw_names <- dplyr::select(names_to_resolve, match_order) %>%
-    assertr::verify(
-      nrow(unique(.)) == nrow(.)
-    ) %>%
-    dplyr::mutate(key = 1:nrow(.))
-
-  resolve_names_results <- list()
-  unresolved_names <- list(tibble::tibble(), tibble::tibble(), tibble::tibble())
+  # Prepare vectors for storing output
+  resolved_names <- list(tibble::tibble(), tibble::tibble(), tibble::tibble())
+  unresolved_names <- resolved_names
 
   # Resolve by scientific name first.
-  # See reports/create_exclude-list.R for how to do initial run to determine exclude lists.
-  resolve_names_results[[1]] <- resolve_names(
-    names_to_resolve = raw_names %>% dplyr::pull(match_order[1]),
-    match_by = match_order[1],
+  sci_name_query <- names_to_resolve
+
+  sci_name_results <- resolve_names(
+    names_to_resolve = sci_name_query,
+    match_by = "scientific_name",
     taxonomic_standard = taxonomic_standard,
-    max_dist = max_dist[match_order[1]],
-    exclude = exclude[[match_order[1]]],
-    mult_syn_selection = syn_select[[match_order[1]]]
+    max_dist = max_dist["scientific_name"]
   ) %>%
-    dplyr::left_join(
-      dplyr::select(raw_names, query = !!as.name(match_order[1]), key),
-      by = "query"
-    )
+    # Add "original query" column with original species name
+    # for tracking and
+    # combining results downstream
+    dplyr::mutate(original_query = query)
 
-  unresolved <-
-    dplyr::filter(resolve_names_results[[1]], taxonomicStatus == "unresolved") %>%
-    dplyr::pull(query)
+  resolved_names[[1]] <- dplyr::filter(sci_name_results, taxonomicStatus != "unresolved")
 
-  unresolved_names[[1]] <-
-    raw_names %>% dplyr::filter(!!as.name(match_order[1]) %in% unresolved)
+  unresolved_names[[1]] <- dplyr::filter(sci_name_results, taxonomicStatus == "unresolved")
 
-  if(!is.na(match_order[2]) & nrow(unresolved_names[[1]]) > 0) {
+  assertthat::assert_that(nrow(resolved_names[[1]]) + nrow(unresolved_names[[1]]) == length(sci_name_query))
 
-    resolve_names_results[[2]] <- resolve_names(
-      names_to_resolve = unresolved_names[[1]] %>% dplyr::pull(match_order[2]),
-      match_by = match_order[2],
+  # Next by taxon name
+  if(nrow(unresolved_names[[1]]) > 0) {
+
+    taxon_query <- unresolved_names[[1]] %>%
+      dplyr::pull(query) %>%
+      parse_names_batch %>% dplyr::pull(taxon)
+
+    taxon_results <- resolve_names(
+      names_to_resolve = taxon_query,
+      match_by = "taxon",
       taxonomic_standard = taxonomic_standard,
-      max_dist = max_dist[match_order[2]],
-      exclude = exclude[[match_order[2]]],
-      mult_syn_selection = syn_select[[match_order[2]]]
+      max_dist = max_dist["taxon"]
     ) %>%
-      dplyr::left_join(
-        dplyr::select(raw_names, query = !!as.name(match_order[2]), key),
-        by = "query"
-      )
+      # Add in original name for matching at the end
+      # this works because order is conserved between the
+      # original query string and output dataframe
+      dplyr::mutate(original_query = unresolved_names[[1]]$original_query)
 
-    unresolved <-
-      dplyr::filter(resolve_names_results[[2]], taxonomicStatus == "unresolved") %>%
-      dplyr::pull(query)
+    resolved_names[[2]] <- dplyr::filter(taxon_results, taxonomicStatus != "unresolved")
 
-    unresolved_names[[2]] <-
-      raw_names %>% dplyr::filter(!!as.name(match_order[2]) %in% unresolved)
+    unresolved_names[[2]] <- dplyr::filter(taxon_results, taxonomicStatus == "unresolved")
+
+    assertthat::assert_that(
+      nrow(resolved_names[[2]]) + nrow(unresolved_names[[2]]) ==
+        nrow(unresolved_names[[1]]))
 
   }
 
-  if(!is.na(match_order[3]) & nrow(unresolved_names[[2]]) > 0) {
+  # Last by species name
+  if(nrow(unresolved_names[[2]]) > 0) {
 
-    resolve_names_results[[3]] <- resolve_names(
-      names_to_resolve = unresolved_names[[2]] %>% dplyr::pull(match_order[3]),
-      match_by = match_order[3],
+    species_query <- unresolved_names[[2]] %>% dplyr::pull(original_query) %>%
+      parse_names_batch %>% dplyr::pull(taxon) %>% sp_name_only
+
+    species_results <- resolve_names(
+      names_to_resolve = species_query,
+      match_by = "species",
       taxonomic_standard = taxonomic_standard,
-      max_dist = max_dist[match_order[3]],
-      exclude = exclude[[match_order[3]]],
-      mult_syn_selection = syn_select[[match_order[3]]]
+      max_dist = max_dist["species"]
     ) %>%
-      dplyr::left_join(
-        dplyr::select(raw_names, query = !!as.name(match_order[3]), key),
-        by = "query"
-      )
+      dplyr::mutate(original_query = unresolved_names[[2]]$original_query)
+
+    resolved_names[[3]] <- dplyr::filter(species_results, taxonomicStatus != "unresolved")
+
+    unresolved_names[[3]] <- dplyr::filter(species_results, taxonomicStatus == "unresolved")
+
+    assertthat::assert_that(
+      nrow(resolved_names[[3]]) + nrow(unresolved_names[[3]]) ==
+        nrow(unresolved_names[[2]]))
 
   }
 
-  final_resolved <-
-    dplyr::bind_rows (resolve_names_results) %>%
-    dplyr::filter(taxonomicStatus != "unresolved") %>%
-    unique %>%
-    dplyr::left_join(raw_names, by = "key")
-
-  final_unresolved <-
-    raw_names %>%
-    dplyr::anti_join(
-      final_resolved, by = "key"
-    ) %>%
-    dplyr::mutate(taxonomicStatus = "unresolved") %>%
+  # Compile unique resolved names with original query
+  final_resolved <- dplyr::bind_rows(resolved_names) %>%
+    dplyr::mutate(query = original_query) %>%
+    dplyr::select(-original_query) %>%
     unique
 
-  results <-
-    dplyr::bind_rows(
-      final_resolved,
-      final_unresolved
-    )
+  # Return results in same order as original query,
+  # duplicating if needed with left_join
+  tibble::tibble(
+    query = names_to_resolve
+  ) %>%
+    dplyr::left_join(final_resolved, by = "query") %>%
+  # Classify anything missing as not resolved
+  dplyr::mutate(taxonomicStatus = tidyr::replace_na(taxonomicStatus, "unresolved"))
 
-  if (isTRUE(check_key)) {
-    results <- results %>%
-      assertr::assert(assertr::is_uniq, key) %>%
-      assertr::assert(nrow(.) == nrow(raw_names)) %>%
-      dplyr::select(-key)
-  }
-
-  # Rearrange so that the original columns come first,
-  # then all the matched/resolved taxonomy
-  original_cols <- colnames(names_to_resolve)[colnames(names_to_resolve) %in% match_order]
-
-  dplyr::select(results, original_cols, dplyr::everything())
 
 }

@@ -2,66 +2,44 @@
 % Please edit documentation in R/resolve_names_full.R
 \name{resolve_names_full}
 \alias{resolve_names_full}
-\title{Resolve names based on scientific name, taxon, and species name}
+\title{Resolve names by recursive matching}
 \usage{
-resolve_names_full(names_to_resolve, taxonomic_standard, exclude = NULL,
-  match_order = c("scientific_name", "taxon", "species"),
-  max_dist = c(scientific_name = 7, taxon = 2, species = 1),
-  syn_select = NULL, check_key = TRUE)
+resolve_names_full(names_to_resolve, taxonomic_standard,
+  max_dist = c(scientific_name = 0, taxon = 0, species = 0))
 }
 \arguments{
-\item{names_to_resolve}{Dataframe of taxonomic names to resolve.}
+\item{names_to_resolve}{Character vector; taxonomic names to resolve.}
 
 \item{taxonomic_standard}{Dataframe of standard names to match to.}
 
-\item{exclude}{Optional list of taxa vectors to exclude from matches. Names in each vector
-must match names in \code{col_to_resolve} exactly.}
-
-\item{match_order}{Vector designating order in which matching should proceed.
-Names in vector must match column names in \code{names_to_resolve} used for matching.}
-
-\item{max_dist}{Integer; maximum distance to use during fuzzy matching.}
-
-\item{syn_select}{List of character vectors. In the case that multiple synonyms
-were detected during matching, use the names specified. Names in each vector must match names in
-\code{scientificName} column of \code{taxonomic_standard} exactly.}
-
-\item{check_key}{Logical; should a check performed before joining resolved
-and unresolved names that all name keys are unique? TRUE by default. If set
-to FALSE, may cause repeat entries, so use with care!}
+\item{max_dist}{Named integer vector; maximum distance to use during
+fuzzy matching by taxonomic rank.
+Names of \code{max_dis} must include 'scientific_name', 'taxon', and 'taxon'.}
 }
 \value{
 Tibble
 }
 \description{
-Resolve names based on scientific name, taxon, and species name
+The input (\code{names_to_resolve}) may include species names formatted
+with or without author or infraspecific epithet. Names will be matched
+recursively in order of scientific name (full name with author), taxon
+name (name including infraspecific epithet but no author), then species
+(genus plus specific epithet only).
 }
 \examples{
 # Load reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
 
-names_df <- tibble::tibble(
-  scientific_name = c("Lycopodium kinabaluense Ching", "Gonocormus minutus (Blume) Bosch"),
-  species = c("Lycopodium kinabaluense", "Gonocormus minutus")
+resolve_names_full(
+  names_to_resolve = c(
+    "Hymenophyllum polyanthos Sw.",
+    "Crepidomanes minutum var. minutum",
+    "Trichomanes crassum Copel.",
+    "Hymenophyllum polyanthos Sw.",
+    "whoops",
+    "Nephrolepis brownii"),
+  taxonomic_standard = filmy_taxonomy
 )
 
-resolve_names_full(
-  names_to_resolve = names_df,
-  taxonomic_standard = filmy_taxonomy,
-  match_order = c("scientific_name", "species"),
-  max_dist = c(
-    scientific_name = 0,
-    species = 0
-  )
-)
-
-resolve_names_full(
-  names_to_resolve = names_df,
-  taxonomic_standard = filmy_taxonomy,
-  match_order = c("scientific_name"),
-  max_dist = c(
-    scientific_name = 0
-  )
-)
 
 }

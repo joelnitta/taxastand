@@ -58,8 +58,8 @@ resolve_names(
 resolve_names(
   names_to_resolve = c(
     "bgalkj",
+    "Hymenophyllum polyanthos",
     "bgalkj",
-    "Hymenophyllum polyanthop",
     "Hymenophyllum polyanthop"),
   match_by = "species",
   taxonomic_standard = filmy_taxonomy,

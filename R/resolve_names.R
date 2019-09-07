@@ -42,8 +42,8 @@
 #' resolve_names(
 #'   names_to_resolve = c(
 #'     "bgalkj",
+#'     "Hymenophyllum polyanthos",
 #'     "bgalkj",
-#'     "Hymenophyllum polyanthop",
 #'     "Hymenophyllum polyanthop"),
 #'   match_by = "species",
 #'   taxonomic_standard = filmy_taxonomy,
@@ -97,18 +97,18 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
     nrow(final_list_resolved) + nrow(final_list_unresolved) == length(names_to_resolve)
   )
 
-  results <-
+  # Combine resolved and unresolved
+  final_list <-
   dplyr::bind_rows(
     final_list_resolved,
     final_list_unresolved
-  )
+  ) %>% unique
 
-  assertthat::assert_that(isTRUE(all.equal(
-    sort(results$query),
-    sort(names_to_resolve)
-  ))
+  # Reorder in same order as input
+  dplyr::left_join(
+    tibble::tibble(query = names_to_resolve),
+    final_list,
+    by = "query"
   )
-
-  results
 
 }
