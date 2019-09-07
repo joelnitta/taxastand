@@ -79,7 +79,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
     dplyr::mutate(key = 1:nrow(.))
 
   resolve_names_results <- list()
-  unresolved_names <- list()
+  unresolved_names <- list(tibble::tibble(), tibble::tibble(), tibble::tibble())
 
   # Resolve by scientific name first.
   # See reports/create_exclude-list.R for how to do initial run to determine exclude lists.
@@ -102,7 +102,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   unresolved_names[[1]] <-
     raw_names %>% dplyr::filter(!!as.name(match_order[1]) %in% unresolved)
 
-  if(!is.na(match_order[2])) {
+  if(!is.na(match_order[2]) & nrow(unresolved_names[[1]]) > 0) {
 
     resolve_names_results[[2]] <- resolve_names(
       names_to_resolve = unresolved_names[[1]] %>% dplyr::pull(match_order[2]),
@@ -125,7 +125,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
 
   }
 
-  if(!is.na(match_order[3])) {
+  if(!is.na(match_order[3]) & nrow(unresolved_names[[2]]) > 0) {
 
     resolve_names_results[[3]] <- resolve_names(
       names_to_resolve = unresolved_names[[2]] %>% dplyr::pull(match_order[3]),
