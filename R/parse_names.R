@@ -33,7 +33,7 @@ add_parsed_names <- function (df, sci_name, parsed_species_name,
     dplyr::pull(!!sci_name_enq) %>%
     unique %>%
     parse_names_batch(gnparser_path = gnparser_path) %>%
-    dplyr::select(!!sci_name_enq := b, !!parsed_taxon_name := c) %>%
+    dplyr::select(!!sci_name_enq := query, !!parsed_taxon_name := taxon) %>%
     dplyr::mutate(!!parsed_species_name := sp_name_only(!!parsed_taxon_name))
 
   suppressMessages(dplyr::left_join(df, parsed_names))
@@ -49,8 +49,6 @@ add_parsed_names <- function (df, sci_name, parsed_species_name,
 #' @param names Character vector of species names.
 #' May include author, variety, etc. All names must be
 #' unique, with no NAs.
-#' @param check Logical; should a check be made that the
-#' results original name match the names of the input?
 #' @param gnparser_path String; path to gnparser executable.
 #' Either this must be provided, or gnparser must be on $PATH.
 #'
@@ -58,13 +56,27 @@ add_parsed_names <- function (df, sci_name, parsed_species_name,
 #'
 #' @examples
 #' parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")
+#' parse_names_batch(c(
+#' "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
+#' "bla",
+#' "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")
+#' )
 #' @export
-parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
+parse_names_batch <- function (names, gnparser_path = NULL) {
 
   assertthat::assert_that(is.character(names))
   assertthat::assert_that(all(assertr::not_na(names)))
-  assertthat::assert_that(all(assertr::is_uniq(names)))
 
+  # GNparser will do weird things (order of names gets scrambled)
+  # if there are duplicate names. Run only on unique names,
+  # then join back together to query at the end.
+  names_table <- tibble::tibble(
+    query = names
+  )
+
+  names <- unique(names)
+
+  # Write out temp file for running GNparser outside of R
   temp_file <- fs::file_temp() %>% fs::path_ext_set("txt")
 
   temp_dir <- fs::path_dir(temp_file)
@@ -73,12 +85,13 @@ parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
 
   readr::write_lines(names, temp_file)
 
+  # Set arguments for GNparser:
   args = c(
     "-f",
-    "simple",
+    "simple", # Simple output format
     "-j",
-    "20",
-    temp_txt
+    "20",     # Max number of jobs to run concurrently
+    temp_txt  # Names to parse
   )
 
   # Specify path to gnparser, if given
@@ -89,6 +102,7 @@ parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
     gnparser_command <- fs::path_abs(gnparser_path)
   }
 
+  # Run GNparser and tidy the output
   results <-
     processx::run(
       command = gnparser_command, args, wd = temp_dir) %>%
@@ -96,19 +110,17 @@ parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
     unlist() %>%
     readr::read_lines() %>%
     stringr::str_split("\\|") %>%
-    # Need to figure out what each column actually means
     purrr::map(~purrr::set_names(., letters[1:7])) %>%
     do.call(dplyr::bind_rows, .) %>%
-    dplyr::select(b:g)
+    # Select only relevant output columns
+    dplyr::select(
+      query = b,
+      taxon = c,
+      taxon_with_rank = d,
+      author = e,
+      year = f)
 
-  if (isTRUE(check)) {
-    # b contains the original name. Sometimes these can get out of order.
-    # Make sure they are in the same order as the input.
-    results <-
-      dplyr::arrange(results, match(b,names)) %>%
-      assertr::verify(all(.$b == names))
-  }
-
-  results
+  # Join back in to original query names.
+  dplyr::left_join(names_table, results, by = "query")
 
 }

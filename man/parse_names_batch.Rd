@@ -4,15 +4,12 @@
 \alias{parse_names_batch}
 \title{Parse species names in batch}
 \usage{
-parse_names_batch(names, check = TRUE, gnparser_path = NULL)
+parse_names_batch(names, gnparser_path = NULL)
 }
 \arguments{
 \item{names}{Character vector of species names.
 May include author, variety, etc. All names must be
 unique, with no NAs.}
-
-\item{check}{Logical; should a check be made that the
-results original name match the names of the input?}
 
 \item{gnparser_path}{String; path to gnparser executable.
 Either this must be provided, or gnparser must be on $PATH.}
@@ -29,4 +26,9 @@ to be installed.
 }
 \examples{
 parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")
+parse_names_batch(c(
+"Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
+"bla",
+"Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")
+)
 }

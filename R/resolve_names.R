@@ -42,10 +42,12 @@
 #' resolve_names(
 #'   names_to_resolve = c(
 #'     "bgalkj",
+#'     "bgalkj",
+#'     "Hymenophyllum polyanthop",
 #'     "Hymenophyllum polyanthop"),
 #'   match_by = "species",
 #'   taxonomic_standard = filmy_taxonomy,
-#'   max_dist = 2)
+#'   max_dist = 0)
 #' @export
 resolve_names <- function (names_to_resolve, taxonomic_standard,
                            match_by = c("species", "taxon", "scientific_name"),
@@ -77,19 +79,36 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
     mult_syn_selection = mult_syn_selection
   )
 
-  print(glue::glue("{hit_resolution$resolved_matches %>% dplyr::pull(query) %>% dplyr::n_distinct()} names resolved by {match_by}"))
-
   # Prepare final list
-  final_list_resolved <- hit_resolution$resolved_matches
+  # resolve_hits() only returns one row per unique name, so join bac
+  # in to original input to return multiple rows if there were duplicate input names.
+  final_list_resolved <-
+    tibble::tibble(query = names_to_resolve) %>%
+    dplyr::inner_join(hit_resolution$resolved_matches, by = "query")
+
+  print(glue::glue("{nrow(final_list_resolved)} names resolved by {match_by}"))
 
   final_list_unresolved <-
     tibble::tibble(query = names_to_resolve) %>%
     dplyr::anti_join(hit_resolution$resolved_matches, by = "query") %>%
     dplyr::mutate(taxonomicStatus = "unresolved")
 
+  assertthat::assert_that(
+    nrow(final_list_resolved) + nrow(final_list_unresolved) == length(names_to_resolve)
+  )
+
+  results <-
   dplyr::bind_rows(
     final_list_resolved,
     final_list_unresolved
   )
+
+  assertthat::assert_that(isTRUE(all.equal(
+    sort(results$query),
+    sort(names_to_resolve)
+  ))
+  )
+
+  results
 
 }
