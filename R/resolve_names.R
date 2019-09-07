@@ -58,17 +58,14 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
   # Check that format of taxonomic standard meets Darwin Core
   check_darwin_core_format(taxonomic_standard)
 
-  # Do fuzzy match on selected columns
-  match_results <- purrr::map_df(
-    names_to_resolve,
-    ~match_taxonomy(
-      query = .,
-      taxonomic_standard = taxonomic_standard,
-      match_by = match_by,
-      max_dist = max_dist
-    )
+  # Do (fuzzy) match on selected columns
+  match_results <- match_taxonomy(
+    query = names_to_resolve,
+    taxonomic_standard = taxonomic_standard,
+    match_by = match_by,
+    max_dist = max_dist
   ) %>%
-    dplyr::filter(!is.na(taxonID))
+  dplyr::filter(!is.na(taxonID))
 
   # Resolve the hits into accepted names or synonyms,
   # and look up parent name for synonyms.
@@ -80,7 +77,7 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
     mult_syn_selection = mult_syn_selection
   )
 
-  print(glue::glue("{hit_resolution$resolved_matches %>% dplyr::pull(query) %>% dplyr::n_distinct()} names resolved"))
+  print(glue::glue("{hit_resolution$resolved_matches %>% dplyr::pull(query) %>% dplyr::n_distinct()} names resolved by {match_by}"))
 
   # Prepare final list
   final_list_resolved <- hit_resolution$resolved_matches
