@@ -246,7 +246,8 @@ resolve_hits <- function (hits,
     dplyr::left_join(
       dplyr::select(single_synonyms, query, n_hits, distance, match_to, match_by,
                     taxonID = acceptedNameUsageID, taxonomicStatus),
-      dplyr::select(taxonomic_standard, -acceptedNameUsageID, -taxonomicStatus)
+      dplyr::select(taxonomic_standard, -acceptedNameUsageID, -taxonomicStatus),
+      by = "taxonID"
     )
 
   # Combine resolved matches

@@ -87,7 +87,7 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
 
   final_list_unresolved <-
     tibble::tibble(query = names_to_resolve) %>%
-    dplyr::anti_join(hit_resolution$resolved_matches) %>%
+    dplyr::anti_join(hit_resolution$resolved_matches, by = "query") %>%
     dplyr::mutate(taxonomicStatus = "unresolved")
 
   dplyr::bind_rows(

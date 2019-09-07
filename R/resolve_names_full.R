@@ -92,7 +92,8 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
     mult_syn_selection = syn_select[[match_order[1]]]
   ) %>%
     dplyr::left_join(
-      dplyr::select(raw_names, query = !!as.name(match_order[1]), key)
+      dplyr::select(raw_names, query = !!as.name(match_order[1]), key),
+      by = "query"
     )
 
   unresolved <-
@@ -113,7 +114,8 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
       mult_syn_selection = syn_select[[match_order[2]]]
     ) %>%
       dplyr::left_join(
-        dplyr::select(raw_names, query = !!as.name(match_order[2]), key)
+        dplyr::select(raw_names, query = !!as.name(match_order[2]), key),
+        by = "query"
       )
 
     unresolved <-
@@ -136,7 +138,8 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
       mult_syn_selection = syn_select[[match_order[3]]]
     ) %>%
       dplyr::left_join(
-        dplyr::select(raw_names, query = !!as.name(match_order[3]), key)
+        dplyr::select(raw_names, query = !!as.name(match_order[3]), key),
+        by = "query"
       )
 
   }
@@ -145,7 +148,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
     dplyr::bind_rows (resolve_names_results) %>%
     dplyr::filter(taxonomicStatus != "unresolved") %>%
     unique %>%
-    dplyr::left_join(raw_names)
+    dplyr::left_join(raw_names, by = "key")
 
   final_unresolved <-
     raw_names %>%
