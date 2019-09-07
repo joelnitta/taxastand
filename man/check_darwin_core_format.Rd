@@ -21,7 +21,7 @@ Check that data used as taxonomic standard meets Darwin Core format
 data(filmy_taxonomy)
 check_darwin_core_format(filmy_taxonomy)
 
-badly_formatted_data <- select(filmy_taxonomy, -taxonRank)
+badly_formatted_data <- dplyr::select(filmy_taxonomy, -taxonRank)
 check_darwin_core_format(badly_formatted_data)
 
 }

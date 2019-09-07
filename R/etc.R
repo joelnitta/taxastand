@@ -1,3 +1,48 @@
+#' Check data for presence and format of Darwin Core columns
+#'
+#' @param data Dataframe
+#'
+#' @return TRUE if passes test, or warning if not
+#'
+#' @examples
+#' \dontrun{
+#'
+#' data(filmy_taxonomy)
+#' check_darwin_core_cols(filmy_taxonomy)
+#'
+#' badly_formatted_data <- dplyr::select(filmy_taxonomy, -taxonRank)
+#' check_darwin_core_cols(badly_formatted_data)
+#'
+#' }
+check_darwin_core_cols <- function (data) {
+
+  # Check for presenc of minimal Darwin Core columns
+  dwc_min_cols <- c("taxonID", "acceptedNameUsageID",
+                    "taxonomicStatus", "taxonRank",
+                    "genus",
+                    "scientificName", "specificEpithet", "infraspecificEpithet")
+
+  missing_cols <- setdiff(dwc_min_cols, colnames(data))
+
+  assertthat::assert_that(
+    length(missing_cols) == 0,
+    msg = glue::glue(
+      "The following columns missing from {deparse(substitute(data))}:
+      {paste(missing_cols, collapse = ', ')}")
+  )
+
+  # Check for format of columns
+  assertthat::assert_that(is.numeric(data$taxonID))
+  assertthat::assert_that(is.numeric(data$acceptedNameUsageID))
+  assertthat::assert_that(is.character(data$taxonomicStatus))
+  assertthat::assert_that(is.character(data$taxonRank))
+  assertthat::assert_that(is.character(data$genus))
+  assertthat::assert_that(is.character(data$scientificName))
+  assertthat::assert_that(is.character(data$specificEpithet))
+  assertthat::assert_that(is.character(data$infraspecificEpithet))
+
+}
+
 #' Check that data used as taxonomic standard meets Darwin Core format
 #'
 #' @param taxonomic_standard Dataframe, should be meet Darwin Core format
@@ -10,37 +55,13 @@
 #' data(filmy_taxonomy)
 #' check_darwin_core_format(filmy_taxonomy)
 #'
-#' badly_formatted_data <- select(filmy_taxonomy, -taxonRank)
+#' badly_formatted_data <- dplyr::select(filmy_taxonomy, -taxonRank)
 #' check_darwin_core_format(badly_formatted_data)
 #'
 #' }
 check_darwin_core_format <- function (taxonomic_standard) {
 
-  # Check for presenc of minimal Darwin Core columns
-  dwc_min_cols <- c("taxonID", "acceptedNameUsageID",
-                    "taxonomicStatus", "taxonRank",
-                    "genus",
-                    "scientificName", "specificEpithet", "infraspecificEpithet")
-
-  missing_cols <- setdiff(dwc_min_cols, colnames(taxonomic_standard))
-
-  assertthat::assert_that(
-    length(missing_cols) == 0,
-    msg = glue::glue(
-      "The following columns missing from taxonomic_standard:
-      {paste(missing_cols, collapse = ', ')}")
-  )
-
-  # Check for format of columns
-  # assertr::assert() fails if nrow(df) = 0, so check for types separately
-  assertthat::assert_that(is.numeric(taxonomic_standard$taxonID))
-  assertthat::assert_that(is.numeric(taxonomic_standard$acceptedNameUsageID))
-  assertthat::assert_that(is.character(taxonomic_standard$taxonomicStatus))
-  assertthat::assert_that(is.character(taxonomic_standard$taxonRank))
-  assertthat::assert_that(is.character(taxonomic_standard$genus))
-  assertthat::assert_that(is.character(taxonomic_standard$scientificName))
-  assertthat::assert_that(is.character(taxonomic_standard$specificEpithet))
-  assertthat::assert_that(is.character(taxonomic_standard$infraspecificEpithet))
+  check_darwin_core_cols(taxonomic_standard)
 
   # Early exit if zero rows
   if(nrow(taxonomic_standard) == 0) return(TRUE)

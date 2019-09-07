@@ -92,7 +92,7 @@ resolve_hits <- function (hits,
 
   # Check that format of hits meets Darwin Core
   # and add non-standard columns (genericName, speciesName, taxonName)
-  check_darwin_core_format(hits)
+  check_darwin_core_cols(hits)
   hits <- add_non_darwin_core_cols(hits)
 
   # Categorize hits
