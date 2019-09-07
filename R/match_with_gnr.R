@@ -10,13 +10,14 @@
 #' It is not recommended to use more than one data source at a time, as this may
 #' complicate resolving synonymy.
 #'
-#' Requires [gnparser](https://gitlab.com/gogna/gnparser) to be installed
-#' and on the user's PATH.
+#' Requires [gnparser](https://gitlab.com/gogna/gnparser) to be installed.
 #'
 #' @param names Character vector of names to resolve
 #' @param data_source_ids Numeric vector of data source IDs to use for
 #' search. Default = 1, the Catalog of Life. For other data sources, see
 #' \code{\link[taxize]{gnr_datasources}}
+#' @param gnparser_path String; path to gnparser executable.
+#' Either this must be provided, or gnparser must be on $PATH.
 #'
 #' @return tibble
 #'
@@ -30,7 +31,7 @@
 #' )
 #'
 #' @export
-match_with_gnr <- function (names, data_source_ids = 1) {
+match_with_gnr <- function (names, data_source_ids = 1, gnparser_path) {
 
   assertthat::assert_that(is.character(names))
   assertthat::assert_that(is.numeric(data_source_ids))
@@ -71,7 +72,7 @@ match_with_gnr <- function (names, data_source_ids = 1) {
   # Modify output
   gnr_results_col <-
     gnr_results_col %>%
-    add_parsed_names(matched_name, matched_species, matched_taxon) %>%
+    add_parsed_names(matched_name, matched_species, matched_taxon, gnparser_path = gnparser_path) %>%
     # Add lowest taxonomic rank
     dplyr::mutate(lowest_taxonomic_rank = dplyr::case_when(
       # infraspecific includes two spaces

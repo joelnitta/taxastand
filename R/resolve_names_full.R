@@ -5,12 +5,17 @@
 #' recursively in order of scientific name (full name with author), taxon
 #' name (name including infraspecific epithet but no author), then species
 #' (genus plus specific epithet only).
+#' 
+#' Requires gnparser (https://gitlab.com/gogna/gnparser/)
+#' to be installed.
 #'
 #' @param names_to_resolve Character vector; taxonomic names to resolve.
 #' @param taxonomic_standard Dataframe of standard names to match to.
 #' @param max_dist Named integer vector; maximum distance to use during
 #' fuzzy matching by taxonomic rank.
 #' Names of `max_dis` must include 'scientific_name', 'taxon', and 'taxon'.
+#' @param gnparser_path String; path to gnparser executable.
+#' Either this must be provided, or gnparser must be on $PATH.
 #'
 #' @return Tibble
 #' @examples
@@ -35,7 +40,8 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
                                  scientific_name = 0,
                                  taxon = 0,
                                  species = 0
-                               )) {
+                               ),
+                               gnparser_path = NULL) {
 
   # Check that format of taxonomic standard meets Darwin Core
   check_darwin_core_format(taxonomic_standard)
@@ -73,7 +79,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
 
     taxon_query <- unresolved_names[[1]] %>%
       dplyr::pull(query) %>%
-      parse_names_batch %>% dplyr::pull(taxon)
+      parse_names_batch(gnparser_path = gnparser_path) %>% dplyr::pull(taxon)
 
     taxon_results <- resolve_names(
       names_to_resolve = taxon_query,
@@ -100,7 +106,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   if(nrow(unresolved_names[[2]]) > 0) {
 
     species_query <- unresolved_names[[2]] %>% dplyr::pull(original_query) %>%
-      parse_names_batch %>% dplyr::pull(taxon) %>% sp_name_only
+      parse_names_batch(gnparser_path = gnparser_path) %>% dplyr::pull(taxon) %>% sp_name_only
 
     species_results <- resolve_names(
       names_to_resolve = species_query,
