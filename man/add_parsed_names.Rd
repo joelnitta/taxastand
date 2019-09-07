@@ -5,7 +5,8 @@
 \title{Add species and taxon names to a dataframe by
 parsing the scientific names with gnparser}
 \usage{
-add_parsed_names(df, sci_name, parsed_species_name, parsed_taxon_name)
+add_parsed_names(df, sci_name, parsed_species_name, parsed_taxon_name,
+  gnparser_path = NULL)
 }
 \arguments{
 \item{df}{Dataframe}
@@ -18,13 +19,16 @@ species name}
 
 \item{parsed_taxon_name}{Unquoted name of column to add with
 taxon name}
+
+\item{gnparser_path}{String; path to gnparser executable.
+Either this must be provided, or gnparser must be on $PATH.}
 }
 \value{
 Tibble
 }
 \description{
 Requires gnparser (https://gitlab.com/gogna/gnparser/)
-to be installed and on $PATH
+to be installed.
 }
 \examples{
 names_df <- tibble::tibble(name = c(

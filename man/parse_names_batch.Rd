@@ -4,7 +4,7 @@
 \alias{parse_names_batch}
 \title{Parse species names in batch}
 \usage{
-parse_names_batch(names, check = TRUE)
+parse_names_batch(names, check = TRUE, gnparser_path = NULL)
 }
 \arguments{
 \item{names}{Character vector of species names.
@@ -13,6 +13,9 @@ unique, with no NAs.}
 
 \item{check}{Logical; should a check be made that the
 results original name match the names of the input?}
+
+\item{gnparser_path}{String; path to gnparser executable.
+Either this must be provided, or gnparser must be on $PATH.}
 }
 \value{
 Tibble
@@ -21,7 +24,8 @@ Tibble
 Runs much faster for a large number of names.
 }
 \details{
-Requires gnparser to be installed and on $PATH
+Requires gnparser (https://gitlab.com/gogna/gnparser/)
+to be installed.
 }
 \examples{
 parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")

@@ -2,7 +2,7 @@
 #' parsing the scientific names with gnparser
 #'
 #' Requires gnparser (https://gitlab.com/gogna/gnparser/)
-#' to be installed and on $PATH
+#' to be installed.
 #'
 #' @param df Dataframe
 #' @param sci_name Unquoted name of column in dataframe with
@@ -11,6 +11,8 @@
 #' species name
 #' @param parsed_taxon_name  Unquoted name of column to add with
 #' taxon name
+#' @param gnparser_path String; path to gnparser executable.
+#' Either this must be provided, or gnparser must be on $PATH.
 #'
 #' @return Tibble
 #' @examples
@@ -19,7 +21,8 @@
 #'   "Crepidomanes minutum var. minutum"))
 #' add_parsed_names(names_df, name, species, taxon)
 #' @export
-add_parsed_names <- function (df, sci_name, parsed_species_name, parsed_taxon_name) {
+add_parsed_names <- function (df, sci_name, parsed_species_name,
+                              parsed_taxon_name, gnparser_path = NULL) {
 
   sci_name_enq <- rlang::enquo(sci_name)
   parsed_species_name <- rlang::enquo(parsed_species_name)
@@ -29,7 +32,7 @@ add_parsed_names <- function (df, sci_name, parsed_species_name, parsed_taxon_na
     df %>%
     dplyr::pull(!!sci_name_enq) %>%
     unique %>%
-    parse_names_batch() %>%
+    parse_names_batch(gnparser_path = gnparser_path) %>%
     dplyr::select(!!sci_name_enq := b, !!parsed_taxon_name := c) %>%
     dplyr::mutate(!!parsed_species_name := sp_name_only(!!parsed_taxon_name))
 
@@ -40,18 +43,21 @@ add_parsed_names <- function (df, sci_name, parsed_species_name, parsed_taxon_na
 #'
 #' Runs much faster for a large number of names.
 #'
-#' Requires gnparser to be installed and on $PATH
+#' Requires gnparser (https://gitlab.com/gogna/gnparser/)
+#' to be installed.
 #'
 #' @param names Character vector of species names.
 #' May include author, variety, etc. All names must be
 #' unique, with no NAs.
 #' @param check Logical; should a check be made that the
 #' results original name match the names of the input?
+#' @param gnparser_path String; path to gnparser executable.
+#' Either this must be provided, or gnparser must be on $PATH.
 #'
 #' @return Tibble
 #'
 #' @examples
-#' parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)", gnparser_path = "/Users/joel/Downloads/gnparser")
+#' parse_names_batch("Amaurorhinus bewichianus (Wollaston,1860) (s.str.)")
 #' @export
 parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
 
@@ -74,10 +80,10 @@ parse_names_batch <- function (names, check = TRUE, gnparser_path = NULL) {
     "20",
     temp_txt
   )
-  
+
   # Specify path to gnparser, if given
   gnparser_command <- "gnparser"
-  
+
   if(!is.null(gnparser_path)) {
     assertthat::assert_that(fs::file_exists(gnparser_path))
     gnparser_command <- fs::path_abs(gnparser_path)
