@@ -4,7 +4,7 @@
 \alias{match_with_gnr}
 \title{Match names using the Global Names Resolver}
 \usage{
-match_with_gnr(names, data_source_ids = 1)
+match_with_gnr(names, data_source_ids = 1, gnparser_path = NULL)
 }
 \arguments{
 \item{names}{Character vector of names to resolve}
@@ -12,6 +12,9 @@ match_with_gnr(names, data_source_ids = 1)
 \item{data_source_ids}{Numeric vector of data source IDs to use for
 search. Default = 1, the Catalog of Life. For other data sources, see
 \code{\link[taxize]{gnr_datasources}}}
+
+\item{gnparser_path}{String; path to gnparser executable.
+Either this must be provided, or gnparser must be on $PATH.}
 }
 \value{
 tibble
@@ -28,8 +31,7 @@ that appear to by hybrids (e.g., with " x " in the name) are excluded
 It is not recommended to use more than one data source at a time, as this may
 complicate resolving synonymy.
 
-Requires \href{https://gitlab.com/gogna/gnparser}{gnparser} to be installed
-and on the user's PATH.
+Requires \href{https://gitlab.com/gogna/gnparser}{gnparser} to be installed.
 }
 \examples{
 match_with_gnr(

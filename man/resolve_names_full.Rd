@@ -5,7 +5,8 @@
 \title{Resolve names by recursive matching}
 \usage{
 resolve_names_full(names_to_resolve, taxonomic_standard,
-  max_dist = c(scientific_name = 0, taxon = 0, species = 0))
+  max_dist = c(scientific_name = 0, taxon = 0, species = 0),
+  gnparser_path = NULL)
 }
 \arguments{
 \item{names_to_resolve}{Character vector; taxonomic names to resolve.}
@@ -15,6 +16,9 @@ resolve_names_full(names_to_resolve, taxonomic_standard,
 \item{max_dist}{Named integer vector; maximum distance to use during
 fuzzy matching by taxonomic rank.
 Names of \code{max_dis} must include 'scientific_name', 'taxon', and 'taxon'.}
+
+\item{gnparser_path}{String; path to gnparser executable.
+Either this must be provided, or gnparser must be on $PATH.}
 }
 \value{
 Tibble
@@ -25,6 +29,10 @@ with or without author or infraspecific epithet. Names will be matched
 recursively in order of scientific name (full name with author), taxon
 name (name including infraspecific epithet but no author), then species
 (genus plus specific epithet only).
+}
+\details{
+Requires gnparser (https://gitlab.com/gogna/gnparser/)
+to be installed.
 }
 \examples{
 # Load reference taxonomy in Darwin Core format

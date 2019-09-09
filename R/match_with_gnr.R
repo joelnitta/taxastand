@@ -31,7 +31,7 @@
 #' )
 #'
 #' @export
-match_with_gnr <- function (names, data_source_ids = 1, gnparser_path) {
+match_with_gnr <- function (names, data_source_ids = 1, gnparser_path = NULL) {
 
   assertthat::assert_that(is.character(names))
   assertthat::assert_that(is.numeric(data_source_ids))

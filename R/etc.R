@@ -184,7 +184,6 @@ sp_name_only <- function (taxon_name, sep = " ") {
     purrr::map_chr(., ~magrittr::extract(., 1:2) %>% jntools::paste3(collapse = sep))
 }
 
-
 #' Convert the first letter of a string to uppercase
 #'
 #' @param x Character vector
