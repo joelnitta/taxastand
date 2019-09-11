@@ -4,7 +4,8 @@
 \alias{resolve_fern_names}
 \title{Resolve names of ferns and lycophytes (pteridophytes)}
 \usage{
-resolve_fern_names(names, col_plants)
+resolve_fern_names(names, col_plants, resolve_to = c("species",
+  "scientific_name"))
 }
 \arguments{
 \item{names}{Vector of scientific names to resolve}
@@ -16,6 +17,10 @@ The unzipped file contains \code{taxa.txt}, which is a tab-separated file
 including 1,168,025 observations of 31 variables, mostly taxonomic ranks
 and names. \code{taxa.txt} should be read-in using \code{readr::read_tsv()} or similar,
 and used as \code{col_plants}.}
+
+\item{resolve_to}{String, either "scientific_name" or "species". The type of
+name that should be resolved. If "species", queries matching different varieties
+within the same species will be collapsed to a single species.}
 }
 \value{
 Tibble with the following columns
@@ -55,9 +60,17 @@ col_plants <- readr::read_tsv(
   col_file,
   col_types = col_spec)
 
-names <- c("abacopteris insularis", "abacopteris philippinarum", "abacopteris rubra var. hirsuta", "acrostichum aureum")
+names <- c("abacopteris insularis",
+  "abacopteris philippinarum",
+  "abacopteris rubra var. hirsuta",
+  "acrostichum aureum",
+  "cystopteris fragilis",
+  "Anemia stricta",
+  "Athyrium macrocarpum",
+  "Bulboschoenus fluviatilis")
 
-resolve_fern_names(names, col_plants)
+resolve_fern_names(names, col_plants, "scientific_name")
+resolve_fern_names(names, col_plants, "species")
 
 }
 

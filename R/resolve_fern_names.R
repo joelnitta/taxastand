@@ -14,6 +14,9 @@
 #' and names. `taxa.txt` should be read-in using `readr::read_tsv()` or similar,
 #' and used as `col_plants`.
 #' @param names Vector of scientific names to resolve
+#' @param resolve_to String, either "scientific_name" or "species". The type of
+#' name that should be resolved. If "species", queries matching different varieties
+#' within the same species will be collapsed to a single species.
 #'
 #' @return Tibble with the following columns
 #' - query: the query (`names`) after slight formatting (removing quotation marks)
@@ -42,16 +45,29 @@
 #'   col_file,
 #'   col_types = col_spec)
 #'
-#' names <- c("abacopteris insularis", "abacopteris philippinarum", "abacopteris rubra var. hirsuta", "acrostichum aureum")
+#' names <- c("abacopteris insularis",
+#'   "abacopteris philippinarum",
+#'   "abacopteris rubra var. hirsuta",
+#'   "acrostichum aureum",
+#'   "cystopteris fragilis",
+#'   "Anemia stricta",
+#'   "Athyrium macrocarpum",
+#'   "Bulboschoenus fluviatilis")
 #'
-#' resolve_fern_names(names, col_plants)
+#' resolve_fern_names(names, col_plants, "scientific_name")
+#' resolve_fern_names(names, col_plants, "species")
 #'
 #' }
 #'
 #' @export
-resolve_fern_names <- function (names, col_plants) {
+resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "scientific_name")) {
 
   assertthat::assert_that(is.character(names))
+  assertthat::assert_that(assertthat::is.string(resolve_to))
+  assertthat::assert_that(
+    resolve_to %in% c("species", "scientific_name"),
+    msg = "`resolve_to` must be one of 'species' or 'scientific_name'")
+
 
   check_darwin_core_cols(col_plants)
 
@@ -151,7 +167,7 @@ resolve_fern_names <- function (names, col_plants) {
   # If the original name was a
   # synonym, the accepted names are looked up and returned.
   # taxonomicStatus refers to the status of the matched name.
-  pterido_names_resolved <- resolve_names_full(
+  pterido_names_resolve_results <- resolve_names_full(
     unique(pterido_names_matched$matched_name), world_ferns) %>%
     dplyr::select(
       resolve_query = query, taxonomicStatus,
@@ -161,6 +177,15 @@ resolve_fern_names <- function (names, col_plants) {
       dplyr::select(gnr_results, gnr_query, matched_name),
       by = c(resolve_query = "matched_name")) %>%
     dplyr::select(gnr_query, resolve_query, taxonomicStatus, scientificName)
+
+  # Split into matched names that were resolved to something,
+  # and those that could not be resolved.
+  not_resolved <- pterido_names_resolve_results %>%
+    dplyr::filter(is.na(scientificName))
+
+  pterido_names_resolved <- pterido_names_resolve_results %>%
+    dplyr::filter(!is.na(scientificName)) %>%
+    add_parsed_names(scientificName, species)
 
   # Split resolved names into those that had a single GNR match
   # and those that had multiple ones.
@@ -172,10 +197,8 @@ resolve_fern_names <- function (names, col_plants) {
     pterido_names_resolved %>%
     dplyr::filter(!assertr::is_uniq(gnr_query))
 
-  # Check if any of the multiple matches ended up resolving to the same
-  # name. In that case, keep them.
-  # Check if any of the multiple matches ended up resolving to the same
-  # name. In that case, keep them.
+  ### Check for multiple matches resolving to the same scientific name
+  # We will keep these (or species, depending on `resolve_to`)
   pterido_names_mult_matches_resolve_to_same_name <-
     pterido_names_resolved_mult_matches %>%
     dplyr::add_count(gnr_query, scientificName) %>%
@@ -200,17 +223,64 @@ resolve_fern_names <- function (names, col_plants) {
     unique() %>%
     dplyr::mutate(match_fail_reason = "multiple matches")
 
-  # Combining matching and resolving results
+  ### Check for multiple matches resolving to the same species
+  # We will keep these (or scientific name, depending on `resolve_to`)
 
-  match_and_resolve_results <-
+  # Check if any of the multiple matches ended up resolving to the same
+  # species name. In that case, keep them.
+  pterido_names_mult_matches_resolve_to_same_species <-
+    pterido_names_resolved_mult_matches %>%
+    dplyr::add_count(gnr_query, species) %>%
+    dplyr::filter(n > 1)
+
+  # Collapse taxonomicStatus for mult matches that resolve to same name
+  if(nrow(pterido_names_mult_matches_resolve_to_same_species) > 0) {
+    pterido_names_mult_matches_resolve_to_same_species <-
+      dplyr::summarize(
+        pterido_names_mult_matches_resolve_to_same_species,
+        gnr_query = unique(gnr_query),
+        species = unique(species),
+        taxonomicStatus = paste(taxonomicStatus, collapse = ", ")
+      ) }
+
+  # Also make list of failures that matched to different species
+  pterido_names_mult_matches_resolve_to_diff_species <-
+    pterido_names_resolved_mult_matches %>%
+    dplyr::add_count(gnr_query, species) %>%
+    dplyr::filter(n == 1) %>%
+    dplyr::select(gnr_query) %>%
+    unique() %>%
+    dplyr::mutate(match_fail_reason = "multiple matches")
+
+  ### Combining matching and resolving results ###
+  match_and_resolve_results_sciname <-
     dplyr::bind_rows(
       # Successes
       pterido_names_mult_matches_resolve_to_same_name,
       pterido_names_resolved_single_matches,
       # Failures
+      not_resolved,
       pterido_names_mult_matches_resolve_to_diff_name,
       pterido_names_not_matched
     )
+
+  match_and_resolve_results_species <-
+    dplyr::bind_rows(
+      # Successes
+      pterido_names_mult_matches_resolve_to_same_species,
+      pterido_names_resolved_single_matches,
+      # Failures
+      not_resolved,
+      pterido_names_mult_matches_resolve_to_diff_species,
+      pterido_names_not_matched
+    )
+
+  # Choose what to type of resuls to return
+  # (resolved to scientific name or species)
+  match_and_resolve_results <- switch(resolve_to,
+    scientific_name = match_and_resolve_results_sciname,
+    species =  match_and_resolve_results_species,
+  )
 
   # Clean up exluded names for final join
   excluded <- names %>% dplyr::filter(exclude_non_pterido_genus|exclude_hybrid) %>%
@@ -237,12 +307,19 @@ resolve_fern_names <- function (names, col_plants) {
     nrow(names_raw) == nrow(results)
   )
 
+  results <-
   dplyr::select(
     results,
     query,
     exclude_non_pterido_genus, exclude_hybrid, match_fail_reason,
-    taxonomicStatus, scientificName) %>%
-    mutate(exclude_non_pterido_genus = tidyr::replace_na(exclude_non_pterido_genus, FALSE)) %>%
-    mutate(exclude_hybrid = tidyr::replace_na(exclude_hybrid, FALSE))
+    taxonomicStatus, scientificName, species) %>%
+    dplyr::mutate(exclude_non_pterido_genus = tidyr::replace_na(exclude_non_pterido_genus, FALSE)) %>%
+    dplyr::mutate(exclude_hybrid = tidyr::replace_na(exclude_hybrid, FALSE))
+
+  if(resolve_to == "scientific_name") results <- dplyr::select(results, -species)
+
+  if(resolve_to == "species") results <- dplyr::select(results, -scientificName)
+
+  results
 
 }
