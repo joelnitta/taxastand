@@ -32,6 +32,7 @@
 #'   "Crepidomanes minutum var. minutus",
 #'   "Hymenophyllum ×polyanthos",
 #'   "Acrostichum aureum",
+#'   "Cystopteris fragilis",
 #'   "fizz bazz")
 #' )
 #'
@@ -41,6 +42,7 @@
 #'   "Crepidomanes minutum var. minutus",
 #'   "Hymenophyllum ×polyanthos",
 #'   "Acrostichum aureum",
+#'   "Cystopteris fragilis",
 #'   "fizz bazz"),
 #'   exclude_mult_matches = FALSE
 #' )
@@ -92,7 +94,8 @@ match_with_gnr <- function (names, data_source_ids = 1,
   # Modify output
   gnr_results_col <-
     gnr_results_col %>%
-    add_parsed_names(matched_name, matched_species, matched_taxon, gnparser_path = gnparser_path) %>%
+    add_parsed_names(matched_name, species, taxon, author, gnparser_path = gnparser_path) %>%
+    dplyr::rename(matched_species = species, matched_taxon = taxon, matched_author = author) %>%
     # Add lowest taxonomic rank
     dplyr::mutate(lowest_taxonomic_rank = dplyr::case_when(
       # infraspecific includes two spaces
@@ -103,6 +106,15 @@ match_with_gnr <- function (names, data_source_ids = 1,
       stringr::str_count(matched_taxon, " ") == 0 ~ "genus",
       stringr::str_count(matched_taxon, " ") > 2 ~ "other"
     ))
+
+  # Drop matches that match to the same taxon except author is missing for one name
+  to_pull <-
+  gnr_results_col %>%
+    dplyr::add_count(matched_taxon) %>%
+    dplyr::filter(n > 1) %>%
+    dplyr::filter(matched_author == "")
+
+  gnr_results_col <- suppressMessages(dplyr::anti_join(gnr_results_col, to_pull))
 
   ## Filter results ##
 

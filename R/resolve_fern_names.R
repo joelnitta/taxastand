@@ -184,7 +184,7 @@ resolve_fern_names <- function (names, col_plants) {
   # Collapse taxonomicStatus for mult matches that resolve to same name
   if(nrow(pterido_names_mult_matches_resolve_to_same_name) > 0) {
     pterido_names_mult_matches_resolve_to_same_name <-
-      summarize(
+      dplyr::summarize(
         pterido_names_mult_matches_resolve_to_same_name,
         gnr_query = unique(gnr_query),
         scientificName = unique(scientificName),

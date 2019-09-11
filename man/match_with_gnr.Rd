@@ -46,6 +46,7 @@ match_with_gnr(
   "Crepidomanes minutum var. minutus",
   "Hymenophyllum ×polyanthos",
   "Acrostichum aureum",
+  "Cystopteris fragilis",
   "fizz bazz")
 )
 
@@ -55,6 +56,7 @@ match_with_gnr(
   "Crepidomanes minutum var. minutus",
   "Hymenophyllum ×polyanthos",
   "Acrostichum aureum",
+  "Cystopteris fragilis",
   "fizz bazz"),
   exclude_mult_matches = FALSE
 )
