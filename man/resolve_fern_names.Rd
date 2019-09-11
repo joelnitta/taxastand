@@ -55,7 +55,7 @@ col_plants <- readr::read_tsv(
   col_file,
   col_types = col_spec)
 
-names <- c("abacopteris insularis", "abacopteris philippinarum", "abacopteris rubra var. hirsuta")
+names <- c("abacopteris insularis", "abacopteris philippinarum", "abacopteris rubra var. hirsuta", "acrostichum aureum")
 
 }
 
