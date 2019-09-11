@@ -44,6 +44,8 @@
 #'
 #' names <- c("abacopteris insularis", "abacopteris philippinarum", "abacopteris rubra var. hirsuta", "acrostichum aureum")
 #'
+#' resolve_fern_names(names, col_plants)
+#'
 #' }
 #'
 #' @export
@@ -158,7 +160,7 @@ resolve_fern_names <- function (names, col_plants) {
     dplyr::left_join(
       dplyr::select(gnr_results, gnr_query, matched_name),
       by = c(resolve_query = "matched_name")) %>%
-    dplyr::select(gnr_query, taxonomicStatus, scientificName)
+    dplyr::select(gnr_query, resolve_query, taxonomicStatus, scientificName)
 
   # Split resolved names into those that had a single GNR match
   # and those that had multiple ones.
@@ -172,18 +174,28 @@ resolve_fern_names <- function (names, col_plants) {
 
   # Check if any of the multiple matches ended up resolving to the same
   # name. In that case, keep them.
+  # Check if any of the multiple matches ended up resolving to the same
+  # name. In that case, keep them.
   pterido_names_mult_matches_resolve_to_same_name <-
-  pterido_names_resolved_mult_matches %>%
-    dplyr::select(gnr_query, scientificName) %>%
-    unique() %>%
-    dplyr::filter(assertr::is_uniq(gnr_query))
+    pterido_names_resolved_mult_matches %>%
+    dplyr::add_count(gnr_query, scientificName) %>%
+    dplyr::filter(n > 1)
+
+  # Collapse taxonomicStatus for mult matches that resolve to same name
+  if(nrow(pterido_names_mult_matches_resolve_to_same_name) > 0) {
+    pterido_names_mult_matches_resolve_to_same_name <-
+      summarize(
+        pterido_names_mult_matches_resolve_to_same_name,
+        gnr_query = unique(gnr_query),
+        scientificName = unique(scientificName),
+        taxonomicStatus = paste(taxonomicStatus, collapse = ", ")
+      ) }
 
   # Also make list of failures that matched to different names
   pterido_names_mult_matches_resolve_to_diff_name <-
     pterido_names_resolved_mult_matches %>%
-    dplyr::select(gnr_query, scientificName) %>%
-    unique() %>%
-    dplyr::filter(!assertr::is_uniq(gnr_query)) %>%
+    dplyr::add_count(gnr_query, scientificName) %>%
+    dplyr::filter(n == 1) %>%
     dplyr::select(gnr_query) %>%
     unique() %>%
     dplyr::mutate(match_fail_reason = "multiple matches")

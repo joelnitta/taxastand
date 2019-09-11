@@ -5,8 +5,7 @@
 \title{Add species and taxon names to a dataframe by
 parsing the scientific names with gnparser}
 \usage{
-add_parsed_names(df, sci_name, parsed_species_name, parsed_taxon_name,
-  gnparser_path = NULL)
+add_parsed_names(df, sci_name, ..., gnparser_path = NULL)
 }
 \arguments{
 \item{df}{Dataframe}
@@ -14,11 +13,8 @@ add_parsed_names(df, sci_name, parsed_species_name, parsed_taxon_name,
 \item{sci_name}{Unquoted name of column in dataframe with
 scientific name to be parsed}
 
-\item{parsed_species_name}{Unquoted name of column to add with
-species name}
-
-\item{parsed_taxon_name}{Unquoted name of column to add with
-taxon name}
+\item{...}{Unquoted taxonomic names to add. May include:
+species, taxon, taxon_with_rank, author, or year.}
 
 \item{gnparser_path}{String; path to gnparser executable.
 Either this must be provided, or gnparser must be on $PATH.}
@@ -35,4 +31,5 @@ names_df <- tibble::tibble(name = c(
   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
   "Crepidomanes minutum var. minutum"))
 add_parsed_names(names_df, name, species, taxon)
+add_parsed_names(names_df, name, species, author)
 }

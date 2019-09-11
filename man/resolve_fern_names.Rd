@@ -57,6 +57,8 @@ col_plants <- readr::read_tsv(
 
 names <- c("abacopteris insularis", "abacopteris philippinarum", "abacopteris rubra var. hirsuta", "acrostichum aureum")
 
+resolve_fern_names(names, col_plants)
+
 }
 
 }

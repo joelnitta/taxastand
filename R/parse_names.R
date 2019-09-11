@@ -7,12 +7,10 @@
 #' @param df Dataframe
 #' @param sci_name Unquoted name of column in dataframe with
 #' scientific name to be parsed
-#' @param parsed_species_name Unquoted name of column to add with
-#' species name
-#' @param parsed_taxon_name  Unquoted name of column to add with
-#' taxon name
 #' @param gnparser_path String; path to gnparser executable.
 #' Either this must be provided, or gnparser must be on $PATH.
+#' @param ... Unquoted taxonomic names to add. May include:
+#' species, taxon, taxon_with_rank, author, or year.
 #'
 #' @return Tibble
 #' @examples
@@ -20,21 +18,18 @@
 #'   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
 #'   "Crepidomanes minutum var. minutum"))
 #' add_parsed_names(names_df, name, species, taxon)
+#' add_parsed_names(names_df, name, species, author)
 #' @export
-add_parsed_names <- function (df, sci_name, parsed_species_name,
-                              parsed_taxon_name, gnparser_path = NULL) {
+add_parsed_names <- function (df, sci_name, ..., gnparser_path = NULL) {
 
   sci_name_enq <- rlang::enquo(sci_name)
-  parsed_species_name <- rlang::enquo(parsed_species_name)
-  parsed_taxon_name <- rlang::enquo(parsed_taxon_name)
 
   parsed_names <-
     df %>%
     dplyr::pull(!!sci_name_enq) %>%
     unique %>%
     parse_names_batch(gnparser_path = gnparser_path) %>%
-    dplyr::select(!!sci_name_enq := query, !!parsed_taxon_name := taxon) %>%
-    dplyr::mutate(!!parsed_species_name := sp_name_only(!!parsed_taxon_name))
+    dplyr::select(!!sci_name_enq := query, ...)
 
   suppressMessages(dplyr::left_join(df, parsed_names))
 }
@@ -118,7 +113,8 @@ parse_names_batch <- function (names, gnparser_path = NULL) {
       taxon = c,
       taxon_with_rank = d,
       author = e,
-      year = f)
+      year = f) %>%
+    dplyr::mutate(species = sp_name_only(taxon))
 
   # Join back in to original query names.
   dplyr::left_join(names_table, results, by = "query")
