@@ -86,6 +86,9 @@ match_with_gnr <- function (names, data_source_ids = 1,
     fields = "minimal",
     cap_first = FALSE)
 
+  # Early exit if zero results
+  if(nrow(gnr_results_col) == 0) return (gnr_results_col)
+
   # Modify output
   gnr_results_col <-
     gnr_results_col %>%
