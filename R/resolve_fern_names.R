@@ -207,12 +207,13 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   # Collapse taxonomicStatus for mult matches that resolve to same name
   if(nrow(pterido_names_mult_matches_resolve_to_same_name) > 0) {
     pterido_names_mult_matches_resolve_to_same_name <-
+      pterido_names_mult_matches_resolve_to_same_name %>%
+      dplyr::group_by(gnr_query) %>%
       dplyr::summarize(
-        pterido_names_mult_matches_resolve_to_same_name,
-        gnr_query = unique(gnr_query),
         scientificName = unique(scientificName),
-        taxonomicStatus = paste(taxonomicStatus, collapse = ", ")
-      ) }
+        taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
+        )
+    }
 
   # Also make list of failures that matched to different names
   pterido_names_mult_matches_resolve_to_diff_name <-
@@ -236,12 +237,14 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   # Collapse taxonomicStatus for mult matches that resolve to same name
   if(nrow(pterido_names_mult_matches_resolve_to_same_species) > 0) {
     pterido_names_mult_matches_resolve_to_same_species <-
+      pterido_names_mult_matches_resolve_to_same_species %>%
+      dplyr::group_by(gnr_query) %>%
       dplyr::summarize(
-        pterido_names_mult_matches_resolve_to_same_species,
-        gnr_query = unique(gnr_query),
         species = unique(species),
-        taxonomicStatus = paste(taxonomicStatus, collapse = ", ")
-      ) }
+        taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
+      )
+    }
+
 
   # Also make list of failures that matched to different species
   pterido_names_mult_matches_resolve_to_diff_species <-
