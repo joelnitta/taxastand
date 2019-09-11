@@ -16,6 +16,10 @@
 #' @param data_source_ids Numeric vector of data source IDs to use for
 #' search. Default = 1, the Catalog of Life. For other data sources, see
 #' \code{\link[taxize]{gnr_datasources}}
+#' @param exclude_mult_matches Logical; should names resulting in multiple
+#' matches be excluded as failures? If `TRUE` (the default), the output will have
+#' a number of rows equal to length of `names`. If `FALSE`, the output may have
+#' more rows than the length of `names`.
 #' @param gnparser_path String; path to gnparser executable.
 #' Either this must be provided, or gnparser must be on $PATH.
 #'
@@ -27,11 +31,24 @@
 #'   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
 #'   "Crepidomanes minutum var. minutus",
 #'   "Hymenophyllum ×polyanthos",
+#'   "Acrostichum aureum",
 #'   "fizz bazz")
 #' )
 #'
+#' match_with_gnr(
+#'  c(
+#'   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
+#'   "Crepidomanes minutum var. minutus",
+#'   "Hymenophyllum ×polyanthos",
+#'   "Acrostichum aureum",
+#'   "fizz bazz"),
+#'   exclude_mult_matches = FALSE
+#' )
+#'
 #' @export
-match_with_gnr <- function (names, data_source_ids = 1, gnparser_path = NULL) {
+match_with_gnr <- function (names, data_source_ids = 1,
+                            exclude_mult_matches = TRUE,
+                            gnparser_path = NULL) {
 
   assertthat::assert_that(is.character(names))
   assertthat::assert_that(is.numeric(data_source_ids))
@@ -111,7 +128,7 @@ match_with_gnr <- function (names, data_source_ids = 1, gnparser_path = NULL) {
     gnr_results_single_match,
     gnr_results_best_match)
 
-  # Also make tibble of names with multiple fuzzy matches
+  # Make tibble of names with multiple fuzzy matches
   multiple_gnr_match <-
     # start with results
     gnr_results_col %>%
@@ -119,12 +136,9 @@ match_with_gnr <- function (names, data_source_ids = 1, gnparser_path = NULL) {
     dplyr::anti_join(gnr_results_with_match, by = "user_supplied_name") %>%
     # filter to those with >1 match
     dplyr::add_count(user_supplied_name) %>%
-    dplyr::filter(n > 1) %>%
-    dplyr::select(user_supplied_name) %>%
-    unique %>%
-    dplyr::mutate(fail_reason = "multiple matches")
+    dplyr::filter(n > 1)
 
-  # Also make tibble of names with no matches at all
+  # Make tibble of names with no matches at all
   no_gnr_match <-
     # start with all query names
     tibble::tibble(user_supplied_name = names) %>%
@@ -137,6 +151,14 @@ match_with_gnr <- function (names, data_source_ids = 1, gnparser_path = NULL) {
     # anything left didn't have a match at all
     unique %>%
     dplyr::mutate(fail_reason = "no match")
+
+  if(exclude_mult_matches) {
+    multiple_gnr_match <-
+      multiple_gnr_match %>%
+      dplyr::select(user_supplied_name) %>%
+      unique %>%
+      dplyr::mutate(fail_reason = "multiple matches")
+  }
 
   # Combine into final matching output
   dplyr::bind_rows(

@@ -4,7 +4,8 @@
 \alias{match_with_gnr}
 \title{Match names using the Global Names Resolver}
 \usage{
-match_with_gnr(names, data_source_ids = 1, gnparser_path = NULL)
+match_with_gnr(names, data_source_ids = 1, exclude_mult_matches = TRUE,
+  gnparser_path = NULL)
 }
 \arguments{
 \item{names}{Character vector of names to resolve}
@@ -12,6 +13,11 @@ match_with_gnr(names, data_source_ids = 1, gnparser_path = NULL)
 \item{data_source_ids}{Numeric vector of data source IDs to use for
 search. Default = 1, the Catalog of Life. For other data sources, see
 \code{\link[taxize]{gnr_datasources}}}
+
+\item{exclude_mult_matches}{Logical; should names resulting in multiple
+matches be excluded as failures? If \code{TRUE} (the default), the output will have
+a number of rows equal to length of \code{names}. If \code{FALSE}, the output may have
+more rows than the length of \code{names}.}
 
 \item{gnparser_path}{String; path to gnparser executable.
 Either this must be provided, or gnparser must be on $PATH.}
@@ -39,7 +45,18 @@ match_with_gnr(
   "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
   "Crepidomanes minutum var. minutus",
   "Hymenophyllum ×polyanthos",
+  "Acrostichum aureum",
   "fizz bazz")
+)
+
+match_with_gnr(
+ c(
+  "Amaurorhinus bewichianus (Wollaston,1860) (s.str.)",
+  "Crepidomanes minutum var. minutus",
+  "Hymenophyllum ×polyanthos",
+  "Acrostichum aureum",
+  "fizz bazz"),
+  exclude_mult_matches = FALSE
 )
 
 }
