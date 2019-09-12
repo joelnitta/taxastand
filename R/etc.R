@@ -199,3 +199,29 @@ toupper_first <- function (x) {
   assertthat::assert_that(is.character(x))
   paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
 }
+
+#' Check for unique values in a dataframe
+#'
+#' @param df Dataframe
+#' @param ... Bare name of column to check for unique values
+#'
+#' @return df If all values in column to check are unique,
+#' error if not. If number of rows in df is zero, original
+#' df will be returned.
+#'
+#' @examples
+#' data <- tibble::tibble(a = c(1,2,3), b = c(2,2,4))
+#' empty_data <- tibble::tibble()
+#' check_unique(data, a)
+#' check_unique(data, b)
+#' check_unique(empty_data, a)
+#'
+check_unique <- function (df, ...) {
+
+  if(nrow(df) > 0) {
+    assertr::assert(df, assertr::is_uniq, ...)
+  }
+
+  df
+
+}

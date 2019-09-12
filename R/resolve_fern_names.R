@@ -176,6 +176,12 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::filter(!exclude_hybrid) %>%
     dplyr::pull(gnr_query)
 
+  # Early exit with NULL if no pteridophyte names to match
+  if(length(pterido_names) == 0) {
+    print("No valid pteridophyte names detected")
+    return (NULL)
+  }
+
   gnr_results <- match_with_gnr(pterido_names, exclude_mult_matches = FALSE) %>%
     dplyr::rename(gnr_query = query)
 
@@ -183,7 +189,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   pterido_names_not_matched <- gnr_results %>%
     dplyr::filter(!is.na(fail_reason)) %>%
     dplyr::select(gnr_query, fail_reason) %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    check_unique(gnr_query)
 
   # (matched still includes things with multiple matches)
   pterido_names_matched <- gnr_results %>% dplyr::filter(is.na(fail_reason))
@@ -210,7 +216,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::filter(is.na(scientificName)) %>%
     dplyr::select(gnr_query, taxonomicStatus) %>%
     unique %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    check_unique(gnr_query)
 
   pterido_names_resolved <- pterido_names_resolve_results %>%
     dplyr::anti_join(not_resolved, by = "gnr_query") %>%
@@ -221,7 +227,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   pterido_names_resolved_single_matches <-
     pterido_names_resolved %>%
     dplyr::filter(assertr::is_uniq(gnr_query)) %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    check_unique(gnr_query)
 
   pterido_names_resolved_mult_matches <-
     pterido_names_resolved %>%
@@ -243,13 +249,13 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::group_by(gnr_query) %>%
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
-    ) %>% ungroup %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    ) %>% ungroup  %>%
+    check_unique(gnr_query)
 
   pterido_names_mult_matches_resolve_to_same_name <-
     pterido_names_resolved_mult_matches_by_sciname %>%
     filter(assertr::is_uniq(gnr_query)) %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    check_unique(gnr_query)
 
   ### Do same for species level:
   # Split multiple matches resolving to the same or different species.
@@ -270,12 +276,12 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
     ) %>% ungroup %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    check_unique(gnr_query)
 
   pterido_names_mult_matches_resolve_to_same_species <-
     pterido_names_resolved_mult_matches_by_species %>%
     filter(assertr::is_uniq(gnr_query)) %>%
-    assertr::assert(assertr::is_uniq, gnr_query)
+    check_unique(gnr_query)
 
   ### Combining matching and resolving results ###
   # Version for returning scientific names
