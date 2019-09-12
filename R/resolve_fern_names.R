@@ -258,7 +258,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     ) %>% dplyr::ungroup()
 
   if(nrow(pterido_names_resolved_mult_matches_by_sciname) > 0)
-  pterido_names_mult_matches_resolve_to_diff_name <-
+    pterido_names_mult_matches_resolve_to_diff_name <-
     pterido_names_resolved_mult_matches_by_sciname %>%
     filter(!assertr::is_uniq(gnr_query)) %>%
     dplyr::group_by(gnr_query) %>%
@@ -268,7 +268,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     check_unique(gnr_query)
 
   if(nrow(pterido_names_resolved_mult_matches_by_sciname) > 0)
-  pterido_names_mult_matches_resolve_to_same_name <-
+    pterido_names_mult_matches_resolve_to_same_name <-
     pterido_names_resolved_mult_matches_by_sciname %>%
     filter(assertr::is_uniq(gnr_query)) %>%
     check_unique(gnr_query)
@@ -289,7 +289,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     ) %>% dplyr::ungroup()
 
   if(nrow(pterido_names_resolved_mult_matches_by_species) > 0)
-  pterido_names_mult_matches_resolve_to_diff_species <-
+    pterido_names_mult_matches_resolve_to_diff_species <-
     pterido_names_resolved_mult_matches_by_species %>%
     filter(!assertr::is_uniq(gnr_query)) %>%
     dplyr::group_by(gnr_query) %>%
@@ -299,7 +299,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     check_unique(gnr_query)
 
   if(nrow(pterido_names_resolved_mult_matches_by_species) > 0)
-  pterido_names_mult_matches_resolve_to_same_species <-
+    pterido_names_mult_matches_resolve_to_same_species <-
     pterido_names_resolved_mult_matches_by_species %>%
     filter(assertr::is_uniq(gnr_query)) %>%
     check_unique(gnr_query)
@@ -334,16 +334,16 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   # Choose what to type of resuls to return
   # (resolved to scientific name or species)
   results <- switch(resolve_to,
-    scientific_name = match_and_resolve_results_sciname,
-    species =  match_and_resolve_results_species,
+                    scientific_name = match_and_resolve_results_sciname,
+                    species =  match_and_resolve_results_species,
   ) %>%
     # Join back in original query names
     dplyr::left_join(dplyr::select(names, gnr_query, query = original_name), by = "gnr_query") %>%
     dplyr::select(-gnr_query) %>%
     # Rearrange columns
-    dplyr::select(query, exclude_non_pterido_genus, exclude_hybrid, everything()) %>%
+    dplyr::select(query, exclude_non_pterido_genus, exclude_hybrid, dplyr::everything()) %>%
     # Fill-in missing NAs
-    dplyr::mutate_at(vars(contains("exclude")), ~tidyr::replace_na(., FALSE))
+    dplyr::mutate_at(dplyr::vars(dplyr::contains("exclude")), ~tidyr::replace_na(., FALSE))
 
   # Conduct final check: make sure all original names are in the results
   assertthat::assert_that(
