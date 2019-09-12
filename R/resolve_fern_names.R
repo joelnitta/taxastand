@@ -63,6 +63,8 @@
 resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "scientific_name")) {
 
   assertthat::assert_that(is.character(names))
+  assertthat::assert_that(assertr::is_uniq(names))
+  assertthat::assert_that(assertr::not_na(names))
   assertthat::assert_that(assertthat::is.string(resolve_to))
   assertthat::assert_that(
     resolve_to %in% c("species", "scientific_name"),
