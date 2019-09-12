@@ -238,22 +238,30 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   ### Split multiple matches resolving to the same or different scientific name
   # Those resolving to same name are successes,
   # those resolving to different names are failures
+
+  # Populate some empty tibbles so we can bind_rows
+  # on everything in the end, even if these have zero names.
+  pterido_names_mult_matches_resolve_to_diff_name <- tibble::tibble()
+  pterido_names_mult_matches_resolve_to_same_name <- tibble::tibble()
+
   pterido_names_resolved_mult_matches_by_sciname <-
     pterido_names_resolved_mult_matches %>%
     dplyr::group_by(gnr_query, scientificName) %>%
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
-    ) %>% ungroup
+    ) %>% dplyr::ungroup()
 
+  if(nrow(pterido_names_resolved_mult_matches_by_sciname) > 0)
   pterido_names_mult_matches_resolve_to_diff_name <-
     pterido_names_resolved_mult_matches_by_sciname %>%
     filter(!assertr::is_uniq(gnr_query)) %>%
     dplyr::group_by(gnr_query) %>%
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
-    ) %>% ungroup  %>%
+    ) %>% dplyr::ungroup() %>%
     check_unique(gnr_query)
 
+  if(nrow(pterido_names_resolved_mult_matches_by_sciname) > 0)
   pterido_names_mult_matches_resolve_to_same_name <-
     pterido_names_resolved_mult_matches_by_sciname %>%
     filter(assertr::is_uniq(gnr_query)) %>%
@@ -264,22 +272,27 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   # Those resolving to same name are successes,
   # those resolving to different names are failures
   # In next step will choose to use scientific name or species based on `resolve_to`
+  pterido_names_mult_matches_resolve_to_diff_species <- tibble::tibble()
+  pterido_names_mult_matches_resolve_to_same_species <- tibble::tibble()
+
   pterido_names_resolved_mult_matches_by_species <-
     pterido_names_resolved_mult_matches %>%
     dplyr::group_by(gnr_query, species) %>%
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
-    ) %>% ungroup
+    ) %>% dplyr::ungroup()
 
+  if(nrow(pterido_names_resolved_mult_matches_by_species) > 0)
   pterido_names_mult_matches_resolve_to_diff_species <-
     pterido_names_resolved_mult_matches_by_species %>%
     filter(!assertr::is_uniq(gnr_query)) %>%
     dplyr::group_by(gnr_query) %>%
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
-    ) %>% ungroup %>%
+    ) %>% dplyr::ungroup() %>%
     check_unique(gnr_query)
 
+  if(nrow(pterido_names_resolved_mult_matches_by_species) > 0)
   pterido_names_mult_matches_resolve_to_same_species <-
     pterido_names_resolved_mult_matches_by_species %>%
     filter(assertr::is_uniq(gnr_query)) %>%
