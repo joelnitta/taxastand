@@ -210,11 +210,13 @@ toupper_first <- function (x) {
 #' df will be returned.
 #'
 #' @examples
+#' \dontrun{
 #' data <- tibble::tibble(a = c(1,2,3), b = c(2,2,4))
 #' empty_data <- tibble::tibble()
 #' check_unique(data, a)
 #' check_unique(data, b)
 #' check_unique(empty_data, a)
+#' }
 #'
 check_unique <- function (df, ...) {
 
