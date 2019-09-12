@@ -208,8 +208,9 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   # and those that could not be resolved.
   not_resolved <- pterido_names_resolve_results %>%
     dplyr::filter(is.na(scientificName)) %>%
-    assertr::assert(assertr::is_uniq, gnr_query) %>%
-    dplyr::select(gnr_query, taxonomicStatus)
+    dplyr::select(gnr_query, taxonomicStatus) %>%
+    unique %>%
+    assertr::assert(assertr::is_uniq, gnr_query)
 
   pterido_names_resolved <- pterido_names_resolve_results %>%
     dplyr::anti_join(not_resolved, by = "gnr_query") %>%
