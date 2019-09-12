@@ -171,20 +171,26 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::filter(exclude_non_pterido_genus | exclude_hybrid) %>%
     dplyr::select(gnr_query, exclude_non_pterido_genus, exclude_hybrid)
 
-  ### Match pteridophyte names with GNR ###
+  ### Make list of pteridophyte names for matching ###
+
   pterido_names <-
     names %>%
     dplyr::filter(!exclude_non_pterido_genus) %>%
     dplyr::filter(!exclude_hybrid) %>%
     dplyr::pull(gnr_query)
 
-  # Early exit with NULL if no pteridophyte names to match
+  # Exit with error if no pteridophyte names to match
   if(length(pterido_names) == 0) {
-    print("No valid pteridophyte names detected")
-    return (NULL)
+    stop("No valid pteridophyte names detected")
   }
 
+  ### Match pteridophyte names with GNR ###
+
   gnr_results <- match_with_gnr(pterido_names, exclude_mult_matches = FALSE) %>%
+    # Exit with error if no names matched
+    assertr::verify(
+      nrow(.) > 0,
+      error_fun = function (errors, data = NULL) {stop("No names matched")}) %>%
     dplyr::rename(gnr_query = query)
 
   # Split GNR results into names not matched and matched
