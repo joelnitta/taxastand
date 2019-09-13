@@ -107,10 +107,10 @@ match_with_gnr <- function (names, data_source_ids = 1,
       stringr::str_count(matched_taxon, " ") > 2 ~ "other"
     ))
 
-  # Drop matches that match to the same taxon except author is missing for one name
+  # Drop queries that match to the same taxon except author is missing for one name
   to_pull <-
   gnr_results_col %>%
-    dplyr::add_count(matched_taxon) %>%
+    dplyr::add_count(user_supplied_name, matched_taxon) %>%
     dplyr::filter(n > 1) %>%
     dplyr::filter(matched_author == "")
 
