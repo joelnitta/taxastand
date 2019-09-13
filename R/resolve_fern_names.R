@@ -163,7 +163,6 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
 
   ### Exclude hybrids ###
 
-  # Check for and exclude hybrids from names to resolve
   names <-
     names %>%
     dplyr::mutate(exclude_hybrid = dplyr::case_when(
@@ -172,9 +171,22 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
       TRUE ~ FALSE
     ))
 
+  ### Exclude anything not identified to species ###
+
+  names <-
+    names %>%
+    dplyr::mutate(exclude_no_id_to_sp = dplyr::case_when(
+      # Need at least one space in name (between genus and species)
+      stringr::str_count(gnr_query, " ") == 0 ~ TRUE,
+      stringr::str_detect(gnr_query, " sp$| sp\\.$") ~ TRUE,
+      TRUE ~ FALSE
+    ))
+
+  ### Make df of excluded names to add back to results at end ###
+
   excluded <- names %>%
-    dplyr::filter(exclude_non_pterido_genus | exclude_hybrid) %>%
-    dplyr::select(gnr_query, exclude_non_pterido_genus, exclude_hybrid)
+    dplyr::filter(exclude_non_pterido_genus | exclude_hybrid | exclude_no_id_to_sp) %>%
+    dplyr::select(gnr_query, exclude_non_pterido_genus, exclude_hybrid, exclude_no_id_to_sp)
 
   ### Make list of pteridophyte names for matching ###
 
@@ -182,6 +194,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     names %>%
     dplyr::filter(!exclude_non_pterido_genus) %>%
     dplyr::filter(!exclude_hybrid) %>%
+    dplyr::filter(!exclude_no_id_to_sp) %>%
     dplyr::pull(gnr_query)
 
   # Exit with error if no pteridophyte names to match
@@ -346,7 +359,10 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::left_join(dplyr::select(names, gnr_query, query = original_name), by = "gnr_query") %>%
     dplyr::select(-gnr_query) %>%
     # Rearrange columns
-    dplyr::select(query, exclude_non_pterido_genus, exclude_hybrid, dplyr::everything()) %>%
+    dplyr::select(
+      query,
+      exclude_non_pterido_genus, exclude_hybrid, exclude_no_id_to_sp,
+      dplyr::everything()) %>%
     # Fill-in missing NAs
     dplyr::mutate_at(dplyr::vars(dplyr::contains("exclude")), ~tidyr::replace_na(., FALSE))
 
