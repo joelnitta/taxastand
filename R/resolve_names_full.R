@@ -5,7 +5,7 @@
 #' recursively in order of scientific name (full name with author), taxon
 #' name (name including infraspecific epithet but no author), then species
 #' (genus plus specific epithet only).
-#' 
+#'
 #' Requires gnparser (https://gitlab.com/gogna/gnparser/)
 #' to be installed.
 #'
@@ -14,6 +14,8 @@
 #' @param max_dist Named integer vector; maximum distance to use during
 #' fuzzy matching by taxonomic rank.
 #' Names of `max_dis` must include 'scientific_name', 'taxon', and 'taxon'.
+#' @param resolve_by_taxon Logical; should names be resolved using taxon?
+#' @param resolve_by_species Logical; should names be resolved using species name?
 #' @param gnparser_path String; path to gnparser executable.
 #' Either this must be provided, or gnparser must be on $PATH.
 #'
@@ -41,6 +43,8 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
                                  taxon = 0,
                                  species = 0
                                ),
+                               resolve_by_taxon = TRUE,
+                               resolve_by_species = TRUE,
                                gnparser_path = NULL) {
 
   # Check that format of taxonomic standard meets Darwin Core
@@ -75,7 +79,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   assertthat::assert_that(nrow(resolved_names[[1]]) + nrow(unresolved_names[[1]]) == length(sci_name_query))
 
   # Next by taxon name
-  if(nrow(unresolved_names[[1]]) > 0) {
+  if(nrow(unresolved_names[[1]]) > 0 && resolve_by_taxon == TRUE) {
 
     taxon_query <- unresolved_names[[1]] %>%
       dplyr::pull(query) %>%
@@ -103,7 +107,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   }
 
   # Last by species name
-  if(nrow(unresolved_names[[2]]) > 0) {
+  if(nrow(unresolved_names[[2]]) > 0 && resolve_by_species == TRUE) {
 
     species_query <- unresolved_names[[2]] %>% dplyr::pull(original_query) %>%
       parse_names_batch(gnparser_path = gnparser_path) %>% dplyr::pull(taxon) %>% sp_name_only

@@ -209,7 +209,9 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   ### Match by exact names ###
   print("Resolving names by exact matching")
   exact_names_resolve_results <- resolve_names_full(
-    pterido_names, world_ferns) %>%
+    names_to_resolve = pterido_names,
+    taxonomic_standard = world_ferns,
+    resolve_by_species = FALSE) %>%
     dplyr::select(gnr_query = query, taxonomicStatus, scientificName)
 
   pterido_names_exact_match <-
@@ -219,7 +221,8 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
 
   if(nrow(pterido_names_exact_match) > 0)
     pterido_names_exact_match <- add_parsed_names(
-      pterido_names_exact_match, scientificName, species)
+      pterido_names_exact_match, scientificName, species) %>%
+    dplyr::mutate(match_type = "exact")
 
   pterido_names_no_exact_match <-
     exact_names_resolve_results %>%
@@ -323,7 +326,8 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
 
   if(nrow(pterido_names_resolved) > 0)
     pterido_names_resolved <- pterido_names_resolved %>%
-    add_parsed_names(scientificName, species)
+    add_parsed_names(scientificName, species) %>%
+    dplyr::mutate(match_type = "fuzzy")
 
   # Split resolved names into those that had a single GNR match
   # and those that had multiple ones.
@@ -422,7 +426,8 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
       dplyr::contains("exclude"),
       dplyr::matches("^scientificName$"),
       dplyr::matches("^taxonomicStatus$"),
-      dplyr::contains("fail_reason")
+      dplyr::matches("^match_type$"),
+      dplyr::matches("^fail_reason$")
     )
 
   # Version for returning species names (no infrasp. epithets)
@@ -443,7 +448,8 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
       dplyr::contains("exclude"),
       dplyr::matches("^species$"),
       dplyr::matches("^taxonomicStatus$"),
-      dplyr::contains("fail_reason")
+      dplyr::matches("^match_type$"),
+      dplyr::matches("^fail_reason$")
     )
 
   # Choose what to type of resuls to return

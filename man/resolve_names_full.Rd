@@ -6,6 +6,7 @@
 \usage{
 resolve_names_full(names_to_resolve, taxonomic_standard,
   max_dist = c(scientific_name = 0, taxon = 0, species = 0),
+  resolve_by_taxon = TRUE, resolve_by_species = TRUE,
   gnparser_path = NULL)
 }
 \arguments{
@@ -16,6 +17,10 @@ resolve_names_full(names_to_resolve, taxonomic_standard,
 \item{max_dist}{Named integer vector; maximum distance to use during
 fuzzy matching by taxonomic rank.
 Names of \code{max_dis} must include 'scientific_name', 'taxon', and 'taxon'.}
+
+\item{resolve_by_taxon}{Logical; should names be resolved using taxon?}
+
+\item{resolve_by_species}{Logical; should names be resolved using species name?}
 
 \item{gnparser_path}{String; path to gnparser executable.
 Either this must be provided, or gnparser must be on $PATH.}
