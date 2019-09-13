@@ -421,6 +421,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
       gnr_query,
       dplyr::contains("exclude"),
       dplyr::matches("^scientificName$"),
+      dplyr::matches("^taxonomicStatus$"),
       dplyr::contains("fail_reason")
     )
 
@@ -441,6 +442,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
       gnr_query,
       dplyr::contains("exclude"),
       dplyr::matches("^species$"),
+      dplyr::matches("^taxonomicStatus$"),
       dplyr::contains("fail_reason")
     )
 
