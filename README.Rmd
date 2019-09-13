@@ -17,6 +17,8 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
+**NOTE:** This package is under **active development**. Functions may change drastically, and the user should not expect the interface to stay consistent.
+
 The goal of `taxastand` is to standardize species names from different sources, a common task in biology. Very often different biologists use different synonyms to refer to the same species. If we want to join data from different sources, their taxonomic names must be standardized first. This is what `taxastand` seeks to do in a reproducible and efficient manner.
 
 `taxastand` is based on matching names to a single **taxonomic standard**, that is, a database of accepted names and synonyms. As long as a single taxonomic standard is used, we can confidently resolve names from disparate sources.
@@ -29,6 +31,10 @@ The taxonomic standard must conform to [Darwin Core standards](https://dwc.tdwg.
 
 ``` r
 install.packages("devtools")
+
+# Install another github-hosted dependency first
+devtools::install_github("joelnitta/jntools")
+
 devtools::install_github("joelnitta/taxastand")
 ```
 
@@ -36,7 +42,7 @@ devtools::install_github("joelnitta/taxastand")
 
 [ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
 
-[taxize](https://github.com/ropensci/taxize) is the "granddaddy" of taxonomy packages in R. It can search around 20 different taxonomic databases for names and retrieve taxonomic information. It does not store any databases locally, and does not do fuzzy matching.
+[taxize](https://github.com/ropensci/taxize) is the "granddaddy" of taxonomy packages in R. It can search around 20 different taxonomic databases for names and retrieve taxonomic information. It does not store any databases locally.
 
 [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic databases and provides tools to interface with them through SQL.
 
@@ -64,20 +70,4 @@ match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific
 # the author, but it is abbreviated in the reference.
 match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
 filmy_taxonomy, "scientific_name", max_dist = 8)
-```
-
-Here is a more "real-world" type of example that involves downloading the entire GBIF database using `taxadb`.
-
-(This is more realistic, but is too slow right now. Needs to be optimized.)
-
-```{r taxadb-example}
-library(taxadb)
-library(tictoc)
-
-# The taxa_tbl() function downloads a local copy of a taxonomic database from various providers.
-gbif <- taxa_tbl("gbif")
-
-tic() # set a timer
-match_taxonomy("Hymenophyllum polyanthos", gbif, "species")
-toc() # see how long it took
 ```

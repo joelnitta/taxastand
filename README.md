@@ -7,6 +7,10 @@
 
 <!-- badges: end -->
 
+**NOTE:** This package is under **active development**. Functions may
+change drastically, and the user should not expect the interface to stay
+consistent.
+
 The goal of `taxastand` is to standardize species names from different
 sources, a common task in biology. Very often different biologists use
 different synonyms to refer to the same species. If we want to join data
@@ -36,6 +40,10 @@ use Darwin Core.
 
 ``` r
 install.packages("devtools")
+
+# Install another github-hosted dependency first
+devtools::install_github("joelnitta/jntools")
+
 devtools::install_github("joelnitta/taxastand")
 ```
 
@@ -48,7 +56,7 @@ available for taxonomy.
 [taxize](https://github.com/ropensci/taxize) is the “granddaddy” of
 taxonomy packages in R. It can search around 20 different taxonomic
 databases for names and retrieve taxonomic information. It does not
-store any databases locally, and does not do fuzzy matching.
+store any databases locally.
 
 [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic
 databases and provides tools to interface with them through SQL.
@@ -96,7 +104,7 @@ match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific
 #> # A tibble: 1 x 13
 #>   query n_hits distance match_to match_by taxonID acceptedNameUsa…
 #>   <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#> 1 Hyme…      1        0 Hymenop… scientific_name   5.41e7               NA
+#> 1 Hyme…      1        0 Hymenop… scienti…  5.41e7               NA
 #> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
 #> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
 #> #   infraspecificEpithet <chr>
@@ -108,44 +116,8 @@ filmy_taxonomy, "scientific_name", max_dist = 8)
 #> # A tibble: 1 x 13
 #>   query n_hits distance match_to match_by taxonID acceptedNameUsa…
 #>   <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#> 1 Hyme…      1        8 Hymenop… scientific_name   5.41e7               NA
+#> 1 Hyme…      1        8 Hymenop… scienti…  5.41e7               NA
 #> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
 #> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
 #> #   infraspecificEpithet <chr>
-```
-
-Here is a more “real-world” type of example that involves downloading
-the entire GBIF database using `taxadb`.
-
-(This is more realistic, but is too slow right now. Needs to be
-optimized.)
-
-``` r
-library(taxadb)
-library(tictoc)
-
-# The taxa_tbl() function downloads a local copy of a taxonomic database from various providers.
-gbif <- taxa_tbl("gbif")
-
-tic() # set a timer
-match_taxonomy("Hymenophyllum polyanthos", gbif, "species")
-#> # A tibble: 11 x 13
-#>    query n_hits distance match_to match_by taxonID acceptedNameUsa…
-#>    <chr>  <dbl>    <dbl> <chr>    <chr>    <chr>   <chr>           
-#>  1 Hyme…     11        0 Hymenop… species  GBIF:8… GBIF:3606711    
-#>  2 Hyme…     11        0 Hymenop… species  GBIF:8… GBIF:3607785    
-#>  3 Hyme…     11        0 Hymenop… species  GBIF:3… GBIF:3608806    
-#>  4 Hyme…     11        0 Hymenop… species  GBIF:3… GBIF:3608806    
-#>  5 Hyme…     11        0 Hymenop… species  GBIF:7… GBIF:3608806    
-#>  6 Hyme…     11        0 Hymenop… species  GBIF:8… GBIF:3608806    
-#>  7 Hyme…     11        0 Hymenop… species  GBIF:8… GBIF:3608806    
-#>  8 Hyme…     11        0 Hymenop… species  GBIF:7… GBIF:3608806    
-#>  9 Hyme…     11        0 Hymenop… species  GBIF:3… GBIF:3608806    
-#> 10 Hyme…     11        0 Hymenop… species  GBIF:3… GBIF:3608806    
-#> 11 Hyme…     11        0 Hymenop… species  GBIF:3… GBIF:3609014    
-#> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
-#> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
-#> #   infraspecificEpithet <chr>
-toc() # see how long it took
-#> 81.41 sec elapsed
 ```
