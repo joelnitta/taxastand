@@ -191,6 +191,7 @@ match_with_gnr <- function (names, data_source_ids = 1,
       matched_name,
       matched_species,
       matched_taxon,
+      matched_author,
       rank = lowest_taxonomic_rank,
       score,
       fail_reason
