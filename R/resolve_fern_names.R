@@ -52,7 +52,8 @@
 #'   "cystopteris fragilis",
 #'   "Anemia stricta",
 #'   "Athyrium macrocarpum",
-#'   "Bulboschoenus fluviatilis")
+#'   "Bulboschoenus fluviatilis",
+#'   "Athyrium whazzat")
 #'
 #' resolve_fern_names(names, col_plants, "scientific_name")
 #' resolve_fern_names(names, col_plants, "species")
@@ -321,6 +322,11 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     unique %>%
     check_unique(gnr_query)
 
+  # Add fail reason for unresolved names.
+  if(nrow(not_resolved) > 0)
+    not_resolved <- not_resolved %>%
+    dplyr::mutate(fail_reason = "Fuzzy matched name not in col_plants")
+
   pterido_names_resolved <- pterido_names_fuzzy_match %>%
     dplyr::anti_join(not_resolved, by = "gnr_query")
 
@@ -351,7 +357,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   pterido_names_mult_matches_resolve_to_same_name <- tibble::tibble()
 
   if (nrow(pterido_names_resolved_mult_matches) > 0)
-  pterido_names_resolved_mult_matches_by_sciname <-
+    pterido_names_resolved_mult_matches_by_sciname <-
     pterido_names_resolved_mult_matches %>%
     dplyr::group_by(gnr_query, scientificName) %>%
     dplyr::summarize(
@@ -366,7 +372,9 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
     ) %>% dplyr::ungroup() %>%
-    check_unique(gnr_query)
+    check_unique(gnr_query) %>%
+    dplyr::mutate(
+      fail_reason = "Fuzzy matched sci name matches multiple sci names in col_plants")
 
   if(nrow(pterido_names_resolved_mult_matches_by_sciname) > 0)
     pterido_names_mult_matches_resolve_to_same_name <-
@@ -384,7 +392,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   pterido_names_mult_matches_resolve_to_same_species <- tibble::tibble()
 
   if(nrow(pterido_names_resolved_mult_matches) > 0)
-  pterido_names_resolved_mult_matches_by_species <-
+    pterido_names_resolved_mult_matches_by_species <-
     pterido_names_resolved_mult_matches %>%
     dplyr::group_by(gnr_query, species) %>%
     dplyr::summarize(
@@ -399,7 +407,9 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     dplyr::summarize(
       taxonomicStatus = paste(unique(taxonomicStatus), collapse = ", ")
     ) %>% dplyr::ungroup() %>%
-    check_unique(gnr_query)
+    check_unique(gnr_query) %>%
+    dplyr::mutate(
+      fail_reason = "Fuzzy matched species matches multiple species in col_plants")
 
   if(nrow(pterido_names_resolved_mult_matches_by_species) > 0)
     pterido_names_mult_matches_resolve_to_same_species <-
