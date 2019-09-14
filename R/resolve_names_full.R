@@ -72,9 +72,9 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
     # combining results downstream
     dplyr::mutate(original_query = query)
 
-  resolved_names[[1]] <- dplyr::filter(sci_name_results, taxonomicStatus != "unresolved")
+  resolved_names[[1]] <- dplyr::filter(sci_name_results, !is.na(scientificName))
 
-  unresolved_names[[1]] <- dplyr::filter(sci_name_results, taxonomicStatus == "unresolved")
+  unresolved_names[[1]] <- dplyr::filter(sci_name_results, is.na(scientificName))
 
   assertthat::assert_that(nrow(resolved_names[[1]]) + nrow(unresolved_names[[1]]) == length(sci_name_query))
 
@@ -96,9 +96,9 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
       # original query string and output dataframe
       dplyr::mutate(original_query = unresolved_names[[1]]$original_query)
 
-    resolved_names[[2]] <- dplyr::filter(taxon_results, taxonomicStatus != "unresolved")
+    resolved_names[[2]] <- dplyr::filter(taxon_results, !is.na(scientificName))
 
-    unresolved_names[[2]] <- dplyr::filter(taxon_results, taxonomicStatus == "unresolved")
+    unresolved_names[[2]] <- dplyr::filter(taxon_results, is.na(scientificName))
 
     assertthat::assert_that(
       nrow(resolved_names[[2]]) + nrow(unresolved_names[[2]]) ==
@@ -120,9 +120,9 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
     ) %>%
       dplyr::mutate(original_query = unresolved_names[[2]]$original_query)
 
-    resolved_names[[3]] <- dplyr::filter(species_results, taxonomicStatus != "unresolved")
+    resolved_names[[3]] <- dplyr::filter(species_results, !is.na(scientificName))
 
-    unresolved_names[[3]] <- dplyr::filter(species_results, taxonomicStatus == "unresolved")
+    unresolved_names[[3]] <- dplyr::filter(species_results, is.na(scientificName))
 
     assertthat::assert_that(
       nrow(resolved_names[[3]]) + nrow(unresolved_names[[3]]) ==
@@ -141,9 +141,7 @@ resolve_names_full <- function(names_to_resolve, taxonomic_standard,
   tibble::tibble(
     query = names_to_resolve
   ) %>%
-    dplyr::left_join(final_resolved, by = "query") %>%
-  # Classify anything missing as not resolved
-  dplyr::mutate(taxonomicStatus = tidyr::replace_na(taxonomicStatus, "unresolved"))
+    dplyr::left_join(final_resolved, by = "query")
 
 
 }

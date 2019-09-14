@@ -90,8 +90,7 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
 
   final_list_unresolved <-
     tibble::tibble(query = names_to_resolve) %>%
-    dplyr::anti_join(hit_resolution$resolved_matches, by = "query") %>%
-    dplyr::mutate(taxonomicStatus = "unresolved")
+    dplyr::anti_join(hit_resolution$resolved_matches, by = "query")
 
   assertthat::assert_that(
     nrow(final_list_resolved) + nrow(final_list_unresolved) == length(names_to_resolve)
