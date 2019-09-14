@@ -89,7 +89,12 @@ match_with_gnr <- function (names, data_source_ids = 1,
     cap_first = FALSE)
 
   # Early exit if zero results
-  if(nrow(gnr_results_col) == 0) return (gnr_results_col)
+  if(nrow(gnr_results_col) == 0) return (
+    tibble::tibble(
+      user_supplied_name = names_to_resolve,
+      fail_reason = "no gnr output"
+    )
+  )
 
   # Modify output
   gnr_results_col <-
