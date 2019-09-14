@@ -207,82 +207,9 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     stop("No valid pteridophyte names detected")
   }
 
-  ### Match by exact names ###
-  print("Resolving names by exact matching")
-  exact_names_resolve_results <- resolve_names_full(
-    names_to_resolve = pterido_names,
-    taxonomic_standard = world_ferns,
-    resolve_by_species = FALSE) %>%
-    dplyr::select(gnr_query = query, taxonomicStatus, scientificName)
-
-  pterido_names_exact_match <-
-    exact_names_resolve_results %>%
-    dplyr::filter(!is.na(scientificName)) %>%
-    check_unique(gnr_query)
-
-  if(nrow(pterido_names_exact_match) > 0)
-    pterido_names_exact_match <- add_parsed_names(
-      pterido_names_exact_match, scientificName, species) %>%
-    dplyr::mutate(match_type = "exact")
-
-  pterido_names_no_exact_match <-
-    exact_names_resolve_results %>%
-    dplyr::filter(is.na(scientificName))
-
-  # Early exit if all names have been resolved by exact matching
-  if(nrow(pterido_names_no_exact_match) == 0) {
-
-    # Version for returning species names (no infrasp. epithets)
-    match_and_resolve_results_species <-
-      dplyr::bind_rows(
-        # Successes
-        dplyr::select(pterido_names_exact_match, -scientificName),
-        # Failures
-        excluded
-      )
-
-    match_and_resolve_results_sciname <-
-      dplyr::bind_rows(
-        # Successes
-        dplyr::select(pterido_names_exact_match, -species),
-        # Failures
-        excluded
-      )
-
-    # Choose what to type of resuls to return
-    # (resolved to scientific name or species)
-    results <- switch(resolve_to,
-                      scientific_name = match_and_resolve_results_sciname,
-                      species =  match_and_resolve_results_species,
-    ) %>%
-      # Join back in original query names
-      dplyr::left_join(dplyr::select(names, gnr_query, query = original_name), by = "gnr_query") %>%
-      dplyr::select(-gnr_query) %>%
-      # Rearrange columns
-      dplyr::select(
-        query,
-        exclude_non_pterido_genus, exclude_hybrid, exclude_no_id_to_sp,
-        dplyr::everything()) %>%
-      # Fill-in missing NAs
-      dplyr::mutate_at(dplyr::vars(dplyr::contains("exclude")), ~tidyr::replace_na(., FALSE))
-
-    # Conduct final check: make sure all original names are in the results
-    assertthat::assert_that(
-      isTRUE(
-        all.equal(
-          sort(results$query),
-          sort(names_raw$original_name)
-        )
-      )
-    )
-
-    return(results)
-
-  }
-
   ### Match pteridophyte names with GNR ###
   print("Resolving names by fuzzy matching")
-  gnr_results <- match_with_gnr(pterido_names_no_exact_match$gnr_query, exclude_mult_matches = FALSE) %>%
+  gnr_results <- match_with_gnr(unique(pterido_names), exclude_mult_matches = FALSE) %>%
     # Exit with error if no names matched
     assertr::verify(
       nrow(.) > 0,
@@ -422,7 +349,6 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   match_and_resolve_results_sciname <-
     dplyr::bind_rows(
       # Successes
-      pterido_names_exact_match,
       pterido_names_mult_matches_resolve_to_same_name,
       pterido_names_resolved_single_matches,
       # Failures
@@ -444,7 +370,6 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   match_and_resolve_results_species <-
     dplyr::bind_rows(
       # Successes
-      pterido_names_exact_match,
       pterido_names_mult_matches_resolve_to_same_species,
       pterido_names_resolved_single_matches,
       # Failures
