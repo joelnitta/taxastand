@@ -7,9 +7,9 @@
 
 <!-- badges: end -->
 
-**NOTE:** This package is under **active development**. Functions may
-change drastically, and the user should not expect the interface to stay
-consistent.
+**DISCLAIMER:** This package is under **active development**. Functions
+may change drastically, and the user should not expect the interface to
+stay consistent. Many functions are not yet available.
 
 The goal of `taxastand` is to standardize species names from different
 sources, a common task in biology. Very often different biologists use
@@ -55,8 +55,11 @@ available for taxonomy.
 
 [taxize](https://github.com/ropensci/taxize) is the “granddaddy” of
 taxonomy packages in R. It can search around 20 different taxonomic
-databases for names and retrieve taxonomic information. It does not
-store any databases locally.
+databases for names and retrieve taxonomic information.
+
+[TNRS](http://tnrs.iplantcollaborative.org/), the Taxonomic Name
+Resolution Service, is a web application that resolves taxonomic names
+of plants according to one of six databases.
 
 [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic
 databases and provides tools to interface with them through SQL.
@@ -71,10 +74,23 @@ has a very similar goal to `taxastand`, but only uses [The Plant
 List](www.theplantlist.org) as its taxonomic standard and does not allow
 the user to provide their own.
 
+## Motivation
+
+Although existing web-based solutions for taxonomic name resolution are
+very useful, they suffer some drawbacks: the choice of database to use
+for standardization is limited, they may not be appropriate for very
+large queries, and the user has no guarantee that the same input will
+yield the same output at a later date due to changes in code or database
+version.
+
+The motivation for `taxastand` is to provide greater flexibility and
+reproducibility by allowing for complete version control of the code and
+database used for name resolution.
+
 ## Examples
 
-Here are some examples that run quickly using the small example dataset
-included with the package.
+Here are some name-matching examples that run quickly using the small
+example dataset included with the package.
 
 ``` r
 library(taxastand)
