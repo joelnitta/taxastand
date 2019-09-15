@@ -26,6 +26,7 @@ add_parsed_names <- function (df, sci_name, ..., gnparser_path = NULL) {
 
   parsed_names <-
     df %>%
+    dplyr::filter(!is.na(!!sci_name_enq)) %>%
     dplyr::pull(!!sci_name_enq) %>%
     unique %>%
     parse_names_batch(gnparser_path = gnparser_path) %>%
