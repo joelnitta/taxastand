@@ -48,6 +48,8 @@ devtools::install_github("joelnitta/taxastand")
 
 [taxadb](https://cboettig.github.io/taxadb/index.html) also downloads and searches taxonomic databases. It can interface with them either through SQL or in-memory in R.
 
+[taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html) has a very similar goal to `taxastand`, but only uses [The Plant List](www.theplantlist.org) as its taxonomic standard and does not allow the user to provide their own.
+
 ## Examples
 
 Here are some examples that run quickly using the small example dataset included with the package.
