@@ -315,25 +315,12 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   pterido_names_matched <- gnr_results %>%
     dplyr::filter(!is.na(matched_name))
 
-  # Having a problem here: a bunch of names in the GNR database apparently
-  # lack authors, even though they do have them in our local CoL plants.
-  # (possibly because the GNR database is out of date).
-  #
-  # Work-around: split GNR matches into those that matched a name in CoL plants
-  # with an author and those that didn't.
-  # If they had an author, match on scientific name.
-  # If they didn't have an author, match on taxon name.
+  # Resolve matched names to World Ferns first by scientific name,
+  # then by taxon
+  results_fuzzy_match <- tibble::tibble()
 
-  names_fuzzy_match_missing_auth <- tibble::tibble()
-  names_fuzzy_match_missing_auth <- pterido_names_matched %>%
-    dplyr::filter(is.na(matched_author) | matched_author == "")
-
-  names_fuzzy_match_with_auth <- tibble::tibble()
-  names_fuzzy_match_with_auth <- pterido_names_matched %>%
-    dplyr::anti_join(names_fuzzy_match_missing_auth, by = "query")
-
-  results_fuzzy_match_missing_auth <- resolve_gnr_results_by_rank(
-    names_fuzzy_match_missing_auth,
+  results_fuzzy_match <- resolve_gnr_results_by_rank(
+    pterido_names_matched,
     world_ferns,
     resolve_by_taxon = TRUE,
     resolve_by_species = FALSE,
@@ -341,14 +328,9 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   ) %>%
     check_unique(query)
 
-  results_fuzzy_match_with_auth <- resolve_gnr_results_by_rank(
-    matched_names = names_fuzzy_match_with_auth,
-    taxonomic_standard = world_ferns,
-    resolve_by_taxon = TRUE,
-    resolve_by_species = FALSE,
-    resolve_to = resolve_to
-  ) %>%
-    check_unique(query)
+  if(nrow(results_fuzzy_match) > 0)
+    results_fuzzy_match <- results_fuzzy_match %>%
+    dplyr::rename(clean_name = query)
 
   ### Combining matching and resolving results ###
   results <-
@@ -356,8 +338,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
       excluded,
       pterido_names_no_fuzzy_match,
       pterido_names_exact_match,
-      dplyr::rename(results_fuzzy_match_missing_auth, clean_name = query),
-      dplyr::rename(results_fuzzy_match_with_auth, clean_name = query)
+      results_fuzzy_match
     ) %>%
     # Add back in original names
     dplyr::left_join(dplyr::select(names, original_name, clean_name), by = "clean_name") %>%
