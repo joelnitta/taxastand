@@ -117,11 +117,11 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   #
   # names
   #	  excluded (F)
-  #   pterido_names
-  #     pterido_names_exact_match (S)
-  #     pterido_names_no_exact_match
-  #	      pterido_names_no_fuzzy_match (F)
-  #	      resolve_by_sciname_results *
+  #   included_names
+  #     resolved_exact_match (S)
+  #     names_no_exact_match
+  #	      failures_no_fuzzy_match (F)
+  #	      names_fuzzy_matched *
   #		      not_resolved (F)
   #		      pterido_names_resolved *
   #			       pterido_names_resolved_single_matches (S)
@@ -206,7 +206,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
 
   ### Make list of pteridophyte names for matching ###
 
-  pterido_names <-
+  included_names <-
     names %>%
     dplyr::filter(!exclude_non_pterido_genus) %>%
     dplyr::filter(!exclude_hybrid) %>%
@@ -215,7 +215,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     unique
 
   # Exit with error if no pteridophyte names to match
-  if(length(pterido_names) == 0) {
+  if(length(included_names) == 0) {
     stop("No valid pteridophyte names detected")
   }
 
@@ -224,36 +224,36 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   print("Resolving names by exact matching")
 
   exact_names_resolve_results <- resolve_names(
-    names_to_resolve = pterido_names,
+    names_to_resolve = included_names,
     taxonomic_standard = world_ferns,
     match_by = "scientific_name",
     max_dist = 0
     ) %>%
     dplyr::select(clean_name = query, taxonomicStatus, scientificName)
 
-  pterido_names_exact_match <-
+  resolved_exact_match <-
     exact_names_resolve_results %>%
     dplyr::filter(!is.na(scientificName)) %>%
     check_unique(clean_name)
 
-  pterido_names_no_exact_match <-
+  names_no_exact_match <-
     exact_names_resolve_results %>%
     dplyr::filter(is.na(scientificName))
 
   # Add species and drop sciname if needed based on resolve_to
-  if(nrow(pterido_names_exact_match) > 0 && resolve_to == "species")
-    pterido_names_exact_match <- add_parsed_names(
-      pterido_names_exact_match, scientificName, species) %>%
+  if(nrow(resolved_exact_match) > 0 && resolve_to == "species")
+    resolved_exact_match <- add_parsed_names(
+      resolved_exact_match, scientificName, species) %>%
     dplyr::select(-scientificName)
 
   # Early exit if all names have been resolved by exact matching
-  if(nrow(pterido_names_no_exact_match) == 0) {
+  if(nrow(names_no_exact_match) == 0) {
 
     # Version for returning species names (no infrasp. epithets)
     match_and_resolve_results_species <-
       dplyr::bind_rows(
         # Successes
-        dplyr::select(pterido_names_exact_match, -scientificName),
+        dplyr::select(resolved_exact_match, -scientificName),
         # Failures
         excluded
       )
@@ -261,7 +261,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     match_and_resolve_results_sciname <-
       dplyr::bind_rows(
         # Successes
-        dplyr::select(pterido_names_exact_match, -species),
+        dplyr::select(resolved_exact_match, -species),
         # Failures
         excluded
       )
@@ -299,20 +299,20 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
 
   ### Match pteridophyte names with GNR ###
   print("Resolving names by fuzzy matching")
-  gnr_results <- match_with_gnr(pterido_names_no_exact_match$clean_name, exclude_mult_matches = FALSE) %>%
+  gnr_results <- match_with_gnr(names_no_exact_match$clean_name, exclude_mult_matches = FALSE) %>%
     # Exit with error if no names matched
     assertr::verify(
       nrow(.) > 0,
       error_fun = function (errors, data = NULL) {stop("No names matched")})
 
   # Split GNR results into names not matched and matched
-  pterido_names_no_fuzzy_match <- gnr_results %>%
+  failures_no_fuzzy_match <- gnr_results %>%
     dplyr::filter(is.na(matched_name)) %>%
     dplyr::select(clean_name = query, fail_reason) %>%
     check_unique(clean_name)
 
   # (matched still includes things with multiple matches)
-  pterido_names_matched <- gnr_results %>%
+  names_fuzzy_matched <- gnr_results %>%
     dplyr::filter(!is.na(matched_name))
 
   # Resolve matched names to World Ferns first by scientific name,
@@ -320,7 +320,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   results_fuzzy_match <- tibble::tibble()
 
   results_fuzzy_match <- resolve_gnr_results_by_rank(
-    pterido_names_matched,
+    names_fuzzy_matched,
     world_ferns,
     resolve_by_taxon = TRUE,
     resolve_by_species = FALSE,
@@ -336,8 +336,8 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   results <-
     dplyr::bind_rows(
       excluded,
-      pterido_names_no_fuzzy_match,
-      pterido_names_exact_match,
+      failures_no_fuzzy_match,
+      resolved_exact_match,
       results_fuzzy_match
     ) %>%
     # Add back in original names
