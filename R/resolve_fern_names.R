@@ -240,6 +240,10 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     exact_names_resolve_results %>%
     dplyr::filter(is.na(scientificName))
 
+  # Add match type
+  if(nrow(resolved_exact_match) > 0 )
+    resolved_exact_match <- dplyr::mutate(resolved_exact_match, match_type = "Exact match")
+
   # Add species and drop sciname if needed based on resolve_to
   if(nrow(resolved_exact_match) > 0 && resolve_to == "species")
     resolved_exact_match <- add_parsed_names(
@@ -330,7 +334,8 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
 
   if(nrow(results_fuzzy_match) > 0)
     results_fuzzy_match <- results_fuzzy_match %>%
-    dplyr::rename(clean_name = query)
+    dplyr::rename(clean_name = query) %>%
+    dplyr::mutate(match_type = "Fuzzy match")
 
   ### Combining matching and resolving results ###
   results <-
@@ -342,8 +347,10 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     ) %>%
     # Add back in original names
     dplyr::left_join(dplyr::select(names, original_name, clean_name), by = "clean_name") %>%
-    # Rearrange columns
-    dplyr::select(original_name, dplyr::everything()) %>%
+    # Drop clean_name
+    dplyr::select(-clean_name) %>%
+    # Rearrange columns, set output column for original name to "query" for consistency
+    dplyr::select(query = original_name, dplyr::everything()) %>%
     # Fill-in missing NAs
     dplyr::mutate_at(dplyr::vars(dplyr::contains("exclude")), ~tidyr::replace_na(., FALSE))
 
@@ -351,7 +358,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   assertthat::assert_that(
     isTRUE(
       all.equal(
-        sort(results$original_name),
+        sort(results$query),
         sort(names_raw$original_name)
       )
     )
