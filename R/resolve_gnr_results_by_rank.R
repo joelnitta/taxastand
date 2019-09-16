@@ -1,3 +1,16 @@
+#' Resolve names matched with the Global Names Resolver to
+#' either scientific name or species
+#'
+#' @param matched_names Tibble; output of matching names with Global Names Resolver
+#' @param taxonomic_standard Tibble; taxonomic standard in Darwin Core format to
+#' use for resolving names
+#' @param resolve_by_taxon Logical; should names be resolved by matching to
+#' taxon?
+#' @param resolve_by_species Logical; should names be resolved by matching to
+#' species?
+#' @param resolve_to Taxonomic level to resolve names to; either "species"
+#' or "scientific name"
+#'
 resolve_gnr_results_by_rank <- function (
   matched_names,
   taxonomic_standard,
@@ -56,7 +69,7 @@ resolve_gnr_results_by_rank <- function (
     dplyr::filter(assertr::is_uniq(gnr_query)) %>%
     check_unique(gnr_query)
 
-  # Any gnr_query matching multiple distinct names is fails
+  # Any gnr_query matching multiple distinct names fails
   fail_mult_match_sci_names <- collapsed_resolved_sci_names %>%
     dplyr::filter(!assertr::is_uniq(gnr_query)) %>%
     dplyr::select(gnr_query) %>%
@@ -69,9 +82,10 @@ resolve_gnr_results_by_rank <- function (
     nrow(dplyr::inner_join(fail_mult_match_sci_names, resolved_sci_names, by = "gnr_query")) == 0
   )
 
-  # Any name not a resolved match or match to multiples is missing
+  # gnr_query with no sciname and not resolved is missing
   fail_match_no_sci_names <-
-  matched_names %>%
+  resolve_results %>%
+    dplyr::filter(is.na(scientificName)) %>%
     dplyr::anti_join(resolved_sci_names, by = "gnr_query") %>%
     dplyr::anti_join(fail_mult_match_sci_names, by = "gnr_query") %>%
     dplyr::select(gnr_query) %>%
@@ -95,7 +109,7 @@ resolve_gnr_results_by_rank <- function (
     dplyr::filter(assertr::is_uniq(gnr_query)) %>%
     check_unique(gnr_query)
 
-  # Any gnr_query matching multiple distinct names is fails
+  # Any gnr_query matching multiple distinct names fails
   fail_mult_match_species <- collapsed_resolved_species %>%
     dplyr::filter(!assertr::is_uniq(gnr_query)) %>%
     dplyr::select(gnr_query) %>%
@@ -108,9 +122,10 @@ resolve_gnr_results_by_rank <- function (
     nrow(dplyr::inner_join(resolved_species, fail_mult_match_species, by = "gnr_query")) == 0
   )
 
-  # Any name not a resolved match or match to multiples is missing
+  # gnr_query with no species and not resolved is missing
   fail_match_no_species <-
-    matched_names %>%
+    resolve_results %>%
+    dplyr::filter(is.na(species)) %>%
     dplyr::anti_join(resolved_species, by = "gnr_query") %>%
     dplyr::anti_join(fail_mult_match_species, by = "gnr_query") %>%
     dplyr::select(gnr_query) %>%
