@@ -146,16 +146,40 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
     tibble::tibble(genus = .) %>%
     dplyr::filter(genus != "")
 
-  # Make a vector of pteridophyte genera
-  # First pull out world ferns from all COL plants,
-  # only use names that include authorship
+  ### Extract pteridophyte names from all COL plants ###
+  # Also do some cleaning to remove double entries where one name has a scientific
+  # name author and one doesn't.
   world_ferns <- dplyr::filter(
     col_plants,
     stringr::str_detect(datasetName, "World Ferns")
   ) %>%
+    # Add genericName column
+    add_non_darwin_core_cols %>%
     dplyr::mutate(scientificNameAuthorship = dplyr::na_if(scientificNameAuthorship, "")) %>%
-    dplyr::filter(!is.na(scientificNameAuthorship))
+    # Add taxon
+    dplyr::mutate(taxon = jntools::paste3(genericName, specificEpithet, infraspecificEpithet))
 
+  # Make tibble of names missing authors
+  missing_auth <-
+    world_ferns %>%
+    dplyr::filter(is.na(scientificNameAuthorship))
+
+  # Identify "bad names": taxon entered both as with an author and
+  # without an author. Filter these out.
+  bad_names <-
+    world_ferns %>%
+    dplyr::filter(taxon %in% missing_auth$taxon) %>%
+    dplyr::add_count(taxon) %>%
+    dplyr::filter(n > 1) %>%
+    dplyr::filter(is.na(scientificNameAuthorship))
+
+  world_ferns <- dplyr::anti_join(
+    world_ferns,
+    bad_names,
+    by = "taxonID"
+  )
+
+  # Make a vector of pteridophyte genera
   pterido_genera <- unique(world_ferns$genericName) %>% sort
 
   # Make a tibble of all genera of plants in Catalog of Life.
