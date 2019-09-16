@@ -49,7 +49,7 @@ resolve_gnr_results <- function(matched_names, taxonomic_standard) {
 
   # Split into not-resolved, resolved names, and synonyms (replaced with accepted name)
   not_resolved <- merged %>%
-    dplyr::mutate(taxonomicStatus = tidyr::replace_na(taxonomicStatus, "no match")) %>%
+    dplyr::mutate(taxonomicStatus = tidyr::replace_na(taxonomicStatus, "No fuzzy match")) %>%
     dplyr::filter(taxonomicStatus != "accepted name") %>%
     dplyr::filter(taxonomicStatus != "synonym") %>%
     dplyr::select(

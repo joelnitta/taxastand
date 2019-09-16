@@ -92,7 +92,7 @@ match_with_gnr <- function (names, data_source_ids = 1,
   if(nrow(gnr_results_col) == 0) return (
     tibble::tibble(
       user_supplied_name = names_to_resolve,
-      fail_reason = "no gnr output"
+      fail_reason = "No gnr output"
     )
   )
 
@@ -170,7 +170,7 @@ match_with_gnr <- function (names, data_source_ids = 1,
     dplyr::anti_join(multiple_gnr_match, by = "user_supplied_name") %>%
     # anything left didn't have a match at all
     unique %>%
-    dplyr::mutate(fail_reason = "no match")
+    dplyr::mutate(fail_reason = "No fuzzy match")
 
   if(exclude_mult_matches) {
     multiple_gnr_match <-
