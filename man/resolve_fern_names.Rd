@@ -67,7 +67,14 @@ names <- c("abacopteris insularis",
   "cystopteris fragilis",
   "Anemia stricta",
   "Athyrium macrocarpum",
-  "Bulboschoenus fluviatilis")
+  "Bulboschoenus fluviatilis",
+  "Asplenium leptophyllum",
+  "Asplenium leptophyllum baker",
+  "Abrodictyum dentatum",
+  "Abrodictyum dentatum Iwats.",
+  "Polypodium vulgare",
+  "Polypodium vulgare l. bak.",
+  "Athyrium whazzat")
 
 resolve_fern_names(names, col_plants, "scientific_name")
 resolve_fern_names(names, col_plants, "species")

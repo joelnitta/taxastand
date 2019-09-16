@@ -25,7 +25,7 @@ resolve_gnr_results_by_rank <- function (
   # taxonomicStatus refers to the status of the matched name.
   resolve_results <- resolve_names_full (
     names_to_resolve = unique(matched_names$matched_name),
-    taxonomic_standard = world_ferns,
+    taxonomic_standard = taxonomic_standard,
     resolve_by_taxon = resolve_by_taxon,
     resolve_by_species = resolve_by_species,
     max_dist = c(scientific_name = 0, taxon = 0, species = 0)
