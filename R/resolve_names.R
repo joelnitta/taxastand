@@ -12,9 +12,6 @@
 #' @param max_dist Integer; maximum distance to use during fuzzy matching.
 #' @param exclude Optional vector of taxa to exclude from matches. Names must match
 #' names in `names_to_resolve` exactly.
-#' @param mult_syn_selection Character vector; in the case that multiple synonyms
-#' were detected during matching, use the names specified. Names must match names in
-#' `scientificName` column of `taxonomic_standard` exactly.
 #'
 #' @return Tibble. `taxonomicStatus` refers to the status of the queried name. If
 #' the query was a synonym, all other taxonomic names are for the accepted name.
@@ -52,7 +49,7 @@
 resolve_names <- function (names_to_resolve, taxonomic_standard,
                            match_by = c("species", "taxon", "scientific_name"),
                            max_dist,
-                           exclude = NULL, mult_syn_selection = NULL) {
+                           exclude = NULL) {
 
   # Check format of query
   assertthat::assert_that(is.character(names_to_resolve))
@@ -75,8 +72,7 @@ resolve_names <- function (names_to_resolve, taxonomic_standard,
     hits = match_results,
     col_to_resolve = match_by,
     exclude = exclude,
-    taxonomic_standard = taxonomic_standard,
-    mult_syn_selection = mult_syn_selection
+    taxonomic_standard = taxonomic_standard
   )
 
   # Prepare final list

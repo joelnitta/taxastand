@@ -6,7 +6,7 @@
 \usage{
 resolve_names(names_to_resolve, taxonomic_standard,
   match_by = c("species", "taxon", "scientific_name"), max_dist,
-  exclude = NULL, mult_syn_selection = NULL)
+  exclude = NULL)
 }
 \arguments{
 \item{names_to_resolve}{Vector of taxonomic names to resolve.}
@@ -21,10 +21,6 @@ Should match the type of names in \code{query}.}
 
 \item{exclude}{Optional vector of taxa to exclude from matches. Names must match
 names in \code{names_to_resolve} exactly.}
-
-\item{mult_syn_selection}{Character vector; in the case that multiple synonyms
-were detected during matching, use the names specified. Names must match names in
-\code{scientificName} column of \code{taxonomic_standard} exactly.}
 }
 \value{
 Tibble. \code{taxonomicStatus} refers to the status of the queried name. If

@@ -5,10 +5,7 @@
 \title{Resolve hits from taxonomic matching of a single name}
 \usage{
 resolve_hits(hits, col_to_resolve = c("scientific_name", "taxon",
-  "species"), taxonomic_standard, accepted_singles_to_exclude = NULL,
-  accepted_mults_to_exclude = NULL, synonym_singles_to_exclude = NULL,
-  synonym_mults_to_exclude = NULL, mult_syn_selection = NULL,
-  exclude = NULL, simple = TRUE)
+  "species"), taxonomic_standard, exclude = NULL, simple = TRUE)
 }
 \arguments{
 \item{hits}{Dataframe; hits from taxonomic matching - output of
@@ -18,24 +15,9 @@ match_taxonomy().}
 
 \item{taxonomic_standard}{Dataframe of standard names to match to.}
 
-\item{accepted_singles_to_exclude}{Character vector; species that
-should be excluded from single, accepted taxa.}
-
-\item{accepted_mults_to_exclude}{Character vector; species that
-should be excluded from multiple, accepted taxa.}
-
-\item{synonym_singles_to_exclude}{Character vector; species that
-should be excluded from single synonyms.}
-
-\item{synonym_mults_to_exclude}{Character vector; species that
-should be excluded from multiple synonyms.}
-
-\item{mult_syn_selection}{Character vector of species names that should be
-selected from those with multiple synonyms to use as the synonym
-for that species.}
-
 \item{exclude}{Character vector; taxa that should be exluded from the final
-results.}
+results. Useful to prevent false positive matches. Names must names in
+\code{col_to_resolve} exactly.}
 
 \item{simple}{Logical; should the results include only a limited set of
 columns? If FALSE, all columns in \code{taxonomic_standard} will be returned.}
