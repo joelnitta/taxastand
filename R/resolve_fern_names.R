@@ -14,6 +14,9 @@
 #' and names. `taxa.txt` should be read-in using `readr::read_tsv()` or similar,
 #' and used as `col_plants`.
 #' @param names Vector of scientific names to resolve
+#' @param exact_match_by String, either "scientific_name" or "species". The first round of matching
+#' will be done using exact matching to either scientific name (species plus author) or species (no author).
+#' Default = "scientific_name".
 #' @param resolve_to String, either "scientific_name" or "species". The type of
 #' name that should be resolved. If "species", queries matching different varieties
 #' within the same species will be collapsed to a single species.
@@ -68,7 +71,7 @@
 #' }
 #'
 #' @export
-resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "scientific_name")) {
+resolve_fern_names <- function (names, col_plants, exact_match_by = "scientific_name", resolve_to = c("species", "scientific_name")) {
 
   # Check input
 
@@ -80,6 +83,10 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   assertthat::assert_that(
     !anyNA(names),
     msg = "`names` cannot include any missing values")
+  assertthat::assert_that(assertthat::is.string(exact_match_by))
+  assertthat::assert_that(
+    exact_match_by %in% c("species", "scientific_name"),
+    msg = "`exact_match_by` must be one of 'species' or 'scientific_name'")
   assertthat::assert_that(assertthat::is.string(resolve_to))
   assertthat::assert_that(
     resolve_to %in% c("species", "scientific_name"),
@@ -250,7 +257,7 @@ resolve_fern_names <- function (names, col_plants, resolve_to = c("species", "sc
   exact_names_resolve_results <- resolve_names(
     names_to_resolve = included_names,
     taxonomic_standard = world_ferns,
-    match_by = "scientific_name",
+    match_by = exact_match_by,
     max_dist = 0
     ) %>%
     dplyr::select(clean_name = query, taxonomicStatus, scientificName)
