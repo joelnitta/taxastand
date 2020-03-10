@@ -98,25 +98,29 @@ parse_names_batch <- function (names, gnparser_path = NULL) {
     gnparser_command <- fs::path_abs(gnparser_path)
   }
 
-  # Run GNparser and tidy the output
+  # Run GNparser
   results <-
     processx::run(
       command = gnparser_command, args, wd = temp_dir) %>%
     magrittr::extract("stdout") %>%
     unlist() %>%
-    readr::read_lines() %>%
-    stringr::str_split("\\|") %>%
-    purrr::map(~purrr::set_names(., letters[1:7])) %>%
-    do.call(dplyr::bind_rows, .) %>%
+    readr::read_lines()
+
+  # Write results out as a CSV to parse correctly
+  temp_file_2 <- fs::file_temp() %>% fs::path_ext_set("csv")
+
+  readr::write_lines(results, temp_file_2)
+
+  readr::read_csv(temp_file_2, col_types = "") %>%
     # Select only relevant output columns
     dplyr::select(
-      query = b,
-      taxon = c,
-      taxon_with_rank = d,
-      author = e,
-      year = f) %>%
-    dplyr::mutate(species = sp_name_only(taxon))
-
+      query = Verbatim,
+      taxon = CanonicalSimple,
+      taxon_with_rank = CanonicalFull,
+      author = Authorship,
+      year = Year) %>%
+    # Add species name
+    dplyr::mutate(species = sp_name_only(taxon)) %>%
   # Join back in to original query names.
   dplyr::left_join(names_table, results, by = "query")
 
