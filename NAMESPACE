@@ -2,6 +2,7 @@
 
 export("%>%")
 export(add_parsed_names)
+export(genus_name_only)
 export(match_taxonomy)
 export(match_with_gnr)
 export(parse_names_batch)

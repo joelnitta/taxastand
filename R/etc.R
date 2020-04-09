@@ -156,6 +156,7 @@ add_non_darwin_core_cols <- function (taxonomic_standard) {
 #' \dontrun{
 #' genus_name_only("Crepidomanes minutum var minutum")
 #' }
+#' @export
 genus_name_only <- function (taxon_name, sep = " ") {
 
   assertthat::assert_that(is.character(taxon_name))
