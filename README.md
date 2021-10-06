@@ -5,6 +5,9 @@
 
 <!-- badges: start -->
 
+[![Project Status: WIP – Initial development is in progress, but there
+has not yet been a stable, usable release suitable for the
+public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 <!-- badges: end -->
 
 **DISCLAIMER:** This package is under **active development**. Functions
@@ -30,9 +33,9 @@ including
 [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c),
 [Catalog of Life](http://www.catalogueoflife.org/), and
 [ITIS](https://www.itis.gov/) to name a few. The
-[taxadb](https://cboettig.github.io/taxadb/index.html) package provides
-convenient functions for downloading various taxonomic databases that
-use Darwin Core.
+[taxadb](https://github.com/ropensci/taxadb) package provides convenient
+functions for downloading various taxonomic databases that use Darwin
+Core.
 
 ## Installation
 
@@ -46,6 +49,13 @@ devtools::install_github("joelnitta/jntools")
 
 devtools::install_github("joelnitta/taxastand")
 ```
+
+## Dependencies
+
+`taxastand` depends on
+[taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name
+matching. The two programs included in `taxon-tools`, `parsenames` and
+`matchnames`, must be installed and on the user’s `PATH`.
 
 ## Similar work
 
@@ -64,15 +74,15 @@ of plants according to one of six databases.
 [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic
 databases and provides tools to interface with them through SQL.
 
-[taxadb](https://cboettig.github.io/taxadb/index.html) also downloads
-and searches taxonomic databases. It can interface with them either
-through SQL or in-memory in
-R.
+[taxadb](https://github.com/ropensci/taxadb) also downloads and searches
+taxonomic databases. It can interface with them either through SQL or
+in-memory in R.
 
 [taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html)
-has a very similar goal to `taxastand`, but only uses [The Plant
-List](www.theplantlist.org) as its taxonomic standard and does not allow
-the user to provide their own.
+has a very similar goal to `taxastand`, but only uses [The Plant List
+(TPL)](http://www.theplantlist.org) as its taxonomic standard and does
+not allow the user to provide their own. Note that TPL is no longer
+being updated as of 2013.
 
 ## Motivation
 
@@ -87,59 +97,53 @@ The motivation for `taxastand` is to provide greater flexibility and
 reproducibility by allowing for complete version control of the code and
 database used for name resolution.
 
-## Examples
+## Example
 
-Here are some name-matching examples that run quickly using the small
-example dataset included with the package.
+Here is an example of fuzzy matching followed by resolution of synonyms
+using the small dataset included with the package.
 
 ``` r
 library(taxastand)
 
-# Load reference taxonomy in Darwin Core format
+# Load example reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
 
-# This taxon matches many names at the species level because
-# there are a bunch of varieties.
-match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
-#> # A tibble: 12 x 13
-#>    query n_hits distance match_to match_by taxonID acceptedNameUsa…
-#>    <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#>  1 Hyme…     12        0 Hymenop… species   5.41e7         54115223
-#>  2 Hyme…     12        0 Hymenop… species   5.41e7         54115393
-#>  3 Hyme…     12        0 Hymenop… species   5.41e7         54115518
-#>  4 Hyme…     12        0 Hymenop… species   5.41e7         54115518
-#>  5 Hyme…     12        0 Hymenop… species   5.41e7         54115524
-#>  6 Hyme…     12        0 Hymenop… species   5.41e7         54115533
-#>  7 Hyme…     12        0 Hymenop… species   5.41e7         54115533
-#>  8 Hyme…     12        0 Hymenop… species   5.41e7         54115574
-#>  9 Hyme…     12        0 Hymenop… species   5.41e7         54115614
-#> 10 Hyme…     12        0 Hymenop… species   5.41e7               NA
-#> 11 Hyme…     12        0 Hymenop… species   5.41e7         54115620
-#> 12 Hyme…     12        0 Hymenop… species   5.41e7         54115649
-#> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
-#> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
-#> #   infraspecificEpithet <chr>
+# Take a look at the columns used by taxastand
+head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+#>    taxonID acceptedNameUsageID taxonomicStatus
+#> 1 54115096                  NA   accepted name
+#> 2 54133783            54115097         synonym
+#> 3 54115097                  NA   accepted name
+#> 4 54133784            54115098         synonym
+#> 5 54115098                  NA   accepted name
+#> 6 54133785            54115099         synonym
+#>                              scientificName
+#> 1             Cephalomanes atrovirens Presl
+#> 2                Trichomanes crassum Copel.
+#> 3 Cephalomanes crassum (Copel.) M. G. Price
+#> 4           Trichomanes densinervium Copel.
+#> 5 Cephalomanes densinervium (Copel.) Copel.
+#> 6         Trichomanes infundibulare Alderw.
 
-# Using the full species name with author can get us a
-# more exact match.
-match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific_name")
-#> # A tibble: 1 x 13
-#>   query n_hits distance match_to match_by taxonID acceptedNameUsa…
-#>   <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#> 1 Hyme…      1        0 Hymenop… scienti…  5.41e7               NA
-#> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
-#> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
-#> #   infraspecificEpithet <chr>
+# As a test, query a misspelled name
+match_results <- ts_match_names(
+  query = "Gonocormus minutum", 
+  reference = unique(filmy_taxonomy$scientificName), 
+  simple = TRUE)
 
-# Fuzzy match helps when the query didn't abbreviate
-# the author, but it is abbreviated in the reference.
-match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
-filmy_taxonomy, "scientific_name", max_dist = 8)
-#> # A tibble: 1 x 13
-#>   query n_hits distance match_to match_by taxonID acceptedNameUsa…
-#>   <chr>  <dbl>    <dbl> <chr>    <chr>      <dbl>            <dbl>
-#> 1 Hyme…      1        8 Hymenop… scienti…  5.41e7               NA
-#> # … with 6 more variables: taxonomicStatus <chr>, taxonRank <chr>,
-#> #   scientificName <chr>, genus <chr>, specificEpithet <chr>,
-#> #   infraspecificEpithet <chr>
+# Inspect the matching results
+match_results
+#>                query                      reference match_type
+#> 1 Gonocormus minutum Gonocormus minutus (Bl.) Bosch auto_fuzzy
+
+# Resolve the synonyms
+ts_resolve_names(match_results, filmy_taxonomy)
+#>                query                        accepted_name match_type  status
+#> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats. auto_fuzzy synonym
+#>                        reference
+#> 1 Gonocormus minutus (Bl.) Bosch
+
+# We can now use the `accepted_name` column of this result for downstream 
+# analyses joining on other datasets that have been resolved to the same 
+# reference taxonomy.
 ```

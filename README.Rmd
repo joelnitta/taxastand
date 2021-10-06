@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 # taxastand
 
 <!-- badges: start -->
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 <!-- badges: end -->
 
 **DISCLAIMER:** This package is under **active development**. Functions may change drastically, and the user should not expect the interface to stay consistent. Many functions are not yet available.
@@ -38,6 +39,10 @@ devtools::install_github("joelnitta/jntools")
 devtools::install_github("joelnitta/taxastand")
 ```
 
+## Dependencies
+
+`taxastand` depends on [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name matching. The two programs included in `taxon-tools`, `parsenames` and `matchnames`, must be installed and on the user's `PATH`.
+
 ## Similar work
 
 [ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
@@ -59,26 +64,32 @@ Although existing web-based solutions for taxonomic name resolution are very use
 
 The motivation for `taxastand` is to provide greater flexibility and reproducibility by allowing for complete version control of the code and database used for name resolution.
 
-## Examples
+## Example
 
-Here are some name-matching examples that run quickly using the small example dataset included with the package.
+Here is an example of fuzzy matching followed by resolution of synonyms using the small dataset included with the package.
 
 ```{r filmy-example}
 library(taxastand)
 
-# Load reference taxonomy in Darwin Core format
+# Load example reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
 
-# This taxon matches many names at the species level because
-# there are a bunch of varieties.
-match_taxonomy("Hymenophyllum polyanthos", filmy_taxonomy, "species")
+# Take a look at the columns used by taxastand
+head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
 
-# Using the full species name with author can get us a
-# more exact match.
-match_taxonomy("Hymenophyllum polyanthos (Sw.) Sw.", filmy_taxonomy, "scientific_name")
+# As a test, query a misspelled name
+match_results <- ts_match_names(
+  query = "Gonocormus minutum", 
+  reference = unique(filmy_taxonomy$scientificName), 
+  simple = TRUE)
 
-# Fuzzy match helps when the query didn't abbreviate
-# the author, but it is abbreviated in the reference.
-match_taxonomy("Hymenophyllum polyanthos (Swartz) Swartz",
-filmy_taxonomy, "scientific_name", max_dist = 8)
+# Inspect the matching results
+match_results
+
+# Resolve the synonyms
+ts_resolve_names(match_results, filmy_taxonomy)
+
+# We can now use the `accepted_name` column of this result for downstream 
+# analyses joining on other datasets that have been resolved to the same 
+# reference taxonomy.
 ```
