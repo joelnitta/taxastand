@@ -23,7 +23,7 @@ The goal of `taxastand` is to standardize species names from different sources, 
 
 `taxastand` is based on matching names to a single **taxonomic standard**, that is, a database of accepted names and synonyms. As long as a single taxonomic standard is used, we can confidently resolve names from disparate sources.
 
-The taxonomic standard must conform to [Darwin Core standards](https://dwc.tdwg.org/). The user must provide this database (as a dataframe). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](http://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) to name a few. The [taxadb](https://cboettig.github.io/taxadb/index.html) package provides convenient functions for downloading various taxonomic databases that use Darwin Core.
+The taxonomic standard must conform to [Darwin Core standards](https://dwc.tdwg.org/). The user must provide this database (as a dataframe). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](http://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) to name a few. The [taxadb](https://github.com/ropensci/taxadb) package provides convenient functions for downloading various taxonomic databases that use Darwin Core.
 
 ## Installation
 
@@ -48,9 +48,10 @@ devtools::install_github("joelnitta/taxastand")
 
 [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic databases and provides tools to interface with them through SQL.
 
-[taxadb](https://cboettig.github.io/taxadb/index.html) also downloads and searches taxonomic databases. It can interface with them either through SQL or in-memory in R.
+[taxadb](https://github.com/ropensci/taxadb) also downloads and searches taxonomic databases. It can interface with them either through SQL or in-memory in R.
 
-[taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html) has a very similar goal to `taxastand`, but only uses [The Plant List](www.theplantlist.org) as its taxonomic standard and does not allow the user to provide their own.
+[taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html) has a very similar goal to `taxastand`, but only uses [The Plant List (TPL)](http://www.theplantlist.org
+) as its taxonomic standard and does not allow the user to provide their own. Note that TPL is no longer being updated as of 2013.
 
 ## Motivation
 
