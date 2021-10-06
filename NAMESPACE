@@ -2,4 +2,5 @@
 
 export("%>%")
 export(ts_parse_names)
+export(ts_write_names)
 importFrom(magrittr,"%>%")
