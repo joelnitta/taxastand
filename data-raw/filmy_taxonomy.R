@@ -27,4 +27,10 @@ unzip(
 filmy_taxonomy <- read_tsv(fs::path(temp_dir, "taxa.txt")) %>%
   filter(str_detect(taxonRank, "species"))
 
+# Replace "v. d. Bosch" with "V. D. Bosch"
+# see https://github.com/camwebb/taxon-tools/issues/10
+filmy_taxonomy <-
+filmy_taxonomy %>%
+  dplyr::mutate(scientificName = stringr::str_replace_all(scientificName, "v. d. Bosch", "V. D. Bosch"))
+
 usethis::use_data(filmy_taxonomy)
