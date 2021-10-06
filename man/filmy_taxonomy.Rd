@@ -4,7 +4,9 @@
 \name{filmy_taxonomy}
 \alias{filmy_taxonomy}
 \title{Taxonomy of filmy ferns (family Hymenophyllaceae)}
-\format{A data frame with 2729 rows and 31 variables.}
+\format{
+A data frame with 2729 rows and 31 variables.
+}
 \source{
 \url{http://www.catalogueoflife.org/}
 }
