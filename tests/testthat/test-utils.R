@@ -10,4 +10,8 @@ test_that("Making a dataframe with taxonomic names works", {
     ts_make_name_df(c("Foogenus", NA)),
     "Input taxa may not contain NAs"
   )
+  expect_error(
+    ts_classify_result("Foogenus"),
+    "match_results must be of class 'data\\.frame'"
+  )
 })

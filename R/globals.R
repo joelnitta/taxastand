@@ -8,5 +8,17 @@ utils::globalVariables(c(
   "record", # <ts_parse_names>
   "id", # <ts_parse_names>
   "name", # <ts_parse_names>
+  "query", # <ts_resolve_names>
+  "reference", # <ts_resolve_names>
+  "match_type", # <ts_resolve_names>
+  "result_type", # <ts_resolve_names>
+  "taxonomicStatus", # <ts_resolve_names>
+  "taxonID", # <ts_resolve_names>
+  "scientificName", # <ts_resolve_names>
+  "accepted_name", # <ts_resolve_names>
+  "n", # <ts_resolve_names>
+  "query", # <ts_classify_result>
+  "result_type", # <ts_classify_result>
+  "n", # <ts_classify_result>
   NULL
 ))

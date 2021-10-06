@@ -3,5 +3,6 @@
 export("%>%")
 export(ts_match_names)
 export(ts_parse_names)
+export(ts_resolve_names)
 export(ts_write_names)
 importFrom(magrittr,"%>%")
