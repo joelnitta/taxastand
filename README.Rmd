@@ -18,9 +18,13 @@ knitr::opts_chunk$set(
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 <!-- badges: end -->
 
-**DISCLAIMER:** This package is under **active development**. Functions may change drastically, and the user should not expect the interface to stay consistent. Many functions are not yet available.
-
 The goal of `taxastand` is to standardize species names from different sources, a common task in biology. Very often different biologists use different synonyms to refer to the same species. If we want to join data from different sources, their taxonomic names must be standardized first. This is what `taxastand` seeks to do in a reproducible and efficient manner.
+
+## Important note
+
+**This package is in early development.** There may be major, breaking changes to functionality in the near future. If you use this package, I highly recommend using a package manager like [renv](https://rstudio.github.io/renv/articles/renv.html) so that later updates won't break your code.
+
+## Taxonomic standard
 
 `taxastand` is based on matching names to a single **taxonomic standard**, that is, a database of accepted names and synonyms. As long as a single taxonomic standard is used, we can confidently resolve names from disparate sources.
 
@@ -31,12 +35,9 @@ The taxonomic standard must conform to [Darwin Core standards](https://dwc.tdwg.
 `taxastand` is currently only available on GitHub:
 
 ``` r
-install.packages("devtools")
+# install.packages("remotes")
 
-# Install another github-hosted dependency first
-devtools::install_github("joelnitta/jntools")
-
-devtools::install_github("joelnitta/taxastand")
+remotes::install_github("joelnitta/taxastand")
 ```
 
 ## Dependencies
@@ -60,13 +61,15 @@ devtools::install_github("joelnitta/taxastand")
 
 ## Motivation
 
-Although existing web-based solutions for taxonomic name resolution are very useful, they suffer some drawbacks: the choice of database to use for standardization is limited, they may not be appropriate for very large queries, and the user has no guarantee that the same input will yield the same output at a later date due to changes in code or database version.
+Although existing web-based solutions for taxonomic name resolution are very useful, they may not be ideal for all situations: the choice of reference database to use for standardization is limited, they may not be able to handle very large queries, and the user has no guarantee that the same input will yield the same output at a later date due to changes in the remote database. 
 
-The motivation for `taxastand` is to provide greater flexibility and reproducibility by allowing for complete version control of the code and database used for name resolution.
+Furthermore, matching of taxonomic names is not straightforward, since they are complex data structures including multiple components (e.g., genus, specific epithet, basionym author, combination author, etc). [Of the tools mentioned above](#similar-work) only [TNRS](http://tnrs.iplantcollaborative.org/) can fuzzily match taxonomic names based on their parsed components, but it does not allow for use of a local reference database.
+
+The motivation for `taxastand` is to provide greater flexibility and reproducibility by allowing for complete version control of the code and database used for name resolution, while implementing fuzzy matching of parsed taxonomic names.
 
 ## Example
 
-Here is an example of fuzzy matching followed by resolution of synonyms using the small dataset included with the package.
+Here is an example of fuzzy matching followed by resolution of synonyms using the dataset included with the package.
 
 ```{r filmy-example}
 library(taxastand)
@@ -77,17 +80,8 @@ data(filmy_taxonomy)
 # Take a look at the columns used by taxastand
 head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
 
-# As a test, query a misspelled name
-match_results <- ts_match_names(
-  query = "Gonocormus minutum", 
-  reference = unique(filmy_taxonomy$scientificName), 
-  simple = TRUE)
-
-# Inspect the matching results
-match_results
-
-# Resolve the synonyms
-ts_resolve_names(match_results, filmy_taxonomy)
+# As a test, resolve a misspelled name
+ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 
 # We can now use the `accepted_name` column of this result for downstream 
 # analyses joining on other datasets that have been resolved to the same 
