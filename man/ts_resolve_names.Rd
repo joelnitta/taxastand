@@ -2,23 +2,26 @@
 % Please edit documentation in R/ts_resolve_names.R
 \name{ts_resolve_names}
 \alias{ts_resolve_names}
-\title{Resolve synonyms in matched taxonomic names}
+\title{Resolve synonyms in taxonomic names}
 \usage{
-ts_resolve_names(match_results, ref_taxonomy)
+ts_resolve_names(query, ref_taxonomy)
 }
 \arguments{
-\item{match_results}{Dataframe; results of taxonomic name matching, most likely
-done with \code{\link{ts_match_names}()}.}
+\item{query}{Character vector or dataframe; taxonomic names to be resolved.
+If a character vector, missing values not allowed and all values must be
+unique. If a dataframe, should be taxonomic names matched with
+\code{\link{ts_match_names}()}.}
 
-\item{ref_taxonomy}{Dataframe; taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}
-with the following columns:
+\item{ref_taxonomy}{Dataframe; reference taxonomic data adhering to the
+\href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard} with the
+following columns:
 \itemize{
 \item \code{taxonID}: \href{https://dwc.tdwg.org/terms/#dwc:taxonID}{Unique identifier for each taxon}.
 \item \code{acceptedNameUsageID}: \href{https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID}{An identifier for the name usage}
-(documented meaning of the name according to a source) of the currently valid (zoological) or
-accepted (botanical) taxon.
-\item \code{taxonomicStatus}: \href{https://dwc.tdwg.org/terms/#dwc:taxonomicStatus}{The status of the use of the scientificName as a label for a taxon}.
-Allowed values include \verb{accepted name}, \verb{ambiguous synonym}, \verb{provisionally accepted name}, \code{synonym}
+(documented meaning of the name according to a source) of the currently valid
+(zoological) or accepted (botanical) taxon.
+\item \code{taxonomicStatus}: \href{https://dwc.tdwg.org/terms/#dwc:taxonomicStatus}{The status of the use of the \code{scientificName} as a label for a taxon}.
+Allowed values include \verb{accepted name}, \verb{ambiguous synonym}, \verb{provisionally accepted name}, \code{synonym}.
 \item \code{scientificName}: \href{https://dwc.tdwg.org/terms/#dwc:scientificName}{The full scientific name},
 with authorship and date information if known.
 }}
@@ -30,34 +33,32 @@ Includes the following columns:
 \item \code{query}: Query name
 \item \code{accepted_name}: Accepted name after resolving synonyms
 \item \code{match_type}: Type of match (for a summary of match types, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual})
-\item \code{status}: Taxonomic status (same as \code{taxonomicStatus} in \code{ref_taxonomy})
+\item \code{status}: Taxonomic status of the matched reference name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
 \item \code{reference}: Matched reference name
 }
 
 Names that could not be matched or resolve to multiple, different synonyms have \code{NA} for \code{accepted_name}.
 }
 \description{
-After matching query names to a reference taxonomy, some may match synonyms.
-This function resolves synonyms to their accepted names.
+After matching taxonomic names to a reference, some may match synonyms. This
+function resolves synonyms to their accepted names.
 }
 \details{
-\code{ref_taxonomy} must be taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}.
-Darwin Core includes many terms, but only four (\code{taxonID}, \code{acceptedNameUsageID},
-\code{taxonomicStatus}, and \code{scientificName}) are required for this function.
+\code{query} can take as input either a character vector of taxonomic names, or
+the output of \code{\link{ts_match_names}()}. If the former, it will run
+\code{\link{ts_match_names}()} to match the query to \code{ref_taxonomy}, then
+resolve synonyms. If the latter, the scientific names in \code{ref_taxonomy}
+should be the same used as reference with \code{\link{ts_match_names}()}
+(this is not checked).
 
-The scientific names in \code{ref_taxonomy} must be the same used as reference
-with \code{\link{ts_match_names}()}.
+\code{ref_taxonomy} must be taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}.
+Darwin Core includes many terms, but only four (\code{taxonID},
+\code{acceptedNameUsageID}, \code{taxonomicStatus}, and \code{scientificName}) are required
+for this function.
 }
 \examples{
 # Load reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
 
-# Query a misspelled name
-match_results <- ts_match_names(
-  query = "Gonocormus minutum",
-  reference = unique(filmy_taxonomy$scientificName),
-  simple = TRUE)
-
-# Resolve the synonyms
-ts_resolve_names(match_results, filmy_taxonomy)
+ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 }
