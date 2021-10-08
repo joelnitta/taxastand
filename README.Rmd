@@ -18,7 +18,9 @@ knitr::opts_chunk$set(
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 <!-- badges: end -->
 
-The goal of `taxastand` is to standardize species names from different sources, a common task in biology. Very often different biologists use different synonyms to refer to the same species. If we want to join data from different sources, their taxonomic names must be standardized first. This is what `taxastand` seeks to do in a reproducible and efficient manner.
+The goal of `taxastand` is to standardize species names from different sources, a common task in biology. 
+
+Very often different biologists use different synonyms to refer to the same species. If we want to join data from different sources, their taxonomic names must be standardized first. This is what `taxastand` seeks to do in a reproducible and efficient manner.
 
 ## Important note
 

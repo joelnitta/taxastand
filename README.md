@@ -11,11 +11,12 @@ public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostat
 <!-- badges: end -->
 
 The goal of `taxastand` is to standardize species names from different
-sources, a common task in biology. Very often different biologists use
-different synonyms to refer to the same species. If we want to join data
-from different sources, their taxonomic names must be standardized
-first. This is what `taxastand` seeks to do in a reproducible and
-efficient manner.
+sources, a common task in biology.
+
+Very often different biologists use different synonyms to refer to the
+same species. If we want to join data from different sources, their
+taxonomic names must be standardized first. This is what `taxastand`
+seeks to do in a reproducible and efficient manner.
 
 ## Important note
 
