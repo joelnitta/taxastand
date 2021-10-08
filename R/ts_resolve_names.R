@@ -23,12 +23,10 @@
 #'   [Darwin Core standard](https://dwc.tdwg.org/terms/#taxon) with the
 #'   following columns:
 #' - `taxonID`: [Unique identifier for each taxon](https://dwc.tdwg.org/terms/#dwc:taxonID).
-#' - `acceptedNameUsageID`: [An identifier for the name usage](https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID)
-#' (documented meaning of the name according to a source) of the currently valid
-#' (zoological) or accepted (botanical) taxon.
-#' - `taxonomicStatus`: [The status of the use of the `scientificName` as a label for a taxon](https://dwc.tdwg.org/terms/#dwc:taxonomicStatus).
+#' - `acceptedNameUsageID`: If the taxon is a synonym, the [unique identifier for the accepted name](https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID)
+#' - `taxonomicStatus`: [The status of the use of the `scientificName` as a label for the taxon](https://dwc.tdwg.org/terms/#dwc:taxonomicStatus).
 #' Allowed values include `accepted name`, `ambiguous synonym`, `provisionally accepted name`, `synonym`.
-#' - `scientificName`: [The full scientific name](https://dwc.tdwg.org/terms/#dwc:scientificName),
+#' - `scientificName`: [The full scientific name of the taxon](https://dwc.tdwg.org/terms/#dwc:scientificName),
 #' with authorship and date information if known.
 #'
 #' @return Dataframe; results of resolving synonyms in matched taxonomic names.

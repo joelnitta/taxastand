@@ -17,12 +17,10 @@ unique. If a dataframe, should be taxonomic names matched with
 following columns:
 \itemize{
 \item \code{taxonID}: \href{https://dwc.tdwg.org/terms/#dwc:taxonID}{Unique identifier for each taxon}.
-\item \code{acceptedNameUsageID}: \href{https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID}{An identifier for the name usage}
-(documented meaning of the name according to a source) of the currently valid
-(zoological) or accepted (botanical) taxon.
-\item \code{taxonomicStatus}: \href{https://dwc.tdwg.org/terms/#dwc:taxonomicStatus}{The status of the use of the \code{scientificName} as a label for a taxon}.
+\item \code{acceptedNameUsageID}: If the taxon is a synonym, the \href{https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID}{unique identifier for the accepted name}
+\item \code{taxonomicStatus}: \href{https://dwc.tdwg.org/terms/#dwc:taxonomicStatus}{The status of the use of the \code{scientificName} as a label for the taxon}.
 Allowed values include \verb{accepted name}, \verb{ambiguous synonym}, \verb{provisionally accepted name}, \code{synonym}.
-\item \code{scientificName}: \href{https://dwc.tdwg.org/terms/#dwc:scientificName}{The full scientific name},
+\item \code{scientificName}: \href{https://dwc.tdwg.org/terms/#dwc:scientificName}{The full scientific name of the taxon},
 with authorship and date information if known.
 }}
 }
