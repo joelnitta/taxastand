@@ -1,6 +1,6 @@
 Package: taxastand
 Title: Standardize Taxonomic Names
-Version: 0.1.0
+Version: 0.0.0.9000
 Authors@R: 
     person(given = "Joel",
            family = "Nitta",
