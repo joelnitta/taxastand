@@ -1,0 +1,23 @@
+home:
+  title: Standardize Taxonomic Names
+  description: >
+    Matches species names to a taxonomic standard. Resolves synonyms consistently and reproducibly.
+template:
+  params:
+    bootswatch: lumen
+reference:
+- title: "Parse names"
+- contents:
+  - ts_parse_names
+- title: "Match names"
+- contents:
+  - ts_match_names
+- title: "Resolve names"
+- contents:
+  - ts_resolve_names
+- title: "Datasets"
+- contents:
+  - filmy_taxonomy
+- title: "I/O"
+- contents:
+  - ts_write_names
