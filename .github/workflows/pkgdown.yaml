@@ -26,6 +26,16 @@ jobs:
           extra-packages: pkgdown
           needs: website
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y --no-install-recommends gawk
+          git clone https://github.com/camwebb/taxon-tools.git
+          cd taxon-tools
+          git checkout 8f8b5e2611b6fdef1998b7878e93e60a9bc7c130
+          make check
+          make install
+          cd ..
+
       - name: Deploy package
         run: |
           git config --local user.name "$GITHUB_ACTOR"
