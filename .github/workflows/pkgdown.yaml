@@ -33,7 +33,7 @@ jobs:
           cd taxon-tools
           git checkout 8f8b5e2611b6fdef1998b7878e93e60a9bc7c130
           make check
-          make install
+          sudo make install
           cd ..
 
       - name: Deploy package
