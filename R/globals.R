@@ -11,11 +11,15 @@ utils::globalVariables(c(
   "reference", # <ts_resolve_names>
   "match_type", # <ts_resolve_names>
   "result_type", # <ts_resolve_names>
-  "taxonomicStatus", # <ts_resolve_names>
+  "acceptedNameUsageID", # <ts_resolve_names>
   "taxonID", # <ts_resolve_names>
+  "taxonomicStatus", # <ts_resolve_names>
   "scientificName", # <ts_resolve_names>
-  "accepted_name", # <ts_resolve_names>
+  "resolved_name", # <ts_resolve_names>
+  "resolved_status", # <ts_resolve_names>
   "n", # <ts_resolve_names>
+  "matched_name", # <ts_resolve_names>
+  "matched_status", # <ts_resolve_names>
   "query", # <ts_classify_result>
   "result_type", # <ts_classify_result>
   "n", # <ts_classify_result>

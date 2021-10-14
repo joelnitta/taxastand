@@ -4,7 +4,13 @@
 \alias{ts_resolve_names}
 \title{Resolve synonyms in taxonomic names}
 \usage{
-ts_resolve_names(query, ref_taxonomy)
+ts_resolve_names(
+  query,
+  ref_taxonomy,
+  max_dist = 10,
+  match_no_auth = FALSE,
+  match_canon = FALSE
+)
 }
 \arguments{
 \item{query}{Character vector or dataframe; taxonomic names to be resolved.
@@ -19,23 +25,33 @@ following columns:
 \item \code{taxonID}: \href{https://dwc.tdwg.org/terms/#dwc:taxonID}{Unique identifier for each taxon}.
 \item \code{acceptedNameUsageID}: If the taxon is a synonym, the \href{https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID}{unique identifier for the accepted name}
 \item \code{taxonomicStatus}: \href{https://dwc.tdwg.org/terms/#dwc:taxonomicStatus}{The status of the use of the \code{scientificName} as a label for the taxon}.
-Allowed values include \verb{accepted name}, \verb{ambiguous synonym}, \verb{provisionally accepted name}, \code{synonym}.
 \item \code{scientificName}: \href{https://dwc.tdwg.org/terms/#dwc:scientificName}{The full scientific name of the taxon},
 with authorship and date information if known.
 }}
+
+\item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
+(total insertions, deletions and substitutions). Default: 10.}
+
+\item{match_no_auth}{Logical; If no author is given in the query and the name (without author)
+occurs only once in the reference, accept the name in the reference as a match.
+Default: to not allow such a match (\code{FALSE}).}
+
+\item{match_canon}{Logical; Allow a "canonical name" match if only the genus, species epithet,
+and infraspecific epithet (if present) match exactly. Default: to not allow such a match (\code{FALSE}).}
 }
 \value{
 Dataframe; results of resolving synonyms in matched taxonomic names.
 Includes the following columns:
 \itemize{
 \item \code{query}: Query name
-\item \code{accepted_name}: Accepted name after resolving synonyms
+\item \code{resolved_name}: Accepted name after resolving synonyms
+\item \code{matched_name}: Name matched to query
+\item \code{resolved_status}: Taxonomic status of the resolved name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
+\item \code{matched_status}: Taxonomic status of the matched name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
 \item \code{match_type}: Type of match (for a summary of match types, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual})
-\item \code{status}: Taxonomic status of the matched reference name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
-\item \code{reference}: Matched reference name
 }
 
-Names that could not be matched or resolve to multiple, different synonyms have \code{NA} for \code{accepted_name}.
+Names that could not be matched or resolve to multiple, different synonyms have \code{NA} for \code{resolved_name}.
 }
 \description{
 After matching taxonomic names to a reference, some may match synonyms. This

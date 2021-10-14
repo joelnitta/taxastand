@@ -25,19 +25,26 @@
 #' - `taxonID`: [Unique identifier for each taxon](https://dwc.tdwg.org/terms/#dwc:taxonID).
 #' - `acceptedNameUsageID`: If the taxon is a synonym, the [unique identifier for the accepted name](https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID)
 #' - `taxonomicStatus`: [The status of the use of the `scientificName` as a label for the taxon](https://dwc.tdwg.org/terms/#dwc:taxonomicStatus).
-#' Allowed values include `accepted name`, `ambiguous synonym`, `provisionally accepted name`, `synonym`.
 #' - `scientificName`: [The full scientific name of the taxon](https://dwc.tdwg.org/terms/#dwc:scientificName),
 #' with authorship and date information if known.
+#' @param max_dist Max Levenshtein distance to allow during fuzzy matching
+#' (total insertions, deletions and substitutions). Default: 10.
+#' @param match_no_auth Logical; If no author is given in the query and the name (without author)
+#' occurs only once in the reference, accept the name in the reference as a match.
+#' Default: to not allow such a match (`FALSE`).
+#' @param match_canon Logical; Allow a "canonical name" match if only the genus, species epithet,
+#' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
 #'
 #' @return Dataframe; results of resolving synonyms in matched taxonomic names.
 #' Includes the following columns:
 #' - `query`: Query name
-#' - `accepted_name`: Accepted name after resolving synonyms
+#' - `resolved_name`: Accepted name after resolving synonyms
+#' - `matched_name`: Name matched to query
+#' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref_taxonomy`)
+#' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref_taxonomy`)
 #' - `match_type`: Type of match (for a summary of match types, [see taxon-tools manual](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes))
-#' - `status`: Taxonomic status of the matched reference name (same as `taxonomicStatus` in `ref_taxonomy`)
-#' - `reference`: Matched reference name
 #'
-#' Names that could not be matched or resolve to multiple, different synonyms have `NA` for `accepted_name`.
+#' Names that could not be matched or resolve to multiple, different synonyms have `NA` for `resolved_name`.
 #'
 #' @autoglobal
 #' @export
@@ -46,7 +53,8 @@
 #' data(filmy_taxonomy)
 #'
 #' ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
-ts_resolve_names <- function(query, ref_taxonomy) {
+ts_resolve_names <- function(query, ref_taxonomy,
+                             max_dist = 10, match_no_auth = FALSE, match_canon = FALSE) {
 
   # Check input
   assertthat::assert_that(
@@ -56,7 +64,7 @@ ts_resolve_names <- function(query, ref_taxonomy) {
 
   # If needed, match names first
   if(is.character(query)) {
-    match_results <- ts_match_names(query, unique(ref_taxonomy$scientificName))
+    match_results <- ts_match_names(query, unique(ref_taxonomy$scientificName), max_dist = max_dist, match_no_auth = match_no_auth, match_canon = match_canon, simple = TRUE)
   } else if (is.data.frame(query)) {
     match_results <- query
   } else {
@@ -73,21 +81,28 @@ ts_resolve_names <- function(query, ref_taxonomy) {
   # Separate out single matches to an accepted name (success type 1)
   accepted_single_match <-
     match_results_classified_with_taxonomy %>%
-    dplyr::filter(taxonomicStatus %in% c("accepted name", "provisionally accepted name") & result_type == "single_match") %>%
-    dplyr::select(query, reference, accepted_name = reference, match_type, status = taxonomicStatus)
+    # consider accepted names have either no acceptedNameUsageID or acceptedNameUsageID is same as taxonID
+    dplyr::filter(
+      (is.na(acceptedNameUsageID) | (taxonID == acceptedNameUsageID)) & result_type == "single_match"
+    ) %>%
+    dplyr::select(query, resolved_name = reference, matched_name = reference, resolved_status = taxonomicStatus, matched_status = taxonomicStatus, match_type)
 
   # Separate out matches to a single synonym (success type 2)
   accepted_single_synonyms <-
     match_results_classified_with_taxonomy %>%
-    dplyr::filter(taxonomicStatus == "synonym") %>%
+    # Consider synonym anything with acceptedNameUsageID not matching taxonID
+    dplyr::filter(!is.na(acceptedNameUsageID)) %>%
+    dplyr::filter(acceptedNameUsageID != taxonID) %>%
+    # Join resolved names via synonym
     dplyr::left_join(
-      dplyr::select(ref_taxonomy, taxonID, accepted_name = scientificName),
+      dplyr::select(ref_taxonomy, taxonID, resolved_name = scientificName, resolved_status = taxonomicStatus),
       by = c(acceptedNameUsageID = "taxonID")) %>%
-    dplyr::select(query, reference, accepted_name, match_type, status = taxonomicStatus) %>%
+    dplyr::select(query, resolved_name, matched_name = reference, resolved_status, matched_status = taxonomicStatus, match_type) %>%
     dplyr::group_by(query) %>%
     # Add count of number of resolved, accepted names per query
-    dplyr::mutate(n = dplyr::n_distinct(accepted_name)) %>%
+    dplyr::mutate(n = dplyr::n_distinct(resolved_name)) %>%
     dplyr::ungroup() %>%
+    # Only keep those that resolve to the same name
     dplyr::filter(n == 1) %>%
     dplyr::select(-n)
 
@@ -97,11 +112,12 @@ ts_resolve_names <- function(query, ref_taxonomy) {
   # Anything else is a failure
   failure <-
     match_results_classified_with_taxonomy %>%
-    dplyr::select(query, reference, match_type, status = taxonomicStatus) %>%
+    dplyr::select(query, match_type, status = taxonomicStatus, matched_name = reference) %>%
     dplyr::anti_join(success, by = "query")
 
   # Combine into final results
   dplyr::bind_rows(success, failure) %>%
     assertr::verify(all(query %in% match_results$query)) %>%
-    assertr::verify(all(match_results$query %in% query))
+    assertr::verify(all(match_results$query %in% query)) %>%
+    dplyr::select(query, resolved_name, matched_name, resolved_status, matched_status, match_type)
 }
