@@ -1,8 +1,8 @@
 ---
-title: "Example workflow"
+title: "The basics"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Example workflow}
+  %\VignetteIndexEntry{The basics}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -16,14 +16,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette explains the typical taxonomic name resolution workflow, which consists of three steps:
-* Name parsing
-* Name matching
-* Name resolution
+This vignette explains the three basic steps of the taxonomic name resolution workflow, which consists of:
+
+1. Name parsing
+2. Name matching
+3. Name resolution
 
 ## Setup
 
-We'll start by loading `taxastand`. For more information on installation, see [here](https://joelnitta.github.io/taxastand/index.html#installation).
+We'll start by loading `taxastand`. For more information on installing `taxastand`, see [here](https://joelnitta.github.io/taxastand/index.html#installation).
 
 ```{r setup}
 library(taxastand)
@@ -42,9 +43,9 @@ However, such a name actually consists of several distinct parts:
 ```
 "Crepidomanes minutum (Bl.) K. Iwats."
 ------------- ------- ---------------
-       |        |          |
-     genus  specific     author
-            epithet
+|        |          |
+genus  specific     author
+epithet
 ```
 
 Furthermore, in the case of this name, it was originally named by Blume (`(Bl.)`), then transferred to a different genus by Iwatsuki (`K. Iwats.`).
@@ -63,4 +64,107 @@ Now that we've parsed a name, in the next section we will see why this is useful
 
 ## Name matching
 
-FIXME: finish rest of vignette
+One reason that name parsing is important is because some scientific names may differ only in certain components.
+
+For example, the species [*Hymenophyllum pectinatum*](https://www.tropicos.org/name/Search?name=Hymenophyllum%20pectinatum) actually corresponds to two different scientific names with different authors, *Hymenophyllum pectinatum* Nees & Blume and *Hymenophyllum pectinatum* Cav.
+
+We can see this by querying the name:
+
+```{r match-example-1}
+ts_match_names(
+  "Hymenophyllum pectinatum", 
+  c("Hymenophyllum pectinatum Nees & Blume", 
+    "Hymenophyllum pectinatum Cav."), 
+  simple = TRUE)
+```
+
+`ts_match_names()` matches both scientific names[^1], because the algorithm it can't distinguish between them without additional information. So **it is almost always better to include the taxonomic author in the query**, to distinguish between such cases.
+
+[^1]: Note that `ts_match_names()` did the name parsing by calling `ts_parse_names()` for us internally. This is usually fine, but it can also take parsed names (dataframes) produced by `ts_parse_names()` as input to either `query` or `reference.`
+
+However, there can be quite a bit of variation in how authors are recorded. Sometimes names are abbreviated to different lengths, or the basionym author (an author name in parentheses) might get left out by accident, etc. The algorithm used by `taxastand` can account for this (to a point). Here is an example where the query lacks a basionym author:
+
+```{r match-example-2}
+ts_match_names(
+  "Hymenophyllum taiwanense C. V. Morton", 
+  c("Hymenophyllum taiwanense (Tagawa) C. V. Morton", 
+    "Hymenophyllum taiwanense De Vol"), 
+  simple = TRUE)
+```
+
+The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `auto_basio-` means an automatic match based on excluding the basionym from the reference. It is a good idea to check any results that weren't identical to verify that the matching algorithm worked correctly.
+
+Here is a summary of the values taken by `match_type` from [`taxon-tools`](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes):
+
+- `exact`: Exact match to all parts of the name (genus hybrid marker, genus name, species hybrid marker, species epithet, infraspecific rank signifier, infraspecific rank, author string).
+- `auto_punct`: Exact match to all parts of the name after removing mis-matching spaces, periods, non-ASCII author name characters, etc.
+- `auto_noauth` (only applies if `match_no_auth` is `TRUE`): Match between a query lacking an author and a reference name lacking an author that occurs only once in the reference.
+- `auto_basio-`: Match after excluding the basionym from the reference. For example, `Cardaminopsis umbrosa Czerep.` vs. `Cardaminopsis umbrosa (Turcz.) Czerep.)`); the basionym is `(Turcz.)`.
+- `auto_basio+`: Match after excluding the basionym from the query.
+- `auto_in-`: Match after excluding all *in* elements from reference. An *in* element refers to phrases such as `Tagawa in Morton`. The version excluding *in* elements is `Tagawa`.
+- `auto_in+`: Match after excluding all *in* elements from query.
+- `auto_ex-`: Match after excluding all *in* and *ex* elements from reference. An *ex* element refers to phrases such as `Rändel ex D.F.Murray`. The version excluding *ex* elements is `Rändel`.
+- `auto_ex+`: Match after excluding all *in* and *ex* elements from query.
+- `auto_basexin`: Match after excluding all basionyms and all *in* and *ex* elements from query and reference.
+- `auto_irank`: Match where all elements agree except for infraspecific rank.
+- `auto_fuzzy`: Fuzzy match; match between scientific names allowed up to threshold given by `max_dist`, the Levenshtein distance including total insertions, deletions and substitutions.
+- `cfonly`: Match by "canonical form", i.e., genus plus specific epithet plus infraspecific epithet (if present), not including the infraspecific specifier ("subsp.", etc.).
+- `no_match`: No match detected.
+
+The matching algorithm will prefer match codes higher in the list; so if a name could be matched both by `auto_punct` and `auto_fuzzy`, it will be matched based on `auto_punct`[^2].
+
+[^2]: The algorithm used by `taxastand` is optimized for plants, algae, and fungi, which vary in their [taxonomic rules](https://www.iapt-taxon.org/nomen/main.php) somewhat from animals. For example, plants include basionym authors in parentheses and typically don't include they year, whereas animals are formatted differently.
+
+## Name resolution
+
+Name resolution refers to the process of mapping a query name to its standard version. This could just be accounting for orthographic variations, or it could involve resolving synonyms: different names that actually refer to the same species.
+
+In order to conduct name resolution, we require a **taxonomic standard** in the form of a dataframe. `taxastand` requires that the taxonomic standard conform to [Darwin Core standards](https://dwc.tdwg.org/). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](http://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) among others.
+
+`taxastand` comes supplied with an example taxonomic standard for filmy ferns (family Hymenophyllaceae):
+
+```{r name-res-example-1}
+# Load example reference taxonomy in Darwin Core format
+data(filmy_taxonomy)
+
+# Take a look at the columns used by taxastand
+head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+```
+
+Here, `taxonID` is a unique identifier for each taxonomic name. `acceptedNameUsageID` only applies in the case of synonyms: it tells us the `taxonID` of the accepted name corresponding to that synonym. `taxonomicStatus` describes the status of the name, typically either as an accepted name, synonym, or something else ("dubious", etc.). Finally, the `scientificName` is the full scientific name, preferably with the author.
+
+In its most simple usage, `ts_resolve_names()` can take as input a character vector to `query`, and provide the resolved name in the taxonomic standard (`reference`):
+
+```{r name-res-example-1}
+ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
+```
+
+In this case, the query, `Gonocormus minutum` was a misspelled name that is actually a synonym for *Crepidomanes minutum* (Bl.) K. Iwats. Under the hood, `ts_resolve_names()` is calling both `ts_parse_names()` and `ts_match_names()` to do parsing and matching steps before name resolution[^3].
+
+[^3]: You can use the output of `ts_match_names()` to the `query` input of `ts_parse_names()` if you want to see the matching results first.
+
+However, when used this way, `ts_resolve_names()` may not be able to provide a resolved name if the input is not matched unambiguously:
+
+```{r name-res-example-2}
+t_bifid_res <- ts_resolve_names("Trichomanes bifidum", filmy_taxonomy)
+head(t_bifid_res)
+dim(t_bifid_res)
+```
+
+In this case, name resolution using the default settings produced `nrow(t_bifid_res)` possible answers! That is obviously far too many. Let's try to adjust the arguments and see if we can reduce the output:
+
+```{r name-res-example-3}
+ts_resolve_names(
+  "Trichomanes bifidum", filmy_taxonomy, 
+  match_no_auth = TRUE, match_canon = TRUE, max_dist = 5)
+```
+
+By allowing matches without the author name (we probably should have done that anyways, since the query lacked an author) and lowering the fuzzy match threshold, we are able to greatly reduce the number of possible resolved names.
+
+Name resolution workflows typically involve tweaking these arguments to resolve a maximum number of names automatically, followed by some amount of manual edits to the remaining resolved names.
+
+A benefit of `taxastand` is that, if during the name resolution workflow we discover mistakes in the reference database, the reference database can be edited so that the query names resolve correctly (this is not possible with packages that rely on querying a remote taxonomic database that can't be modified by the user).
+
+## Conclusion
+
+This vignette illustrated the typical steps involved in name resolution with `taxastand` on some trivial examples. In another vignette, I will provide a more realistic example with a bigger dataset.
