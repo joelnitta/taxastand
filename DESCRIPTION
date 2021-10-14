@@ -29,8 +29,11 @@ Roxygen: list(
 RoxygenNote: 7.1.2
 Depends: R (>= 2.10)
 Suggests: 
+    rmarkdown,
+    knitr,
     roxyglobals (>= 0.2.1),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Remotes: 
     anthonynorth/roxyglobals
+VignetteBuilder: knitr

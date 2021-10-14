@@ -1,0 +1,66 @@
+---
+title: "Example workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example workflow}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette explains the typical taxonomic name resolution workflow, which consists of three steps:
+* Name parsing
+* Name matching
+* Name resolution
+
+## Setup
+
+We'll start by loading `taxastand`. For more information on installation, see [here](https://joelnitta.github.io/taxastand/index.html#installation).
+
+```{r setup}
+library(taxastand)
+```
+
+## Name parsing
+
+In R, scientific names are often just stored as character vectors (strings). For example,
+
+```{r example-name}
+example_name <- "Crepidomanes minutum (Bl.) K. Iwats."
+```
+
+However, such a name actually consists of several distinct parts:
+
+```
+"Crepidomanes minutum (Bl.) K. Iwats."
+------------- ------- ---------------
+       |        |          |
+     genus  specific     author
+            epithet
+```
+
+Furthermore, in the case of this name, it was originally named by Blume (`(Bl.)`), then transferred to a different genus by Iwatsuki (`K. Iwats.`).
+
+When working with taxonomic names, it can be useful to **parse** the name into its component parts. That is what `ts_parse_names()` does. It takes a character vector as input and returns a dataframe:
+
+```{r parse-example}
+ts_parse_names(example_name)
+```
+
+The first column, `name`, is the original input name. `id` is a unique identifier attached to the name. The rest of the columns are [ the parsed components of the name](https://joelnitta.github.io/taxastand/reference/ts_parse_names.html#value).
+
+Note that the [name parsing algorithm](https://github.com/camwebb/taxon-tools#parsenames) used by `taxastand` is case-sensitive! It assumes that the [standard capitalization of scientific names](https://en.wikipedia.org/wiki/Binomial_nomenclature#Writing_binomial_names) is being used: genus is capitalized, specific epithet is lower case, author is capitalized as a proper noun, etc. **Name parsing probably won't work without this type of capitalization.**
+
+Now that we've parsed a name, in the next section we will see why this is useful for matching names to each other.
+
+## Name matching
+
+FIXME: finish rest of vignette
