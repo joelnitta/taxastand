@@ -61,6 +61,14 @@ remotes::install_github("joelnitta/taxastand")
 matching. The two programs included in `taxon-tools`, `parsenames` and
 `matchnames`, must be installed and on the user’s `PATH`.
 
+## Docker image
+
+A docker image is available to run `taxastand`:
+[`joelnitta/taxastand:latest`](https://hub.docker.com/r/joelnitta/taxastand).
+
+The [Dockerfile lives
+here](https://github.com/joelnitta/taxastand-docker).
+
 ## Similar work
 
 [ROpenSci](https://ropensci.org/) has a [task

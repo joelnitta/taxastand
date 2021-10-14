@@ -46,6 +46,12 @@ remotes::install_github("joelnitta/taxastand")
 
 `taxastand` depends on [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name matching. The two programs included in `taxon-tools`, `parsenames` and `matchnames`, must be installed and on the user's `PATH`.
 
+## Docker image
+
+A docker image is available to run `taxastand`: [`joelnitta/taxastand:latest`](https://hub.docker.com/r/joelnitta/taxastand).
+
+The [Dockerfile lives here](https://github.com/joelnitta/taxastand-docker).
+
 ## Similar work
 
 [ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
