@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette explains the three basic steps of the taxonomic name resolution workflow, which consists of:
+This vignette explains the three basic steps of the taxonomic name resolution workflow, which consist of:
 
 1. Name parsing
 2. Name matching
@@ -113,7 +113,7 @@ Here is a summary of the values taken by `match_type` from [`taxon-tools`](https
 
 The matching algorithm will prefer match codes higher in the list; so if a name could be matched both by `auto_punct` and `auto_fuzzy`, it will be matched based on `auto_punct`[^2].
 
-[^2]: The algorithm used by `taxastand` is optimized for plants, algae, and fungi, which vary in their [taxonomic rules](https://www.iapt-taxon.org/nomen/main.php) somewhat from animals. For example, plants include basionym authors in parentheses and typically don't include they year, whereas animals are formatted differently.
+[^2]: The algorithm used by `taxastand` is optimized for plants, algae, and fungi, which vary in their [taxonomic rules](https://www.iapt-taxon.org/nomen/main.php) somewhat from animals. For example, plants include basionym authors in parentheses followed by the combination author, and typically don't include the year, whereas animals normally include the year and may not provide the combination author.
 
 ## Name resolution
 
@@ -135,7 +135,7 @@ Here, `taxonID` is a unique identifier for each taxonomic name. `acceptedNameUsa
 
 In its most simple usage, `ts_resolve_names()` can take as input a character vector to `query`, and provide the resolved name in the taxonomic standard (`reference`):
 
-```{r name-res-example-1}
+```{r name-res-example-2}
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 ```
 
@@ -145,15 +145,15 @@ In this case, the query, `Gonocormus minutum` was a misspelled name that is actu
 
 However, when used this way, `ts_resolve_names()` may not be able to provide a resolved name if the input is not matched unambiguously:
 
-```{r name-res-example-2}
+```{r name-res-example-3}
 t_bifid_res <- ts_resolve_names("Trichomanes bifidum", filmy_taxonomy)
 head(t_bifid_res)
 dim(t_bifid_res)
 ```
 
-In this case, name resolution using the default settings produced `nrow(t_bifid_res)` possible answers! That is obviously far too many. Let's try to adjust the arguments and see if we can reduce the output:
+In this case, name resolution using the default settings produced `r nrow(t_bifid_res)` possible answers! That is obviously far too many. Let's try to adjust the arguments and see if we can reduce the output:
 
-```{r name-res-example-3}
+```{r name-res-example-4}
 ts_resolve_names(
   "Trichomanes bifidum", filmy_taxonomy, 
   match_no_auth = TRUE, match_canon = TRUE, max_dist = 5)
@@ -167,4 +167,4 @@ A benefit of `taxastand` is that, if during the name resolution workflow we disc
 
 ## Conclusion
 
-This vignette illustrated the typical steps involved in name resolution with `taxastand` on some trivial examples. In another vignette, I will provide a more realistic example with a bigger dataset.
+This vignette illustrated the typical steps involved in name resolution with `taxastand` on some trivial examples. In another vignette, I will provide a more realistic example with a larger dataset.
