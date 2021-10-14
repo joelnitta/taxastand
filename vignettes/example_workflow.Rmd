@@ -43,9 +43,9 @@ However, such a name actually consists of several distinct parts:
 ```
 "Crepidomanes minutum (Bl.) K. Iwats."
 ------------- ------- ---------------
-|        |          |
-genus  specific     author
-epithet
+      |         |          |
+    genus    specific    author
+             epithet
 ```
 
 Furthermore, in the case of this name, it was originally named by Blume (`(Bl.)`), then transferred to a different genus by Iwatsuki (`K. Iwats.`).
