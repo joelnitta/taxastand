@@ -92,22 +92,22 @@ ts_match_names(
   simple = TRUE)
 ```
 
-The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `auto_basio-` means an automatic match based on excluding the basionym from the reference. It is a good idea to check any results that weren't identical to verify that the matching algorithm worked correctly.
+The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `auto_basio-` means an automatic match based on excluding the basionym author from the reference. **It is recommended to always check any results that weren't identical** (`exact`) to verify that the matching algorithm worked correctly, especially for fuzzy matches (`auto_fuzzy`). 
 
 Here is a summary of the values taken by `match_type` from [`taxon-tools`](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes):
 
 - `exact`: Exact match to all parts of the name (genus hybrid marker, genus name, species hybrid marker, species epithet, infraspecific rank signifier, infraspecific rank, author string).
 - `auto_punct`: Exact match to all parts of the name after removing mis-matching spaces, periods, non-ASCII author name characters, etc.
 - `auto_noauth` (only applies if `match_no_auth` is `TRUE`): Match between a query lacking an author and a reference name lacking an author that occurs only once in the reference.
-- `auto_basio-`: Match after excluding the basionym from the reference. For example, `Cardaminopsis umbrosa Czerep.` vs. `Cardaminopsis umbrosa (Turcz.) Czerep.)`); the basionym is `(Turcz.)`.
-- `auto_basio+`: Match after excluding the basionym from the query.
+- `auto_basio-`: Match after excluding the basionym author from the reference. For example, `Cardaminopsis umbrosa Czerep.` vs. `Cardaminopsis umbrosa (Turcz.) Czerep.)`); the basionym author is `(Turcz.)`.
+- `auto_basio+`: Match after excluding the basionym author from the query.
 - `auto_in-`: Match after excluding all *in* elements from reference. An *in* element refers to phrases such as `Tagawa in Morton`. The version excluding *in* elements is `Tagawa`.
 - `auto_in+`: Match after excluding all *in* elements from query.
 - `auto_ex-`: Match after excluding all *in* and *ex* elements from reference. An *ex* element refers to phrases such as `Rändel ex D.F.Murray`. The version excluding *ex* elements is `Rändel`.
 - `auto_ex+`: Match after excluding all *in* and *ex* elements from query.
-- `auto_basexin`: Match after excluding all basionyms and all *in* and *ex* elements from query and reference.
+- `auto_basexin`: Match after excluding all basionym authors and all *in* and *ex* elements from query and reference.
 - `auto_irank`: Match where all elements agree except for infraspecific rank.
-- `auto_fuzzy`: Fuzzy match; match between scientific names allowed up to threshold given by `max_dist`, the Levenshtein distance including total insertions, deletions and substitutions.
+- `auto_fuzzy`: Fuzzy match; match between scientific names allowed up to threshold given by `max_dist`, the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) including total insertions, deletions and substitutions.
 - `cfonly`: Match by "canonical form", i.e., genus plus specific epithet plus infraspecific epithet (if present), not including the infraspecific specifier ("subsp.", etc.).
 - `no_match`: No match detected.
 
