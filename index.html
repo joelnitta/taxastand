@@ -47,6 +47,18 @@
 <li>
   <a href="reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="articles/example_workflow.html">Example workflow</a>
+    </li>
+  </ul>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right"></ul>
 </div>
@@ -138,12 +150,12 @@
 
 <span class="co"># As a test, resolve a misspelled name</span>
 <span class="fu"><a href="reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span>
-<span class="co">#&gt;                query                        accepted_name match_type  status</span>
-<span class="co">#&gt; 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats. auto_fuzzy synonym</span>
-<span class="co">#&gt;                        reference</span>
-<span class="co">#&gt; 1 Gonocormus minutus (Bl.) Bosch</span>
+<span class="co">#&gt;                query                        resolved_name</span>
+<span class="co">#&gt; 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.</span>
+<span class="co">#&gt;                     matched_name resolved_status matched_status match_type</span>
+<span class="co">#&gt; 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy</span>
 
-<span class="co"># We can now use the `accepted_name` column of this result for downstream </span>
+<span class="co"># We can now use the `resolved_name` column of this result for downstream </span>
 <span class="co"># analyses joining on other datasets that have been resolved to the same </span>
 <span class="co"># reference taxonomy.</span></code></pre></div>
 </div>
