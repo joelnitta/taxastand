@@ -148,7 +148,7 @@
 <span class="co">#&gt; 1 Hymenophyllum taiwanense C. V. Morton</span>
 <span class="co">#&gt;                                        reference  match_type</span>
 <span class="co">#&gt; 1 Hymenophyllum taiwanense (Tagawa) C. V. Morton auto_basio-</span></code></pre></div>
-<p>The name matching algorithm was able to narrow the match down to <code>Hymenophyllum taiwanense (Tagawa) C. V. Morton</code> even though the query lacked <code>(Tagawa)</code>. Furthermore, the <code>match_type</code> tells us how the matching was done: <code>auto_basio-</code> means an automatic match based on excluding the basionym from the reference. It is a good idea to check any results that weren’t identical to verify that the matching algorithm worked correctly.</p>
+<p>The name matching algorithm was able to narrow the match down to <code>Hymenophyllum taiwanense (Tagawa) C. V. Morton</code> even though the query lacked <code>(Tagawa)</code>. Furthermore, the <code>match_type</code> tells us how the matching was done: <code>auto_basio-</code> means an automatic match based on excluding the basionym author from the reference. <strong>It is recommended to always check any results that weren’t identical</strong> (<code>exact</code>) to verify that the matching algorithm worked correctly, especially for fuzzy matches (<code>auto_fuzzy</code>).</p>
 <p>Here is a summary of the values taken by <code>match_type</code> from <a href="https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes"><code>taxon-tools</code></a>:</p>
 <ul>
 <li>
@@ -158,9 +158,9 @@
 <li>
 <code>auto_noauth</code> (only applies if <code>match_no_auth</code> is <code>TRUE</code>): Match between a query lacking an author and a reference name lacking an author that occurs only once in the reference.</li>
 <li>
-<code>auto_basio-</code>: Match after excluding the basionym from the reference. For example, <code>Cardaminopsis umbrosa Czerep.</code> vs. <code>Cardaminopsis umbrosa (Turcz.) Czerep.)</code>); the basionym is <code>(Turcz.)</code>.</li>
+<code>auto_basio-</code>: Match after excluding the basionym author from the reference. For example, <code>Cardaminopsis umbrosa Czerep.</code> vs. <code>Cardaminopsis umbrosa (Turcz.) Czerep.)</code>); the basionym author is <code>(Turcz.)</code>.</li>
 <li>
-<code>auto_basio+</code>: Match after excluding the basionym from the query.</li>
+<code>auto_basio+</code>: Match after excluding the basionym author from the query.</li>
 <li>
 <code>auto_in-</code>: Match after excluding all <em>in</em> elements from reference. An <em>in</em> element refers to phrases such as <code>Tagawa in Morton</code>. The version excluding <em>in</em> elements is <code>Tagawa</code>.</li>
 <li>
@@ -170,11 +170,11 @@
 <li>
 <code>auto_ex+</code>: Match after excluding all <em>in</em> and <em>ex</em> elements from query.</li>
 <li>
-<code>auto_basexin</code>: Match after excluding all basionyms and all <em>in</em> and <em>ex</em> elements from query and reference.</li>
+<code>auto_basexin</code>: Match after excluding all basionym authors and all <em>in</em> and <em>ex</em> elements from query and reference.</li>
 <li>
 <code>auto_irank</code>: Match where all elements agree except for infraspecific rank.</li>
 <li>
-<code>auto_fuzzy</code>: Fuzzy match; match between scientific names allowed up to threshold given by <code>max_dist</code>, the Levenshtein distance including total insertions, deletions and substitutions.</li>
+<code>auto_fuzzy</code>: Fuzzy match; match between scientific names allowed up to threshold given by <code>max_dist</code>, the <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> including total insertions, deletions and substitutions.</li>
 <li>
 <code>cfonly</code>: Match by “canonical form”, i.e., genus plus specific epithet plus infraspecific epithet (if present), not including the infraspecific specifier (“subsp.”, etc.).</li>
 <li>
