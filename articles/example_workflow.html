@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Example workflow • taxastand</title>
+<title>The basics • taxastand</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/lumen/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Example workflow">
+<script src="../pkgdown.js"></script><meta property="og:title" content="The basics">
 <meta property="og:description" content="taxastand">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -54,7 +54,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/example_workflow.html">Example workflow</a>
+      <a href="../articles/example_workflow.html">The basics</a>
     </li>
   </ul>
 </li>
@@ -72,7 +72,7 @@
       </header><script src="example_workflow_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Example workflow</h1>
+      <h1 data-toc-skip>The basics</h1>
             
       
       
@@ -82,11 +82,16 @@
 
     
     
-<p>This vignette explains the typical taxonomic name resolution workflow, which consists of three steps: * Name parsing * Name matching * Name resolution</p>
+<p>This vignette explains the three basic steps of the taxonomic name resolution workflow, which consist of:</p>
+<ol style="list-style-type: decimal">
+<li>Name parsing</li>
+<li>Name matching</li>
+<li>Name resolution</li>
+</ol>
 <div id="setup" class="section level2">
 <h2 class="hasAnchor">
 <a href="#setup" class="anchor"></a>Setup</h2>
-<p>We’ll start by loading <code>taxastand</code>. For more information on installation, see <a href="https://joelnitta.github.io/taxastand/index.html#installation">here</a>.</p>
+<p>We’ll start by loading <code>taxastand</code>. For more information on installing <code>taxastand</code>, see <a href="https://joelnitta.github.io/taxastand/index.html#installation">here</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">taxastand</span><span class="op">)</span></code></pre></div>
 </div>
@@ -99,9 +104,9 @@
 <p>However, such a name actually consists of several distinct parts:</p>
 <pre><code>"Crepidomanes minutum (Bl.) K. Iwats."
 ------------- ------- ---------------
-       |        |          |
-     genus  specific     author
-            epithet</code></pre>
+|        |          |
+genus  specific     author
+epithet</code></pre>
 <p>Furthermore, in the case of this name, it was originally named by Blume (<code>(Bl.)</code>), then transferred to a different genus by Iwatsuki (<code>K. Iwats.</code>).</p>
 <p>When working with taxonomic names, it can be useful to <strong>parse</strong> the name into its component parts. That is what <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> does. It takes a character vector as input and returns a dataframe:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -119,7 +124,141 @@
 <div id="name-matching" class="section level2">
 <h2 class="hasAnchor">
 <a href="#name-matching" class="anchor"></a>Name matching</h2>
-<p>FIXME: finish rest of vignette</p>
+<p>One reason that name parsing is important is because some scientific names may differ only in certain components.</p>
+<p>For example, the species <a href="https://www.tropicos.org/name/Search?name=Hymenophyllum%20pectinatum"><em>Hymenophyllum pectinatum</em></a> actually corresponds to two different scientific names with different authors, <em>Hymenophyllum pectinatum</em> Nees &amp; Blume and <em>Hymenophyllum pectinatum</em> Cav.</p>
+<p>We can see this by querying the name:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span>
+  <span class="st">"Hymenophyllum pectinatum"</span>, 
+  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Hymenophyllum pectinatum Nees &amp; Blume"</span>, 
+    <span class="st">"Hymenophyllum pectinatum Cav."</span><span class="op">)</span>, 
+  simple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="co">#&gt;                      query                             reference match_type</span>
+<span class="co">#&gt; 1 Hymenophyllum pectinatum Hymenophyllum pectinatum Nees &amp; Blume auto_fuzzy</span>
+<span class="co">#&gt; 2 Hymenophyllum pectinatum         Hymenophyllum pectinatum Cav. auto_fuzzy</span></code></pre></div>
+<p><code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> matches both scientific names<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, because the algorithm it can’t distinguish between them without additional information. So <strong>it is almost always better to include the taxonomic author in the query</strong>, to distinguish between such cases.</p>
+<p>However, there can be quite a bit of variation in how authors are recorded. Sometimes names are abbreviated to different lengths, or the basionym author (an author name in parentheses) might get left out by accident, etc. The algorithm used by <code>taxastand</code> can account for this (to a point). Here is an example where the query lacks a basionym author:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span>
+  <span class="st">"Hymenophyllum taiwanense C. V. Morton"</span>, 
+  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Hymenophyllum taiwanense (Tagawa) C. V. Morton"</span>, 
+    <span class="st">"Hymenophyllum taiwanense De Vol"</span><span class="op">)</span>, 
+  simple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="co">#&gt;                                   query</span>
+<span class="co">#&gt; 1 Hymenophyllum taiwanense C. V. Morton</span>
+<span class="co">#&gt;                                        reference  match_type</span>
+<span class="co">#&gt; 1 Hymenophyllum taiwanense (Tagawa) C. V. Morton auto_basio-</span></code></pre></div>
+<p>The name matching algorithm was able to narrow the match down to <code>Hymenophyllum taiwanense (Tagawa) C. V. Morton</code> even though the query lacked <code>(Tagawa)</code>. Furthermore, the <code>match_type</code> tells us how the matching was done: <code>auto_basio-</code> means an automatic match based on excluding the basionym from the reference. It is a good idea to check any results that weren’t identical to verify that the matching algorithm worked correctly.</p>
+<p>Here is a summary of the values taken by <code>match_type</code> from <a href="https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes"><code>taxon-tools</code></a>:</p>
+<ul>
+<li>
+<code>exact</code>: Exact match to all parts of the name (genus hybrid marker, genus name, species hybrid marker, species epithet, infraspecific rank signifier, infraspecific rank, author string).</li>
+<li>
+<code>auto_punct</code>: Exact match to all parts of the name after removing mis-matching spaces, periods, non-ASCII author name characters, etc.</li>
+<li>
+<code>auto_noauth</code> (only applies if <code>match_no_auth</code> is <code>TRUE</code>): Match between a query lacking an author and a reference name lacking an author that occurs only once in the reference.</li>
+<li>
+<code>auto_basio-</code>: Match after excluding the basionym from the reference. For example, <code>Cardaminopsis umbrosa Czerep.</code> vs. <code>Cardaminopsis umbrosa (Turcz.) Czerep.)</code>); the basionym is <code>(Turcz.)</code>.</li>
+<li>
+<code>auto_basio+</code>: Match after excluding the basionym from the query.</li>
+<li>
+<code>auto_in-</code>: Match after excluding all <em>in</em> elements from reference. An <em>in</em> element refers to phrases such as <code>Tagawa in Morton</code>. The version excluding <em>in</em> elements is <code>Tagawa</code>.</li>
+<li>
+<code>auto_in+</code>: Match after excluding all <em>in</em> elements from query.</li>
+<li>
+<code>auto_ex-</code>: Match after excluding all <em>in</em> and <em>ex</em> elements from reference. An <em>ex</em> element refers to phrases such as <code>Rändel ex D.F.Murray</code>. The version excluding <em>ex</em> elements is <code>Rändel</code>.</li>
+<li>
+<code>auto_ex+</code>: Match after excluding all <em>in</em> and <em>ex</em> elements from query.</li>
+<li>
+<code>auto_basexin</code>: Match after excluding all basionyms and all <em>in</em> and <em>ex</em> elements from query and reference.</li>
+<li>
+<code>auto_irank</code>: Match where all elements agree except for infraspecific rank.</li>
+<li>
+<code>auto_fuzzy</code>: Fuzzy match; match between scientific names allowed up to threshold given by <code>max_dist</code>, the Levenshtein distance including total insertions, deletions and substitutions.</li>
+<li>
+<code>cfonly</code>: Match by “canonical form”, i.e., genus plus specific epithet plus infraspecific epithet (if present), not including the infraspecific specifier (“subsp.”, etc.).</li>
+<li>
+<code>no_match</code>: No match detected.</li>
+</ul>
+<p>The matching algorithm will prefer match codes higher in the list; so if a name could be matched both by <code>auto_punct</code> and <code>auto_fuzzy</code>, it will be matched based on <code>auto_punct</code><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+</div>
+<div id="name-resolution" class="section level2">
+<h2 class="hasAnchor">
+<a href="#name-resolution" class="anchor"></a>Name resolution</h2>
+<p>Name resolution refers to the process of mapping a query name to its standard version. This could just be accounting for orthographic variations, or it could involve resolving synonyms: different names that actually refer to the same species.</p>
+<p>In order to conduct name resolution, we require a <strong>taxonomic standard</strong> in the form of a dataframe. <code>taxastand</code> requires that the taxonomic standard conform to <a href="https://dwc.tdwg.org/">Darwin Core standards</a>. There are many sources of taxonomic data online, including <a href="https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c">GBIF</a>, <a href="http://www.catalogueoflife.org/">Catalog of Life</a>, and <a href="https://www.itis.gov/">ITIS</a> among others.</p>
+<p><code>taxastand</code> comes supplied with an example taxonomic standard for filmy ferns (family Hymenophyllaceae):</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Load example reference taxonomy in Darwin Core format</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span>
+
+<span class="co"># Take a look at the columns used by taxastand</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"taxonID"</span>, <span class="st">"acceptedNameUsageID"</span>, <span class="st">"taxonomicStatus"</span>, <span class="st">"scientificName"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
+<span class="co">#&gt; # A tibble: 6 × 4</span>
+<span class="co">#&gt;    taxonID acceptedNameUsageID taxonomicStatus scientificName                   </span>
+<span class="co">#&gt;      &lt;dbl&gt;               &lt;dbl&gt; &lt;chr&gt;           &lt;chr&gt;                            </span>
+<span class="co">#&gt; 1 54115096                  NA accepted name   Cephalomanes atrovirens Presl    </span>
+<span class="co">#&gt; 2 54133783            54115097 synonym         Trichomanes crassum Copel.       </span>
+<span class="co">#&gt; 3 54115097                  NA accepted name   Cephalomanes crassum (Copel.) M.…</span>
+<span class="co">#&gt; 4 54133784            54115098 synonym         Trichomanes densinervium Copel.  </span>
+<span class="co">#&gt; 5 54115098                  NA accepted name   Cephalomanes densinervium (Copel…</span>
+<span class="co">#&gt; 6 54133785            54115099 synonym         Trichomanes infundibulare Alderw.</span></code></pre></div>
+<p>Here, <code>taxonID</code> is a unique identifier for each taxonomic name. <code>acceptedNameUsageID</code> only applies in the case of synonyms: it tells us the <code>taxonID</code> of the accepted name corresponding to that synonym. <code>taxonomicStatus</code> describes the status of the name, typically either as an accepted name, synonym, or something else (“dubious”, etc.). Finally, the <code>scientificName</code> is the full scientific name, preferably with the author.</p>
+<p>In its most simple usage, <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code> can take as input a character vector to <code>query</code>, and provide the resolved name in the taxonomic standard (<code>reference</code>):</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span>
+<span class="co">#&gt;                query                        resolved_name</span>
+<span class="co">#&gt; 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.</span>
+<span class="co">#&gt;                     matched_name resolved_status matched_status match_type</span>
+<span class="co">#&gt; 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy</span></code></pre></div>
+<p>In this case, the query, <code>Gonocormus minutum</code> was a misspelled name that is actually a synonym for <em>Crepidomanes minutum</em> (Bl.) K. Iwats. Under the hood, <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code> is calling both <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> and <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> to do parsing and matching steps before name resolution<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>.</p>
+<p>However, when used this way, <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code> may not be able to provide a resolved name if the input is not matched unambiguously:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">t_bifid_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Trichomanes bifidum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">t_bifid_res</span><span class="op">)</span>
+<span class="co">#&gt;                 query resolved_name                 matched_name</span>
+<span class="co">#&gt; 1 Trichomanes bifidum          &lt;NA&gt;   Trichomanes asynkii Racib.</span>
+<span class="co">#&gt; 2 Trichomanes bifidum          &lt;NA&gt;      Trichomanes hartii Bak.</span>
+<span class="co">#&gt; 3 Trichomanes bifidum          &lt;NA&gt;  Trichomanes minimum Alderw.</span>
+<span class="co">#&gt; 4 Trichomanes bifidum          &lt;NA&gt;      Trichomanes loreum Bory</span>
+<span class="co">#&gt; 5 Trichomanes bifidum          &lt;NA&gt; Trichomanes bifidum C. Presl</span>
+<span class="co">#&gt; 6 Trichomanes bifidum          &lt;NA&gt;   Trichomanes bilingue Hook.</span>
+<span class="co">#&gt;   resolved_status matched_status match_type</span>
+<span class="co">#&gt; 1            &lt;NA&gt;           &lt;NA&gt; auto_fuzzy</span>
+<span class="co">#&gt; 2            &lt;NA&gt;           &lt;NA&gt; auto_fuzzy</span>
+<span class="co">#&gt; 3            &lt;NA&gt;           &lt;NA&gt; auto_fuzzy</span>
+<span class="co">#&gt; 4            &lt;NA&gt;           &lt;NA&gt; auto_fuzzy</span>
+<span class="co">#&gt; 5            &lt;NA&gt;           &lt;NA&gt; auto_fuzzy</span>
+<span class="co">#&gt; 6            &lt;NA&gt;           &lt;NA&gt; auto_fuzzy</span>
+<span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">t_bifid_res</span><span class="op">)</span>
+<span class="co">#&gt; [1] 211   6</span></code></pre></div>
+<p>In this case, name resolution using the default settings produced 211 possible answers! That is obviously far too many. Let’s try to adjust the arguments and see if we can reduce the output:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span>
+  <span class="st">"Trichomanes bifidum"</span>, <span class="va">filmy_taxonomy</span>, 
+  match_no_auth <span class="op">=</span> <span class="cn">TRUE</span>, match_canon <span class="op">=</span> <span class="cn">TRUE</span>, max_dist <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
+<span class="co">#&gt;                 query resolved_name             matched_name resolved_status</span>
+<span class="co">#&gt; 1 Trichomanes bifidum          &lt;NA&gt; Trichomanes bifolium Bl.            &lt;NA&gt;</span>
+<span class="co">#&gt; 2 Trichomanes bifidum          &lt;NA&gt;  Trichomanes rigidum Sw.            &lt;NA&gt;</span>
+<span class="co">#&gt;   matched_status match_type</span>
+<span class="co">#&gt; 1           &lt;NA&gt; auto_fuzzy</span>
+<span class="co">#&gt; 2           &lt;NA&gt; auto_fuzzy</span></code></pre></div>
+<p>By allowing matches without the author name (we probably should have done that anyways, since the query lacked an author) and lowering the fuzzy match threshold, we are able to greatly reduce the number of possible resolved names.</p>
+<p>Name resolution workflows typically involve tweaking these arguments to resolve a maximum number of names automatically, followed by some amount of manual edits to the remaining resolved names.</p>
+<p>A benefit of <code>taxastand</code> is that, if during the name resolution workflow we discover mistakes in the reference database, the reference database can be edited so that the query names resolve correctly (this is not possible with packages that rely on querying a remote taxonomic database that can’t be modified by the user).</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2 class="hasAnchor">
+<a href="#conclusion" class="anchor"></a>Conclusion</h2>
+<p>This vignette illustrated the typical steps involved in name resolution with <code>taxastand</code> on some trivial examples. In another vignette, I will provide a more realistic example with a larger dataset.</p>
+</div>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p>Note that <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> did the name parsing by calling <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> for us internally. This is usually fine, but it can also take parsed names (dataframes) produced by <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> as input to either <code>query</code> or <code>reference.</code><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>The algorithm used by <code>taxastand</code> is optimized for plants, algae, and fungi, which vary in their <a href="https://www.iapt-taxon.org/nomen/main.php">taxonomic rules</a> somewhat from animals. For example, plants include basionym authors in parentheses followed by the combination author, and typically don’t include the year, whereas animals normally include the year and may not provide the combination author.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>You can use the output of <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> to the <code>query</code> input of <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> if you want to see the matching results first.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
 </div>
   </div>
 
