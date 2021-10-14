@@ -85,7 +85,7 @@ head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scie
 # As a test, resolve a misspelled name
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 
-# We can now use the `accepted_name` column of this result for downstream 
+# We can now use the `resolved_name` column of this result for downstream 
 # analyses joining on other datasets that have been resolved to the same 
 # reference taxonomy.
 ```

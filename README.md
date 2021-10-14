@@ -140,12 +140,12 @@ head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scie
 
 # As a test, resolve a misspelled name
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
-#>                query                        accepted_name match_type  status
-#> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats. auto_fuzzy synonym
-#>                        reference
-#> 1 Gonocormus minutus (Bl.) Bosch
+#>                query                        resolved_name
+#> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
+#>                     matched_name resolved_status matched_status match_type
+#> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy
 
-# We can now use the `accepted_name` column of this result for downstream 
+# We can now use the `resolved_name` column of this result for downstream 
 # analyses joining on other datasets that have been resolved to the same 
 # reference taxonomy.
 ```
