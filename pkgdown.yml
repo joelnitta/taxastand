@@ -2,6 +2,6 @@ pandoc: 2.7.3
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
-  example_workflow: example_workflow.html
-last_built: 2021-10-14T11:27Z
+  basics: basics.html
+last_built: 2021-10-15T04:05Z
 
