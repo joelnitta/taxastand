@@ -124,7 +124,7 @@
     <p>Requires <a href='https://github.com/camwebb/taxon-tools'>taxon-tools</a> to be installed.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ts_parse_names</span><span class='op'>(</span><span class='va'>taxa</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>ts_parse_names</span><span class='op'>(</span><span class='va'>taxa</span>, tbl_out <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"ts_tbl_out"</span>, default <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -133,6 +133,12 @@
       <th>taxa</th>
       <td><p>Character vector; taxon names to be parsed by taxon-tools <code>parsenames</code>.
 Missing values not allowed. Must all be unique.</p></td>
+    </tr>
+    <tr>
+      <th>tbl_out</th>
+      <td><p>Logical vector of length 1; should a tibble be returned?
+If <code>FALSE</code> (default), output will be a data.frame. This argument can
+be controlled via the option <code>ts_tbl_out</code>; see Examples.</p></td>
     </tr>
     </table>
 
@@ -156,12 +162,34 @@ Missing values not allowed. Must all be unique.</p></td>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'>ts_parse_names</span><span class='op'>(</span><span class='st'>"Foogenus x barspecies var. foosubsp (L.) F. Bar"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                                              name         id genus_hybrid_sign
-#&gt; 1 Foogenus x barspecies var. foosubsp (L.) F. Bar 5f207ff2-1              &lt;NA&gt;
-#&gt;   genus_name species_hybrid_sign specific_epithet infraspecific_rank
-#&gt; 1   Foogenus                   ×       barspecies               var.
-#&gt;   infraspecific_epithet      author
-#&gt; 1              foosubsp (L.) F. Bar</div><div class='input'>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 9</span>
+#&gt;   name       id    genus_hybrid_si… genus_name species_hybrid_… specific_epithet
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           
+#&gt; <span style='color: #BCBCBC;'>1</span> Foogenus … 5f20… <span style='color: #BB0000;'>NA</span>               Foogenus   ×                barspecies      
+#&gt; <span style='color: #949494;'># … with 3 more variables: infraspecific_rank &lt;chr&gt;,</span>
+#&gt; <span style='color: #949494;'>#   infraspecific_epithet &lt;chr&gt;, author &lt;chr&gt;</span></div><div class='input'><span class='fu'>ts_parse_names</span><span class='op'>(</span><span class='st'>"Foogenus x barspecies var. foosubsp (L.) F. Bar"</span>, tbl_out <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 9</span>
+#&gt;   name       id    genus_hybrid_si… genus_name species_hybrid_… specific_epithet
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           
+#&gt; <span style='color: #BCBCBC;'>1</span> Foogenus … 5f20… <span style='color: #BB0000;'>NA</span>               Foogenus   ×                barspecies      
+#&gt; <span style='color: #949494;'># … with 3 more variables: infraspecific_rank &lt;chr&gt;,</span>
+#&gt; <span style='color: #949494;'>#   infraspecific_epithet &lt;chr&gt;, author &lt;chr&gt;</span></div><div class='input'>
+<span class='co'># If you always want tibble output without specifying `tbl_out = TRUE` every</span>
+<span class='co'># time, set the option:</span>
+<span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span><span class='op'>(</span>ts_tbl_out <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+<span class='fu'>ts_parse_names</span><span class='op'>(</span><span class='st'>"Foogenus x barspecies var. foosubsp (L.) F. Bar"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 9</span>
+#&gt;   name       id    genus_hybrid_si… genus_name species_hybrid_… specific_epithet
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           
+#&gt; <span style='color: #BCBCBC;'>1</span> Foogenus … 5f20… <span style='color: #BB0000;'>NA</span>               Foogenus   ×                barspecies      
+#&gt; <span style='color: #949494;'># … with 3 more variables: infraspecific_rank &lt;chr&gt;,</span>
+#&gt; <span style='color: #949494;'>#   infraspecific_epithet &lt;chr&gt;, author &lt;chr&gt;</span></div><div class='input'><span class='fu'>ts_parse_names</span><span class='op'>(</span><span class='st'>"Crepidomanes minutum (Blume) K. Iwats."</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 9</span>
+#&gt;   name      id     genus_hybrid_si… genus_name species_hybrid_… specific_epithet
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>      <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>            <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           
+#&gt; <span style='color: #BCBCBC;'>1</span> Crepidom… e43ef… <span style='color: #BB0000;'>NA</span>               Crepidoma… <span style='color: #BB0000;'>NA</span>               minutum         
+#&gt; <span style='color: #949494;'># … with 3 more variables: infraspecific_rank &lt;chr&gt;,</span>
+#&gt; <span style='color: #949494;'>#   infraspecific_epithet &lt;chr&gt;, author &lt;chr&gt;</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -131,7 +131,8 @@ function resolves synonyms to their accepted names.</p>
   <span class='va'>ref_taxonomy</span>,
   max_dist <span class='op'>=</span> <span class='fl'>10</span>,
   match_no_auth <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  match_canon <span class='op'>=</span> <span class='cn'>FALSE</span>
+  match_canon <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  tbl_out <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"ts_tbl_out"</span>, default <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -172,6 +173,12 @@ Default: to not allow such a match (<code>FALSE</code>).</p></td>
       <td><p>Logical; Allow a "canonical name" match if only the genus, species epithet,
 and infraspecific epithet (if present) match exactly. Default: to not allow such a match (<code>FALSE</code>).</p></td>
     </tr>
+    <tr>
+      <th>tbl_out</th>
+      <td><p>Logical vector of length 1; should a tibble be returned?
+If <code>FALSE</code> (default), output will be a data.frame. This argument can
+be controlled via the option <code>ts_tbl_out</code>; see Examples.</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -205,10 +212,18 @@ for this function.</p>
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>filmy_taxonomy</span><span class='op'>)</span>
 
 <span class='fu'>ts_resolve_names</span><span class='op'>(</span><span class='st'>"Gonocormus minutum"</span>, <span class='va'>filmy_taxonomy</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                query                        resolved_name
-#&gt; 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
-#&gt;                     matched_name resolved_status matched_status match_type
-#&gt; 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy</div></pre>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 6</span>
+#&gt;   query  resolved_name   matched_name  resolved_status matched_status match_type
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>         <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>          <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     
+#&gt; <span style='color: #BCBCBC;'>1</span> Gonoc… Crepidomanes m… Gonocormus m… accepted name   synonym        auto_fuzzy</div><div class='input'><span class='co'># If you always want tibble output without specifying `tbl_out = TRUE` every</span>
+<span class='co'># time, set the option:</span>
+<span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span><span class='op'>(</span>ts_tbl_out <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+<span class='fu'>ts_resolve_names</span><span class='op'>(</span><span class='st'>"Gonocormus minutum"</span>, <span class='va'>filmy_taxonomy</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 6</span>
+#&gt;   query  resolved_name   matched_name  resolved_status matched_status match_type
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>         <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>          <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     
+#&gt; <span style='color: #BCBCBC;'>1</span> Gonoc… Crepidomanes m… Gonocormus m… accepted name   synonym        auto_fuzzy</div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
