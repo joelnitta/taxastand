@@ -94,7 +94,7 @@ ts_resolve_names <- function(
     match_results_classified_with_taxonomy %>%
     # consider accepted names have either no acceptedNameUsageID or acceptedNameUsageID is same as taxonID
     dplyr::filter(
-      (is.na(acceptedNameUsageID) | (taxonID == acceptedNameUsageID)) & result_type == "single_match"
+      (is.na(acceptedNameUsageID) | acceptedNameUsageID == "" | taxonID == acceptedNameUsageID) & result_type == "single_match"
     ) %>%
     dplyr::select(query, resolved_name = reference, matched_name = reference, resolved_status = taxonomicStatus, matched_status = taxonomicStatus, match_type)
 
