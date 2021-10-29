@@ -33,6 +33,9 @@
 #' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
 #' @param simple Logical; return the output in a simplified format with only the query
 #' name, matched reference name, and match type. Default: `FALSE`.
+#' @param tbl_out Logical vector of length 1; should a tibble be returned?
+#' If `FALSE` (default), output will be a data.frame. This argument can
+#' be controlled via the option `ts_tbl_out`; see Examples.
 #'
 #' @return Dataframe with the following columns (if `simple` is `FALSE`):
 #' - query: Query name
@@ -64,9 +67,17 @@
 #'   "Crepidomanes minutus",
 #'   c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
 #'   simple = TRUE)
+#'
+#' # If you always want tibble output without specifying `tbl_out = TRUE` every
+#' # time, set the option:
+#' options(ts_tbl_out = TRUE)
+#' ts_match_names(
+#'   "Crepidomanes minutus",
+#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos"))
 ts_match_names <- function(
   query, reference,
-  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE, simple = FALSE
+  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE, simple = FALSE,
+  tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
 
   # Check input
@@ -80,6 +91,7 @@ ts_match_names <- function(
   assertthat::assert_that(is.logical(match_no_auth))
   assertthat::assert_that(is.logical(match_canon))
   assertthat::assert_that(is.logical(simple))
+  assertthat::assert_that(assertthat::is.flag(tbl_out))
 
   # Parse or load query names
   if(is.character(query)) {
@@ -183,6 +195,8 @@ ts_match_names <- function(
   results <- dplyr::select(results, query, reference, match_type, dplyr::everything())
 
   if(simple == TRUE) results <- dplyr::select(results, query, reference, match_type)
+
+  if(isTRUE(tbl_out)) return(tibble::as_tibble(results))
 
   results
 

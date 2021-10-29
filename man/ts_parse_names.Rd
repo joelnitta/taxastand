@@ -4,11 +4,15 @@
 \alias{ts_parse_names}
 \title{Parse taxonomic names}
 \usage{
-ts_parse_names(taxa)
+ts_parse_names(taxa, tbl_out = getOption("ts_tbl_out", default = FALSE))
 }
 \arguments{
 \item{taxa}{Character vector; taxon names to be parsed by taxon-tools \code{parsenames}.
 Missing values not allowed. Must all be unique.}
+
+\item{tbl_out}{Logical vector of length 1; should a tibble be returned?
+If \code{FALSE} (default), output will be a data.frame. This argument can
+be controlled via the option \code{ts_tbl_out}; see Examples.}
 }
 \value{
 A dataframe including the following columns.
@@ -32,5 +36,12 @@ Parses scientific names into their component parts (genus, species, variety, aut
 }
 \examples{
 ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
+
+# If you always want tibble output without specifying `tbl_out = TRUE` every
+# time, set the option:
+options(ts_tbl_out = TRUE)
+ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 
 }

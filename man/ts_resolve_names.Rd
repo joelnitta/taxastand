@@ -9,7 +9,8 @@ ts_resolve_names(
   ref_taxonomy,
   max_dist = 10,
   match_no_auth = FALSE,
-  match_canon = FALSE
+  match_canon = FALSE,
+  tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
 }
 \arguments{
@@ -38,6 +39,10 @@ Default: to not allow such a match (\code{FALSE}).}
 
 \item{match_canon}{Logical; Allow a "canonical name" match if only the genus, species epithet,
 and infraspecific epithet (if present) match exactly. Default: to not allow such a match (\code{FALSE}).}
+
+\item{tbl_out}{Logical vector of length 1; should a tibble be returned?
+If \code{FALSE} (default), output will be a data.frame. This argument can
+be controlled via the option \code{ts_tbl_out}; see Examples.}
 }
 \value{
 Dataframe; results of resolving synonyms in matched taxonomic names.
@@ -75,4 +80,9 @@ for this function.
 data(filmy_taxonomy)
 
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
+# If you always want tibble output without specifying `tbl_out = TRUE` every
+# time, set the option:
+options(ts_tbl_out = TRUE)
+ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
+
 }

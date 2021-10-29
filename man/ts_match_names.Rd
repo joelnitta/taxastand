@@ -10,7 +10,8 @@ ts_match_names(
   max_dist = 10,
   match_no_auth = FALSE,
   match_canon = FALSE,
-  simple = FALSE
+  simple = FALSE,
+  tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
 }
 \arguments{
@@ -34,6 +35,10 @@ and infraspecific epithet (if present) match exactly. Default: to not allow such
 
 \item{simple}{Logical; return the output in a simplified format with only the query
 name, matched reference name, and match type. Default: \code{FALSE}.}
+
+\item{tbl_out}{Logical vector of length 1; should a tibble be returned?
+If \code{FALSE} (default), output will be a data.frame. This argument can
+be controlled via the option \code{ts_tbl_out}; see Examples.}
 }
 \value{
 Dataframe with the following columns (if \code{simple} is \code{FALSE}):
@@ -88,4 +93,11 @@ ts_match_names(
   "Crepidomanes minutus",
   c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
   simple = TRUE)
+
+# If you always want tibble output without specifying `tbl_out = TRUE` every
+# time, set the option:
+options(ts_tbl_out = TRUE)
+ts_match_names(
+  "Crepidomanes minutus",
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos"))
 }

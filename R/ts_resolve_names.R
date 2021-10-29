@@ -34,6 +34,9 @@
 #' Default: to not allow such a match (`FALSE`).
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus, species epithet,
 #' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
+#' @param tbl_out Logical vector of length 1; should a tibble be returned?
+#' If `FALSE` (default), output will be a data.frame. This argument can
+#' be controlled via the option `ts_tbl_out`; see Examples.
 #'
 #' @return Dataframe; results of resolving synonyms in matched taxonomic names.
 #' Includes the following columns:
@@ -53,14 +56,22 @@
 #' data(filmy_taxonomy)
 #'
 #' ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
-ts_resolve_names <- function(query, ref_taxonomy,
-                             max_dist = 10, match_no_auth = FALSE, match_canon = FALSE) {
+#' # If you always want tibble output without specifying `tbl_out = TRUE` every
+#' # time, set the option:
+#' options(ts_tbl_out = TRUE)
+#' ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
+#'
+ts_resolve_names <- function(
+  query, ref_taxonomy,
+  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
+  tbl_out = getOption("ts_tbl_out", default = FALSE)) {
 
   # Check input
   assertthat::assert_that(
     is.character(query) | inherits(query, "data.frame"),
     msg = "query must be of class 'data.frame' or a character vector")
   assertthat::assert_that(inherits(ref_taxonomy, "data.frame"), msg = "ref_taxonomy must be of class 'data.frame'")
+  assertthat::assert_that(assertthat::is.flag(tbl_out))
 
   # If needed, match names first
   if(is.character(query)) {
@@ -116,8 +127,13 @@ ts_resolve_names <- function(query, ref_taxonomy,
     dplyr::anti_join(success, by = "query")
 
   # Combine into final results
-  dplyr::bind_rows(success, failure) %>%
+  results <- dplyr::bind_rows(success, failure) %>%
     assertr::verify(all(query %in% match_results$query)) %>%
     assertr::verify(all(match_results$query %in% query)) %>%
     dplyr::select(query, resolved_name, matched_name, resolved_status, matched_status, match_type)
+
+  # Return as tibble or dataframe
+  if(isTRUE(tbl_out)) return(tibble::as_tibble(results))
+
+  results
 }
