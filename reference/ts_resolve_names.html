@@ -208,22 +208,24 @@ Darwin Core includes many terms, but only four (<code>taxonID</code>,
 for this function.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Load reference taxonomy in Darwin Core format</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>filmy_taxonomy</span><span class='op'>)</span>
-
-<span class='fu'>ts_resolve_names</span><span class='op'>(</span><span class='st'>"Gonocormus minutum"</span>, <span class='va'>filmy_taxonomy</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 6</span>
-#&gt;   query  resolved_name   matched_name  resolved_status matched_status match_type
-#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>         <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>          <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     
-#&gt; <span style='color: #BCBCBC;'>1</span> Gonoc… Crepidomanes m… Gonocormus m… accepted name   synonym        auto_fuzzy</div><div class='input'><span class='co'># If you always want tibble output without specifying `tbl_out = TRUE` every</span>
-<span class='co'># time, set the option:</span>
-<span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span><span class='op'>(</span>ts_tbl_out <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-<span class='fu'>ts_resolve_names</span><span class='op'>(</span><span class='st'>"Gonocormus minutum"</span>, <span class='va'>filmy_taxonomy</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 1 × 6</span>
-#&gt;   query  resolved_name   matched_name  resolved_status matched_status match_type
-#&gt;   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>         <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>          <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     
-#&gt; <span style='color: #BCBCBC;'>1</span> Gonoc… Crepidomanes m… Gonocormus m… accepted name   synonym        auto_fuzzy</div><div class='input'>
-</div></pre>
+    <pre class="examples"><span class='r-in'><span class='co'># Load reference taxonomy in Darwin Core format</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>filmy_taxonomy</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='fu'>ts_resolve_names</span><span class='op'>(</span><span class='st'>"Gonocormus minutum"</span>, <span class='va'>filmy_taxonomy</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #949494;'># A tibble: 1 × 6</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   query  resolved_name   matched_name  resolved_status matched_status match_type</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>         <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>          <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span> Gonoc… Crepidomanes m… Gonocormus m… accepted name   synonym        auto_fuzzy</span>
+<span class='r-in'><span class='co'># If you always want tibble output without specifying `tbl_out = TRUE` every</span></span>
+<span class='r-in'><span class='co'># time, set the option:</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span><span class='op'>(</span>ts_tbl_out <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'>ts_resolve_names</span><span class='op'>(</span><span class='st'>"Gonocormus minutum"</span>, <span class='va'>filmy_taxonomy</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #949494;'># A tibble: 1 × 6</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   query  resolved_name   matched_name  resolved_status matched_status match_type</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>  <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>         <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>           <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>          <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>     </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='color: #BCBCBC;'>1</span> Gonoc… Crepidomanes m… Gonocormus m… accepted name   synonym        auto_fuzzy</span>
+<span class='r-in'></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
