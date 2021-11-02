@@ -103,6 +103,7 @@ ts_resolve_names <- function(
     match_results_classified_with_taxonomy %>%
     # Consider synonym anything with acceptedNameUsageID not matching taxonID
     dplyr::filter(!is.na(acceptedNameUsageID)) %>%
+    dplyr::filter(acceptedNameUsageID != "") %>%
     dplyr::filter(acceptedNameUsageID != taxonID) %>%
     # Join resolved names via synonym
     dplyr::left_join(
