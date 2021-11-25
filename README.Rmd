@@ -101,7 +101,7 @@ ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 
 If you use this package, please cite it! Here is an example:
 
-    Nitta JH, (2021) taxastand: Standardize taxonomic names in R. doi: 10.5281/zenodo.5726390
+    Nitta, JH (2021) taxastand: Taxonomic name standardization in R. https://doi.org/10.5281/zenodo.5726390
 
 The example DOI above is for the overall package.
 

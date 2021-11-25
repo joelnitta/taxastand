@@ -1,5 +1,5 @@
 Package: taxastand
-Title: Standardize Taxonomic Names
+Title: Taxonomic Name Standardization
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Joel",
