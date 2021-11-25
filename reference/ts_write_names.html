@@ -149,7 +149,7 @@
     <pre class="examples"><span class='r-in'><span class='va'>parsed_names</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ts_parse_names.html'>ts_parse_names</a></span><span class='op'>(</span><span class='st'>"Foogenus x barspecies var. foosubsp (L.) F. Bar"</span><span class='op'>)</span></span>
 <span class='r-in'><span class='va'>temp_file</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span><span class='op'>(</span><span class='op'>)</span></span>
 <span class='r-in'><span class='fu'>ts_write_names</span><span class='op'>(</span><span class='va'>parsed_names</span>, <span class='va'>temp_file</span><span class='op'>)</span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "/tmp/Rtmp0TFkkf/file3198548f6ed3"</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "/tmp/RtmpWLvySk/file2bde40db04e0"</span>
 <span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/readLines.html'>readLines</a></span><span class='op'>(</span><span class='va'>temp_file</span><span class='op'>)</span></span>
 <span class='r-out co'><span class='r-pr'>#&gt;</span> [1] "5f207ff2-1||Foogenus|×|barspecies|var.|foosubsp|(L.) F. Bar"</span>
 <span class='r-in'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span><span class='op'>(</span><span class='va'>temp_file</span><span class='op'>)</span></span>
