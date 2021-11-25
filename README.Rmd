@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![DOI](https://zenodo.org/badge/192684959.svg)](https://zenodo.org/badge/latestdoi/192684959)
 <!-- badges: end -->
 
 The goal of `taxastand` is to standardize species names from different sources, a common task in biology. 
@@ -95,3 +96,21 @@ ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 # analyses joining on other datasets that have been resolved to the same 
 # reference taxonomy.
 ```
+
+## Citing this package
+
+If you use this package, please cite it! Here is an example:
+
+    Nitta JH, (2021) taxastand: Standardize taxonomic names in R. doi: 10.5281/zenodo.5726390
+
+The example DOI above is for the overall package.
+
+Here is the latest DOI, which you should use if you are using the latest
+version of the package:
+
+[![DOI](https://zenodo.org/badge/192684959.svg)](https://zenodo.org/badge/latestdoi/192684959)
+
+You can find DOIs for older versions by viewing the “Releases” menu on
+the right.
+
+You should also cite the software that `taxastand` relies on, `taxon-tools`: https://github.com/camwebb/taxon-tools
