@@ -124,7 +124,7 @@ ts_resolve_names <- function(
   # Anything else is a failure
   failure <-
     match_results_classified_with_taxonomy %>%
-    dplyr::select(query, match_type, status = taxonomicStatus, matched_name = reference) %>%
+    dplyr::select(query, match_type, matched_status = taxonomicStatus, matched_name = reference) %>%
     dplyr::anti_join(success, by = "query")
 
   # Combine into final results
