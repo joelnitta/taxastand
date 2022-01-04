@@ -34,6 +34,9 @@
 #' Default: to not allow such a match (`FALSE`).
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus, species epithet,
 #' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
+#' @param collapse_infra Logical; if the specific epithet and infraspecific epithet
+#' are the same, drop the infraspecific rank and epithet from the query. For more
+#' information, see \code{\link{ts_match_names}()}.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
@@ -64,6 +67,7 @@
 ts_resolve_names <- function(
   query, ref_taxonomy,
   max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
+  collapse_infra = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)) {
 
   # Check input
@@ -75,7 +79,11 @@ ts_resolve_names <- function(
 
   # If needed, match names first
   if(is.character(query)) {
-    match_results <- ts_match_names(query, unique(ref_taxonomy$scientificName), max_dist = max_dist, match_no_auth = match_no_auth, match_canon = match_canon, simple = TRUE)
+    match_results <- ts_match_names(
+      query = query, reference = unique(ref_taxonomy$scientificName),
+      max_dist = max_dist, match_no_auth = match_no_auth,
+      match_canon = match_canon, collapse_infra = collapse_infra,
+      simple = TRUE)
   } else if (is.data.frame(query)) {
     match_results <- query
   } else {
