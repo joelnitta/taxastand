@@ -117,8 +117,10 @@ ts_match_names(
 
 # Example using collapse_infra argument
 ts_match_names(
-  c("Crepidomanes minutus", "Blechnum lunare var. lunare"),
-  c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare"),
+  c("Crepidomanes minutus", "Blechnum lunare var. lunare", "Blechnum lunare",
+    "Bar foo var. foo", "Bar foo"),
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+    "Bar foo"),
   collapse_infra = TRUE
   )
 

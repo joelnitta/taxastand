@@ -89,8 +89,10 @@
 #'
 #' # Example using collapse_infra argument
 #' ts_match_names(
-#'   c("Crepidomanes minutus", "Blechnum lunare var. lunare"),
-#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare"),
+#'   c("Crepidomanes minutus", "Blechnum lunare var. lunare", "Blechnum lunare",
+#'     "Bar foo var. foo", "Bar foo"),
+#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+#'     "Bar foo"),
 #'   collapse_infra = TRUE
 #'   )
 #'
@@ -125,8 +127,26 @@ ts_match_names <- function(
     query_parsed_df <- query
   }
 
+  # Helper function to add a namestring to a dataframe of parsed names
+  add_namestring <- function(df) {
+    df$namestring <-
+      paste0(
+        df$genus_hybrid_sign,
+        df$genus_name,
+        df$species_hybrid_sign,
+        df$specific_epithet,
+        df$infraspecific_rank,
+        df$infraspecific_epithet,
+        df$author,
+        sep = "_"
+      )
+    df
+  }
+
   # Optionally collapse infraspecific name
   if (isTRUE(collapse_infra)) {
+    # Save a copy of original unmodified parsed query
+    query_parsed_df_original <- query_parsed_df
     # Identify rows where infraspecific_epithet is the same as specific_epithet
     query_parsed_df$same_infra_species <- query_parsed_df$specific_epithet ==
       query_parsed_df$infraspecific_epithet
@@ -137,6 +157,14 @@ ts_match_names <- function(
     query_parsed_df$infraspecific_epithet[query_parsed_df$same_infra_species] <- NA
     query_parsed_df$infraspecific_rank[query_parsed_df$same_infra_species] <- NA
     query_parsed_df$same_infra_species <- NULL
+    # Account for duplicates created after collapsing names: drop them
+    query_parsed_df <- add_namestring(query_parsed_df) |>
+      dplyr::group_by(namestring) |>
+      dplyr::mutate(key_id = dplyr::first(id)) |>
+      dplyr::ungroup()
+    id_map <- dplyr::select(query_parsed_df, id_query = key_id, id)
+    query_parsed_df <- query_parsed_df[!duplicated(query_parsed_df$namestring),]
+    query_parsed_df$namestring <- NULL
   }
 
   # Write out parsed names to temporary file
@@ -230,6 +258,20 @@ ts_match_names <- function(
     by = "id_ref")
 
   results <- dplyr::select(results, query, reference, match_type, dplyr::everything())
+
+  # Add back in names that were duplicated due to collapsed infrasp names
+  if (isTRUE(collapse_infra)) {
+  results <-
+  dplyr::select(
+    query_parsed_df_original,
+    query = name, id) |>
+    dplyr::left_join(id_map, by = "id") |>
+    dplyr::left_join(
+      dplyr::select(results, -query),
+      by = "id_query") |>
+    dplyr::select(-id) |>
+    dplyr::select(query, reference, match_type, dplyr::everything())
+  }
 
   if(simple == TRUE) results <- dplyr::select(results, query, reference, match_type)
 
