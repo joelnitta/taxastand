@@ -28,7 +28,7 @@ Roxygen: list(
     markdown = TRUE,
     roclets = c("collate", "namespace", "rd", "roxyglobals::global_roclet"))
 RoxygenNote: 7.1.2
-Depends: R (>= 2.10)
+Depends: R (>= 4.1.0)
 Suggests: 
     rmarkdown,
     knitr,
