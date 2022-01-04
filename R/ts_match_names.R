@@ -246,6 +246,9 @@ ts_match_names <- function(
     fill = "right",
     remove = TRUE)
 
+  # Convert empty strings to NA
+  results <- dplyr::mutate(results, dplyr::across(dplyr::everything(), ~dplyr::na_if(.x, "")))
+
   # Add back in the original search terms (query and reference)
   results <- dplyr::left_join(
     results,
