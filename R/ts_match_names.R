@@ -12,11 +12,19 @@
 #'
 #' For more information on rules used for matching, [see taxon-tools manual](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes).
 #'
-#' Parsing is fairly fast (much faster than matching) but can take some time if the
-#' number of names is very large. If multiple queries will be made (e.g., to the
-#' same large reference database), it is recommended to first parse the names
-#' using \code{\link{ts_parse_names}()}, and use the results as input to `query`
-#' and/or `reference`.
+#' Parsing is fairly fast (much faster than matching) but can take some time if
+#' the number of names is very large. If multiple queries will be made (e.g., to
+#' the same large reference database), it is recommended to first parse the
+#' names using \code{\link{ts_parse_names}()}, and use the results as input to
+#' `query` and/or `reference`.
+#'
+#' `collapse_infra` is useful in situations where the reference database does
+#' not use names that have the same specific epithet and infraspecific epithet.
+#' For example, reference name "Blechnum lunare" and query "Blechnum lunare var.
+#' lunare". In this case, if `collapse_infra` is `TRUE`, "Blechnum lunare" will
+#' be queried instead of "Blechnum lunare var. lunare". Note that the
+#' `match_type` will be "exact" even though the literal query and the matched
+#' name are different (see example below).
 #'
 #' @param query Character vector or dataframe; taxonomic names to be queried.
 #' If a character vector, missing values not allowed and all values must be unique.
@@ -31,6 +39,8 @@
 #' Default: to not allow such a match (`FALSE`).
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus, species epithet,
 #' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
+#' @param collapse_infra Logical; if the specific epithet and infraspecific epithet
+#' are the same, drop the infraspecific rank and epithet from the query.
 #' @param simple Logical; return the output in a simplified format with only the query
 #' name, matched reference name, and match type. Default: `FALSE`.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
@@ -66,17 +76,29 @@
 #' ts_match_names(
 #'   "Crepidomanes minutus",
 #'   c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-#'   simple = TRUE)
+#'   simple = TRUE
+#'   )
 #'
 #' # If you always want tibble output without specifying `tbl_out = TRUE` every
 #' # time, set the option:
 #' options(ts_tbl_out = TRUE)
 #' ts_match_names(
 #'   "Crepidomanes minutus",
-#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos"))
+#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos")
+#'   )
+#'
+#' # Example using collapse_infra argument
+#' ts_match_names(
+#'   c("Crepidomanes minutus", "Blechnum lunare var. lunare"),
+#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare"),
+#'   collapse_infra = TRUE
+#'   )
+#'
 ts_match_names <- function(
   query, reference,
-  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE, simple = FALSE,
+  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
+  collapse_infra = FALSE,
+  simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
 
@@ -92,6 +114,7 @@ ts_match_names <- function(
   assertthat::assert_that(is.logical(match_canon))
   assertthat::assert_that(is.logical(simple))
   assertthat::assert_that(assertthat::is.flag(tbl_out))
+  assertthat::assert_that(assertthat::is.flag(collapse_infra))
 
   # Parse or load query names
   if(is.character(query)) {
@@ -100,6 +123,20 @@ ts_match_names <- function(
   } else {
     # Or, names are already parsed
     query_parsed_df <- query
+  }
+
+  # Optionally collapse infraspecific name
+  if (isTRUE(collapse_infra)) {
+    # Identify rows where infraspecific_epithet is the same as specific_epithet
+    query_parsed_df$same_infra_species <- query_parsed_df$specific_epithet ==
+      query_parsed_df$infraspecific_epithet
+    query_parsed_df$same_infra_species[
+      is.na(query_parsed_df$same_infra_species)] <- FALSE
+    # For rows where infraspecific_epithet is the same as specific_epithet,
+    # delete infraspecific_epithet and infraspecific_rank
+    query_parsed_df$infraspecific_epithet[query_parsed_df$same_infra_species] <- NA
+    query_parsed_df$infraspecific_rank[query_parsed_df$same_infra_species] <- NA
+    query_parsed_df$same_infra_species <- NULL
   }
 
   # Write out parsed names to temporary file

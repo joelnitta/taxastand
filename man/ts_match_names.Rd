@@ -10,6 +10,7 @@ ts_match_names(
   max_dist = 10,
   match_no_auth = FALSE,
   match_canon = FALSE,
+  collapse_infra = FALSE,
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
@@ -32,6 +33,9 @@ Default: to not allow such a match (\code{FALSE}).}
 
 \item{match_canon}{Logical; Allow a "canonical name" match if only the genus, species epithet,
 and infraspecific epithet (if present) match exactly. Default: to not allow such a match (\code{FALSE}).}
+
+\item{collapse_infra}{Logical; if the specific epithet and infraspecific epithet
+are the same, drop the infraspecific rank and epithet from the query.}
 
 \item{simple}{Logical; return the output in a simplified format with only the query
 name, matched reference name, and match type. Default: \code{FALSE}.}
@@ -82,22 +86,40 @@ parts.
 
 For more information on rules used for matching, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual}.
 
-Parsing is fairly fast (much faster than matching) but can take some time if the
-number of names is very large. If multiple queries will be made (e.g., to the
-same large reference database), it is recommended to first parse the names
-using \code{\link{ts_parse_names}()}, and use the results as input to \code{query}
-and/or \code{reference}.
+Parsing is fairly fast (much faster than matching) but can take some time if
+the number of names is very large. If multiple queries will be made (e.g., to
+the same large reference database), it is recommended to first parse the
+names using \code{\link{ts_parse_names}()}, and use the results as input to
+\code{query} and/or \code{reference}.
+
+\code{collapse_infra} is useful in situations where the reference database does
+not use names that have the same specific epithet and infraspecific epithet.
+For example, reference name "Blechnum lunare" and query "Blechnum lunare var.
+lunare". In this case, if \code{collapse_infra} is \code{TRUE}, "Blechnum lunare" will
+be queried instead of "Blechnum lunare var. lunare". Note that the
+\code{match_type} will be "exact" even though the literal query and the matched
+name are different (see example below).
 }
 \examples{
 ts_match_names(
   "Crepidomanes minutus",
   c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-  simple = TRUE)
+  simple = TRUE
+  )
 
 # If you always want tibble output without specifying `tbl_out = TRUE` every
 # time, set the option:
 options(ts_tbl_out = TRUE)
 ts_match_names(
   "Crepidomanes minutus",
-  c("Crepidomanes minutum", "Hymenophyllum polyanthos"))
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos")
+  )
+
+# Example using collapse_infra argument
+ts_match_names(
+  c("Crepidomanes minutus", "Blechnum lunare var. lunare"),
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare"),
+  collapse_infra = TRUE
+  )
+
 }
