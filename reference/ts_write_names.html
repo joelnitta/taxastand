@@ -53,7 +53,9 @@
     <p>Write out parsed names to a text file</p>
     </div>
 
-    <div id="ref-usage">Usage,<div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">ts_write_names</span><span class="op">(</span><span class="va">df</span>, <span class="va">path</span><span class="op">)</span></code></pre></div></div>
+    <div id="ref-usage">
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">ts_write_names</span><span class="op">(</span><span class="va">df</span>, <span class="va">path</span><span class="op">)</span></code></pre></div>
+    </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
@@ -74,7 +76,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">parsed_names</span> <span class="op">&lt;-</span> <span class="fu"><a href="ts_parse_names.html">ts_parse_names</a></span><span class="op">(</span><span class="st">"Foogenus x barspecies var. foosubsp (L.) F. Bar"</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">temp_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu">ts_write_names</span><span class="op">(</span><span class="va">parsed_names</span>, <span class="va">temp_file</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpbgukIX/file6c5f2a78971f"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpkFsKql/file317f733c61e4"</span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="va">temp_file</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "5f207ff2-1||Foogenus|×|barspecies|var.|foosubsp|(L.) F. Bar"</span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.remove</a></span><span class="op">(</span><span class="va">temp_file</span><span class="op">)</span></span>
@@ -93,7 +95,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer></div>
