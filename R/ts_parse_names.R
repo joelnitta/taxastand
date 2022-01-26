@@ -9,6 +9,8 @@
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
+#' @param quiet Logical; if TRUE, suppress warning messages that would normally
+#' be issued
 #'
 #' @return A dataframe including the following columns.
 #' - id: A unique ID number assigned to the input name
@@ -33,7 +35,8 @@
 #' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 #' ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 #'
-ts_parse_names <- function(taxa, tbl_out = getOption("ts_tbl_out", default = FALSE)) {
+ts_parse_names <- function(
+  taxa, tbl_out = getOption("ts_tbl_out", default = FALSE), quiet = FALSE) {
 
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
@@ -95,7 +98,7 @@ ts_parse_names <- function(taxa, tbl_out = getOption("ts_tbl_out", default = FAL
     msg = "No names could be successfully parsed")
 
   # Emit warning for failures
-  if(sum(parsed_names$fail) > 0) {
+  if(sum(parsed_names$fail) > 0 && quiet == FALSE) {
     failed_ids <- parsed_names$id[parsed_names$fail == TRUE]
     failed_names <- paste(taxa_tbl$name[taxa_tbl$id %in% failed_ids], collapse = ", ")
     warning(glue::glue("The following names could not be parsed and are excluded from results: {failed_names}"))

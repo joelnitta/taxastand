@@ -4,7 +4,11 @@
 \alias{ts_parse_names}
 \title{Parse taxonomic names}
 \usage{
-ts_parse_names(taxa, tbl_out = getOption("ts_tbl_out", default = FALSE))
+ts_parse_names(
+  taxa,
+  tbl_out = getOption("ts_tbl_out", default = FALSE),
+  quiet = FALSE
+)
 }
 \arguments{
 \item{taxa}{Character vector; taxon names to be parsed by taxon-tools \code{parsenames}.
@@ -13,6 +17,9 @@ Missing values not allowed. Must all be unique.}
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
 be controlled via the option \code{ts_tbl_out}; see Examples.}
+
+\item{quiet}{Logical; if TRUE, suppress warning messages that would normally
+be issued}
 }
 \value{
 A dataframe including the following columns.
