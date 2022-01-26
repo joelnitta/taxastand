@@ -163,9 +163,9 @@ name are different (see example below).</p>
 <span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Crepidomanes minutum"</span>, <span class="st">"Hymenophyllum polyanthos"</span><span class="op">)</span></span>
 <span class="r-in">  <span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 19</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query  reference  match_type id_query id_ref genus_hybrid_si… genus_name_query</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepi… Crepidoma… auto_fuzzy c1ad73e… 2d68c… <span style="color: #BB0000;">NA</span>               Crepidomanes    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   query   reference match_type id_query id_ref genus_hybrid_si… genus_name_query</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepid… Crepidom… auto_fuzzy c1ad73e… 2d68c… <span style="color: #BB0000;">NA</span>               Crepidomanes    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 12 more variables: species_hybrid_sign_query &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   specific_epithet_query &lt;chr&gt;, infraspecific_rank_query &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_epithet_query &lt;chr&gt;, author_query &lt;chr&gt;,</span></span>
@@ -183,13 +183,13 @@ name are different (see example below).</p>
 <span class="r-in">  collapse_infra <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span class="r-in">  <span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 19</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query  reference  match_type id_query id_ref genus_hybrid_si… genus_name_query</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepi… Crepidoma… auto_fuzzy 982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Crepidomanes    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blech… Blechnum … exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Blechnum        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blech… Blechnum … exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Blechnum        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar f… Bar foo    exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Bar             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar f… Bar foo    exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Bar             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   query   reference match_type id_query id_ref genus_hybrid_si… genus_name_query</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepid… Crepidom… auto_fuzzy 982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Crepidomanes    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechn… Blechnum… exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Blechnum        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blechn… Blechnum… exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Blechnum        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar fo… Bar foo   exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Bar             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar foo Bar foo   exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Bar             </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 12 more variables: species_hybrid_sign_query &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   specific_epithet_query &lt;chr&gt;, infraspecific_rank_query &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_epithet_query &lt;chr&gt;, author_query &lt;chr&gt;,</span></span>
@@ -212,7 +212,7 @@ name are different (see example below).</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer></div>
