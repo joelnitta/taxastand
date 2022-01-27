@@ -37,6 +37,9 @@
 #' @param collapse_infra Logical; if the specific epithet and infraspecific epithet
 #' are the same, drop the infraspecific rank and epithet from the query. For more
 #' information, see \code{\link{ts_match_names}()}.
+#' @param collapse_infra_exclude Character vector; taxonomic names to exclude
+#' collapsing with `collapse_infra`. Any names used must match those in `query`
+#' exactly, or they won't be excluded.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
@@ -68,6 +71,7 @@ ts_resolve_names <- function(
   query, ref_taxonomy,
   max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
   collapse_infra = FALSE,
+  collapse_infra_exclude = NULL,
   tbl_out = getOption("ts_tbl_out", default = FALSE)) {
 
   # Check input
@@ -76,6 +80,9 @@ ts_resolve_names <- function(
     msg = "query must be of class 'data.frame' or a character vector")
   assertthat::assert_that(inherits(ref_taxonomy, "data.frame"), msg = "ref_taxonomy must be of class 'data.frame'")
   assertthat::assert_that(assertthat::is.flag(tbl_out))
+  if (!is.null(collapse_infra_exclude)) {
+    assertthat::assert_that(is.character(collapse_infra_exclude))
+  }
 
   # If needed, match names first
   if(is.character(query)) {
@@ -83,6 +90,7 @@ ts_resolve_names <- function(
       query = query, reference = unique(ref_taxonomy$scientificName),
       max_dist = max_dist, match_no_auth = match_no_auth,
       match_canon = match_canon, collapse_infra = collapse_infra,
+      collapse_infra_exclude = collapse_infra_exclude,
       simple = TRUE)
   } else if (is.data.frame(query)) {
     match_results <- query

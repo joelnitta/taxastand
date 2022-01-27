@@ -11,6 +11,7 @@ ts_match_names(
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
+  collapse_infra_exclude = NULL,
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
@@ -36,6 +37,10 @@ and infraspecific epithet (if present) match exactly. Default: to not allow such
 
 \item{collapse_infra}{Logical; if the specific epithet and infraspecific epithet
 are the same, drop the infraspecific rank and epithet from the query.}
+
+\item{collapse_infra_exclude}{Character vector; taxonomic names to exclude
+from collapsing with \code{collapse_infra}. Any names used must match those in
+\code{query} exactly, or they won't be excluded.}
 
 \item{simple}{Logical; return the output in a simplified format with only the query
 name, matched reference name, and match type. Default: \code{FALSE}.}
@@ -121,7 +126,9 @@ ts_match_names(
     "Bar foo var. foo", "Bar foo"),
   c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
     "Bar foo"),
-  collapse_infra = TRUE
+  collapse_infra = TRUE,
+  collapse_infra_exclude = "Bar foo var. foo",
+  simple = TRUE
   )
 
 }

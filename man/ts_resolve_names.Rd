@@ -11,6 +11,7 @@ ts_resolve_names(
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
+  collapse_infra_exclude = NULL,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
 }
@@ -44,6 +45,10 @@ and infraspecific epithet (if present) match exactly. Default: to not allow such
 \item{collapse_infra}{Logical; if the specific epithet and infraspecific epithet
 are the same, drop the infraspecific rank and epithet from the query. For more
 information, see \code{\link{ts_match_names}()}.}
+
+\item{collapse_infra_exclude}{Character vector; taxonomic names to exclude
+collapsing with \code{collapse_infra}. Any names used must match those in \code{query}
+exactly, or they won't be excluded.}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can

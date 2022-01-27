@@ -41,6 +41,9 @@
 #' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
 #' @param collapse_infra Logical; if the specific epithet and infraspecific epithet
 #' are the same, drop the infraspecific rank and epithet from the query.
+#' @param collapse_infra_exclude Character vector; taxonomic names to exclude
+#' from collapsing with `collapse_infra`. Any names used must match those in
+#' `query` exactly, or they won't be excluded.
 #' @param simple Logical; return the output in a simplified format with only the query
 #' name, matched reference name, and match type. Default: `FALSE`.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
@@ -93,13 +96,16 @@
 #'     "Bar foo var. foo", "Bar foo"),
 #'   c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
 #'     "Bar foo"),
-#'   collapse_infra = TRUE
+#'   collapse_infra = TRUE,
+#'   collapse_infra_exclude = "Bar foo var. foo",
+#'   simple = TRUE
 #'   )
 #'
 ts_match_names <- function(
   query, reference,
   max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
   collapse_infra = FALSE,
+  collapse_infra_exclude = NULL,
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
@@ -117,6 +123,9 @@ ts_match_names <- function(
   assertthat::assert_that(is.logical(simple))
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(collapse_infra))
+  if (!is.null(collapse_infra_exclude)) {
+    assertthat::assert_that(is.character(collapse_infra_exclude))
+  }
 
   # Parse or load query names
   if(is.character(query)) {
@@ -148,10 +157,10 @@ ts_match_names <- function(
     # Save a copy of original unmodified parsed query
     query_parsed_df_original <- query_parsed_df
     # Identify rows where infraspecific_epithet is the same as specific_epithet
-    query_parsed_df$same_infra_species <- query_parsed_df$specific_epithet ==
-      query_parsed_df$infraspecific_epithet
-    query_parsed_df$same_infra_species[
-      is.na(query_parsed_df$same_infra_species)] <- FALSE
+    query_parsed_df$same_infra_species <-
+      (query_parsed_df$specific_epithet == query_parsed_df$infraspecific_epithet) %in% TRUE &
+      !query_parsed_df$name %in% collapse_infra_exclude
+    assertthat::assert_that(!anyNA(query_parsed_df$same_infra_species))
     # For rows where infraspecific_epithet is the same as specific_epithet,
     # delete infraspecific_epithet and infraspecific_rank
     query_parsed_df$infraspecific_epithet[query_parsed_df$same_infra_species] <- NA
