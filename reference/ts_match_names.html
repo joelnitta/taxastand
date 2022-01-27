@@ -65,6 +65,7 @@ installed.</p>
   match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,
   match_canon <span class="op">=</span> <span class="cn">FALSE</span>,
   collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,
+  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,
   simple <span class="op">=</span> <span class="cn">FALSE</span>,
   tbl_out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_tbl_out"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
 <span class="op">)</span></code></pre></div>
@@ -93,6 +94,10 @@ and infraspecific epithet (if present) match exactly. Default: to not allow such
 <dt>collapse_infra</dt>
 <dd><p>Logical; if the specific epithet and infraspecific epithet
 are the same, drop the infraspecific rank and epithet from the query.</p></dd>
+<dt>collapse_infra_exclude</dt>
+<dd><p>Character vector; taxonomic names to exclude
+from collapsing with <code>collapse_infra</code>. Any names used must match those in
+<code>query</code> exactly, or they won't be excluded.</p></dd>
 <dt>simple</dt>
 <dd><p>Logical; return the output in a simplified format with only the query
 name, matched reference name, and match type. Default: <code>FALSE</code>.</p></dd>
@@ -180,23 +185,18 @@ name are different (see example below).</p>
 <span class="r-in">    <span class="st">"Bar foo var. foo"</span>, <span class="st">"Bar foo"</span><span class="op">)</span>,</span>
 <span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Crepidomanes minutum"</span>, <span class="st">"Hymenophyllum polyanthos"</span>, <span class="st">"Blechnum lunare"</span>,</span>
 <span class="r-in">    <span class="st">"Bar foo"</span><span class="op">)</span>,</span>
-<span class="r-in">  collapse_infra <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span class="r-in">  collapse_infra <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span class="r-in">  collapse_infra_exclude <span class="op">=</span> <span class="st">"Bar foo var. foo"</span>,</span>
+<span class="r-in">  simple <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span class="r-in">  <span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 19</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query   reference match_type id_query id_ref genus_hybrid_si… genus_name_query</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepid… Crepidom… auto_fuzzy 982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Crepidomanes    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechn… Blechnum… exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Blechnum        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blechn… Blechnum… exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Blechnum        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar fo… Bar foo   exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Bar             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar foo Bar foo   exact      982192f… 70fbc… <span style="color: #BB0000;">NA</span>               Bar             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 12 more variables: species_hybrid_sign_query &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   specific_epithet_query &lt;chr&gt;, infraspecific_rank_query &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_epithet_query &lt;chr&gt;, author_query &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   genus_hybrid_sign_ref &lt;chr&gt;, genus_name_ref &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   species_hybrid_sign_ref &lt;chr&gt;, specific_epithet_ref &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_rank_ref &lt;chr&gt;, infraspecific_epithet_ref &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   author_ref &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   query                       reference            match_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomanes minutus        Crepidomanes minutum auto_fuzzy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechnum lunare var. lunare Blechnum lunare      exact     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blechnum lunare             Blechnum lunare      exact     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar foo var. foo            Bar foo              auto_fuzzy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar foo                     Bar foo              exact     </span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
