@@ -1,5 +1,6 @@
 ^taxastand\.Rproj$
 ^\.Rproj\.user$
+^\.Rprofile$
 ^LICENSE\.md$
 ^data-raw$
 ^README\.Rmd$
