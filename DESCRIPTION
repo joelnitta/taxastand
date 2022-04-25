@@ -33,7 +33,8 @@ Suggests:
     rmarkdown,
     knitr,
     roxyglobals (>= 0.2.1),
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    babelwhale
 Config/testthat/edition: 3
 Remotes: 
     anthonynorth/roxyglobals

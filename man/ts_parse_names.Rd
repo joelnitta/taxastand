@@ -7,7 +7,8 @@
 ts_parse_names(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  quiet = FALSE
+  quiet = FALSE,
+  docker = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,9 @@ be controlled via the option \code{ts_tbl_out}; see Examples.}
 
 \item{quiet}{Logical; if TRUE, suppress warning messages that would normally
 be issued}
+
+\item{docker}{Logical; if TRUE, docker will be used to run taxon-tools
+(so that taxon-tools need not be installed).}
 }
 \value{
 A dataframe including the following columns.
@@ -36,7 +40,8 @@ A dataframe including the following columns.
 }
 }
 \description{
-Requires \href{https://github.com/camwebb/taxon-tools}{taxon-tools} to be installed.
+Requires \href{https://github.com/camwebb/taxon-tools}{taxon-tools} or docker
+to be installed.
 }
 \details{
 Parses scientific names into their component parts (genus, species, variety, author, etc).
@@ -50,5 +55,14 @@ ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE
 options(ts_tbl_out = TRUE)
 ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
+
+# Using docker
+if (babelwhale::test_docker_installation()) {
+
+ts_parse_names(
+  "Foogenus x barspecies var. foosubsp (L.) F. Bar",
+  docker = TRUE)
+
+}
 
 }

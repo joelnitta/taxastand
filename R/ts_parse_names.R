@@ -1,6 +1,7 @@
 #' Parse taxonomic names
 #'
-#' Requires [taxon-tools](https://github.com/camwebb/taxon-tools) to be installed.
+#' Requires [taxon-tools](https://github.com/camwebb/taxon-tools) or docker
+#' to be installed.
 #'
 #' Parses scientific names into their component parts (genus, species, variety, author, etc).
 #'
@@ -11,6 +12,8 @@
 #' be controlled via the option `ts_tbl_out`; see Examples.
 #' @param quiet Logical; if TRUE, suppress warning messages that would normally
 #' be issued
+#' @param docker Logical; if TRUE, docker will be used to run taxon-tools
+#' (so that taxon-tools need not be installed).
 #'
 #' @return A dataframe including the following columns.
 #' - id: A unique ID number assigned to the input name
@@ -35,14 +38,27 @@
 #' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 #' ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 #'
+#' # Using docker
+#' if (babelwhale::test_docker_installation()) {
+#'
+#' ts_parse_names(
+#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar",
+#'   docker = TRUE)
+#'
+#' }
+#'
 ts_parse_names <- function(
-  taxa, tbl_out = getOption("ts_tbl_out", default = FALSE), quiet = FALSE) {
+  taxa,
+  tbl_out = getOption("ts_tbl_out", default = FALSE),
+  quiet = FALSE,
+  docker = FALSE) {
 
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
   assertthat::assert_that(assertthat::noNA(taxa), msg = "Input taxa may not contain NAs")
   assertthat::assert_that(all(assertr::is_uniq(taxa)), msg = "Input taxa must be unique")
   assertthat::assert_that(assertthat::is.flag(tbl_out))
+  assertthat::assert_that(assertthat::is.flag(docker))
 
   # Write out names formatted for parsing with taxon-tools to temp file
   # format:
@@ -59,7 +75,20 @@ ts_parse_names <- function(
   writeLines(taxa_tbl$record, ref_taxa_txt_file)
 
   # Parse reference names with taxon tools
-  ref_parsed <- processx::run("parsenames", ref_taxa_txt_file)
+  if (isTRUE(docker)) {
+    if (requireNamespace("babelwhale", quietly = TRUE)) {
+      ref_parsed <- babelwhale::run_auto_mount(
+        container_id = "joelnitta/taxastand:latest",
+        command = "parsenames",
+        args = c(file = ref_taxa_txt_file)
+      )
+    } else {
+      stop("babelwhale needs to be installed to use docker")
+    }
+  } else {
+    ref_parsed <- processx::run("parsenames", ref_taxa_txt_file)
+  }
+
   if (fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
 
   # Read in results of parsing, format as dataframe
