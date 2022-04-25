@@ -128,7 +128,7 @@ ts_match_names <- function(
   }
 
   # Parse or load query names
-  if(is.character(query)) {
+  if (is.character(query)) {
     # Parse the names (adds 'name' column)
     query_parsed_df <- ts_parse_names(query)
   } else {
@@ -178,11 +178,11 @@ ts_match_names <- function(
 
   # Write out parsed names to temporary file
   query_parsed_txt <- tempfile(pattern = digest::digest(query), fileext = ".txt")
-  if(fs::file_exists(query_parsed_txt)) fs::file_delete(query_parsed_txt)
+  if (fs::file_exists(query_parsed_txt)) fs::file_delete(query_parsed_txt)
   ts_write_names(query_parsed_df, query_parsed_txt)
 
   # Parse or load reference names
-  if(is.character(reference)) {
+  if (is.character(reference)) {
     # Parse the names (adds 'name' column)
     ref_parsed_df <- ts_parse_names(reference)
   } else {
@@ -192,16 +192,16 @@ ts_match_names <- function(
 
   # Write out parsed names to temporary file
   ref_parsed_txt <- tempfile(pattern = digest::digest(reference), fileext = ".txt")
-  if(fs::file_exists(ref_parsed_txt)) fs::file_delete(ref_parsed_txt)
+  if (fs::file_exists(ref_parsed_txt)) fs::file_delete(ref_parsed_txt)
   ts_write_names(ref_parsed_df, ref_parsed_txt)
 
   # Format argument flags
-  if(match_no_auth) match_no_auth <- "-1" else match_no_auth <- NULL
-  if(match_canon) match_canon <- "-c" else match_canon <- NULL
+  if (match_no_auth) match_no_auth <- "-1" else match_no_auth <- NULL
+  if (match_canon) match_canon <- "-c" else match_canon <- NULL
 
   # Specify temporary output file
   match_results_txt <- tempfile(pattern = digest::digest(c(query, reference)), fileext = ".txt")
-  if(fs::file_exists(match_results_txt)) fs::file_delete(match_results_txt)
+  if (fs::file_exists(match_results_txt)) fs::file_delete(match_results_txt)
 
   # Run taxon-tools matchnames
   match_results <- processx::run(
@@ -256,7 +256,7 @@ ts_match_names <- function(
     remove = TRUE)
 
   # Convert empty strings to NA
-  results <- dplyr::mutate(results, dplyr::across(dplyr::everything(), ~dplyr::na_if(.x, "")))
+  results <- dplyr::mutate(results, dplyr::across(dplyr::everything(), ~dplyr::na_if (.x, "")))
 
   # Add back in the original search terms (query and reference)
   results <- dplyr::left_join(
@@ -285,9 +285,9 @@ ts_match_names <- function(
     dplyr::select(query, reference, match_type, dplyr::everything())
   }
 
-  if(simple == TRUE) results <- dplyr::select(results, query, reference, match_type)
+  if (simple == TRUE) results <- dplyr::select(results, query, reference, match_type)
 
-  if(isTRUE(tbl_out)) return(tibble::as_tibble(results))
+  if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
 
   results
 

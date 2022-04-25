@@ -85,7 +85,7 @@ ts_resolve_names <- function(
   }
 
   # If needed, match names first
-  if(is.character(query)) {
+  if (is.character(query)) {
     match_results <- ts_match_names(
       query = query, reference = unique(ref_taxonomy$scientificName),
       max_dist = max_dist, match_no_auth = match_no_auth,
@@ -150,7 +150,7 @@ ts_resolve_names <- function(
     dplyr::select(query, resolved_name, matched_name, resolved_status, matched_status, match_type)
 
   # Return as tibble or dataframe
-  if(isTRUE(tbl_out)) return(tibble::as_tibble(results))
+  if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
 
   results
 }

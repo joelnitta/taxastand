@@ -55,12 +55,12 @@ ts_parse_names <- function(
     pattern = digest::digest(taxa),
     fileext = ".txt"
   )
-  if(fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
+  if (fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
   writeLines(taxa_tbl$record, ref_taxa_txt_file)
 
   # Parse reference names with taxon tools
   ref_parsed <- processx::run("parsenames", ref_taxa_txt_file)
-  if(fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
+  if (fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
 
   # Read in results of parsing, format as dataframe
 
@@ -98,7 +98,7 @@ ts_parse_names <- function(
     msg = "No names could be successfully parsed")
 
   # Emit warning for failures
-  if(sum(parsed_names$fail) > 0 && quiet == FALSE) {
+  if (sum(parsed_names$fail) > 0 && quiet == FALSE) {
     failed_ids <- parsed_names$id[parsed_names$fail == TRUE]
     failed_names <- paste(taxa_tbl$name[taxa_tbl$id %in% failed_ids], collapse = ", ")
     warning(glue::glue("The following names could not be parsed and are excluded from results: {failed_names}"))
@@ -116,7 +116,7 @@ ts_parse_names <- function(
   # Return parsed names as dataframe or tibble
   results <- parsed_names[, c("name", "id", name_parts)]
 
-  if(isTRUE(tbl_out)) return(tibble::as_tibble(results))
+  if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
 
   results
 
