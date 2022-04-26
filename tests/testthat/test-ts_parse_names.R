@@ -8,3 +8,18 @@ test_that("Input checks work", {
     "Input taxa may not contain NAs"
   )
 })
+
+test_that("Parsing works", {
+  if (babelwhale::test_docker_installation()) {
+    expect_snapshot(
+        ts_parse_names(
+        "Foogenus x barspecies var. foosubsp (L.) F. Bar",
+        docker = TRUE)
+    )
+  }
+  if (ts_tt_installed()) {
+    expect_snapshot(
+      ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+    )
+  }
+})
