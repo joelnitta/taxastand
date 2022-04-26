@@ -1,8 +1,7 @@
-#' Test if taxon-tools is installed
+#' Test if [taxon-tools](https://github.com/camwebb/taxon-tools) is installed
 #'
-#' A message will be issued if taxon-tools is not installed.
-#'
-#' @return `TRUE` if taxon-tools is installed, or `FALSE` if not.
+#' @return `TRUE` if [taxon-tools](https://github.com/camwebb/taxon-tools) is
+#'   installed, or `FALSE` if not.
 #' @export
 #'
 #' @examples
@@ -10,11 +9,11 @@
 ts_tt_installed <- function(){
   tryCatch(
     {
-      res <- processx::run("parsenames", "--version")
+      parsenames_res <- processx::run("parsenames", "--version")
+      matchnames_res <- processx::run("matchnames", "--version")
       return(TRUE)
     },
     error = function(error_message) {
-      message("taxon-tools is not installed")
       return(FALSE)
     }
   )

@@ -2,15 +2,16 @@
 % Please edit documentation in R/ts_taxontools_installed.R
 \name{ts_tt_installed}
 \alias{ts_tt_installed}
-\title{Test if taxon-tools is installed}
+\title{Test if \href{https://github.com/camwebb/taxon-tools}{taxon-tools} is installed}
 \usage{
 ts_tt_installed()
 }
 \value{
-\code{TRUE} if taxon-tools is installed, or \code{FALSE} if not.
+\code{TRUE} if \href{https://github.com/camwebb/taxon-tools}{taxon-tools} is
+installed, or \code{FALSE} if not.
 }
 \description{
-A message will be issued if taxon-tools is not installed.
+Test if \href{https://github.com/camwebb/taxon-tools}{taxon-tools} is installed
 }
 \examples{
 ts_tt_installed()
