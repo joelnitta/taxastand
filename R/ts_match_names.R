@@ -111,7 +111,7 @@ ts_match_names <- function(
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
-  docker = FALSE,
+  docker = getOption("ts_docker", default = FALSE),
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
 

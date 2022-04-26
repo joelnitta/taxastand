@@ -8,7 +8,7 @@ ts_parse_names(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   quiet = FALSE,
-  docker = FALSE
+  docker = getOption("ts_docker", default = FALSE)
 )
 }
 \arguments{

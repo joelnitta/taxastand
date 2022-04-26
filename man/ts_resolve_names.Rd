@@ -12,7 +12,7 @@ ts_resolve_names(
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
-  docker = FALSE,
+  docker = getOption("ts_docker", default = FALSE),
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
 }

@@ -76,7 +76,7 @@ ts_resolve_names <- function(
   max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
-  docker = FALSE,
+  docker = getOption("ts_docker", default = FALSE),
   tbl_out = getOption("ts_tbl_out", default = FALSE)) {
 
   # Check input

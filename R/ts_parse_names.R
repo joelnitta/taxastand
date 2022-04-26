@@ -57,7 +57,7 @@ ts_parse_names <- function(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   quiet = FALSE,
-  docker = FALSE) {
+  docker = getOption("ts_docker", default = FALSE)) {
 
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
