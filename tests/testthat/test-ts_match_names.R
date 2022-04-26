@@ -17,8 +17,18 @@ test_that("Input checks work", {
   )
 })
 
-test_that("Produces expected output", {
-  expect_s3_class(
-    ts_match_names("Crepidomanes minutus", "Crepidomanes minutum"),
-    "data.frame")
+test_that("Produces expected output in docker", {
+  skip_if_no_docker()
+  match_res <- ts_match_names(
+    "Crepidomanes minutus", "Crepidomanes minutum", docker = TRUE)
+  expect_s3_class(match_res, "data.frame")
+  expect_snapshot(match_res)
+})
+
+test_that("Produces expected output without docker", {
+  skip_if_no_tt()
+  match_res <- ts_match_names(
+    "Crepidomanes minutus", "Crepidomanes minutum")
+  expect_s3_class(match_res, "data.frame")
+  expect_snapshot(match_res)
 })
