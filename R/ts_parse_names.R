@@ -82,16 +82,24 @@ ts_parse_names <- function(
 
   # Parse reference names with taxon tools
   if (isTRUE(docker)) {
-    if (requireNamespace("babelwhale", quietly = TRUE)) {
-      ref_parsed <- babelwhale::run_auto_mount(
-        container_id = "joelnitta/taxastand:latest",
-        command = "parsenames",
-        args = c(file = ref_taxa_txt_file)
-      )
-    } else {
-      stop("babelwhale needs to be installed to use docker")
-    }
+    assertthat::assert_that(
+      requireNamespace("babelwhale", quietly = TRUE),
+      msg = "babelwhale needs to be installed to use docker"
+    )
+    assertthat::assert_that(
+      babelwhale::test_docker_installation(),
+      msg = "docker not installed"
+    )
+    ref_parsed <- babelwhale::run_auto_mount(
+      container_id = "joelnitta/taxastand:latest",
+      command = "parsenames",
+      args = c(file = ref_taxa_txt_file)
+    )
   } else {
+    assertthat::assert_that(
+      ts_tt_installed(),
+      msg = "taxon-tools not installed"
+    )
     ref_parsed <- processx::run("parsenames", ref_taxa_txt_file)
   }
 
