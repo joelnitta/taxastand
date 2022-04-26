@@ -52,12 +52,12 @@ skip_if_no_docker <- function() {
   if (babelwhale::test_docker_installation()) {
     return(invisible(TRUE))
   }
-  skip("docker not installed")
+  testthat::skip("docker not installed")
 }
 
 skip_if_no_tt <- function() {
   if (ts_tt_installed()) {
     return(invisible(TRUE))
   }
-  skip("taxon-tools not installed")
+  testthat::skip("taxon-tools not installed")
 }
