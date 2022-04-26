@@ -13,6 +13,7 @@ ts_match_names(
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
+  docker = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
 }
@@ -44,6 +45,9 @@ from collapsing with \code{collapse_infra}. Any names used must match those in
 
 \item{simple}{Logical; return the output in a simplified format with only the query
 name, matched reference name, and match type. Default: \code{FALSE}.}
+
+\item{docker}{Logical; if TRUE, docker will be used to run taxon-tools
+(so that taxon-tools need not be installed).}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
@@ -106,29 +110,31 @@ be queried instead of "Blechnum lunare var. lunare". Note that the
 name are different (see example below).
 }
 \examples{
-ts_match_names(
-  "Crepidomanes minutus",
-  c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-  simple = TRUE
-  )
+if(ts_tt_installed()) {
+  ts_match_names(
+    "Crepidomanes minutus",
+    c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+    simple = TRUE
+    )
 
-# If you always want tibble output without specifying `tbl_out = TRUE` every
-# time, set the option:
-options(ts_tbl_out = TRUE)
-ts_match_names(
-  "Crepidomanes minutus",
-  c("Crepidomanes minutum", "Hymenophyllum polyanthos")
-  )
+  # If you always want tibble output without specifying `tbl_out = TRUE`
+  # every time, set the option:
+  options(ts_tbl_out = TRUE)
+  ts_match_names(
+    "Crepidomanes minutus",
+    c("Crepidomanes minutum", "Hymenophyllum polyanthos")
+    )
 
-# Example using collapse_infra argument
-ts_match_names(
-  c("Crepidomanes minutus", "Blechnum lunare var. lunare", "Blechnum lunare",
-    "Bar foo var. foo", "Bar foo"),
-  c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
-    "Bar foo"),
-  collapse_infra = TRUE,
-  collapse_infra_exclude = "Bar foo var. foo",
-  simple = TRUE
-  )
+  # Example using collapse_infra argument
+  ts_match_names(
+    c("Crepidomanes minutus", "Blechnum lunare var. lunare",
+      "Blechnum lunare", "Bar foo var. foo", "Bar foo"),
+    c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+      "Bar foo"),
+    collapse_infra = TRUE,
+    collapse_infra_exclude = "Bar foo var. foo",
+    simple = TRUE
+    )
+}
 
 }

@@ -46,6 +46,8 @@
 #' `query` exactly, or they won't be excluded.
 #' @param simple Logical; return the output in a simplified format with only the query
 #' name, matched reference name, and match type. Default: `FALSE`.
+#' @param docker Logical; if TRUE, docker will be used to run taxon-tools
+#' (so that taxon-tools need not be installed).
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
@@ -76,30 +78,32 @@
 #' @autoglobal
 #' @export
 #' @examples
-#' ts_match_names(
-#'   "Crepidomanes minutus",
-#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-#'   simple = TRUE
-#'   )
+#' if(ts_tt_installed()) {
+#'   ts_match_names(
+#'     "Crepidomanes minutus",
+#'     c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+#'     simple = TRUE
+#'     )
 #'
-#' # If you always want tibble output without specifying `tbl_out = TRUE` every
-#' # time, set the option:
-#' options(ts_tbl_out = TRUE)
-#' ts_match_names(
-#'   "Crepidomanes minutus",
-#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos")
-#'   )
+#'   # If you always want tibble output without specifying `tbl_out = TRUE`
+#'   # every time, set the option:
+#'   options(ts_tbl_out = TRUE)
+#'   ts_match_names(
+#'     "Crepidomanes minutus",
+#'     c("Crepidomanes minutum", "Hymenophyllum polyanthos")
+#'     )
 #'
-#' # Example using collapse_infra argument
-#' ts_match_names(
-#'   c("Crepidomanes minutus", "Blechnum lunare var. lunare", "Blechnum lunare",
-#'     "Bar foo var. foo", "Bar foo"),
-#'   c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
-#'     "Bar foo"),
-#'   collapse_infra = TRUE,
-#'   collapse_infra_exclude = "Bar foo var. foo",
-#'   simple = TRUE
-#'   )
+#'   # Example using collapse_infra argument
+#'   ts_match_names(
+#'     c("Crepidomanes minutus", "Blechnum lunare var. lunare",
+#'       "Blechnum lunare", "Bar foo var. foo", "Bar foo"),
+#'     c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+#'       "Bar foo"),
+#'     collapse_infra = TRUE,
+#'     collapse_infra_exclude = "Bar foo var. foo",
+#'     simple = TRUE
+#'     )
+#' }
 #'
 ts_match_names <- function(
   query, reference,
@@ -107,6 +111,7 @@ ts_match_names <- function(
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
+  docker = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
 
@@ -126,11 +131,12 @@ ts_match_names <- function(
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
+  assertthat::assert_that(assertthat::is.flag(docker))
 
   # Parse or load query names
   if (is.character(query)) {
     # Parse the names (adds 'name' column)
-    query_parsed_df <- ts_parse_names(query)
+    query_parsed_df <- ts_parse_names(query, docker = docker)
   } else {
     # Or, names are already parsed
     query_parsed_df <- query
@@ -184,7 +190,7 @@ ts_match_names <- function(
   # Parse or load reference names
   if (is.character(reference)) {
     # Parse the names (adds 'name' column)
-    ref_parsed_df <- ts_parse_names(reference)
+    ref_parsed_df <- ts_parse_names(reference, docker = docker)
   } else {
     # Or, names are already parsed
     ref_parsed_df <- reference
@@ -204,18 +210,48 @@ ts_match_names <- function(
   if (fs::file_exists(match_results_txt)) fs::file_delete(match_results_txt)
 
   # Run taxon-tools matchnames
-  match_results <- processx::run(
-    command = "matchnames",
-    args = c(
-      "-a", query_parsed_txt,
-      "-b", ref_parsed_txt,
-      "-o", match_results_txt,
-      "-e", max_dist,
-      "-F", # no manual matching
-      match_no_auth,
-      match_canon
+
+
+  if (isTRUE(docker)) {
+    assertthat::assert_that(
+      requireNamespace("babelwhale", quietly = TRUE),
+      msg = "babelwhale needs to be installed to use docker"
     )
-  )
+    assertthat::assert_that(
+      babelwhale::test_docker_installation(),
+      msg = "docker not installed"
+    )
+    match_results <- babelwhale::run_auto_mount(
+      container_id = "joelnitta/taxastand:latest",
+      command = "matchnames",
+      args = c(
+        "-a", file = query_parsed_txt,
+        "-b", file = ref_parsed_txt,
+        "-o", file = match_results_txt,
+        "-e", max_dist,
+        "-F", # no manual matching
+        match_no_auth,
+        match_canon
+      )
+    )
+  } else {
+    assertthat::assert_that(
+      ts_tt_installed(),
+      msg = "taxon-tools not installed"
+    )
+    match_results <- processx::run(
+      command = "matchnames",
+      args = c(
+        "-a", query_parsed_txt,
+        "-b", ref_parsed_txt,
+        "-o", match_results_txt,
+        "-e", max_dist,
+        "-F", # no manual matching
+        match_no_auth,
+        match_canon
+      )
+    )
+  }
 
   # Read in results
   # Each line represents a single name from the query list (list A).
@@ -273,16 +309,16 @@ ts_match_names <- function(
 
   # Add back in names that were duplicated due to collapsed infrasp names
   if (isTRUE(collapse_infra)) {
-  results <-
-  dplyr::select(
-    query_parsed_df_original,
-    query = name, id) |>
-    dplyr::left_join(id_map, by = "id") |>
-    dplyr::left_join(
-      dplyr::select(results, -query),
-      by = "id_query") |>
-    dplyr::select(-id) |>
-    dplyr::select(query, reference, match_type, dplyr::everything())
+    results <-
+      dplyr::select(
+        query_parsed_df_original,
+        query = name, id) |>
+      dplyr::left_join(id_map, by = "id") |>
+      dplyr::left_join(
+        dplyr::select(results, -query),
+        by = "id_query") |>
+      dplyr::select(-id) |>
+      dplyr::select(query, reference, match_type, dplyr::everything())
   }
 
   if (simple == TRUE) results <- dplyr::select(results, query, reference, match_type)
