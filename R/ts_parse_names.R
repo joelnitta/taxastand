@@ -29,14 +29,20 @@
 #' @autoglobal
 #' @export
 #' @examples
-#' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
+#' # Using local taxon-tools installation
+#' if (ts_tt_installed()) {
 #'
-#' # If you always want tibble output without specifying `tbl_out = TRUE` every
-#' # time, set the option:
-#' options(ts_tbl_out = TRUE)
-#' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#' ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
+#'   ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+#'   ts_parse_names(
+#'     "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
+#'
+#'   # If you always want tibble output without specifying `tbl_out = TRUE`
+#'   # every time, set the option:
+#'   options(ts_tbl_out = TRUE)
+#'   ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+#'   ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
+#'
+#' }
 #'
 #' # Using docker
 #' if (babelwhale::test_docker_installation()) {
