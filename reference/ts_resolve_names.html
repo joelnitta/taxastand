@@ -27,7 +27,7 @@ function resolves synonyms to their accepted names."><!-- mathjax --><script src
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -64,6 +64,7 @@ function resolves synonyms to their accepted names.</p>
   match_canon <span class="op">=</span> <span class="cn">FALSE</span>,
   collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,
   collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,
+  docker <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_docker"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,
   tbl_out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_tbl_out"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -102,6 +103,9 @@ information, see <code><a href="ts_match_names.html">ts_match_names</a>()</code>
 <dd><p>Character vector; taxonomic names to exclude
 collapsing with <code>collapse_infra</code>. Any names used must match those in <code>query</code>
 exactly, or they won't be excluded.</p></dd>
+<dt>docker</dt>
+<dd><p>Logical; if TRUE, docker will be used to run taxon-tools
+(so that taxon-tools need not be installed).</p></dd>
 <dt>tbl_out</dt>
 <dd><p>Logical vector of length 1; should a tibble be returned?
 If <code>FALSE</code> (default), output will be a data.frame. This argument can
@@ -134,18 +138,16 @@ for this function.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Load reference taxonomy in Darwin Core format</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="ts_tt_installed.html">ts_tt_installed</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span class="r-in">  <span class="co"># Load reference taxonomy in Darwin Core format</span></span>
+<span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="fu">ts_resolve_names</span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query     resolved_name matched_name resolved_status matched_status match_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocorm… Crepidomanes… Gonocormus … accepted name   synonym        auto_fuzzy</span>
-<span class="r-in"><span class="co"># If you always want tibble output without specifying `tbl_out = TRUE` every</span></span>
-<span class="r-in"><span class="co"># time, set the option:</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>ts_tbl_out <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">ts_resolve_names</span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span>
+<span class="r-in">  <span class="fu">ts_resolve_names</span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span>
+<span class="r-in">  <span class="co"># If you always want tibble output without specifying `tbl_out = TRUE`</span></span>
+<span class="r-in">  <span class="co"># every time, set the option:</span></span>
+<span class="r-in">  <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>ts_tbl_out <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-in">  <span class="fu">ts_resolve_names</span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span>
+<span class="r-in"><span class="op">}</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   query     resolved_name matched_name resolved_status matched_status match_type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
@@ -165,7 +167,7 @@ for this function.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
 </div>
 
       </footer></div>
