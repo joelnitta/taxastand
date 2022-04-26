@@ -14,6 +14,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+# Use docker to run taxon-tools
+options(ts_docker = TRUE)
 ```
 
 This vignette explains the three basic steps of the taxonomic name resolution workflow, which consist of:
