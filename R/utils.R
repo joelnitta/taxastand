@@ -47,3 +47,17 @@ ts_classify_result <- function(match_results) {
     assertr::assert(assertr::not_na, result_type) %>%
     dplyr::select(-n)
 }
+
+skip_if_no_docker <- function() {
+  if (babelwhale::test_docker_installation()) {
+    return(invisible(TRUE))
+  }
+  skip("docker not installed")
+}
+
+skip_if_no_tt <- function() {
+  if (ts_tt_installed()) {
+    return(invisible(TRUE))
+  }
+  skip("taxon-tools not installed")
+}
