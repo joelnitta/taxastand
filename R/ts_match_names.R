@@ -221,8 +221,8 @@ ts_match_names <- function(
       babelwhale::test_docker_installation(),
       msg = "docker not installed"
     )
-    match_results <- babelwhale::run_auto_mount(
-      container_id = "joelnitta/taxastand:latest",
+    match_results <- run_auto_mount(
+      container_id = "camwebb/taxon-tools:v1.3.0",
       command = "matchnames",
       args = c(
         "-a", file = query_parsed_txt,

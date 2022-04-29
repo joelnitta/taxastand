@@ -90,8 +90,8 @@ ts_parse_names <- function(
       babelwhale::test_docker_installation(),
       msg = "docker not installed"
     )
-    ref_parsed <- babelwhale::run_auto_mount(
-      container_id = "joelnitta/taxastand:latest",
+    ref_parsed <- run_auto_mount(
+      container_id = "camwebb/taxon-tools:v1.3.0",
       command = "parsenames",
       args = c(file = ref_taxa_txt_file)
     )
