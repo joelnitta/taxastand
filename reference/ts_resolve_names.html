@@ -18,7 +18,7 @@ function resolves synonyms to their accepted names."><!-- mathjax --><script src
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">taxastand</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -76,6 +76,8 @@ function resolves synonyms to their accepted names.</p>
 If a character vector, missing values not allowed and all values must be
 unique. If a dataframe, should be taxonomic names matched with
 <code><a href="ts_match_names.html">ts_match_names</a>()</code>.</p></dd>
+
+
 <dt>ref_taxonomy</dt>
 <dd><p>Dataframe; reference taxonomic data adhering to the
 <a href="https://dwc.tdwg.org/terms/#taxon" class="external-link">Darwin Core standard</a> with the
@@ -85,35 +87,52 @@ following columns:</p><ul><li><p><code>taxonID</code>: <a href="https://dwc.tdwg
 <li><p><code>scientificName</code>: <a href="https://dwc.tdwg.org/terms/#dwc:scientificName" class="external-link">The full scientific name of the taxon</a>,
 with authorship and date information if known.</p></li>
 </ul></dd>
+
+
 <dt>max_dist</dt>
 <dd><p>Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). Default: 10.</p></dd>
+
+
 <dt>match_no_auth</dt>
 <dd><p>Logical; If no author is given in the query and the name (without author)
 occurs only once in the reference, accept the name in the reference as a match.
 Default: to not allow such a match (<code>FALSE</code>).</p></dd>
+
+
 <dt>match_canon</dt>
 <dd><p>Logical; Allow a "canonical name" match if only the genus, species epithet,
 and infraspecific epithet (if present) match exactly. Default: to not allow such a match (<code>FALSE</code>).</p></dd>
+
+
 <dt>collapse_infra</dt>
 <dd><p>Logical; if the specific epithet and infraspecific epithet
 are the same, drop the infraspecific rank and epithet from the query. For more
 information, see <code><a href="ts_match_names.html">ts_match_names</a>()</code>.</p></dd>
+
+
 <dt>collapse_infra_exclude</dt>
 <dd><p>Character vector; taxonomic names to exclude
 collapsing with <code>collapse_infra</code>. Any names used must match those in <code>query</code>
 exactly, or they won't be excluded.</p></dd>
+
+
 <dt>docker</dt>
 <dd><p>Logical; if TRUE, docker will be used to run taxon-tools
 (so that taxon-tools need not be installed).</p></dd>
+
+
 <dt>tbl_out</dt>
 <dd><p>Logical vector of length 1; should a tibble be returned?
 If <code>FALSE</code> (default), output will be a data.frame. This argument can
 be controlled via the option <code>ts_tbl_out</code>; see Examples.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Dataframe; results of resolving synonyms in matched taxonomic names.
+    
+
+<p>Dataframe; results of resolving synonyms in matched taxonomic names.
 Includes the following columns:</p><ul><li><p><code>query</code>: Query name</p></li>
 <li><p><code>resolved_name</code>: Accepted name after resolving synonyms</p></li>
 <li><p><code>matched_name</code>: Name matched to query</p></li>
@@ -167,7 +186,7 @@ for this function.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

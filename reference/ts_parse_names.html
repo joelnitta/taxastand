@@ -18,7 +18,7 @@ to be installed."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">taxastand</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -69,20 +69,29 @@ to be installed.</p>
     <dl><dt>taxa</dt>
 <dd><p>Character vector; taxon names to be parsed by taxon-tools <code>parsenames</code>.
 Missing values not allowed. Must all be unique.</p></dd>
+
+
 <dt>tbl_out</dt>
 <dd><p>Logical vector of length 1; should a tibble be returned?
 If <code>FALSE</code> (default), output will be a data.frame. This argument can
 be controlled via the option <code>ts_tbl_out</code>; see Examples.</p></dd>
+
+
 <dt>quiet</dt>
 <dd><p>Logical; if TRUE, suppress warning messages that would normally
 be issued</p></dd>
+
+
 <dt>docker</dt>
 <dd><p>Logical; if TRUE, docker will be used to run taxon-tools
 (so that taxon-tools need not be installed).</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A dataframe including the following columns.</p><ul><li><p>id: A unique ID number assigned to the input name</p></li>
+    
+
+<p>A dataframe including the following columns.</p><ul><li><p>id: A unique ID number assigned to the input name</p></li>
 <li><p>name: The input name</p></li>
 <li><p>genus_hybrid_sign: Hybrid sign for genus</p></li>
 <li><p>genus_name: Genus name</p></li>
@@ -128,6 +137,12 @@ be issued</p></dd>
 <span class="r-in">  docker <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="op">}</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name       id    genus_hybrid_si… genus_name species_hybrid_… specific_epithet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Foogenus … 5f20… <span style="color: #BB0000;">NA</span>               Foogenus   ×                barspecies      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 3 more variables: infraspecific_rank &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_epithet &lt;chr&gt;, author &lt;chr&gt;</span></span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
@@ -143,7 +158,7 @@ be issued</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>
