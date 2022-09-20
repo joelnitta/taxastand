@@ -52,7 +52,7 @@ remotes::install_github("joelnitta/taxastand")
 
 `taxastand` depends on [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name matching.
 
-There are two options for using `taxastand`.
+There are two options for using this dependency.
 
 - Install [docker](https://www.docker.com/) and set `docker = TRUE` when using `taxastand` functions.
 
@@ -62,17 +62,17 @@ OR
 
 ## Similar work
 
-[ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
+- [ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
 
-[taxize](https://github.com/ropensci/taxize) is the "granddaddy" of taxonomy packages in R. It can search around 20 different taxonomic databases for names and retrieve taxonomic information.
+- [taxize](https://github.com/ropensci/taxize) is the "granddaddy" of taxonomy packages in R. It can search around 20 different taxonomic databases for names and retrieve taxonomic information.
 
-[TNRS](http://tnrs.iplantcollaborative.org/), the Taxonomic Name Resolution Service, is a web application that resolves taxonomic names of plants according to one of six databases.
+- [TNRS](http://tnrs.iplantcollaborative.org/), the Taxonomic Name Resolution Service, is a web application that resolves taxonomic names of plants according to one of six databases.
 
-[taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic databases and provides tools to interface with them through SQL.
+- [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic databases and provides tools to interface with them through SQL.
 
-[taxadb](https://github.com/ropensci/taxadb) also downloads and searches taxonomic databases. It can interface with them either through SQL or in-memory in R.
+- [taxadb](https://github.com/ropensci/taxadb) also downloads and searches taxonomic databases. It can interface with them either through SQL or in-memory in R.
 
-[taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html) has a very similar goal to `taxastand`, but only uses [The Plant List (TPL)](http://www.theplantlist.org
+- [taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html) has a very similar goal to `taxastand`, but only uses [The Plant List (TPL)](http://www.theplantlist.org
 ) as its taxonomic standard and does not allow the user to provide their own. Note that TPL is no longer being updated as of 2013.
 
 ## Motivation
