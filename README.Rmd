@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 ```
-# taxastand
+# taxastand <img src='man/figures/logo.png' align="right" height="150"/>
 
 <!-- badges: start -->
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
@@ -35,23 +35,30 @@ The taxonomic standard must conform to [Darwin Core standards](https://dwc.tdwg.
 
 ## Installation
 
-`taxastand` is currently only available on GitHub:
+`taxastand` can be installed from [r-universe](https://joelnitta.r-universe.dev) or [github](https://github.com/joelnitta).
+
+``` r
+install.packages("taxastand", repos = 'https://joelnitta.r-universe.dev')
+```
+
+OR
 
 ``` r
 # install.packages("remotes")
-
 remotes::install_github("joelnitta/taxastand")
 ```
 
 ## Dependencies
 
-`taxastand` depends on [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name matching. The two programs included in `taxon-tools`, `parsenames` and `matchnames`, must be installed and on the user's `PATH`.
+`taxastand` depends on [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name matching.
 
-## Docker image
+There are two options for using `taxastand`.
 
-A docker image is available to run `taxastand`: [`joelnitta/taxastand:latest`](https://hub.docker.com/r/joelnitta/taxastand).
+- Install [docker](https://www.docker.com/) and set `docker = TRUE` when using `taxastand` functions.
 
-The [Dockerfile lives here](https://github.com/joelnitta/taxastand-docker).
+OR
+
+- Install the two programs included in [taxon-tools](https://github.com/camwebb/taxon-tools), `parsenames` and `matchnames`.
 
 ## Similar work
 
@@ -80,20 +87,39 @@ The motivation for `taxastand` is to provide greater flexibility and reproducibi
 
 Here is an example of fuzzy matching followed by resolution of synonyms using the dataset included with the package.
 
-```{r filmy-example}
+```{r filmy-example-show, eval = FALSE}
 library(taxastand)
 
 # Load example reference taxonomy in Darwin Core format
 data(filmy_taxonomy)
 
 # Take a look at the columns used by taxastand
-head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+head(filmy_taxonomy[c(
+  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
 
 # As a test, resolve a misspelled name
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 
-# We can now use the `resolved_name` column of this result for downstream 
-# analyses joining on other datasets that have been resolved to the same 
+# We can now use the `resolved_name` column of this result for downstream
+# analyses joining on other datasets that have been resolved to the same
+# reference taxonomy.
+```
+
+```{r filmy-example-hide, echo = FALSE}
+library(taxastand)
+
+# Load example reference taxonomy in Darwin Core format
+data(filmy_taxonomy)
+
+# Take a look at the columns used by taxastand
+head(filmy_taxonomy[c(
+  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+
+# As a test, resolve a misspelled name
+ts_resolve_names("Gonocormus minutum", filmy_taxonomy, docker = TRUE)
+
+# We can now use the `resolved_name` column of this result for downstream
+# analyses joining on other datasets that have been resolved to the same
 # reference taxonomy.
 ```
 

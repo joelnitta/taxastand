@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# taxastand
+# taxastand <img src='man/figures/logo.png' align="right" height="150"/>
 
 <!-- badges: start -->
 
@@ -47,11 +47,18 @@ Core.
 
 ## Installation
 
-`taxastand` is currently only available on GitHub:
+`taxastand` can be installed from
+[r-universe](https://joelnitta.r-universe.dev) or
+[github](https://github.com/joelnitta).
+
+``` r
+install.packages("taxastand", repos = 'https://joelnitta.r-universe.dev')
+```
+
+OR
 
 ``` r
 # install.packages("remotes")
-
 remotes::install_github("joelnitta/taxastand")
 ```
 
@@ -59,16 +66,18 @@ remotes::install_github("joelnitta/taxastand")
 
 `taxastand` depends on
 [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name
-matching. The two programs included in `taxon-tools`, `parsenames` and
-`matchnames`, must be installed and on the user’s `PATH`.
+matching.
 
-## Docker image
+There are two options for using `taxastand`.
 
-A docker image is available to run `taxastand`:
-[`joelnitta/taxastand:latest`](https://hub.docker.com/r/joelnitta/taxastand).
+- Install [docker](https://www.docker.com/) and set `docker = TRUE` when
+  using `taxastand` functions.
 
-The [Dockerfile lives
-here](https://github.com/joelnitta/taxastand-docker).
+OR
+
+- Install the two programs included in
+  [taxon-tools](https://github.com/camwebb/taxon-tools), `parsenames`
+  and `matchnames`.
 
 ## Similar work
 
@@ -131,33 +140,35 @@ library(taxastand)
 data(filmy_taxonomy)
 
 # Take a look at the columns used by taxastand
-head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
-#>    taxonID acceptedNameUsageID taxonomicStatus
-#> 1 54115096                  NA   accepted name
-#> 2 54133783            54115097         synonym
-#> 3 54115097                  NA   accepted name
-#> 4 54133784            54115098         synonym
-#> 5 54115098                  NA   accepted name
-#> 6 54133785            54115099         synonym
-#>                              scientificName
-#> 1             Cephalomanes atrovirens Presl
-#> 2                Trichomanes crassum Copel.
-#> 3 Cephalomanes crassum (Copel.) M. G. Price
-#> 4           Trichomanes densinervium Copel.
-#> 5 Cephalomanes densinervium (Copel.) Copel.
-#> 6         Trichomanes infundibulare Alderw.
+head(filmy_taxonomy[c(
+  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
 
 # As a test, resolve a misspelled name
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
-#>                query                        resolved_name
-#> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
-#>                     matched_name resolved_status matched_status match_type
-#> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy
 
-# We can now use the `resolved_name` column of this result for downstream 
-# analyses joining on other datasets that have been resolved to the same 
+# We can now use the `resolved_name` column of this result for downstream
+# analyses joining on other datasets that have been resolved to the same
 # reference taxonomy.
 ```
+
+    #>    taxonID acceptedNameUsageID taxonomicStatus
+    #> 1 54115096                  NA   accepted name
+    #> 2 54133783            54115097         synonym
+    #> 3 54115097                  NA   accepted name
+    #> 4 54133784            54115098         synonym
+    #> 5 54115098                  NA   accepted name
+    #> 6 54133785            54115099         synonym
+    #>                              scientificName
+    #> 1             Cephalomanes atrovirens Presl
+    #> 2                Trichomanes crassum Copel.
+    #> 3 Cephalomanes crassum (Copel.) M. G. Price
+    #> 4           Trichomanes densinervium Copel.
+    #> 5 Cephalomanes densinervium (Copel.) Copel.
+    #> 6         Trichomanes infundibulare Alderw.
+    #>                query                        resolved_name
+    #> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
+    #>                     matched_name resolved_status matched_status match_type
+    #> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy
 
 ## Citing this package
 
