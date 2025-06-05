@@ -11,12 +11,18 @@ test_that("Input checks work", {
 
 test_that("Parsing works with docker", {
   skip_if_no_docker()
-  expect_snapshot(
-    ts_parse_names(
-      "Foogenus x barspecies var. foosubsp (L.) F. Bar",
-      docker = TRUE
+  expect_snapshot({
+    # Need invisible() and capture.output() to suppress spinner
+    invisible(
+      capture.output(
+        parse_res <- ts_parse_names(
+          "Foogenus x barspecies var. foosubsp (L.) F. Bar",
+          docker = TRUE
+        )
+      )
     )
-  )
+    parse_res
+  })
 })
 
 test_that("Parsing works with local taxon-tools", {
