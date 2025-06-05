@@ -19,7 +19,6 @@
 #'   file.remove(temp_file)
 #' }
 ts_write_names <- function(df, path) {
-
   # Make vector of standard taxon-tools columns
   tt_col_names = c(
     "id",
@@ -32,13 +31,22 @@ ts_write_names <- function(df, path) {
     "author"
   )
 
-  assertthat::assert_that(inherits(df, "data.frame"), msg = "df must be of class 'data.frame'")
+  assertthat::assert_that(
+    inherits(df, "data.frame"),
+    msg = "df must be of class 'data.frame'"
+  )
   assertthat::assert_that(
     isTRUE(all(tt_col_names %in% colnames(df))),
-    msg = glue::glue("df must include the following columns: {paste(tt_col_names, collapse = ', ')}"))
+    msg = glue::glue(
+      "df must include the following columns: {paste(tt_col_names, collapse = ', ')}"
+    )
+  )
 
   # Replace NA values with ""
-  df <- dplyr::mutate(df, dplyr::across(dplyr::everything(), ~tidyr::replace_na(., "")))
+  df <- dplyr::mutate(
+    df,
+    dplyr::across(dplyr::everything(), ~ tidyr::replace_na(., ""))
+  )
 
   # Subset to only taxon-tools columns, in order
   df <- df[, tt_col_names]
@@ -50,5 +58,4 @@ ts_write_names <- function(df, path) {
   writeLines(df$text, path)
 
   path
-
 }

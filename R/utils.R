@@ -10,10 +10,15 @@
 #' ts_make_name_df("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 #' }
 ts_make_name_df <- function(taxa) {
-
   assertthat::assert_that(is.character(taxa))
-  assertthat::assert_that(assertthat::noNA(taxa), msg = "Input taxa may not contain NAs")
-  assertthat::assert_that(all(assertr::is_uniq(taxa)), msg = "Input taxa must be unique")
+  assertthat::assert_that(
+    assertthat::noNA(taxa),
+    msg = "Input taxa may not contain NAs"
+  )
+  assertthat::assert_that(
+    all(assertr::is_uniq(taxa)),
+    msg = "Input taxa must be unique"
+  )
 
   # Format input names as data frame with unique ID
   # ID is combination of first 8 chars of hash of the
@@ -33,7 +38,10 @@ ts_make_name_df <- function(taxa) {
 #' @keywords internal
 #' @autoglobal
 ts_classify_result <- function(match_results) {
-  assertthat::assert_that(inherits(match_results, "data.frame"), msg = "match_results must be of class 'data.frame'")
+  assertthat::assert_that(
+    inherits(match_results, "data.frame"),
+    msg = "match_results must be of class 'data.frame'"
+  )
   match_results %>%
     dplyr::add_count(query) %>%
     dplyr::mutate(
@@ -116,8 +124,8 @@ run_auto_mount <- function(
   debug = FALSE,
   verbose = FALSE,
   stdout = "|",
-  stderr = "|") {
-
+  stderr = "|"
+) {
   # Convert paths of file arguments to absolute for docker
   file_args <- args[names(args) == "file"]
   in_path <- fs::path_abs(file_args)
@@ -142,7 +150,8 @@ run_auto_mount <- function(
     c(
       glue::glue("{in_dir}:/{prefix}_{1:length(in_dir)}"),
       wd_volume
-    ))
+    )
+  )
 
   # Replace file arg paths with location in container
   files_in_container <- glue::glue("/{prefix}_{1:length(in_dir)}/{in_file}")
@@ -162,4 +171,3 @@ run_auto_mount <- function(
     stderr = stderr
   )
 }
-

@@ -1,6 +1,6 @@
 test_that("Input checks work", {
   expect_error(
-    ts_parse_names(c("Foogenus","Foogenus")),
+    ts_parse_names(c("Foogenus", "Foogenus")),
     "Input taxa must be unique"
   )
   expect_error(
@@ -14,7 +14,8 @@ test_that("Parsing works with docker", {
   expect_snapshot(
     ts_parse_names(
       "Foogenus x barspecies var. foosubsp (L.) F. Bar",
-      docker = TRUE)
+      docker = TRUE
+    )
   )
 })
 

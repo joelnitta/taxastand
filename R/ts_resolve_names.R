@@ -72,18 +72,25 @@
 #' }
 #'
 ts_resolve_names <- function(
-  query, ref_taxonomy,
-  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
+  query,
+  ref_taxonomy,
+  max_dist = 10,
+  match_no_auth = FALSE,
+  match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   docker = getOption("ts_docker", default = FALSE),
-  tbl_out = getOption("ts_tbl_out", default = FALSE)) {
-
+  tbl_out = getOption("ts_tbl_out", default = FALSE)
+) {
   # Check input
   assertthat::assert_that(
     is.character(query) | inherits(query, "data.frame"),
-    msg = "query must be of class 'data.frame' or a character vector")
-  assertthat::assert_that(inherits(ref_taxonomy, "data.frame"), msg = "ref_taxonomy must be of class 'data.frame'")
+    msg = "query must be of class 'data.frame' or a character vector"
+  )
+  assertthat::assert_that(
+    inherits(ref_taxonomy, "data.frame"),
+    msg = "ref_taxonomy must be of class 'data.frame'"
+  )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(docker))
   if (!is.null(collapse_infra_exclude)) {
@@ -93,11 +100,16 @@ ts_resolve_names <- function(
   # If needed, match names first
   if (is.character(query)) {
     match_results <- ts_match_names(
-      query = query, reference = unique(ref_taxonomy$scientificName),
-      max_dist = max_dist, match_no_auth = match_no_auth,
-      match_canon = match_canon, collapse_infra = collapse_infra,
+      query = query,
+      reference = unique(ref_taxonomy$scientificName),
+      max_dist = max_dist,
+      match_no_auth = match_no_auth,
+      match_canon = match_canon,
+      collapse_infra = collapse_infra,
       collapse_infra_exclude = collapse_infra_exclude,
-      simple = TRUE, docker = docker)
+      simple = TRUE,
+      docker = docker
+    )
   } else if (is.data.frame(query)) {
     match_results <- query
   } else {
@@ -116,9 +128,19 @@ ts_resolve_names <- function(
     match_results_classified_with_taxonomy %>%
     # consider accepted names have either no acceptedNameUsageID or acceptedNameUsageID is same as taxonID
     dplyr::filter(
-      (is.na(acceptedNameUsageID) | acceptedNameUsageID == "" | taxonID == acceptedNameUsageID) & result_type == "single_match"
+      (is.na(acceptedNameUsageID) |
+        acceptedNameUsageID == "" |
+        taxonID == acceptedNameUsageID) &
+        result_type == "single_match"
     ) %>%
-    dplyr::select(query, resolved_name = reference, matched_name = reference, resolved_status = taxonomicStatus, matched_status = taxonomicStatus, match_type)
+    dplyr::select(
+      query,
+      resolved_name = reference,
+      matched_name = reference,
+      resolved_status = taxonomicStatus,
+      matched_status = taxonomicStatus,
+      match_type
+    )
 
   # Separate out matches to a single synonym (success type 2)
   accepted_single_synonyms <-
@@ -129,9 +151,22 @@ ts_resolve_names <- function(
     dplyr::filter(acceptedNameUsageID != taxonID) %>%
     # Join resolved names via synonym
     dplyr::left_join(
-      dplyr::select(ref_taxonomy, taxonID, resolved_name = scientificName, resolved_status = taxonomicStatus),
-      by = c(acceptedNameUsageID = "taxonID")) %>%
-    dplyr::select(query, resolved_name, matched_name = reference, resolved_status, matched_status = taxonomicStatus, match_type) %>%
+      dplyr::select(
+        ref_taxonomy,
+        taxonID,
+        resolved_name = scientificName,
+        resolved_status = taxonomicStatus
+      ),
+      by = c(acceptedNameUsageID = "taxonID")
+    ) %>%
+    dplyr::select(
+      query,
+      resolved_name,
+      matched_name = reference,
+      resolved_status,
+      matched_status = taxonomicStatus,
+      match_type
+    ) %>%
     dplyr::group_by(query) %>%
     # Add count of number of resolved, accepted names per query
     dplyr::mutate(n = dplyr::n_distinct(resolved_name)) %>%
@@ -146,14 +181,26 @@ ts_resolve_names <- function(
   # Anything else is a failure
   failure <-
     match_results_classified_with_taxonomy %>%
-    dplyr::select(query, match_type, matched_status = taxonomicStatus, matched_name = reference) %>%
+    dplyr::select(
+      query,
+      match_type,
+      matched_status = taxonomicStatus,
+      matched_name = reference
+    ) %>%
     dplyr::anti_join(success, by = "query")
 
   # Combine into final results
   results <- dplyr::bind_rows(success, failure) %>%
     assertr::verify(all(query %in% match_results$query)) %>%
     assertr::verify(all(match_results$query %in% query)) %>%
-    dplyr::select(query, resolved_name, matched_name, resolved_status, matched_status, match_type)
+    dplyr::select(
+      query,
+      resolved_name,
+      matched_name,
+      resolved_status,
+      matched_status,
+      match_type
+    )
 
   # Return as tibble or dataframe
   if (isTRUE(tbl_out)) return(tibble::as_tibble(results))

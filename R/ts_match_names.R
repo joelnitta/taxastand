@@ -106,22 +106,26 @@
 #' }
 #'
 ts_match_names <- function(
-  query, reference,
-  max_dist = 10, match_no_auth = FALSE, match_canon = FALSE,
+  query,
+  reference,
+  max_dist = 10,
+  match_no_auth = FALSE,
+  match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
   docker = getOption("ts_docker", default = FALSE),
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
-
   # Check input
   assertthat::assert_that(
     is.character(query) | inherits(query, "data.frame"),
-    msg = "query must be of class 'data.frame' or a character vector")
+    msg = "query must be of class 'data.frame' or a character vector"
+  )
   assertthat::assert_that(
     is.character(reference) | inherits(reference, "data.frame"),
-    msg = "reference must be of class 'data.frame' or a character vector")
+    msg = "reference must be of class 'data.frame' or a character vector"
+  )
   assertthat::assert_that(assertthat::is.number(max_dist))
   assertthat::assert_that(is.logical(match_no_auth))
   assertthat::assert_that(is.logical(match_canon))
@@ -164,12 +168,16 @@ ts_match_names <- function(
     query_parsed_df_original <- query_parsed_df
     # Identify rows where infraspecific_epithet is the same as specific_epithet
     query_parsed_df$same_infra_species <-
-      (query_parsed_df$specific_epithet == query_parsed_df$infraspecific_epithet) %in% TRUE &
+      (query_parsed_df$specific_epithet ==
+        query_parsed_df$infraspecific_epithet) %in%
+      TRUE &
       !query_parsed_df$name %in% collapse_infra_exclude
     assertthat::assert_that(!anyNA(query_parsed_df$same_infra_species))
     # For rows where infraspecific_epithet is the same as specific_epithet,
     # delete infraspecific_epithet and infraspecific_rank
-    query_parsed_df$infraspecific_epithet[query_parsed_df$same_infra_species] <- NA
+    query_parsed_df$infraspecific_epithet[
+      query_parsed_df$same_infra_species
+    ] <- NA
     query_parsed_df$infraspecific_rank[query_parsed_df$same_infra_species] <- NA
     query_parsed_df$same_infra_species <- NULL
     # Account for duplicates created after collapsing names: drop them
@@ -178,12 +186,17 @@ ts_match_names <- function(
       dplyr::mutate(key_id = dplyr::first(id)) |>
       dplyr::ungroup()
     id_map <- dplyr::select(query_parsed_df, id_query = key_id, id)
-    query_parsed_df <- query_parsed_df[!duplicated(query_parsed_df$namestring),]
+    query_parsed_df <- query_parsed_df[
+      !duplicated(query_parsed_df$namestring),
+    ]
     query_parsed_df$namestring <- NULL
   }
 
   # Write out parsed names to temporary file
-  query_parsed_txt <- tempfile(pattern = digest::digest(query), fileext = ".txt")
+  query_parsed_txt <- tempfile(
+    pattern = digest::digest(query),
+    fileext = ".txt"
+  )
   if (fs::file_exists(query_parsed_txt)) fs::file_delete(query_parsed_txt)
   ts_write_names(query_parsed_df, query_parsed_txt)
 
@@ -197,7 +210,10 @@ ts_match_names <- function(
   }
 
   # Write out parsed names to temporary file
-  ref_parsed_txt <- tempfile(pattern = digest::digest(reference), fileext = ".txt")
+  ref_parsed_txt <- tempfile(
+    pattern = digest::digest(reference),
+    fileext = ".txt"
+  )
   if (fs::file_exists(ref_parsed_txt)) fs::file_delete(ref_parsed_txt)
   ts_write_names(ref_parsed_df, ref_parsed_txt)
 
@@ -206,11 +222,13 @@ ts_match_names <- function(
   if (match_canon) match_canon <- "-c" else match_canon <- NULL
 
   # Specify temporary output file
-  match_results_txt <- tempfile(pattern = digest::digest(c(query, reference)), fileext = ".txt")
+  match_results_txt <- tempfile(
+    pattern = digest::digest(c(query, reference)),
+    fileext = ".txt"
+  )
   if (fs::file_exists(match_results_txt)) fs::file_delete(match_results_txt)
 
   # Run taxon-tools matchnames
-
 
   if (isTRUE(docker)) {
     assertthat::assert_that(
@@ -225,10 +243,14 @@ ts_match_names <- function(
       container_id = "camwebb/taxon-tools:v1.3.0",
       command = "matchnames",
       args = c(
-        "-a", file = query_parsed_txt,
-        "-b", file = ref_parsed_txt,
-        "-o", file = match_results_txt,
-        "-e", max_dist,
+        "-a",
+        file = query_parsed_txt,
+        "-b",
+        file = ref_parsed_txt,
+        "-o",
+        file = match_results_txt,
+        "-e",
+        max_dist,
         "-F", # no manual matching
         match_no_auth,
         match_canon
@@ -242,10 +264,14 @@ ts_match_names <- function(
     match_results <- processx::run(
       command = "matchnames",
       args = c(
-        "-a", query_parsed_txt,
-        "-b", ref_parsed_txt,
-        "-o", match_results_txt,
-        "-e", max_dist,
+        "-a",
+        query_parsed_txt,
+        "-b",
+        ref_parsed_txt,
+        "-o",
+        match_results_txt,
+        "-e",
+        max_dist,
         "-F", # no manual matching
         match_no_auth,
         match_canon
@@ -289,42 +315,57 @@ ts_match_names <- function(
     into = matchnames_cols,
     sep = "\\|",
     fill = "right",
-    remove = TRUE)
+    remove = TRUE
+  )
 
   # Convert empty strings to NA
-  results <- dplyr::mutate(results, dplyr::across(dplyr::everything(), ~dplyr::na_if (.x, "")))
+  results <- dplyr::mutate(
+    results,
+    dplyr::across(dplyr::everything(), ~ dplyr::na_if(.x, ""))
+  )
 
   # Add back in the original search terms (query and reference)
   results <- dplyr::left_join(
     results,
     dplyr::select(query_parsed_df, id_query = id, query = name),
-    by = "id_query")
+    by = "id_query"
+  )
 
   results <- dplyr::left_join(
     results,
     dplyr::select(ref_parsed_df, id_ref = id, reference = name),
-    by = "id_ref")
+    by = "id_ref"
+  )
 
-  results <- dplyr::select(results, query, reference, match_type, dplyr::everything())
+  results <- dplyr::select(
+    results,
+    query,
+    reference,
+    match_type,
+    dplyr::everything()
+  )
 
   # Add back in names that were duplicated due to collapsed infrasp names
   if (isTRUE(collapse_infra)) {
     results <-
       dplyr::select(
         query_parsed_df_original,
-        query = name, id) |>
+        query = name,
+        id
+      ) |>
       dplyr::left_join(id_map, by = "id") |>
       dplyr::left_join(
         dplyr::select(results, -query),
-        by = "id_query") |>
+        by = "id_query"
+      ) |>
       dplyr::select(-id) |>
       dplyr::select(query, reference, match_type, dplyr::everything())
   }
 
-  if (simple == TRUE) results <- dplyr::select(results, query, reference, match_type)
+  if (simple == TRUE)
+    results <- dplyr::select(results, query, reference, match_type)
 
   if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
 
   results
-
 }
