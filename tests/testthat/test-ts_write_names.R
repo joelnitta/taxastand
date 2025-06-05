@@ -17,15 +17,23 @@ test_that("Produces expected output file with docker", {
   skip_if_no_docker()
   parsed_names <- ts_parse_names(
     "Foogenus x barspecies var. foosubsp (L.) F. Bar",
-    docker = TRUE)
-  expect_snapshot_file(ts_write_names(parsed_names, "parsed_name.txt"), "parsed_name.txt")
+    docker = TRUE
+  )
+  expect_snapshot_file(
+    ts_write_names(parsed_names, "parsed_name.txt"),
+    "parsed_name.txt"
+  )
   file.remove("parsed_name.txt")
 })
 
 test_that("Produces expected output file without docker", {
   skip_if_no_tt()
   parsed_names <- ts_parse_names(
-    "Foogenus x barspecies var. foosubsp (L.) F. Bar")
-  expect_snapshot_file(ts_write_names(parsed_names, "parsed_name.txt"), "parsed_name.txt")
+    "Foogenus x barspecies var. foosubsp (L.) F. Bar"
+  )
+  expect_snapshot_file(
+    ts_write_names(parsed_names, "parsed_name.txt"),
+    "parsed_name.txt"
+  )
   file.remove("parsed_name.txt")
 })

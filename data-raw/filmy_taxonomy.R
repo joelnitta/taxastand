@@ -18,7 +18,8 @@ download.file(
 # Unzip
 unzip(
   fs::path(temp_dir, "archive-genus-vandenboschia-bl3.zip"),
-  exdir = temp_dir)
+  exdir = temp_dir
+)
 
 # Read in taxonomy table, keep only
 # names at species rank and below
@@ -30,7 +31,13 @@ filmy_taxonomy <- read_tsv(fs::path(temp_dir, "taxa.txt")) %>%
 # Replace "v. d. Bosch" with "V. D. Bosch"
 # see https://github.com/camwebb/taxon-tools/issues/10
 filmy_taxonomy <-
-filmy_taxonomy %>%
-  dplyr::mutate(scientificName = stringr::str_replace_all(scientificName, "v. d. Bosch", "V. D. Bosch"))
+  filmy_taxonomy %>%
+  dplyr::mutate(
+    scientificName = stringr::str_replace_all(
+      scientificName,
+      "v. d. Bosch",
+      "V. D. Bosch"
+    )
+  )
 
 usethis::use_data(filmy_taxonomy)

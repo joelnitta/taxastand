@@ -57,12 +57,18 @@ ts_parse_names <- function(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   quiet = FALSE,
-  docker = getOption("ts_docker", default = FALSE)) {
-
+  docker = getOption("ts_docker", default = FALSE)
+) {
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
-  assertthat::assert_that(assertthat::noNA(taxa), msg = "Input taxa may not contain NAs")
-  assertthat::assert_that(all(assertr::is_uniq(taxa)), msg = "Input taxa must be unique")
+  assertthat::assert_that(
+    assertthat::noNA(taxa),
+    msg = "Input taxa may not contain NAs"
+  )
+  assertthat::assert_that(
+    all(assertr::is_uniq(taxa)),
+    msg = "Input taxa must be unique"
+  )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(docker))
 
@@ -108,7 +114,9 @@ ts_parse_names <- function(
   # Read in results of parsing, format as dataframe
 
   # The output is originally one record per line, with fields separated by '|' (pipe symbol)
-  parsed_names <- data.frame(record = strsplit(ref_parsed[["stdout"]], "\n")[[1]])
+  parsed_names <- data.frame(
+    record = strsplit(ref_parsed[["stdout"]], "\n")[[1]]
+  )
 
   # Split these into separate columns
   name_parts <- c(
@@ -127,30 +135,42 @@ ts_parse_names <- function(
     into = c("id", name_parts),
     sep = "\\|",
     fill = "right",
-    remove = FALSE)
+    remove = FALSE
+  )
 
   # Fill in NA if that name part is missing
   parsed_names[parsed_names == ""] <- NA
 
   # Add "fail" column if all name parts are missing (couldn't be parsed properly)
-  parsed_names$fail <- sapply(1:nrow(parsed_names), function(x) all(is.na(parsed_names[x, name_parts])))
+  parsed_names$fail <- sapply(
+    1:nrow(parsed_names),
+    function(x) all(is.na(parsed_names[x, name_parts]))
+  )
 
   # Early exit if everything failed
   assertthat::assert_that(
     !all(parsed_names$fail == TRUE),
-    msg = "No names could be successfully parsed")
+    msg = "No names could be successfully parsed"
+  )
 
   # Emit warning for failures
   if (sum(parsed_names$fail) > 0 && quiet == FALSE) {
     failed_ids <- parsed_names$id[parsed_names$fail == TRUE]
-    failed_names <- paste(taxa_tbl$name[taxa_tbl$id %in% failed_ids], collapse = ", ")
-    warning(glue::glue("The following names could not be parsed and are excluded from results: {failed_names}"))
+    failed_names <- paste(
+      taxa_tbl$name[taxa_tbl$id %in% failed_ids],
+      collapse = ", "
+    )
+    warning(glue::glue(
+      "The following names could not be parsed and are excluded from results: {failed_names}"
+    ))
   }
 
   # Add back in original name
   parsed_names <- dplyr::left_join(
     parsed_names,
-    dplyr::select(taxa_tbl, id, name), by = "id")
+    dplyr::select(taxa_tbl, id, name),
+    by = "id"
+  )
 
   # Remove failures, drop "fail" column
   parsed_names <- parsed_names[parsed_names$fail == FALSE, ]
@@ -162,5 +182,4 @@ ts_parse_names <- function(
   if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
 
   results
-
 }

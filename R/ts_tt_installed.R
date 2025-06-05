@@ -6,7 +6,7 @@
 #'
 #' @examples
 #' ts_tt_installed()
-ts_tt_installed <- function(){
+ts_tt_installed <- function() {
   tryCatch(
     {
       parsenames_res <- processx::run("parsenames", "--version")
