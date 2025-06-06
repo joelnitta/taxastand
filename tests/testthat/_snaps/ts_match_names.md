@@ -16,3 +16,12 @@
         author_ref
       1       <NA>
 
+# Manually matched names work
+
+    Code
+      match_res
+    Output
+                       query                reference match_type
+      1 Crepidomanes minutus     Crepidomanes minutum auto_fuzzy
+      2        Hymeefee erae Hymenophyllum polyanthos     manual
+
