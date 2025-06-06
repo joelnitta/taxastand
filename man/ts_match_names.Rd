@@ -30,6 +30,10 @@ reference. If a character vector, missing values not allowed and all values
 must be unique. If a dataframe, should be taxonomic names parsed with
 \code{\link{ts_parse_names}()}.}
 
+\item{manual_match}{Optional. Dataframe of manually matched names that will
+override any results from \code{taxon-tools}. Must include two columns, \code{query}
+and \code{match}.}
+
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). Default: 10.}
 
@@ -98,7 +102,7 @@ variety, author, etc).
 parts.
 }
 
-For more information on rules used for matching, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual}. # nolint
+For more information on rules used for matching, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual}.
 
 Parsing is fairly fast (much faster than matching) but can take some time if
 the number of names is very large. If multiple queries will be made (e.g., to
@@ -121,6 +125,24 @@ if(ts_tt_installed()) {
     c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
     simple = TRUE
     )
+
+  # If names are too distant, they won't match
+  ts_match_names(
+    query = "Crepidblah foo",
+    reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+    simple = TRUE
+    )
+
+  # But we can force a match manually
+  ts_match_names(
+    query = "Crepidblah foo",
+    reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+    manual_match = data.frame(
+      query = c("Crepidblah foo"),
+      match = c("Crepidomanes minutum")
+    ),
+    simple = TRUE
+   )
 
   # If you always want tibble output without specifying `tbl_out = TRUE`
   # every time, set the option:
