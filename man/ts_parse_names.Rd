@@ -12,8 +12,8 @@ ts_parse_names(
 )
 }
 \arguments{
-\item{taxa}{Character vector; taxon names to be parsed by taxon-tools \code{parsenames}.
-Missing values not allowed. Must all be unique.}
+\item{taxa}{Character vector; taxon names to be parsed by taxon-tools
+\code{parsenames}. Missing values not allowed. Must all be unique.}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
@@ -44,7 +44,8 @@ Requires \href{https://github.com/camwebb/taxon-tools}{taxon-tools} or docker
 to be installed.
 }
 \details{
-Parses scientific names into their component parts (genus, species, variety, author, etc).
+Parses scientific names into their component parts (genus, species, variety,
+author, etc).
 }
 \examples{
 # Using local taxon-tools installation

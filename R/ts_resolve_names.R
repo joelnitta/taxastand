@@ -29,14 +29,15 @@
 #' with authorship and date information if known.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
 #' (total insertions, deletions and substitutions). Default: 10.
-#' @param match_no_auth Logical; If no author is given in the query and the name (without author)
-#' occurs only once in the reference, accept the name in the reference as a match.
+#' @param match_no_auth Logical; If no author is given in the query and the name
+#' (without author) occurs only once in the reference, accept the name in the
+#' reference as a match. Default: to not allow such a match (`FALSE`).
+#' @param match_canon Logical; Allow a "canonical name" match if only the genus,
+#' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
-#' @param match_canon Logical; Allow a "canonical name" match if only the genus, species epithet,
-#' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
-#' @param collapse_infra Logical; if the specific epithet and infraspecific epithet
-#' are the same, drop the infraspecific rank and epithet from the query. For more
-#' information, see \code{\link{ts_match_names}()}.
+#' @param collapse_infra Logical; if the specific epithet and infraspecific
+#' epithet are the same, drop the infraspecific rank and epithet from the query.
+#' For more information, see \code{\link{ts_match_names}()}.
 #' @param collapse_infra_exclude Character vector; taxonomic names to exclude
 #' collapsing with `collapse_infra`. Any names used must match those in `query`
 #' exactly, or they won't be excluded.
@@ -55,7 +56,8 @@
 #' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref_taxonomy`)
 #' - `match_type`: Type of match (for a summary of match types, [see taxon-tools manual](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes))
 #'
-#' Names that could not be matched or resolve to multiple, different synonyms have `NA` for `resolved_name`.
+#' Names that could not be matched or resolve to multiple, different synonyms
+#' have `NA` for `resolved_name`.
 #'
 #' @autoglobal
 #' @export

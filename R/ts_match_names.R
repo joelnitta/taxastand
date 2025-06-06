@@ -1,8 +1,8 @@
 #' Match taxonomic names to a reference
 #'
 #' Allows for orthographic differences between query and reference by using
-#' fuzzy matching on parsed taxonomic names. Requires [taxon-tools](https://github.com/camwebb/taxon-tools) to be
-#' installed.
+#' fuzzy matching on parsed taxonomic names. Requires
+#' [taxon-tools](https://github.com/camwebb/taxon-tools) to be installed.
 #'
 #' `taxon-tools` matches names in two steps:
 #' 1. Scientific names are parsed into their component parts (genus, species,
@@ -27,25 +27,29 @@
 #' name are different (see example below).
 #'
 #' @param query Character vector or dataframe; taxonomic names to be queried.
-#' If a character vector, missing values not allowed and all values must be unique.
-#' If a dataframe, should be taxonomic names parsed with \code{\link{ts_parse_names}()}.
-#' @param reference  Character vector or dataframe; taxonomic names to use as reference.
-#' If a character vector, missing values not allowed and all values must be unique.
-#' If a dataframe, should be taxonomic names parsed with \code{\link{ts_parse_names}()}.
+#' If a character vector, missing values not allowed and all values must be
+#' unique.
+#' If a dataframe, should be taxonomic names parsed with
+#' \code{\link{ts_parse_names}()}.
+#' @param reference  Character vector or dataframe; taxonomic names to use as
+#' reference. If a character vector, missing values not allowed and all values
+#' must be unique. If a dataframe, should be taxonomic names parsed with
+#' \code{\link{ts_parse_names}()}.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
 #' (total insertions, deletions and substitutions). Default: 10.
-#' @param match_no_auth Logical; If no author is given in the query and the name (without author)
-#' occurs only once in the reference, accept the name in the reference as a match.
+#' @param match_no_auth Logical; If no author is given in the query and the name
+#' (without author) occurs only once in the reference, accept the name in the
+#' reference as a match. Default: to not allow such a match (`FALSE`).
+#' @param match_canon Logical; Allow a "canonical name" match if only the genus,
+#' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
-#' @param match_canon Logical; Allow a "canonical name" match if only the genus, species epithet,
-#' and infraspecific epithet (if present) match exactly. Default: to not allow such a match (`FALSE`).
-#' @param collapse_infra Logical; if the specific epithet and infraspecific epithet
-#' are the same, drop the infraspecific rank and epithet from the query.
+#' @param collapse_infra Logical; if the specific epithet and infraspecific
+#' epithet are the same, drop the infraspecific rank and epithet from the query.
 #' @param collapse_infra_exclude Character vector; taxonomic names to exclude
 #' from collapsing with `collapse_infra`. Any names used must match those in
 #' `query` exactly, or they won't be excluded.
-#' @param simple Logical; return the output in a simplified format with only the query
-#' name, matched reference name, and match type. Default: `FALSE`.
+#' @param simple Logical; return the output in a simplified format with only the
+#' query name, matched reference name, and match type. Default: `FALSE`.
 #' @param docker Logical; if TRUE, docker will be used to run taxon-tools
 #' (so that taxon-tools need not be installed).
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?

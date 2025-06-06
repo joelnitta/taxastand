@@ -7,6 +7,7 @@
 ts_match_names(
   query,
   reference,
+  manual_match = NULL,
   max_dist = 10,
   match_no_auth = FALSE,
   match_canon = FALSE,
@@ -19,32 +20,36 @@ ts_match_names(
 }
 \arguments{
 \item{query}{Character vector or dataframe; taxonomic names to be queried.
-If a character vector, missing values not allowed and all values must be unique.
-If a dataframe, should be taxonomic names parsed with \code{\link{ts_parse_names}()}.}
+If a character vector, missing values not allowed and all values must be
+unique.
+If a dataframe, should be taxonomic names parsed with
+\code{\link{ts_parse_names}()}.}
 
-\item{reference}{Character vector or dataframe; taxonomic names to use as reference.
-If a character vector, missing values not allowed and all values must be unique.
-If a dataframe, should be taxonomic names parsed with \code{\link{ts_parse_names}()}.}
+\item{reference}{Character vector or dataframe; taxonomic names to use as
+reference. If a character vector, missing values not allowed and all values
+must be unique. If a dataframe, should be taxonomic names parsed with
+\code{\link{ts_parse_names}()}.}
 
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). Default: 10.}
 
-\item{match_no_auth}{Logical; If no author is given in the query and the name (without author)
-occurs only once in the reference, accept the name in the reference as a match.
+\item{match_no_auth}{Logical; If no author is given in the query and the name
+(without author) occurs only once in the reference, accept the name in the
+reference as a match. Default: to not allow such a match (\code{FALSE}).}
+
+\item{match_canon}{Logical; Allow a "canonical name" match if only the genus,
+species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (\code{FALSE}).}
 
-\item{match_canon}{Logical; Allow a "canonical name" match if only the genus, species epithet,
-and infraspecific epithet (if present) match exactly. Default: to not allow such a match (\code{FALSE}).}
-
-\item{collapse_infra}{Logical; if the specific epithet and infraspecific epithet
-are the same, drop the infraspecific rank and epithet from the query.}
+\item{collapse_infra}{Logical; if the specific epithet and infraspecific
+epithet are the same, drop the infraspecific rank and epithet from the query.}
 
 \item{collapse_infra_exclude}{Character vector; taxonomic names to exclude
 from collapsing with \code{collapse_infra}. Any names used must match those in
 \code{query} exactly, or they won't be excluded.}
 
-\item{simple}{Logical; return the output in a simplified format with only the query
-name, matched reference name, and match type. Default: \code{FALSE}.}
+\item{simple}{Logical; return the output in a simplified format with only the
+query name, matched reference name, and match type. Default: \code{FALSE}.}
 
 \item{docker}{Logical; if TRUE, docker will be used to run taxon-tools
 (so that taxon-tools need not be installed).}
@@ -81,8 +86,8 @@ If \code{simple} is \code{TRUE}, only return the first three columns above.
 }
 \description{
 Allows for orthographic differences between query and reference by using
-fuzzy matching on parsed taxonomic names. Requires \href{https://github.com/camwebb/taxon-tools}{taxon-tools} to be
-installed.
+fuzzy matching on parsed taxonomic names. Requires
+\href{https://github.com/camwebb/taxon-tools}{taxon-tools} to be installed.
 }
 \details{
 \code{taxon-tools} matches names in two steps:
@@ -93,7 +98,7 @@ variety, author, etc).
 parts.
 }
 
-For more information on rules used for matching, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual}.
+For more information on rules used for matching, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual}. # nolint
 
 Parsing is fairly fast (much faster than matching) but can take some time if
 the number of names is very large. If multiple queries will be made (e.g., to
