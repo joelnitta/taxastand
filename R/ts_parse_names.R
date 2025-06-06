@@ -3,10 +3,11 @@
 #' Requires [taxon-tools](https://github.com/camwebb/taxon-tools) or docker
 #' to be installed.
 #'
-#' Parses scientific names into their component parts (genus, species, variety, author, etc).
+#' Parses scientific names into their component parts (genus, species, variety,
+#' author, etc).
 #'
-#' @param taxa Character vector; taxon names to be parsed by taxon-tools `parsenames`.
-#' Missing values not allowed. Must all be unique.
+#' @param taxa Character vector; taxon names to be parsed by taxon-tools
+#' `parsenames`. Missing values not allowed. Must all be unique.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
