@@ -25,3 +25,18 @@
       1 Crepidomanes minutus     Crepidomanes minutum auto_fuzzy
       2        Hymeefee erae Hymenophyllum polyanthos     manual
 
+# Manually matched names work with collapsed infrasp names
+
+    Code
+      match_res
+    Output
+      # A tibble: 6 x 3
+        query                       reference            match_type
+        <chr>                       <chr>                <chr>     
+      1 Crepidomanes minutus        Crepidomanes minutum auto_fuzzy
+      2 Crepidomanes minutawtaw     Crepidomanes minutum manual    
+      3 Blechnum lunare var. lunare Blechnum lunare      exact     
+      4 Blechnum lunare             Blechnum lunare      exact     
+      5 Bar foo var. foo            Bar foo              manual    
+      6 Bar foo                     Bar foo              exact     
+

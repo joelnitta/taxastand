@@ -36,8 +36,8 @@
 #' must be unique. If a dataframe, should be taxonomic names parsed with
 #' \code{\link{ts_parse_names}()}.
 #' @param manual_match Optional. Dataframe of manually matched names that will
-#' override any results from `taxon-tools`. Must include two columns, `query`
-#' and `match`.
+#' override any results from `taxon-tools`. Must include columns, `query`
+#' and `match`. Can only be used if `query` is a character vector.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
 #' (total insertions, deletions and substitutions). Default: 10.
 #' @param match_no_auth Logical; If no author is given in the query and the name
@@ -168,8 +168,10 @@ ts_match_names <- function(
       msg = "manual_match must be of class 'data.frame'"
     )
     assertthat::assert_that(
-      assertthat::are_equal(sort(colnames(manual_match)), c("match", "query")),
-      msg = "manual_match must have `query` and `match` columns (only)"
+      isTRUE(
+        all(c("query", "match") %in% colnames(manual_match))
+      ),
+      msg = "manual_match must have `query` and `match` columns"
     )
     assertthat::assert_that(
       is.character(manual_match$query)
@@ -187,15 +189,10 @@ ts_match_names <- function(
       isTRUE(!any(duplicated(manual_match$query))),
       msg = "All values of manual_match$query must be unique"
     )
-  }
-
-  # Parse or load query names
-  if (is.character(query)) {
-    # Parse the names (adds 'name' column)
-    query_parsed_df <- ts_parse_names(query, docker = docker)
-  } else {
-    # Or, names are already parsed
-    query_parsed_df <- query
+    assertthat::assert_that(
+      is.character(query),
+      msg = "manual_match can only be used if query is a character vector"
+    )
   }
 
   # Helper function to add a namestring to a dataframe of parsed names
@@ -212,6 +209,37 @@ ts_match_names <- function(
         sep = "_"
       )
     df
+  }
+
+  # Parse or load query names
+  if (is.character(query)) {
+    # Optional: for manual matches, use matched name instead of query
+    # to generate exact match
+    if (!is.null(manual_match)) {
+      manual_replacement_df <-
+        data.frame(
+          query_original = query
+        ) |>
+        dplyr::left_join(
+          dplyr::select(
+            manual_match,
+            query_original = query,
+            query_new = match
+          ),
+          by = "query_original",
+          relationship = "one-to-one"
+        ) |>
+        dplyr::mutate(
+          query_new = dplyr::coalesce(query_new, query_original)
+        )
+      query <- manual_replacement_df$query_new |>
+        unique()
+    }
+    # Parse the names (adds 'name' column)
+    query_parsed_df <- ts_parse_names(query, docker = docker)
+  } else {
+    # Or, names are already parsed
+    query_parsed_df <- query
   }
 
   # Optionally collapse infraspecific name
@@ -259,6 +287,14 @@ ts_match_names <- function(
   } else {
     # Or, names are already parsed
     ref_parsed_df <- reference
+  }
+
+  # Check that manually matched ref names are in data
+  if (!is.null(manual_match)) {
+    assertthat::assert_that(
+      isTRUE(all(manual_match$match %in% ref_parsed_df$name)),
+      msg = "One or more manually matched reference names not in reference data"
+    )
   }
 
   # Write out parsed names to temporary file
@@ -376,111 +412,6 @@ ts_match_names <- function(
     dplyr::across(dplyr::everything(), ~ dplyr::na_if(.x, ""))
   )
 
-  # Optional: replace manual matches
-  if (!is.null(manual_match)) {
-    # - Check that manually specified match data are in actual query and
-    # reference data
-    assertthat::assert_that(
-      isTRUE(all(manual_match$match %in% ref_parsed_df$name)),
-      msg = "One or more manually matched reference names not in reference data"
-    )
-    assertthat::assert_that(
-      isTRUE(all(manual_match$query %in% query_parsed_df$name)),
-      msg = "One or more manually matched query names not in reference data"
-    )
-
-    # - Parse manual matches
-    # Save raw results as _orig, add other columns needed for constructing
-    # manually matched results
-    manual_match_query_df_orig <- ts_parse_names(
-      manual_match$query,
-      docker = docker
-    )
-    manual_match_query_df <- manual_match_query_df_orig |>
-      add_namestring()
-    colnames(manual_match_query_df) <- paste0(
-      colnames(manual_match_query_df),
-      "_query"
-    )
-    manual_match_match_df <- ts_parse_names(
-      manual_match$match,
-      docker = docker
-    )
-    manual_match_match_df_orig <- manual_match_match_df
-    colnames(manual_match_match_df) <- paste0(
-      colnames(manual_match_match_df),
-      "_ref"
-    )
-    manual_match_parsed <- cbind(
-      manual_match_query_df,
-      manual_match_match_df
-    ) |>
-      dplyr::mutate(match_type = "manual")
-
-    # - Replace manual matches in results by query namestring
-    results$namestring_query <-
-      paste0(
-        results$genus_hybrid_sign_query,
-        results$genus_name_query,
-        results$species_hybrid_sign_query,
-        results$specific_epithet_query,
-        results$infraspecific_rank_query,
-        results$infraspecific_epithet_query,
-        results$author_query,
-        sep = "_"
-      )
-    # Make sure columns match
-    manual_match_parsed <- dplyr::select(
-      manual_match_parsed,
-      dplyr::all_of(colnames(results))
-    )
-
-    # Exclude any names from manual matches not in actual results (query)
-    manual_match_parsed <-
-      manual_match_parsed |>
-      dplyr::inner_join(
-        dplyr::select(results, namestring_query),
-        by = "namestring_query"
-      )
-
-    assertthat::assert_that(
-      nrow(manual_match_parsed) > 0,
-      msg = "No names in `manual_match` found `query`"
-    )
-
-    # Delete algorithm results for manual matches
-    results <-
-      results |>
-      dplyr::anti_join(
-        manual_match_parsed,
-        by = "namestring_query"
-      )
-
-    # Add in manual matches
-    results <-
-      dplyr::bind_rows(results, manual_match_parsed)
-
-    results$namestring_query <- NULL
-
-    # Need to add IDs of parsed names in manual matches to
-    # query_parsed_df and ref_parsed_df
-    query_parsed_df_combined <- dplyr::bind_rows(
-      query_parsed_df,
-      manual_match_query_df_orig
-    ) |>
-      unique()
-
-    query_parsed_df <- query_parsed_df_combined
-
-    ref_parsed_df_combined <- dplyr::bind_rows(
-      ref_parsed_df,
-      manual_match_match_df_orig
-    ) |>
-      unique()
-
-    ref_parsed_df <- ref_parsed_df_combined
-  }
-
   # Add back in the original search terms (query and reference)
   results <- dplyr::left_join(
     results,
@@ -517,6 +448,28 @@ ts_match_names <- function(
       ) |>
       dplyr::select(-id) |>
       dplyr::select(query, reference, match_type, dplyr::everything())
+  }
+
+  # For manual matches, restore back to original query input, and specify
+  # that match was made manually
+  if (!is.null(manual_match)) {
+    results <-
+      manual_replacement_df |>
+      dplyr::left_join(
+        results,
+        by = dplyr::join_by(query_new == query),
+        relationship = "many-to-one"
+      ) |>
+      dplyr::mutate(
+        match_type = dplyr::case_when(
+          query_original %in% manual_match$query ~ "manual",
+          .default = match_type
+        )
+      ) |>
+      dplyr::select(
+        query = query_original,
+        dplyr::everything()
+      )
   }
 
   if (simple == TRUE)
