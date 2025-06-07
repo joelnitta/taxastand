@@ -25,6 +25,16 @@
       1 Crepidomanes minutus     Crepidomanes minutum auto_fuzzy
       2        Hymeefee erae Hymenophyllum polyanthos     manual
 
+# Names that can't be parsed don't show up in results
+
+    Code
+      match_res
+    Output
+      # A tibble: 1 x 3
+        query                reference            match_type
+        <chr>                <chr>                <chr>     
+      1 Crepidomanes minutus Crepidomanes minutum auto_fuzzy
+
 # Manually matched names work with collapsed infrasp names
 
     Code

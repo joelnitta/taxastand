@@ -53,6 +53,23 @@ test_that("Manually matched names work", {
   expect_snapshot(match_res)
 })
 
+test_that("Names that can't be parsed don't show up in results", {
+  skip_if_no_docker()
+  match_res <- ts_match_names(
+    query = c(
+      "Vanden kalamocarpa x Vanden nipponica x Vanden striata",
+      "Crepidomanes minutus"
+    ),
+    reference = c(
+      "Crepidomanes minutum"
+    ),
+    simple = TRUE,
+    docker = TRUE,
+    tbl_out = TRUE
+  )
+  expect_snapshot(match_res)
+})
+
 test_that("Manually matched names work with collapsed infrasp names", {
   skip_if_no_docker()
   match_res <- ts_match_names(
