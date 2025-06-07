@@ -455,7 +455,7 @@ ts_match_names <- function(
   if (!is.null(manual_match)) {
     results <-
       manual_replacement_df |>
-      dplyr::left_join(
+      dplyr::inner_join(
         results,
         by = dplyr::join_by(query_new == query)
       ) |>
