@@ -457,8 +457,7 @@ ts_match_names <- function(
       manual_replacement_df |>
       dplyr::left_join(
         results,
-        by = dplyr::join_by(query_new == query),
-        relationship = "many-to-one"
+        by = dplyr::join_by(query_new == query)
       ) |>
       dplyr::mutate(
         match_type = dplyr::case_when(
