@@ -7,13 +7,12 @@
 ts_parse_names(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  quiet = FALSE,
-  docker = getOption("ts_docker", default = FALSE)
+  quiet = FALSE
 )
 }
 \arguments{
-\item{taxa}{Character vector; taxon names to be parsed by taxon-tools
-\code{parsenames}. Missing values not allowed. Must all be unique.}
+\item{taxa}{Character vector; taxon names to be parsed. Missing values not
+allowed. Must all be unique.}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
@@ -21,9 +20,6 @@ be controlled via the option \code{ts_tbl_out}; see Examples.}
 
 \item{quiet}{Logical; if TRUE, suppress warning messages that would normally
 be issued}
-
-\item{docker}{Logical; if TRUE, docker will be used to run taxon-tools
-(so that taxon-tools need not be installed).}
 }
 \value{
 A dataframe including the following columns.
@@ -40,36 +36,18 @@ A dataframe including the following columns.
 }
 }
 \description{
-Requires \href{https://github.com/camwebb/taxon-tools}{taxon-tools} or docker
-to be installed.
-}
-\details{
 Parses scientific names into their component parts (genus, species, variety,
 author, etc).
 }
 \examples{
-# Using local taxon-tools installation
-if (ts_tt_installed()) {
-
-  ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-  ts_parse_names(
-    "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
-
-  # If you always want tibble output without specifying `tbl_out = TRUE`
-  # every time, set the option:
-  options(ts_tbl_out = TRUE)
-  ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-  ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
-
-}
-
-# Using docker
-if (babelwhale::test_docker_installation()) {
-
+ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 ts_parse_names(
-  "Foogenus x barspecies var. foosubsp (L.) F. Bar",
-  docker = TRUE)
+  "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
 
-}
+# If you always want tibble output without specifying `tbl_out = TRUE`
+# every time, set the option:
+options(ts_tbl_out = TRUE)
+ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 
 }

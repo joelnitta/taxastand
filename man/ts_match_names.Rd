@@ -14,7 +14,6 @@ ts_match_names(
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
-  docker = getOption("ts_docker", default = FALSE),
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 )
 }
@@ -31,8 +30,8 @@ must be unique. If a dataframe, should be taxonomic names parsed with
 \code{\link{ts_parse_names}()}.}
 
 \item{manual_match}{Optional. Dataframe of manually matched names that will
-override any results from \code{taxon-tools}. Must include two columns, \code{query}
-and \code{match}.}
+override any results from \code{taxon-tools}. Must include columns, \code{query}
+and \code{match}. Can only be used if \code{query} is a character vector.}
 
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). Default: 10.}
@@ -54,9 +53,6 @@ from collapsing with \code{collapse_infra}. Any names used must match those in
 
 \item{simple}{Logical; return the output in a simplified format with only the
 query name, matched reference name, and match type. Default: \code{FALSE}.}
-
-\item{docker}{Logical; if TRUE, docker will be used to run taxon-tools
-(so that taxon-tools need not be installed).}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
@@ -90,11 +86,10 @@ If \code{simple} is \code{TRUE}, only return the first three columns above.
 }
 \description{
 Allows for orthographic differences between query and reference by using
-fuzzy matching on parsed taxonomic names. Requires
-\href{https://github.com/camwebb/taxon-tools}{taxon-tools} to be installed.
+fuzzy matching on parsed taxonomic names.
 }
 \details{
-\code{taxon-tools} matches names in two steps:
+Names are matched in two steps:
 \enumerate{
 \item Scientific names are parsed into their component parts (genus, species,
 variety, author, etc).
@@ -102,7 +97,9 @@ variety, author, etc).
 parts.
 }
 
-For more information on rules used for matching, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual}.
+For more information on rules used for matching,
+\href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual},
+which uses the same logic.
 
 Parsing is fairly fast (much faster than matching) but can take some time if
 the number of names is very large. If multiple queries will be made (e.g., to
@@ -119,49 +116,47 @@ be queried instead of "Blechnum lunare var. lunare". Note that the
 name are different (see example below).
 }
 \examples{
-if(ts_tt_installed()) {
-  ts_match_names(
-    "Crepidomanes minutus",
-    c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-    simple = TRUE
-    )
+ts_match_names(
+  "Crepidomanes minutus",
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+  simple = TRUE
+  )
 
-  # If names are too distant, they won't match
-  ts_match_names(
-    query = "Crepidblah foo",
-    reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-    simple = TRUE
-    )
+# If names are too distant, they won't match
+ts_match_names(
+  query = "Crepidblah foo",
+  reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+  simple = TRUE
+  )
 
-  # But we can force a match manually
-  ts_match_names(
-    query = "Crepidblah foo",
-    reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-    manual_match = data.frame(
-      query = c("Crepidblah foo"),
-      match = c("Crepidomanes minutum")
-    ),
-    simple = TRUE
-   )
+# But we can force a match manually
+ts_match_names(
+  query = "Crepidblah foo",
+  reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+  manual_match = data.frame(
+    query = c("Crepidblah foo"),
+    match = c("Crepidomanes minutum")
+  ),
+  simple = TRUE
+ )
 
-  # If you always want tibble output without specifying `tbl_out = TRUE`
-  # every time, set the option:
-  options(ts_tbl_out = TRUE)
-  ts_match_names(
-    "Crepidomanes minutus",
-    c("Crepidomanes minutum", "Hymenophyllum polyanthos")
-    )
+# If you always want tibble output without specifying `tbl_out = TRUE`
+# every time, set the option:
+options(ts_tbl_out = TRUE)
+ts_match_names(
+  "Crepidomanes minutus",
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos")
+  )
 
-  # Example using collapse_infra argument
-  ts_match_names(
-    c("Crepidomanes minutus", "Blechnum lunare var. lunare",
-      "Blechnum lunare", "Bar foo var. foo", "Bar foo"),
-    c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
-      "Bar foo"),
-    collapse_infra = TRUE,
-    collapse_infra_exclude = "Bar foo var. foo",
-    simple = TRUE
-    )
-}
+# Example using collapse_infra argument
+ts_match_names(
+  c("Crepidomanes minutus", "Blechnum lunare var. lunare",
+    "Blechnum lunare", "Bar foo var. foo", "Bar foo"),
+  c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+    "Bar foo"),
+  collapse_infra = TRUE,
+  collapse_infra_exclude = "Bar foo var. foo",
+  simple = TRUE
+  )
 
 }
