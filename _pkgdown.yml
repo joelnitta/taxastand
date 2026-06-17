@@ -18,9 +18,3 @@ reference:
 - title: "Datasets"
 - contents:
   - filmy_taxonomy
-- title: "I/O"
-- contents:
-  - ts_write_names
-- title: "Utilities"
-- contents:
-  - ts_tt_installed
