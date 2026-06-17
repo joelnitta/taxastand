@@ -10,10 +10,7 @@ Description: Matches species names to a taxonomic standard. Resolves synonyms co
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-SystemRequirements: 
-    parsenames (<https://github.com/camwebb/taxon-tools>),
-    matchnames (<https://github.com/camwebb/taxon-tools>)
-Imports: 
+Imports:
     assertr,
     assertthat,
     digest,
@@ -21,21 +18,19 @@ Imports:
     fs,
     glue,
     magrittr,
-    processx,
     tibble,
     tidyr
 Roxygen: list(
     markdown = TRUE,
     roclets = c("collate", "namespace", "rd", "roxyglobals::global_roclet"))
-RoxygenNote: 7.3.2
 Depends: R (>= 4.1.0)
-Suggests: 
+Suggests:
     rmarkdown,
     knitr,
     roxyglobals (>= 0.2.1),
-    testthat (>= 3.0.0),
-    babelwhale
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Remotes: 
     anthonynorth/roxyglobals
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0

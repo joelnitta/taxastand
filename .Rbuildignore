@@ -10,3 +10,5 @@
 ^\.github$
 ^doc$
 ^Meta$
+^\.claude$
+^\.plans$
