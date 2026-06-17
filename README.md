@@ -19,14 +19,6 @@ same species. If we want to join data from different sources, their
 taxonomic names must be standardized first. This is what `taxastand`
 seeks to do in a reproducible and efficient manner.
 
-## Important note
-
-**This package is in early development.** There may be major, breaking
-changes to functionality in the near future. If you use this package, I
-highly recommend using a package manager like
-[renv](https://rstudio.github.io/renv/articles/renv.html) so that later
-updates won’t break your code.
-
 ## Taxonomic standard
 
 `taxastand` is based on matching names to a single **taxonomic
@@ -62,36 +54,20 @@ OR
 remotes::install_github("joelnitta/taxastand")
 ```
 
-## Dependencies
-
-`taxastand` depends on
-[taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name
-matching.
-
-There are two options for using this dependency.
-
-- Install [docker](https://www.docker.com/) and set `docker = TRUE` when
-  using `taxastand` functions.
-
-OR
-
-- Install the two programs included in
-  [taxon-tools](https://github.com/camwebb/taxon-tools), `parsenames`
-  and `matchnames`.
-
 ## Similar work
 
-- [ROpenSci](https://ropensci.org/) has a [task
-  view](https://github.com/ropensci/taxonomy) summarizing many tools
-  available for taxonomy.
+- [taxon-tools](https://github.com/camwebb/taxon-tools) is a
+  command-line interface program that was the inspiration for
+  `taxastand`. `taxastand` originally required it as a dependency, but
+  this was removed in v2.0.
 
 - [taxize](https://github.com/ropensci/taxize) is the “granddaddy” of
   taxonomy packages in R. It can search around 20 different taxonomic
   databases for names and retrieve taxonomic information.
 
-- [TNRS](http://tnrs.iplantcollaborative.org/), the Taxonomic Name
-  Resolution Service, is a web application that resolves taxonomic names
-  of plants according to one of six databases.
+- [TNRS](https://tnrs.biendata.org/), the Taxonomic Name Resolution
+  Service, is a web application that resolves taxonomic names of plants
+  according to one of six databases.
 
 - [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic
   databases and provides tools to interface with them through SQL.
@@ -106,6 +82,10 @@ OR
   not allow the user to provide their own. Note that TPL is no longer
   being updated as of 2013.
 
+- [ROpenSci](https://ropensci.org/) has a [task
+  view](https://github.com/ropensci/taxonomy) summarizing many tools
+  available for taxonomy.
+
 ## Motivation
 
 Although existing web-based solutions for taxonomic name resolution are
@@ -119,9 +99,9 @@ Furthermore, matching of taxonomic names is not straightforward, since
 they are complex data structures including multiple components (e.g.,
 genus, specific epithet, basionym author, combination author, etc). [Of
 the tools mentioned above](#similar-work) only
-[TNRS](http://tnrs.iplantcollaborative.org/) can fuzzily match taxonomic
-names based on their parsed components, but it does not allow for use of
-a local reference database.
+[TNRS](https://tnrs.biendata.org/) can fuzzily match taxonomic names
+based on their parsed components, but it does not allow for use of a
+local reference database.
 
 The motivation for `taxastand` is to provide greater flexibility and
 reproducibility by allowing for complete version control of the code and
@@ -142,39 +122,38 @@ data(filmy_taxonomy)
 # Take a look at the columns used by taxastand
 head(filmy_taxonomy[c(
   "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+#>    taxonID acceptedNameUsageID taxonomicStatus
+#> 1 54115096                  NA   accepted name
+#> 2 54133783            54115097         synonym
+#> 3 54115097                  NA   accepted name
+#> 4 54133784            54115098         synonym
+#> 5 54115098                  NA   accepted name
+#> 6 54133785            54115099         synonym
+#>                              scientificName
+#> 1             Cephalomanes atrovirens Presl
+#> 2                Trichomanes crassum Copel.
+#> 3 Cephalomanes crassum (Copel.) M. G. Price
+#> 4           Trichomanes densinervium Copel.
+#> 5 Cephalomanes densinervium (Copel.) Copel.
+#> 6         Trichomanes infundibulare Alderw.
 
 # As a test, resolve a misspelled name
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
+#>                query                        resolved_name
+#> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
+#>                     matched_name resolved_status matched_status match_type
+#> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy
 
 # We can now use the `resolved_name` column of this result for downstream
 # analyses joining on other datasets that have been resolved to the same
 # reference taxonomy.
 ```
 
-    #>    taxonID acceptedNameUsageID taxonomicStatus
-    #> 1 54115096                  NA   accepted name
-    #> 2 54133783            54115097         synonym
-    #> 3 54115097                  NA   accepted name
-    #> 4 54133784            54115098         synonym
-    #> 5 54115098                  NA   accepted name
-    #> 6 54133785            54115099         synonym
-    #>                              scientificName
-    #> 1             Cephalomanes atrovirens Presl
-    #> 2                Trichomanes crassum Copel.
-    #> 3 Cephalomanes crassum (Copel.) M. G. Price
-    #> 4           Trichomanes densinervium Copel.
-    #> 5 Cephalomanes densinervium (Copel.) Copel.
-    #> 6         Trichomanes infundibulare Alderw.
-    #>                query                        resolved_name
-    #> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
-    #>                     matched_name resolved_status matched_status match_type
-    #> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy
-
 ## Citing this package
 
 If you use this package, please cite it! Here is an example:
 
-    Nitta, JH (2021) taxastand: Taxonomic name standardization in R. https://doi.org/10.5281/zenodo.5726390
+    Nitta, JH (2026) taxastand: Taxonomic name standardization in R. https://doi.org/10.5281/zenodo.5726390
 
 The example DOI above is for the overall package.
 
@@ -185,6 +164,3 @@ version of the package:
 
 You can find DOIs for older versions by viewing the “Releases” menu on
 the right.
-
-You should also cite the software that `taxastand` relies on,
-`taxon-tools`: <https://github.com/camwebb/taxon-tools>

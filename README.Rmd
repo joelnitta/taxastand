@@ -22,10 +22,6 @@ The goal of `taxastand` is to standardize species names from different sources, 
 
 Very often different biologists use different synonyms to refer to the same species. If we want to join data from different sources, their taxonomic names must be standardized first. This is what `taxastand` seeks to do in a reproducible and efficient manner.
 
-## Important note
-
-**This package is in early development.** There may be major, breaking changes to functionality in the near future. If you use this package, I highly recommend using a package manager like [renv](https://rstudio.github.io/renv/articles/renv.html) so that later updates won't break your code.
-
 ## Taxonomic standard
 
 `taxastand` is based on matching names to a single **taxonomic standard**, that is, a database of accepted names and synonyms. As long as a single taxonomic standard is used, we can confidently resolve names from disparate sources.
@@ -42,30 +38,18 @@ install.packages("taxastand", repos = 'https://joelnitta.r-universe.dev')
 
 OR
 
-``` r
+```r
 # install.packages("remotes")
 remotes::install_github("joelnitta/taxastand")
 ```
 
-## Dependencies
-
-`taxastand` depends on [taxon-tools](https://github.com/camwebb/taxon-tools) for taxonomic name matching.
-
-There are two options for using this dependency.
-
-- Install [docker](https://www.docker.com/) and set `docker = TRUE` when using `taxastand` functions.
-
-OR
-
-- Install the two programs included in [taxon-tools](https://github.com/camwebb/taxon-tools), `parsenames` and `matchnames`.
-
 ## Similar work
 
-- [ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
+- [taxon-tools](https://github.com/camwebb/taxon-tools) is a command-line interface program that was the inspiration for `taxastand`. `taxastand` originally required it as a dependency, but this was removed in v2.0.
 
 - [taxize](https://github.com/ropensci/taxize) is the "granddaddy" of taxonomy packages in R. It can search around 20 different taxonomic databases for names and retrieve taxonomic information.
 
-- [TNRS](http://tnrs.iplantcollaborative.org/), the Taxonomic Name Resolution Service, is a web application that resolves taxonomic names of plants according to one of six databases.
+- [TNRS](https://tnrs.biendata.org/), the Taxonomic Name Resolution Service, is a web application that resolves taxonomic names of plants according to one of six databases.
 
 - [taxizedb](https://github.com/ropensci/taxizedb) downloads taxonomic databases and provides tools to interface with them through SQL.
 
@@ -74,11 +58,13 @@ OR
 - [taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html) has a very similar goal to `taxastand`, but only uses [The Plant List (TPL)](http://www.theplantlist.org
 ) as its taxonomic standard and does not allow the user to provide their own. Note that TPL is no longer being updated as of 2013.
 
+- [ROpenSci](https://ropensci.org/) has a [task view](https://github.com/ropensci/taxonomy) summarizing many tools available for taxonomy.
+
 ## Motivation
 
 Although existing web-based solutions for taxonomic name resolution are very useful, they may not be ideal for all situations: the choice of reference database to use for standardization is limited, they may not be able to handle very large queries, and the user has no guarantee that the same input will yield the same output at a later date due to changes in the remote database. 
 
-Furthermore, matching of taxonomic names is not straightforward, since they are complex data structures including multiple components (e.g., genus, specific epithet, basionym author, combination author, etc). [Of the tools mentioned above](#similar-work) only [TNRS](http://tnrs.iplantcollaborative.org/) can fuzzily match taxonomic names based on their parsed components, but it does not allow for use of a local reference database.
+Furthermore, matching of taxonomic names is not straightforward, since they are complex data structures including multiple components (e.g., genus, specific epithet, basionym author, combination author, etc). [Of the tools mentioned above](#similar-work) only [TNRS](https://tnrs.biendata.org/) can fuzzily match taxonomic names based on their parsed components, but it does not allow for use of a local reference database.
 
 The motivation for `taxastand` is to provide greater flexibility and reproducibility by allowing for complete version control of the code and database used for name resolution, while implementing fuzzy matching of parsed taxonomic names.
 
@@ -86,7 +72,7 @@ The motivation for `taxastand` is to provide greater flexibility and reproducibi
 
 Here is an example of fuzzy matching followed by resolution of synonyms using the dataset included with the package.
 
-```{r filmy-example-show, eval = FALSE}
+```{r filmy-example}
 library(taxastand)
 
 # Load example reference taxonomy in Darwin Core format
@@ -104,29 +90,11 @@ ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 # reference taxonomy.
 ```
 
-```{r filmy-example-hide, echo = FALSE}
-library(taxastand)
-
-# Load example reference taxonomy in Darwin Core format
-data(filmy_taxonomy)
-
-# Take a look at the columns used by taxastand
-head(filmy_taxonomy[c(
-  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
-
-# As a test, resolve a misspelled name
-ts_resolve_names("Gonocormus minutum", filmy_taxonomy, docker = TRUE)
-
-# We can now use the `resolved_name` column of this result for downstream
-# analyses joining on other datasets that have been resolved to the same
-# reference taxonomy.
-```
-
 ## Citing this package
 
 If you use this package, please cite it! Here is an example:
 
-    Nitta, JH (2021) taxastand: Taxonomic name standardization in R. https://doi.org/10.5281/zenodo.5726390
+    Nitta, JH (2026) taxastand: Taxonomic name standardization in R. https://doi.org/10.5281/zenodo.5726390
 
 The example DOI above is for the overall package.
 
@@ -137,5 +105,3 @@ version of the package:
 
 You can find DOIs for older versions by viewing the “Releases” menu on
 the right.
-
-You should also cite the software that `taxastand` relies on, `taxon-tools`: https://github.com/camwebb/taxon-tools
