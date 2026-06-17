@@ -1,20 +1,15 @@
 #' Parse taxonomic names
 #'
-#' Requires [taxon-tools](https://github.com/camwebb/taxon-tools) or docker
-#' to be installed.
-#'
 #' Parses scientific names into their component parts (genus, species, variety,
 #' author, etc).
 #'
-#' @param taxa Character vector; taxon names to be parsed by taxon-tools
-#' `parsenames`. Missing values not allowed. Must all be unique.
+#' @param taxa Character vector; taxon names to be parsed. Missing values not
+#' allowed. Must all be unique.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
 #' @param quiet Logical; if TRUE, suppress warning messages that would normally
 #' be issued
-#' @param docker Logical; if TRUE, docker will be used to run taxon-tools
-#' (so that taxon-tools need not be installed).
 #'
 #' @return A dataframe including the following columns.
 #' - id: A unique ID number assigned to the input name
@@ -30,35 +25,20 @@
 #' @autoglobal
 #' @export
 #' @examples
-#' # Using local taxon-tools installation
-#' if (ts_tt_installed()) {
-#'
-#'   ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#'   ts_parse_names(
-#'     "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
-#'
-#'   # If you always want tibble output without specifying `tbl_out = TRUE`
-#'   # every time, set the option:
-#'   options(ts_tbl_out = TRUE)
-#'   ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#'   ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
-#'
-#' }
-#'
-#' # Using docker
-#' if (babelwhale::test_docker_installation()) {
-#'
+#' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 #' ts_parse_names(
-#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar",
-#'   docker = TRUE)
+#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
 #'
-#' }
+#' # If you always want tibble output without specifying `tbl_out = TRUE`
+#' # every time, set the option:
+#' options(ts_tbl_out = TRUE)
+#' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+#' ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 #'
 ts_parse_names <- function(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  quiet = FALSE,
-  docker = getOption("ts_docker", default = FALSE)
+  quiet = FALSE
 ) {
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
@@ -71,53 +51,19 @@ ts_parse_names <- function(
     msg = "Input taxa must be unique"
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
-  assertthat::assert_that(assertthat::is.flag(docker))
 
-  # Write out names formatted for parsing with taxon-tools to temp file
-  # format:
-  # `id_num|taxon_name`
-  # for example,
+  # Format input names for parsing as `id|taxon_name` records, for example
   # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar`
   taxa_tbl <- ts_make_name_df(taxa)
   taxa_tbl$record <- paste(taxa_tbl$id, taxa_tbl$name, sep = "|")
-  ref_taxa_txt_file <- tempfile(
-    pattern = digest::digest(taxa),
-    fileext = ".txt"
-  )
-  if (fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
-  writeLines(taxa_tbl$record, ref_taxa_txt_file)
 
-  # Parse reference names with taxon tools
-  if (isTRUE(docker)) {
-    assertthat::assert_that(
-      requireNamespace("babelwhale", quietly = TRUE),
-      msg = "babelwhale needs to be installed to use docker"
-    )
-    assertthat::assert_that(
-      babelwhale::test_docker_installation(),
-      msg = "docker not installed"
-    )
-    ref_parsed <- run_auto_mount(
-      container_id = "camwebb/taxon-tools:v1.3.0",
-      command = "parsenames",
-      args = c(file = ref_taxa_txt_file)
-    )
-  } else {
-    assertthat::assert_that(
-      ts_tt_installed(),
-      msg = "taxon-tools not installed"
-    )
-    ref_parsed <- processx::run("parsenames", ref_taxa_txt_file)
-  }
-
-  if (fs::file_exists(ref_taxa_txt_file)) fs::file_delete(ref_taxa_txt_file)
+  # Parse names (pure-R reimplementation of taxon-tools `parsenames`)
+  parsed_lines <- tt_parsenames(taxa_tbl$record)
 
   # Read in results of parsing, format as dataframe
 
-  # The output is originally one record per line, with fields separated by '|' (pipe symbol)
-  parsed_names <- data.frame(
-    record = strsplit(ref_parsed[["stdout"]], "\n")[[1]]
-  )
+  # The output is one record per line, with fields separated by '|' (pipe symbol)
+  parsed_names <- data.frame(record = parsed_lines)
 
   # Split these into separate columns
   name_parts <- c(
