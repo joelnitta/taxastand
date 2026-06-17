@@ -1,4 +1,4 @@
-# Produces expected output with docker
+# Produces expected output
 
     Code
       match_results
