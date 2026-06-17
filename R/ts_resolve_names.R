@@ -41,8 +41,6 @@
 #' @param collapse_infra_exclude Character vector; taxonomic names to exclude
 #' collapsing with `collapse_infra`. Any names used must match those in `query`
 #' exactly, or they won't be excluded.
-#' @param docker Logical; if TRUE, docker will be used to run taxon-tools
-#' (so that taxon-tools need not be installed).
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
@@ -62,16 +60,14 @@
 #' @autoglobal
 #' @export
 #' @examples
-#' if (ts_tt_installed()) {
-#'   # Load reference taxonomy in Darwin Core format
-#'   data(filmy_taxonomy)
+#' # Load reference taxonomy in Darwin Core format
+#' data(filmy_taxonomy)
 #'
-#'   ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
-#'   # If you always want tibble output without specifying `tbl_out = TRUE`
-#'   # every time, set the option:
-#'   options(ts_tbl_out = TRUE)
-#'   ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
-#' }
+#' ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
+#' # If you always want tibble output without specifying `tbl_out = TRUE`
+#' # every time, set the option:
+#' options(ts_tbl_out = TRUE)
+#' ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 #'
 ts_resolve_names <- function(
   query,
@@ -81,7 +77,6 @@ ts_resolve_names <- function(
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
-  docker = getOption("ts_docker", default = FALSE),
   tbl_out = getOption("ts_tbl_out", default = FALSE)
 ) {
   # Check input
@@ -94,7 +89,6 @@ ts_resolve_names <- function(
     msg = "ref_taxonomy must be of class 'data.frame'"
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
-  assertthat::assert_that(assertthat::is.flag(docker))
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
@@ -109,8 +103,7 @@ ts_resolve_names <- function(
       match_canon = match_canon,
       collapse_infra = collapse_infra,
       collapse_infra_exclude = collapse_infra_exclude,
-      simple = TRUE,
-      docker = docker
+      simple = TRUE
     )
   } else if (is.data.frame(query)) {
     match_results <- query

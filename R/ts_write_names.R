@@ -10,14 +10,12 @@
 #' @return Path to parsed names
 #' @export
 #' @examples
-#' if (ts_tt_installed()) {
-#'   parsed_names <- ts_parse_names(
-#'     "Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#'   temp_file <- tempfile()
-#'   ts_write_names(parsed_names, temp_file)
-#'   readLines(temp_file)
-#'   file.remove(temp_file)
-#' }
+#' parsed_names <- ts_parse_names(
+#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar")
+#' temp_file <- tempfile()
+#' ts_write_names(parsed_names, temp_file)
+#' readLines(temp_file)
+#' file.remove(temp_file)
 ts_write_names <- function(df, path) {
   # Make vector of standard taxon-tools columns
   tt_col_names = c(
