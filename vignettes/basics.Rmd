@@ -66,15 +66,15 @@ Now that we've parsed a name, in the next section we will see why this is useful
 
 One reason that name parsing is important is because some scientific names may differ only in certain components.
 
-For example, the species [*Hymenophyllum pectinatum*](https://www.tropicos.org/name/Search?name=Hymenophyllum%20pectinatum) actually corresponds to two different scientific names with different authors, *Hymenophyllum pectinatum* Nees & Blume and *Hymenophyllum pectinatum* Cav.
+For example, the name [*Hymenophyllum wilsonii*](https://www.tropicos.org/name/Search?name=Hymenophyllum%20wilsonii) corresponds to two different scientific names with different authors, *Hymenophyllum wilsonii* Fée and *Hymenophyllum wilsonii* Hook.
 
-We can see this by querying the name:
+We can see this by querying the name without an author:
 
 ```{r match-example-1}
 ts_match_names(
-  "Hymenophyllum pectinatum", 
-  c("Hymenophyllum pectinatum Nees & Blume", 
-    "Hymenophyllum pectinatum Cav."), 
+  "Hymenophyllum wilsonii",
+  c("Hymenophyllum wilsonii Fée",
+    "Hymenophyllum wilsonii Hook."),
   simple = TRUE)
 ```
 
@@ -146,25 +146,21 @@ In this case, the query, `Gonocormus minutum` was a misspelled name that is actu
 However, when used this way, `ts_resolve_names()` may not be able to provide a resolved name if the input is not matched unambiguously:
 
 ```{r name-res-example-3}
-t_bifid_res <- ts_resolve_names("Trichomanes bifidum", filmy_taxonomy)
-head(t_bifid_res)
-dim(t_bifid_res)
+natalense_res <- ts_resolve_names("Hymenophyllum natalense", filmy_taxonomy)
+head(natalense_res)
+dim(natalense_res)
 ```
 
-In this case, name resolution using the default settings produced `r nrow(t_bifid_res)` possible answers! That is obviously far too many. Let's try to adjust the arguments and see if we can reduce the output:
+In this case, name resolution using the default settings produced `r nrow(natalense_res)` possible answers! That is obviously far too many. The trouble is that our query lacked an author, so it fuzzily matched many similar names. Since the query has no author anyway, let's allow matching names without the author (`match_no_auth = TRUE`):
 
 ```{r name-res-example-4}
 ts_resolve_names(
-  "Trichomanes bifidum", filmy_taxonomy, 
-  match_no_auth = TRUE, match_canon = TRUE, max_dist = 5)
+  "Hymenophyllum natalense", filmy_taxonomy,
+  match_no_auth = TRUE)
 ```
 
-By allowing matches without the author name (we probably should have done that anyways, since the query lacked an author) and lowering the fuzzy match threshold, we are able to greatly reduce the number of possible resolved names.
+Because the name *Hymenophyllum natalense* occurs only once in the reference, allowing matches without the author is enough to pin down a single, unambiguous match (labelled `auto_noauth`), which then resolves to its accepted name.
 
-Name resolution workflows typically involve tweaking these arguments to resolve a maximum number of names automatically, followed by some amount of manual edits to the remaining resolved names.
+Name resolution workflows typically involve tweaking the matching arguments (such as `match_no_auth`, `match_canon`, and `max_dist`) to resolve as many names as possible automatically, followed by some amount of manual editing of the names that remain unresolved.
 
 A benefit of `taxastand` is that, if during the name resolution workflow we discover mistakes in the reference database, the reference database can be edited so that the query names resolve correctly (this is not possible with packages that rely on querying a remote taxonomic database that can't be modified by the user).
-
-## Conclusion
-
-This vignette illustrated the typical steps involved in name resolution with `taxastand` on some trivial examples. In another vignette, I will provide a more realistic example with a larger dataset.
