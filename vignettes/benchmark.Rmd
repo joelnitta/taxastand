@@ -1,0 +1,194 @@
+---
+title: "Benchmark: pure R vs. taxon-tools"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Benchmark: pure R vs. taxon-tools}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  chunk_output_type: console
+---
+
+```{r detect, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+# The benchmark compares against the original taxon-tools, run from its Docker
+# image. The image bundles the aregex (gawk amatch) build of taxon-tools, i.e.
+# the faster of the tool's fuzzy-matching backends. The benchmark chunks below
+# are only evaluated when Docker and that image are available, so this vignette
+# still builds (showing a note instead of tables) on machines without Docker.
+image <- "camwebb/taxon-tools:v1.3.0"
+has_docker <- tryCatch(
+  system2("docker", c("image", "inspect", image),
+          stdout = FALSE, stderr = FALSE) == 0,
+  error = function(e) FALSE
+)
+```
+
+## Background
+
+As of version 2.0.0, `taxastand` parses and matches taxonomic names with a
+pure-R reimplementation of [taxon-tools](https://github.com/camwebb/taxon-tools)
+(`parsenames` and `matchnames`). Earlier versions shelled out to the original
+`taxon-tools` programs, either via a local install or the
+`r image` Docker image.
+
+The pure-R engines produce **byte-for-byte identical output** to the original
+tool (this is checked in the package's test suite against the Docker image). The
+question this vignette answers is: how do they compare on **speed**?
+
+The comparison below is against the `aregex` build of `taxon-tools` shipped in
+the Docker image, which uses gawk's `amatch()` for fuzzy matching --- the faster
+of the tool's two fuzzy backends.
+
+## Setup
+
+```{r setup, eval = has_docker}
+library(taxastand)
+data(filmy_taxonomy)
+
+dir <- tempfile("bench")
+dir.create(dir)
+
+# Best-of-n elapsed seconds for a zero-argument function
+timeit <- function(f, reps = 2) {
+  min(vapply(seq_len(reps),
+             function(i) system.time(f())[["elapsed"]], numeric(1)))
+}
+
+# Run a taxon-tools command in the Docker image, mounting `dir` at /data
+docker_run <- function(args) {
+  system2("docker", c("run", "--rm", "-v", paste0(dir, ":/data"), image, args),
+          stdout = TRUE, stderr = FALSE)
+}
+
+base <- unique(filmy_taxonomy$scientificName)
+base <- base[!is.na(base) & nzchar(base)]
+length(base)
+```
+
+## Parsing
+
+```{r parse-bench, eval = has_docker}
+parse_rows <- lapply(c(1, 5, 10), function(mult) {
+  names_vec <- rep(base, mult)
+  records <- paste0("n", seq_along(names_vec), "|", names_vec)
+  writeLines(records, file.path(dir, "p.txt"), useBytes = TRUE)
+  n <- length(records)
+
+  r_t <- timeit(function() taxastand:::tt_parsenames(records))
+  d_t <- timeit(function() docker_run(c("parsenames", "/data/p.txt")))
+
+  data.frame(
+    `Names parsed` = n,
+    `pure R (s)` = round(r_t, 2),
+    `taxon-tools (s)` = round(d_t, 2),
+    `R names/s` = round(n / r_t),
+    `Speed-up` = sprintf("%.1fx", d_t / r_t),
+    check.names = FALSE
+  )
+})
+parse_tbl <- do.call(rbind, parse_rows)
+```
+
+```{r parse-table, eval = has_docker}
+knitr::kable(parse_tbl, align = "r")
+```
+
+## Matching
+
+The reference (the whole taxonomy) and a query set (misspellings and
+author-dropped variants of a sample) are parsed up front, so that only the
+matching step is timed.
+
+```{r match-bench, eval = has_docker}
+parse_lines <- function(x, prefix) {
+  lines <- taxastand:::tt_parsenames(paste0(prefix, seq_along(x), "|", x))
+  rest <- sub("^[^|]*\\|", "", lines)
+  lines[gsub("\\|", "", rest) != ""]      # drop unparseable names
+}
+
+ref_lines <- parse_lines(base, "r")
+
+set.seed(1)
+samp <- sample(base, 300)
+mis <- vapply(samp, function(s) {
+  cs <- strsplit(s, "")[[1]]
+  pos <- which(grepl("[a-z]", cs))
+  if (length(pos) > 3) cs[pos[length(pos) %/% 2]] <- "x"
+  paste(cs, collapse = "")
+}, character(1))
+query <- unique(c(samp, mis, sub(" [A-Z(].*$", "", samp)))
+query_lines <- parse_lines(query, "q")
+
+writeLines(ref_lines, file.path(dir, "ref.txt"), useBytes = TRUE)
+writeLines(query_lines, file.path(dir, "query.txt"), useBytes = TRUE)
+
+match_rows <- lapply(c(5, 10), function(e) {
+  r_t <- timeit(function()
+    taxastand:::tt_matchnames(query_lines, ref_lines, max_dist = e))
+  d_t <- timeit(function() docker_run(c(
+    "matchnames", "-a", "/data/query.txt", "-b", "/data/ref.txt",
+    "-o", "/data/out.txt", "-e", e, "-F")))
+
+  data.frame(
+    `max_dist` = e,
+    `pure R (s)` = round(r_t, 2),
+    `taxon-tools (s)` = round(d_t, 2),
+    `Speed-up` = sprintf("%.1fx", d_t / r_t),
+    check.names = FALSE
+  )
+})
+match_tbl <- do.call(rbind, match_rows)
+```
+
+```{r match-table, eval = has_docker}
+cat(sprintf("%d queries against %d references\n",
+            length(query_lines), length(ref_lines)))
+knitr::kable(match_tbl, align = "r")
+```
+
+```{r no-docker-note, eval = !has_docker, echo = FALSE, results = "asis"}
+cat(
+  "> **Docker (or the `", image, "` image) was not available when this ",
+  "vignette was built, so the benchmark was not run.** Install Docker and ",
+  "pull the image, then re-render this vignette to see live results.\n",
+  sep = ""
+)
+```
+
+## Takeaways
+
+```{r takeaway-numbers, eval = has_docker, echo = FALSE, results = "asis"}
+p1 <- parse_tbl[parse_tbl$`Names parsed` == length(base), ]
+m10 <- match_tbl[match_tbl$max_dist == 10, ]
+cat(sprintf(
+  paste0("On this machine, parsing %s names took %.2fs in pure R vs %.2fs via ",
+         "taxon-tools (%s), and matching at the default `max_dist = 10` was ",
+         "%s faster.\n"),
+  format(length(base), big.mark = ","),
+  p1$`pure R (s)`, p1$`taxon-tools (s)`, p1$`Speed-up`, m10$`Speed-up`
+))
+```
+
+- **Parsing** is several times faster in pure R. Both implementations have
+  near-constant per-name cost; the gap is largest for small inputs, where
+  Docker's container start-up dominates, but pure R stays well ahead even at
+  tens of thousands of names.
+
+- **Matching** is where the difference is dramatic, and it *grows* with
+  `max_dist`. The original tool fuzzy-matches with gawk's `amatch()` (TRE
+  approximate-regex matching), whose cost climbs steeply as the allowed edit
+  distance increases. The pure-R engine uses base R's vectorised `adist()`
+  restricted to within-genus candidates, which barely moves from `max_dist` 5
+  to 10.
+
+- Beyond raw speed, the pure-R implementation removes the need to install
+  `taxon-tools` or run Docker at all, while producing identical results.
+
+These numbers depend on hardware, dataset size, and the proportion of names that
+require fuzzy matching; re-render this vignette to measure them on your machine.
+
+```{r session, eval = has_docker}
+sessionInfo()
+```
