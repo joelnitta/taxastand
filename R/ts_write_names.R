@@ -3,19 +3,13 @@
 #' @param df Dataframe with parsed names
 #' @param path Path to write dataframe
 #'
-#' Writes out parsed names in a format that can be used by [taxon-tools](https://github.com/camwebb/taxon-tools)
-#' (each part of the scientific name is separated by the pipe symbol (|), with one name per line).
+#' Writes out parsed names in pipe-delimited format (one name per line),
+#' as required by the internal matching engine.
 #'
 #' @autoglobal
 #' @return Path to parsed names
-#' @export
-#' @examples
-#' parsed_names <- ts_parse_names(
-#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#' temp_file <- tempfile()
-#' ts_write_names(parsed_names, temp_file)
-#' readLines(temp_file)
-#' file.remove(temp_file)
+#' @keywords internal
+#' @noRd
 ts_write_names <- function(df, path) {
   # Make vector of standard taxon-tools columns
   tt_col_names = c(
