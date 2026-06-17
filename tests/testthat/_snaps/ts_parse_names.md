@@ -1,9 +1,7 @@
-# Parsing works with docker
+# Parsing works
 
     Code
-      invisible(capture.output(parse_res <- ts_parse_names(
-        "Foogenus x barspecies var. foosubsp (L.) F. Bar", docker = TRUE)))
-      parse_res
+      ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
     Output
                                                    name         id genus_hybrid_sign
       1 Foogenus x barspecies var. foosubsp (L.) F. Bar 5f207ff2-1              <NA>

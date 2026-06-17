@@ -17,19 +17,7 @@ test_that("Input checks work", {
   )
 })
 
-test_that("Produces expected output in docker", {
-  skip_if_no_docker()
-  match_res <- ts_match_names(
-    "Crepidomanes minutus",
-    "Crepidomanes minutum",
-    docker = TRUE
-  )
-  expect_s3_class(match_res, "data.frame")
-  expect_snapshot(match_res)
-})
-
-test_that("Produces expected output without docker", {
-  skip_if_no_tt()
+test_that("Produces expected output", {
   match_res <- ts_match_names(
     "Crepidomanes minutus",
     "Crepidomanes minutum"
@@ -39,7 +27,6 @@ test_that("Produces expected output without docker", {
 })
 
 test_that("Manually matched names work", {
-  skip_if_no_docker()
   match_res <- ts_match_names(
     query = c("Crepidomanes minutus", "Hymeefee erae"),
     reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
@@ -47,14 +34,12 @@ test_that("Manually matched names work", {
       query = "Hymeefee erae",
       match = "Hymenophyllum polyanthos"
     ),
-    simple = TRUE,
-    docker = TRUE
+    simple = TRUE
   )
   expect_snapshot(match_res)
 })
 
 test_that("Names that can't be parsed don't show up in results", {
-  skip_if_no_docker()
   match_res <- ts_match_names(
     query = c(
       "Vanden kalamocarpa x Vanden nipponica x Vanden striata",
@@ -64,14 +49,12 @@ test_that("Names that can't be parsed don't show up in results", {
       "Crepidomanes minutum"
     ),
     simple = TRUE,
-    docker = TRUE,
     tbl_out = TRUE
   )
   expect_snapshot(match_res)
 })
 
 test_that("Manually matched names work with collapsed infrasp names", {
-  skip_if_no_docker()
   match_res <- ts_match_names(
     query = c(
       "Crepidomanes minutus",
@@ -97,14 +80,12 @@ test_that("Manually matched names work with collapsed infrasp names", {
     collapse_infra = TRUE,
     collapse_infra_exclude = NULL,
     simple = TRUE,
-    docker = TRUE,
     tbl_out = TRUE
   )
   expect_snapshot(match_res)
 })
 
 test_that("Incorrectly specified manual match fails", {
-  skip_if_no_docker()
   expect_error(
     ts_match_names(
       query = c("Crepidomanes minutus", "Hymeefee erae"),
@@ -113,8 +94,7 @@ test_that("Incorrectly specified manual match fails", {
         query = "Hymeefee erae",
         match = "Hymenophyllum poWHAT"
       ),
-      simple = TRUE,
-      docker = TRUE
+      simple = TRUE
     ),
     "One or more manually matched reference names not in reference data"
   )
@@ -126,8 +106,7 @@ test_that("Incorrectly specified manual match fails", {
         query = c("Crepidomanes minutus", "Crepidomanes minutus"),
         match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
       ),
-      simple = TRUE,
-      docker = TRUE
+      simple = TRUE
     ),
     "All values of manual_match\\$query must be unique"
   )
@@ -139,21 +118,19 @@ test_that("Incorrectly specified manual match fails", {
         name = c("Hymenophyllum polyantha", "Crepidomanes minutu"),
         match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
       ),
-      simple = TRUE,
-      docker = TRUE
+      simple = TRUE
     ),
     "manual_match must have `query` and `match` columns"
   )
   expect_error(
     ts_match_names(
-      query = ts_parse_names("Hymenophyllum polyantha", docker = TRUE),
+      query = ts_parse_names("Hymenophyllum polyantha"),
       reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         query = c("Hymenophyllum polyantha"),
         match = c("Hymenophyllum polyanthos")
       ),
-      simple = TRUE,
-      docker = TRUE
+      simple = TRUE
     ),
     "manual_match can only be used if query is a character vector"
   )
