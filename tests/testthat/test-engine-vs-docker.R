@@ -17,10 +17,10 @@ docker_tt <- function(dir, args) {
 skip_if_no_image <- function() {
   skip_if_no_docker()
   ok <- tryCatch(
-    length(suppressWarnings(system2(
+    system2(
       "docker", c("image", "inspect", tt_image),
-      stdout = TRUE, stderr = FALSE
-    ))) > 0,
+      stdout = FALSE, stderr = FALSE
+    ) == 0,
     error = function(e) FALSE
   )
   if (!isTRUE(ok)) testthat::skip(paste("docker image", tt_image, "not present"))
