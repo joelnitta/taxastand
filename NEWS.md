@@ -3,6 +3,9 @@
 ## Major changes
 
 * Implement pure R solution for name parsing and matching
+* Add `manual_match` argument to `ts_match_names()`, so users can supply a
+  dataframe of manually matched names that override the matching algorithm
+  (#4)
 
 # taxastand 1.0.0
 
