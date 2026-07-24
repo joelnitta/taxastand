@@ -27,10 +27,8 @@ Suggests:
     covr,
     rmarkdown,
     knitr,
-    roxyglobals (>= 0.2.1),
+    roxyglobals (>= 1.0.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Remotes: 
-    anthonynorth/roxyglobals
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.0.0
