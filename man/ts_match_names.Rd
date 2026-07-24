@@ -120,14 +120,14 @@ ts_match_names(
   "Crepidomanes minutus",
   c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
   simple = TRUE
-  )
+)
 
 # If names are too distant, they won't match
 ts_match_names(
   query = "Crepidblah foo",
   reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
   simple = TRUE
-  )
+)
 
 # But we can force a match manually
 ts_match_names(
@@ -138,7 +138,7 @@ ts_match_names(
     match = c("Crepidomanes minutum")
   ),
   simple = TRUE
- )
+)
 
 # If you always want tibble output without specifying `tbl_out = TRUE`
 # every time, set the option:
@@ -146,17 +146,21 @@ options(ts_tbl_out = TRUE)
 ts_match_names(
   "Crepidomanes minutus",
   c("Crepidomanes minutum", "Hymenophyllum polyanthos")
-  )
+)
 
 # Example using collapse_infra argument
 ts_match_names(
-  c("Crepidomanes minutus", "Blechnum lunare var. lunare",
-    "Blechnum lunare", "Bar foo var. foo", "Bar foo"),
-  c("Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
-    "Bar foo"),
+  c(
+    "Crepidomanes minutus", "Blechnum lunare var. lunare",
+    "Blechnum lunare", "Bar foo var. foo", "Bar foo"
+  ),
+  c(
+    "Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+    "Bar foo"
+  ),
   collapse_infra = TRUE,
   collapse_infra_exclude = "Bar foo var. foo",
   simple = TRUE
-  )
+)
 
 }

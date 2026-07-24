@@ -73,9 +73,12 @@ We can see this by querying the name without an author:
 ```{r match-example-1}
 ts_match_names(
   "Hymenophyllum wilsonii",
-  c("Hymenophyllum wilsonii Fée",
-    "Hymenophyllum wilsonii Hook."),
-  simple = TRUE)
+  c(
+    "Hymenophyllum wilsonii Fée",
+    "Hymenophyllum wilsonii Hook."
+  ),
+  simple = TRUE
+)
 ```
 
 `ts_match_names()` matches both scientific names[^1], because the algorithm it can't distinguish between them without additional information. So **it is almost always better to include the taxonomic author in the query**, to distinguish between such cases.
@@ -86,10 +89,13 @@ However, there can be quite a bit of variation in how authors are recorded. Some
 
 ```{r match-example-2}
 ts_match_names(
-  "Hymenophyllum taiwanense C. V. Morton", 
-  c("Hymenophyllum taiwanense (Tagawa) C. V. Morton", 
-    "Hymenophyllum taiwanense De Vol"), 
-  simple = TRUE)
+  "Hymenophyllum taiwanense C. V. Morton",
+  c(
+    "Hymenophyllum taiwanense (Tagawa) C. V. Morton",
+    "Hymenophyllum taiwanense De Vol"
+  ),
+  simple = TRUE
+)
 ```
 
 The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `auto_basio-` means an automatic match based on excluding the basionym author from the reference. **It is recommended to always check any results that weren't identical** (`exact`) to verify that the matching algorithm worked correctly, especially for fuzzy matches (`auto_fuzzy`). 
@@ -156,7 +162,8 @@ In this case, name resolution using the default settings produced `r nrow(natale
 ```{r name-res-example-4}
 ts_resolve_names(
   "Hymenophyllum natalense", filmy_taxonomy,
-  match_no_auth = TRUE)
+  match_no_auth = TRUE
+)
 ```
 
 Because the name *Hymenophyllum natalense* occurs only once in the reference, allowing matches without the author is enough to pin down a single, unambiguous match (labelled `auto_noauth`), which then resolves to its accepted name.

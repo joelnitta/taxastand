@@ -12,7 +12,7 @@
 #' @noRd
 ts_write_names <- function(df, path) {
   # Make vector of standard taxon-tools columns
-  tt_col_names = c(
+  tt_col_names <- c(
     "id",
     "genus_hybrid_sign",
     "genus_name",

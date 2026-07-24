@@ -25,7 +25,7 @@ ts_make_name_df <- function(taxa) {
   # ID is combination of first 8 chars of hash of the
   # input (taxa), followed by "-" and integer
   taxa_df <- data.frame(name = taxa)
-  taxa_df$id <- 1:nrow(taxa_df)
+  taxa_df$id <- seq_len(nrow(taxa_df))
   taxa_df$id <- paste(substr(digest::digest(taxa), 1, 8), taxa_df$id, sep = "-")
 
   taxa_df[, c("id", "name")]

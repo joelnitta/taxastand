@@ -22,13 +22,13 @@
 #   1 genus hybrid | 2 genus | 3 species hybrid | 4 species |
 #   5 infraspecific rank | 6 infraspecific epithet | 7 author string
 .tt_parse_re <- paste0(
-  "(*UCP)",                                       # Unicode-aware POSIX classes
-  "^([\u00d7xX]?) ?",                                  # 1 genus hybrid sign
-  "([A-Z][a-z\u00eb-]+) ?",                            # 2 genus name
-  "([\u00d7xX]? |[\u00d7X]?) ?",                       # 3 species hybrid sign
-  "([a-z\ufb02-][a-z\ufb02-]+)? ?",                    # 4 specific epithet
+  "(*UCP)", # Unicode-aware POSIX classes
+  "^([\u00d7xX]?) ?", # 1 genus hybrid sign
+  "([A-Z][a-z\u00eb-]+) ?", # 2 genus name
+  "([\u00d7xX]? |[\u00d7X]?) ?", # 3 species hybrid sign
+  "([a-z\ufb02-][a-z\ufb02-]+)? ?", # 4 specific epithet
   "(var\\.|f\\.|forma|subf\\.|taxon|fo\\.|subsp\\.|prol\\.|nothovar\\.|lus\\.|\\[infrasp\\.unranked\\])? ?", # 5 rank
-  "([a-z\ufb02_-]+)? ?",                               # 6 infraspecific epithet
+  "([a-z\ufb02_-]+)? ?", # 6 infraspecific epithet
   # 7 author: ']' placed first (literal), '-' last (literal); includes
   # [:alnum:] plus the combining diacritics used in author names
   "([] [().&;,\u2019'[:alnum:]\u0301 \u0300 \u0308 \u0306 \u030c \u0327 \u0326 \u0303 \u030a \u0302 -]+)?$"
@@ -53,28 +53,28 @@
 #' @noRd
 tt_depunct <- function(x) {
   # Diacritic flattening (precomposed Latin-1 / Latin Extended letters)
-  x <- gsub("[\u00f9\u00fa\u00fb\u00fc]", "u", x)            # \u00f9\u00fa\u00fb\u00fc
-  x <- gsub("[\u00d1]", "N", x)                              # \u00d1
+  x <- gsub("[\u00f9\u00fa\u00fb\u00fc]", "u", x) # \u00f9\u00fa\u00fb\u00fc
+  x <- gsub("[\u00d1]", "N", x) # \u00d1
   x <- gsub("[\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5]", "A", x) # \u00c0\u00c1\u00c2\u00c3\u00c4\u00c5
-  x <- gsub("[\u00ec\u00ed\u00ee\u00ef]", "i", x)            # \u00ec\u00ed\u00ee\u00ef
+  x <- gsub("[\u00ec\u00ed\u00ee\u00ef]", "i", x) # \u00ec\u00ed\u00ee\u00ef
   x <- gsub("[\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8]", "O", x) # \u00d2\u00d3\u00d4\u00d5\u00d6\u00d8
-  x <- gsub("[\u00c7]", "C", x)                              # \u00c7
-  x <- gsub("[\u00e6]", "ae", x)                             # \u00e6
-  x <- gsub("[\u00d0]", "D", x)                              # \u00d0
-  x <- gsub("[\u00fd\u00ff]", "y", x)                        # \u00fd\u00ff
-  x <- gsub("[\u00c8\u00c9\u00ca\u00cb]", "E", x)            # \u00c8\u00c9\u00ca\u00cb
-  x <- gsub("[\u00f1]", "n", x)                              # \u00f1
+  x <- gsub("[\u00c7]", "C", x) # \u00c7
+  x <- gsub("[\u00e6]", "ae", x) # \u00e6
+  x <- gsub("[\u00d0]", "D", x) # \u00d0
+  x <- gsub("[\u00fd\u00ff]", "y", x) # \u00fd\u00ff
+  x <- gsub("[\u00c8\u00c9\u00ca\u00cb]", "E", x) # \u00c8\u00c9\u00ca\u00cb
+  x <- gsub("[\u00f1]", "n", x) # \u00f1
   x <- gsub("[\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5]", "a", x) # \u00e0\u00e1\u00e2\u00e3\u00e4\u00e5
   x <- gsub("[\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8]", "o", x) # \u00f2\u00f3\u00f4\u00f5\u00f6\u00f8
-  x <- gsub("[\u00df]", "b", x)                              # \u00df
-  x <- gsub("[\u00d9\u00da\u00db\u00dc]", "U", x)            # \u00d9\u00da\u00db\u00dc
-  x <- gsub("[\u00de\u00fe]", "p", x)                        # \u00de\u00fe
-  x <- gsub("[\u00e7\u010d]", "c", x)                        # \u00e7\u010d
-  x <- gsub("[\u00cc\u00cd\u00ce\u00cf]", "I", x)            # \u00cc\u00cd\u00ce\u00cf
-  x <- gsub("[\u00f0]", "d", x)                              # \u00f0
-  x <- gsub("[\u00e8\u00e9\u00ea\u00eb]", "e", x)            # \u00e8\u00e9\u00ea\u00eb
-  x <- gsub("[\u00c6]", "Ae", x)                             # \u00c6
-  x <- gsub("[\u00dd]", "Y", x)                              # \u00dd
+  x <- gsub("[\u00df]", "b", x) # \u00df
+  x <- gsub("[\u00d9\u00da\u00db\u00dc]", "U", x) # \u00d9\u00da\u00db\u00dc
+  x <- gsub("[\u00de\u00fe]", "p", x) # \u00de\u00fe
+  x <- gsub("[\u00e7\u010d]", "c", x) # \u00e7\u010d
+  x <- gsub("[\u00cc\u00cd\u00ce\u00cf]", "I", x) # \u00cc\u00cd\u00ce\u00cf
+  x <- gsub("[\u00f0]", "d", x) # \u00f0
+  x <- gsub("[\u00e8\u00e9\u00ea\u00eb]", "e", x) # \u00e8\u00e9\u00ea\u00eb
+  x <- gsub("[\u00c6]", "Ae", x) # \u00c6
+  x <- gsub("[\u00dd]", "Y", x) # \u00dd
 
   # Parentheses to underscore (later stripped); ' and / et ' to ' & '
   x <- gsub("[()]", "_", x)
@@ -109,7 +109,9 @@ tt_depunct <- function(x) {
 #' @keywords internal
 #' @noRd
 tt_parsenames <- function(records) {
-  if (length(records) == 0) return(character(0))
+  if (length(records) == 0) {
+    return(character(0))
+  }
 
   records <- enc2utf8(records)
   id <- sub("\\|.*$", "", records)
@@ -121,9 +123,9 @@ tt_parsenames <- function(records) {
   name <- gsub(" ssp\\. ", " subsp. ", name)
 
   # parse_taxon_name: clean bad chars (lines 54-56)
-  name <- gsub("[\u00bf/\"]", "", name)  # remove \u00bf / "
-  name <- gsub("\u00a0", " ", name)       # non-breaking space -> space
-  name <- gsub("\u2014", "-", name)       # em dash -> hyphen
+  name <- gsub("[\u00bf/\"]", "", name) # remove \u00bf / "
+  name <- gsub("\u00a0", " ", name) # non-breaking space -> space
+  name <- gsub("\u2014", "-", name) # em dash -> hyphen
 
   # The big anchored parse regex (line 61); perl = TRUE to match gawk captures
   parsed <- sub(.tt_parse_re, "\\1|\\2|\\3|\\4|\\5|\\6|\\7", name, perl = TRUE)
@@ -153,17 +155,17 @@ tt_parsenames <- function(records) {
 
   depunct_eq <-
     gsub("\u00d7", "x", tt_depunct(remade)) ==
-    gsub("\u00d7", "x", tt_depunct(name))
+      gsub("\u00d7", "x", tt_depunct(name))
 
   fail <-
     !matched |
-    !grepl(.tt_v1, p1, perl = TRUE) |
-    !grepl(.tt_v2, p2, perl = TRUE) |
-    !grepl(.tt_v3, p3, perl = TRUE) |
-    !grepl(.tt_v4, p4, perl = TRUE) |
-    !grepl(.tt_v5, p5, perl = TRUE) |
-    !grepl(.tt_v6, p6, perl = TRUE) |
-    !depunct_eq
+      !grepl(.tt_v1, p1, perl = TRUE) |
+      !grepl(.tt_v2, p2, perl = TRUE) |
+      !grepl(.tt_v3, p3, perl = TRUE) |
+      !grepl(.tt_v4, p4, perl = TRUE) |
+      !grepl(.tt_v5, p5, perl = TRUE) |
+      !grepl(.tt_v6, p6, perl = TRUE) |
+      !depunct_eq
 
   # On failure the original returns "" -> output line is just `id|`
   out_parsed <- ifelse(fail, "", parsed)

@@ -112,7 +112,7 @@ ts_resolve_names <- function(
   }
 
   # Classify results of matching
-  match_results_classified_with_taxonomy <-
+  match_results_classified <-
     match_results %>%
     ts_classify_result() %>%
     dplyr::select(query, reference, match_type, result_type) %>%
@@ -120,7 +120,7 @@ ts_resolve_names <- function(
 
   # Separate out single matches to an accepted name (success type 1)
   accepted_single_match <-
-    match_results_classified_with_taxonomy %>%
+    match_results_classified %>%
     # consider accepted names have either no acceptedNameUsageID or acceptedNameUsageID is same as taxonID
     dplyr::filter(
       (is.na(acceptedNameUsageID) |
@@ -139,7 +139,7 @@ ts_resolve_names <- function(
 
   # Separate out matches to a single synonym (success type 2)
   accepted_single_synonyms <-
-    match_results_classified_with_taxonomy %>%
+    match_results_classified %>%
     # Consider synonym anything with acceptedNameUsageID not matching taxonID
     dplyr::filter(!is.na(acceptedNameUsageID)) %>%
     dplyr::filter(acceptedNameUsageID != "") %>%
@@ -175,7 +175,7 @@ ts_resolve_names <- function(
 
   # Anything else is a failure
   failure <-
-    match_results_classified_with_taxonomy %>%
+    match_results_classified %>%
     dplyr::select(
       query,
       match_type,
@@ -205,7 +205,9 @@ ts_resolve_names <- function(
     )
 
   # Return as tibble or dataframe
-  if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
+  if (isTRUE(tbl_out)) {
+    return(tibble::as_tibble(results))
+  }
 
   results
 }

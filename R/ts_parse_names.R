@@ -27,7 +27,9 @@
 #' @examples
 #' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 #' ts_parse_names(
-#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
+#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar",
+#'   tbl_out = TRUE
+#' )
 #'
 #' # If you always want tibble output without specifying `tbl_out = TRUE`
 #' # every time, set the option:
@@ -53,7 +55,7 @@ ts_parse_names <- function(
   assertthat::assert_that(assertthat::is.flag(tbl_out))
 
   # Format input names for parsing as `id|taxon_name` records, for example
-  # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar`
+  # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar` # nolint: commented_code_linter.
   taxa_tbl <- ts_make_name_df(taxa)
   taxa_tbl$record <- paste(taxa_tbl$id, taxa_tbl$name, sep = "|")
 
@@ -90,7 +92,7 @@ ts_parse_names <- function(
 
   # Add "fail" column if all name parts are missing (couldn't be parsed properly)
   parsed_names$fail <- sapply(
-    1:nrow(parsed_names),
+    seq_len(nrow(parsed_names)),
     function(x) all(is.na(parsed_names[x, name_parts]))
   )
 
@@ -126,7 +128,9 @@ ts_parse_names <- function(
   # Return parsed names as dataframe or tibble
   results <- parsed_names[, c("name", "id", name_parts)]
 
-  if (isTRUE(tbl_out)) return(tibble::as_tibble(results))
+  if (isTRUE(tbl_out)) {
+    return(tibble::as_tibble(results))
+  }
 
   results
 }

@@ -42,7 +42,9 @@ author, etc).
 \examples{
 ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 ts_parse_names(
-  "Foogenus x barspecies var. foosubsp (L.) F. Bar", tbl_out = TRUE)
+  "Foogenus x barspecies var. foosubsp (L.) F. Bar",
+  tbl_out = TRUE
+)
 
 # If you always want tibble output without specifying `tbl_out = TRUE`
 # every time, set the option:

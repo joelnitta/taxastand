@@ -124,7 +124,8 @@ data(filmy_taxonomy)
 
 # Take a look at the columns used by taxastand
 head(filmy_taxonomy[c(
-  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName"
+)])
 #>    taxonID acceptedNameUsageID taxonomicStatus
 #> 1 54115096                  NA   accepted name
 #> 2 54133783            54115097         synonym
