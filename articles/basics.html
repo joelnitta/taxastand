@@ -160,9 +160,12 @@ different authors, <em>Hymenophyllum wilsonii</em> Fée and
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Hymenophyllum wilsonii"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Hymenophyllum wilsonii Fée"</span>,</span>
-<span>    <span class="st">"Hymenophyllum wilsonii Hook."</span><span class="op">)</span>,</span>
-<span>  simple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Hymenophyllum wilsonii Fée"</span>,</span>
+<span>    <span class="st">"Hymenophyllum wilsonii Hook."</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  simple <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt;                    query                    reference match_type</span></span>
 <span><span class="co">#&gt; 1 Hymenophyllum wilsonii   Hymenophyllum wilsonii Fée auto_fuzzy</span></span>
 <span><span class="co">#&gt; 2 Hymenophyllum wilsonii Hymenophyllum wilsonii Hook. auto_fuzzy</span></span></code></pre></div>
@@ -179,10 +182,13 @@ for this (to a point). Here is an example where the query lacks a
 basionym author:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Hymenophyllum taiwanense C. V. Morton"</span>, </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Hymenophyllum taiwanense (Tagawa) C. V. Morton"</span>, </span>
-<span>    <span class="st">"Hymenophyllum taiwanense De Vol"</span><span class="op">)</span>, </span>
-<span>  simple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="st">"Hymenophyllum taiwanense C. V. Morton"</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Hymenophyllum taiwanense (Tagawa) C. V. Morton"</span>,</span>
+<span>    <span class="st">"Hymenophyllum taiwanense De Vol"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  simple <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                   query</span></span>
 <span><span class="co">#&gt; 1 Hymenophyllum taiwanense C. V. Morton</span></span>
 <span><span class="co">#&gt;                                        reference  match_type</span></span>
@@ -343,7 +349,8 @@ the author (<code>match_no_auth = TRUE</code>):</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Hymenophyllum natalense"</span>, <span class="va">filmy_taxonomy</span>,</span>
-<span>  match_no_auth <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  match_no_auth <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt;                     query                 resolved_name</span></span>
 <span><span class="co">#&gt; 1 Hymenophyllum natalense Hymenophyllum capense Schrad.</span></span>
 <span><span class="co">#&gt;                          matched_name resolved_status matched_status</span></span>
