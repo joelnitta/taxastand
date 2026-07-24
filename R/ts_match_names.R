@@ -37,8 +37,8 @@
 #' must be unique. If a dataframe, should be taxonomic names parsed with
 #' \code{\link{ts_parse_names}()}.
 #' @param manual_match Optional. Dataframe of manually matched names that will
-#' override any results from `taxon-tools`. Must include columns, `query`
-#' and `match`. Can only be used if `query` is a character vector.
+#' override any results from the name-matching engine. Must include columns,
+#' `query` and `match`. Can only be used if `query` is a character vector.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
 #' (total insertions, deletions and substitutions). Default: 10.
 #' @param match_no_auth Logical; If no author is given in the query and the name

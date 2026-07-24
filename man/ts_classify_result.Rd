@@ -2,17 +2,17 @@
 % Please edit documentation in R/utils.R
 \name{ts_classify_result}
 \alias{ts_classify_result}
-\title{Classify results of taxon-tools matching}
+\title{Classify results of name matching}
 \usage{
 ts_classify_result(match_results)
 }
 \arguments{
-\item{match_results}{Dataframe; output of tt_match_names()}
+\item{match_results}{Dataframe; output of \code{\link{ts_match_names}()}}
 }
 \value{
 Dataframe with column \code{result_type} added
 }
 \description{
-Classify results of taxon-tools matching
+Classify results of name matching
 }
 \keyword{internal}

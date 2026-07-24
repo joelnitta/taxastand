@@ -30,8 +30,8 @@ must be unique. If a dataframe, should be taxonomic names parsed with
 \code{\link{ts_parse_names}()}.}
 
 \item{manual_match}{Optional. Dataframe of manually matched names that will
-override any results from \code{taxon-tools}. Must include columns, \code{query}
-and \code{match}. Can only be used if \code{query} is a character vector.}
+override any results from the name-matching engine. Must include columns,
+\code{query} and \code{match}. Can only be used if \code{query} is a character vector.}
 
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). Default: 10.}
