@@ -185,9 +185,16 @@ ts_resolve_names <- function(
     dplyr::anti_join(success, by = "query")
 
   # Combine into final results
-  results <- dplyr::bind_rows(success, failure) %>%
-    assertr::verify(all(query %in% match_results$query)) %>%
-    assertr::verify(all(match_results$query %in% query)) %>%
+  results_raw <- dplyr::bind_rows(success, failure)
+  assertthat::assert_that(
+    all(results_raw$query %in% match_results$query),
+    msg = "query values in results must all be present in match_results"
+  )
+  assertthat::assert_that(
+    all(match_results$query %in% results_raw$query),
+    msg = "query values in match_results must all be present in results"
+  )
+  results <- results_raw %>%
     dplyr::select(
       query,
       resolved_name,

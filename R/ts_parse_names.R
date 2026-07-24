@@ -47,7 +47,7 @@ ts_parse_names <- function(
     msg = "Input taxa may not contain NAs"
   )
   assertthat::assert_that(
-    all(assertr::is_uniq(taxa)),
+    !anyDuplicated(taxa),
     msg = "Input taxa must be unique"
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
