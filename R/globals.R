@@ -25,7 +25,6 @@ utils::globalVariables(c(
   "matched_name", # <ts_resolve_names>
   "matched_status", # <ts_resolve_names>
   "query", # <ts_classify_result>
-  "result_type", # <ts_classify_result>
   "n", # <ts_classify_result>
   NULL
 ))

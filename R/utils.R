@@ -16,7 +16,7 @@ ts_make_name_df <- function(taxa) {
     msg = "Input taxa may not contain NAs"
   )
   assertthat::assert_that(
-    all(assertr::is_uniq(taxa)),
+    !anyDuplicated(taxa),
     msg = "Input taxa must be unique"
   )
 
@@ -42,7 +42,7 @@ ts_classify_result <- function(match_results) {
     inherits(match_results, "data.frame"),
     msg = "match_results must be of class 'data.frame'"
   )
-  match_results %>%
+  result <- match_results %>%
     dplyr::add_count(query) %>%
     dplyr::mutate(
       result_type = dplyr::case_when(
@@ -51,8 +51,12 @@ ts_classify_result <- function(match_results) {
         match_type == "no_match" ~ "no_match",
         TRUE ~ NA_character_
       )
-    ) %>%
-    assertr::assert(assertr::not_na, result_type) %>%
+    )
+  assertthat::assert_that(
+    !anyNA(result$result_type),
+    msg = "result_type must not be NA"
+  )
+  result %>%
     dplyr::select(-n)
 }
 
