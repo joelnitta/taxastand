@@ -1,0 +1,13 @@
+linters: lintr::linters_with_defaults(
+    # indentation_linter disagrees with styler on continuation indents for
+    # multi-line operator chains; styler is the formatting authority here.
+    indentation_linter = NULL,
+    # The package deliberately uses magrittr's %>% throughout (and
+    # re-exports it for users in R/utils-pipe.R); not switching to |>.
+    pipe_consistency_linter = NULL,
+    # Many roxygen doc lines contain long, unbreakable markdown links
+    # (e.g. Darwin Core term URLs); wrapping them would be worse than
+    # leaving them long.
+    line_length_linter = NULL
+  )
+encoding: "UTF-8"

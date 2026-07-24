@@ -4,15 +4,18 @@
 # Faithful port of the gawk script `matchnames` from taxon-tools v1.3.0
 # (camwebb/taxon-tools, upstream commit 8f8b5e2). The interactive `-f`
 # matching, the `-m` manual-choices file, and stdin prompting are intentionally
-# omitted (out of scope; never invoked by taxastand).
+# omitted (out of scope; never invoked by taxastand). Variable names below
+# (A, B, Bmap, etc.) intentionally mirror the gawk source's array names for
+# traceability against the upstream script.
+# nolint start: object_name_linter.
 #
 # Input is the parsed pipe-delimited format produced by tt_parsenames /
-# ts_write_names: id|g_hybrid|genus|s_hybrid|species|rank|infrasp|author
+# ts_write_names: id|g_hybrid|genus|s_hybrid|species|rank|infrasp|author # nolint: commented_code_linter.
 # Output is the 17-field result format documented in ts_match_names().
 #
 # Fuzzy matching uses base adist() (Levenshtein); the original uses gawk's
 # anchored amatch(), documented in-source as equivalent to
-# levenshtein(...) <= FUZZERR.
+# levenshtein(...) <= FUZZERR. # nolint: commented_code_linter.
 
 # Collapse internal/leading/trailing spaces (matchnames `cleanspaces`)
 .tt_cleanspaces <- function(x) {
@@ -60,7 +63,7 @@
   data <- paste(xg, g, xs, s, st, ssp, a, sep = "|")
   exact <- .tt_cleanspaces(paste(xg, g, xs, s, st, ssp, a))
 
-  namex <- paste0(xg, g, xs, s, st, ssp)         # all parts, no author
+  namex <- paste0(xg, g, xs, s, st, ssp) # all parts, no author
   punct <- tt_depunct(paste0(namex, a))
   noauth <- tt_depunct(namex)
   cfonly <- tt_depunct(paste0(g, s, ssp))
@@ -149,8 +152,10 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
   B <- .tt_record_keys(ref_lines)
   A <- .tt_record_keys(query_lines)
 
-  methods <- c("exact", "punct", "noauth", "cfonly", "irank",
-               "basio", "in", "exin", "basexin")
+  methods <- c(
+    "exact", "punct", "noauth", "cfonly", "irank",
+    "basio", "in", "exin", "basexin"
+  )
   Bmap <- lapply(methods, function(m) .tt_build_map(B[[m]], B$code))
   names(Bmap) <- methods
 
@@ -168,8 +173,10 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
 
   # emit a standard 17-field line: qcode|rcode|type|<qdata>|<rdata>
   line_match <- function(qi, rcode, type) {
-    paste0(A$code[qi], "|", rcode, "|", type, "|",
-           A$data[qi], "|", .tt_get(Bdata, rcode))
+    paste0(
+      A$code[qi], "|", rcode, "|", type, "|",
+      A$data[qi], "|", .tt_get(Bdata, rcode)
+    )
   }
   line_nomatch <- function(qi) {
     paste0(A$code[qi], "||no_match|", A$data[qi], "|||||||")
@@ -207,7 +214,9 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
   test_allfuzzy <- function(qi) {
     cand <- Bgenus_codes[[A$genus[qi]]]
     cand <- cand[cand != A$code[qi]]
-    if (!length(cand)) return(NULL)
+    if (!length(cand)) {
+      return(NULL)
+    }
     qp <- A$punct[qi]
     rp <- Bpunct_by_code[cand]
     # gawk's amatch(text = ref, "^query$", FUZZERR) accepts a pair when its
@@ -224,7 +233,9 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
       keep[bnd] <- .tt_amatch_trailing(qp, rp[bnd], d[bnd]) == 0L
     }
     hit <- cand[keep]
-    if (!length(hit)) return(NULL)
+    if (!length(hit)) {
+      return(NULL)
+    }
     vapply(hit, function(rc) line_match(qi, rc, "auto_fuzzy"), character(1))
   }
 
@@ -258,3 +269,4 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
 
   unlist(out, use.names = FALSE)
 }
+# nolint end

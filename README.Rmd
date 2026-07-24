@@ -82,7 +82,8 @@ data(filmy_taxonomy)
 
 # Take a look at the columns used by taxastand
 head(filmy_taxonomy[c(
-  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName"
+)])
 
 # As a test, resolve a misspelled name
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)

@@ -20,7 +20,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 image <- "camwebb/taxon-tools:v1.3.0"
 has_docker <- tryCatch(
   system2("docker", c("image", "inspect", image),
-          stdout = FALSE, stderr = FALSE) == 0,
+    stdout = FALSE, stderr = FALSE
+  ) == 0,
   error = function(e) FALSE
 )
 ```
@@ -52,14 +53,17 @@ dir.create(dir)
 
 # Best-of-n elapsed seconds for a zero-argument function
 timeit <- function(f, reps = 2) {
-  min(vapply(seq_len(reps),
-             function(i) system.time(f())[["elapsed"]], numeric(1)))
+  min(vapply(
+    seq_len(reps),
+    function(i) system.time(f())[["elapsed"]], numeric(1)
+  ))
 }
 
 # Run a taxon-tools command in the Docker image, mounting `dir` at /data
 docker_run <- function(args) {
   system2("docker", c("run", "--rm", "-v", paste0(dir, ":/data"), image, args),
-          stdout = TRUE, stderr = FALSE)
+    stdout = TRUE, stderr = FALSE
+  )
 }
 
 base <- unique(filmy_taxonomy$scientificName)
@@ -105,7 +109,7 @@ matching step is timed.
 parse_lines <- function(x, prefix) {
   lines <- taxastand:::tt_parsenames(paste0(prefix, seq_along(x), "|", x))
   rest <- sub("^[^|]*\\|", "", lines)
-  lines[gsub("\\|", "", rest) != ""]      # drop unparseable names
+  lines[gsub("\\|", "", rest) != ""] # drop unparseable names
 }
 
 ref_lines <- parse_lines(base, "r")
@@ -125,11 +129,15 @@ writeLines(ref_lines, file.path(dir, "ref.txt"), useBytes = TRUE)
 writeLines(query_lines, file.path(dir, "query.txt"), useBytes = TRUE)
 
 match_rows <- lapply(c(5, 10), function(e) {
-  r_t <- timeit(function()
-    taxastand:::tt_matchnames(query_lines, ref_lines, max_dist = e))
-  d_t <- timeit(function() docker_run(c(
-    "matchnames", "-a", "/data/query.txt", "-b", "/data/ref.txt",
-    "-o", "/data/out.txt", "-e", e, "-F")))
+  r_t <- timeit(function() {
+    taxastand:::tt_matchnames(query_lines, ref_lines, max_dist = e)
+  })
+  d_t <- timeit(function() {
+    docker_run(c(
+      "matchnames", "-a", "/data/query.txt", "-b", "/data/ref.txt",
+      "-o", "/data/out.txt", "-e", e, "-F"
+    ))
+  })
 
   data.frame(
     `max_dist` = e,
@@ -143,8 +151,10 @@ match_tbl <- do.call(rbind, match_rows)
 ```
 
 ```{r match-table, eval = has_docker}
-cat(sprintf("%d queries against %d references\n",
-            length(query_lines), length(ref_lines)))
+cat(sprintf(
+  "%d queries against %d references\n",
+  length(query_lines), length(ref_lines)
+))
 knitr::kable(match_tbl, align = "r")
 ```
 
@@ -163,9 +173,11 @@ cat(
 p1 <- parse_tbl[parse_tbl$`Names parsed` == length(base), ]
 m10 <- match_tbl[match_tbl$max_dist == 10, ]
 cat(sprintf(
-  paste0("On this machine, parsing %s names took %.2fs in pure R vs %.2fs via ",
-         "taxon-tools (%s), and matching at the default `max_dist = 10` was ",
-         "%s faster.\n"),
+  paste0(
+    "On this machine, parsing %s names took %.2fs in pure R vs %.2fs via ",
+    "taxon-tools (%s), and matching at the default `max_dist = 10` was ",
+    "%s faster.\n"
+  ),
   format(length(base), big.mark = ","),
   p1$`pure R (s)`, p1$`taxon-tools (s)`, p1$`Speed-up`, m10$`Speed-up`
 ))
