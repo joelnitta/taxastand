@@ -1,7 +1,8 @@
 #' Make a dataframe with taxonomic names
 #'
-#' @param taxa Character vector; taxon names to be parsed by taxon-tools `parsenames`.
-#' Missing values not allowed. Must all be unique.
+#' @param taxa Character vector; taxon names to be parsed by
+#' \code{\link{ts_parse_names}()} (via the internal pure-R parsing engine,
+#' `tt_parsenames()`). Missing values not allowed. Must all be unique.
 #'
 #' @return Dataframe with two columns: `id` and `name`
 #' @keywords internal
@@ -30,9 +31,9 @@ ts_make_name_df <- function(taxa) {
   taxa_df[, c("id", "name")]
 }
 
-#' Classify results of taxon-tools matching
+#' Classify results of name matching
 #'
-#' @param match_results Dataframe; output of tt_match_names()
+#' @param match_results Dataframe; output of \code{\link{ts_match_names}()}
 #'
 #' @return Dataframe with column `result_type` added
 #' @keywords internal

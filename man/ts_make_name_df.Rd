@@ -7,8 +7,9 @@
 ts_make_name_df(taxa)
 }
 \arguments{
-\item{taxa}{Character vector; taxon names to be parsed by taxon-tools \code{parsenames}.
-Missing values not allowed. Must all be unique.}
+\item{taxa}{Character vector; taxon names to be parsed by
+\code{\link{ts_parse_names}()} (via the internal pure-R parsing engine,
+\code{tt_parsenames()}). Missing values not allowed. Must all be unique.}
 }
 \value{
 Dataframe with two columns: \code{id} and \code{name}
