@@ -25,6 +25,7 @@ Roxygen: list(
     roclets = c("collate", "namespace", "rd", "roxyglobals::global_roclet"))
 Depends: R (>= 4.1.0)
 Suggests:
+    covr,
     rmarkdown,
     knitr,
     roxyglobals (>= 0.2.1),
