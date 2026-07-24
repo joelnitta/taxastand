@@ -185,7 +185,7 @@ ts_match_names <- function(
       assertthat::noNA(manual_match$query)
     )
     assertthat::assert_that(
-      isTRUE(!any(duplicated(manual_match$query))),
+      !anyDuplicated(manual_match$query),
       msg = "All values of manual_match$query must be unique"
     )
     assertthat::assert_that(
@@ -197,7 +197,7 @@ ts_match_names <- function(
   # Helper function to add a namestring to a dataframe of parsed names
   add_namestring <- function(df) {
     df$namestring <-
-      paste0(
+      paste(
         df$genus_hybrid_sign,
         df$genus_name,
         df$species_hybrid_sign,
@@ -419,7 +419,7 @@ ts_match_names <- function(
       )
   }
 
-  if (simple == TRUE) {
+  if (simple) {
     results <- dplyr::select(results, query, reference, match_type)
   }
 
