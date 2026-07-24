@@ -93,6 +93,16 @@ ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 # reference taxonomy.
 ```
 
+## Contributing
+
+Contributions are welcome! Please see the
+[contributing guide](.github/CONTRIBUTING.md) for how to file issues,
+submit pull requests, and run checks locally.
+
+Please note that this package is released with a [Contributor Code of
+Conduct](https://ropensci.org/code-of-conduct/). By contributing to this
+project, you agree to abide by its terms.
+
 ## Citing this package
 
 If you use this package, please cite it! Here is an example:
