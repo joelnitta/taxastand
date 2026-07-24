@@ -12,3 +12,4 @@
 ^Meta$
 ^\.claude$
 ^\.plans$
+^codecov\.yml$
