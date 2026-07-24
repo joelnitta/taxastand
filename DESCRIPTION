@@ -5,11 +5,21 @@ Authors@R:
     person(given = "Joel",
            family = "Nitta",
            role = c("aut", "cre"),
-           email = "joelnitta@gmail.com")
-Description: Matches species names to a taxonomic standard. Resolves synonyms consistently and reproducibly.
+           email = "joelnitta@gmail.com",
+           comment = c(ORCID = "0000-0003-4719-7472"))
+Description: Standardizes taxonomic names by matching species names to
+    entries in a user-supplied reference taxonomy, then resolving synonyms
+    to their accepted names. Fuzzy matching on parsed name components
+    (genus, epithet, author, infraspecific rank, etc.) allows for
+    orthographic differences between the query and reference names.
+    This facilitates reproducible joining of datasets that use different
+    taxonomic synonyms for the same species.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+URL: https://joelnitta.github.io/taxastand/,
+    https://github.com/joelnitta/taxastand
+BugReports: https://github.com/joelnitta/taxastand/issues
 Imports:
     assertthat,
     digest,
