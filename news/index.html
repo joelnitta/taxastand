@@ -65,6 +65,30 @@
 <div class="section level3">
 <h3 id="major-changes-2-0-0">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-2-0-0"></a></h3>
 <ul><li>Implement pure R solution for name parsing and matching</li>
+<li>Add <code>manual_match</code> argument to <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code>, so users can supply a dataframe of manually matched names that override the matching algorithm (<a href="https://github.com/joelnitta/taxastand/issues/4" class="external-link">#4</a>)</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="1.0.0" id="taxastand-100">taxastand 1.0.0<a class="anchor" aria-label="anchor" href="#taxastand-100"></a></h2>
+<div class="section level3">
+<h3 id="major-changes-1-0-0">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-1-0-0"></a></h3>
+<ul><li>Add Docker support for running <code>taxon-tools</code>, so it no longer needs to be installed locally</li>
+<li>Add <code>collapse_infra</code> and <code>collapse_infra_exclude</code> arguments to <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> and <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code>, for collapsing infraspecific taxa to their species when matching</li>
+<li>Add <code>quiet</code> argument to <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> to suppress warnings</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-0-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-0"></a></h3>
+<ul><li>Fix mapping of match results after collapsing infraspecific taxa</li>
+<li>Fix <code>matched_status</code> incorrectly showing as <code>NA</code> for some results</li>
+<li>Replace empty strings with <code>NA</code> in results</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.0.0.9000" id="taxastand-0009000">taxastand 0.0.0.9000<a class="anchor" aria-label="anchor" href="#taxastand-0009000"></a></h2>
+<div class="section level3">
+<h3 id="major-changes-0-0-0-9000">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-0-0-0-9000"></a></h3>
+<ul><li>Initial implementation of <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code>, <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code>, and <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code>, using the external <code>taxon-tools</code> system dependency for parsing and fuzzy matching</li>
+<li>Add package website via pkgdown and an introductory vignette</li>
 </ul></div>
 </div>
   </div>
