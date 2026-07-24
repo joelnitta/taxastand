@@ -15,3 +15,4 @@
 ^codecov\.yml$
 ^CODE_OF_CONDUCT\.md$
 ^\.lintr$
+^CITATION\.cff$
