@@ -5,9 +5,9 @@
 
 <!-- badges: start -->
 
-[![Project Status: WIP – Initial development is in progress, but there
-has not yet been a stable, usable release suitable for the
-public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![DOI](https://zenodo.org/badge/192684959.svg)](https://zenodo.org/badge/latestdoi/192684959)
 [![R-CMD-check](https://github.com/joelnitta/taxastand/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/joelnitta/taxastand/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
