@@ -1,3 +1,24 @@
+# taxastand 2.0.0.9000
+
+## Bug fixes
+
+* Fix `ts_match_names(..., collapse_infra = TRUE)`'s internal deduplication
+  key, which used `paste0(..., sep = "_")` -- `paste0()` has no `sep`
+  argument, so the separator was silently dropped, joining name components
+  with no delimiter between them. This could in rare cases cause two
+  genuinely different names to be treated as duplicates during
+  deduplication if their concatenated components happened to coincide.
+  Found via static analysis while running `pkgcheck::pkgcheck()` ahead of
+  rOpenSci submission.
+
+## Minor improvements
+
+* Use `vapply()` instead of `sapply()`, `anyDuplicated()` instead of
+  `any(duplicated(x))`, and drop several redundant `x == TRUE`/`x == FALSE`
+  comparisons
+* Fix a dead link in the README ("The Plant List", no longer online; now
+  links to a Wayback Machine snapshot)
+
 # taxastand 2.0.0
 
 ## Major changes

@@ -118,7 +118,7 @@ set.seed(1)
 samp <- sample(base, 300)
 mis <- vapply(samp, function(s) {
   cs <- strsplit(s, "")[[1]]
-  pos <- which(grepl("[a-z]", cs))
+  pos <- grep("[a-z]", cs)
   if (length(pos) > 3) cs[pos[length(pos) %/% 2]] <- "x"
   paste(cs, collapse = "")
 }, character(1))

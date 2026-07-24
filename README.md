@@ -81,9 +81,10 @@ remotes::install_github("joelnitta/taxastand")
 
 - [taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html)
   has a very similar goal to `taxastand`, but only uses [The Plant List
-  (TPL)](http://www.theplantlist.org) as its taxonomic standard and does
-  not allow the user to provide their own. Note that TPL is no longer
-  being updated as of 2013.
+  (TPL)](https://web.archive.org/web/20260619054601/http://www.theplantlist.org/)
+  as its taxonomic standard and does not allow the user to provide their
+  own. Note that TPL is no longer being updated as of 2013, and its
+  website is no longer online (linked above via the Wayback Machine).
 
 - [ROpenSci](https://ropensci.org/) has a [task
   view](https://github.com/ropensci/taxonomy) summarizing many tools
