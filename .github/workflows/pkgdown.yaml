@@ -26,6 +26,9 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Pull taxon-tools Docker image for the benchmark vignette
+        run: docker pull camwebb/taxon-tools:v1.3.0
+
       - name: Deploy package
         run: |
           git config --local user.name "$GITHUB_ACTOR"
