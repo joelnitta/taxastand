@@ -134,7 +134,8 @@ fuzzy backends.</p>
 <span></span>
 <span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">$</span><span class="va">scientificName</span><span class="op">)</span></span>
 <span><span class="va">base</span> <span class="op">&lt;-</span> <span class="va">base</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">base</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">base</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">base</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">base</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2727</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="parsing">Parsing<a class="anchor" aria-label="anchor" href="#parsing"></a>
@@ -161,6 +162,38 @@ fuzzy backends.</p>
 <span><span class="va">parse_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">parse_rows</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">parse_tbl</span>, align <span class="op">=</span> <span class="st">"r"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">Names parsed</th>
+<th align="right">pure R (s)</th>
+<th align="right">taxon-tools (s)</th>
+<th align="right">R names/s</th>
+<th align="right">Speed-up</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">2727</td>
+<td align="right">0.19</td>
+<td align="right">0.41</td>
+<td align="right">14583</td>
+<td align="right">2.2x</td>
+</tr>
+<tr class="even">
+<td align="right">13635</td>
+<td align="right">0.99</td>
+<td align="right">1.25</td>
+<td align="right">13717</td>
+<td align="right">1.3x</td>
+</tr>
+<tr class="odd">
+<td align="right">27270</td>
+<td align="right">2.00</td>
+<td align="right">2.32</td>
+<td align="right">13662</td>
+<td align="right">1.2x</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="matching">Matching<a class="anchor" aria-label="anchor" href="#matching"></a>
@@ -216,17 +249,37 @@ the matching step is timed.</p>
 <span>  <span class="st">"%d queries against %d references\n"</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">query_lines</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ref_lines</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 896 queries against 2727 references</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">match_tbl</span>, align <span class="op">=</span> <span class="st">"r"</span><span class="op">)</span></span></code></pre></div>
-<blockquote>
-<p><strong>Docker (or the <code>camwebb/taxon-tools:v1.3.0</code> image)
-was not available when this vignette was built, so the benchmark was not
-run.</strong> Install Docker and pull the image, then re-render this
-vignette to see live results.</p>
-</blockquote>
+<table class="table">
+<thead><tr class="header">
+<th align="right">max_dist</th>
+<th align="right">pure R (s)</th>
+<th align="right">taxon-tools (s)</th>
+<th align="right">Speed-up</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">2.62</td>
+<td align="right">3.79</td>
+<td align="right">1.4x</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">3.44</td>
+<td align="right">6.69</td>
+<td align="right">1.9x</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="takeaways">Takeaways<a class="anchor" aria-label="anchor" href="#takeaways"></a>
 </h2>
+<p>On this machine, parsing 2,727 names took 0.19s in pure R vs 0.41s
+via taxon-tools (2.2x), and matching at the default
+<code>max_dist = 10</code> was 1.9x faster.</p>
 <ul>
 <li><p><strong>Parsing</strong> is several times faster in pure R. Both
 implementations have near-constant per-name cost; the gap is largest for
@@ -247,7 +300,38 @@ identical results.</p></li>
 names that require fuzzy matching; re-render this vignette to measure
 them on your machine.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] taxastand_2.0.0.9000</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
+<span><span class="co">#&gt;  [5] xfun_0.60         magrittr_2.0.5    cachem_1.1.0      knitr_1.51       </span></span>
+<span><span class="co">#&gt;  [9] htmltools_0.5.9   rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6        </span></span>
+<span><span class="co">#&gt; [13] sass_0.4.10       pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4  </span></span>
+<span><span class="co">#&gt; [17] systemfonts_1.3.2 compiler_4.6.1    tools_4.6.1       ragg_1.5.2       </span></span>
+<span><span class="co">#&gt; [21] bslib_0.11.0      evaluate_1.0.5    yaml_2.3.12       otel_0.2.0       </span></span>
+<span><span class="co">#&gt; [25] jsonlite_2.0.0    rlang_1.3.0       fs_2.1.0</span></span></code></pre></div>
 </div>
   </div>
 
