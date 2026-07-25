@@ -185,7 +185,7 @@ ts_match_names <- function(
       assertthat::noNA(manual_match$query)
     )
     assertthat::assert_that(
-      isTRUE(!any(duplicated(manual_match$query))),
+      !anyDuplicated(manual_match$query),
       msg = "All values of manual_match$query must be unique"
     )
     assertthat::assert_that(
@@ -419,7 +419,7 @@ ts_match_names <- function(
       )
   }
 
-  if (simple == TRUE) {
+  if (simple) {
     results <- dplyr::select(results, query, reference, match_type)
   }
 

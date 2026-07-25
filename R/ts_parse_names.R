@@ -91,20 +91,21 @@ ts_parse_names <- function(
   parsed_names[parsed_names == ""] <- NA
 
   # Add "fail" column if all name parts are missing (couldn't be parsed properly)
-  parsed_names$fail <- sapply(
+  parsed_names$fail <- vapply(
     seq_len(nrow(parsed_names)),
-    function(x) all(is.na(parsed_names[x, name_parts]))
+    function(x) all(is.na(parsed_names[x, name_parts])),
+    logical(1)
   )
 
   # Early exit if everything failed
   assertthat::assert_that(
-    !all(parsed_names$fail == TRUE),
+    !all(parsed_names$fail),
     msg = "No names could be successfully parsed"
   )
 
   # Emit warning for failures
-  if (sum(parsed_names$fail) > 0 && quiet == FALSE) {
-    failed_ids <- parsed_names$id[parsed_names$fail == TRUE]
+  if (sum(parsed_names$fail) > 0 && !quiet) {
+    failed_ids <- parsed_names$id[parsed_names$fail]
     failed_names <- paste(
       taxa_tbl$name[taxa_tbl$id %in% failed_ids],
       collapse = ", "
@@ -122,7 +123,7 @@ ts_parse_names <- function(
   )
 
   # Remove failures, drop "fail" column
-  parsed_names <- parsed_names[parsed_names$fail == FALSE, ]
+  parsed_names <- parsed_names[!parsed_names$fail, ]
   parsed_names$fail <- NULL
 
   # Return parsed names as dataframe or tibble
