@@ -4,7 +4,7 @@ Version: 2.0.0.9000
 Authors@R: 
     person(given = "Joel",
            family = "Nitta",
-           role = c("aut", "cre"),
+           role = c("aut", "cre", "cph"),
            email = "joelnitta@gmail.com",
            comment = c(ORCID = "0000-0003-4719-7472"))
 Description: Standardizes taxonomic names by matching species names to
