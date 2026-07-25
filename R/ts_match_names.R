@@ -197,7 +197,7 @@ ts_match_names <- function(
   # Helper function to add a namestring to a dataframe of parsed names
   add_namestring <- function(df) {
     df$namestring <-
-      paste0(
+      paste(
         df$genus_hybrid_sign,
         df$genus_name,
         df$species_hybrid_sign,

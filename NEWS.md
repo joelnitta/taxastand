@@ -1,3 +1,16 @@
+# taxastand 2.0.0.9000
+
+## Bug fixes
+
+* Fix `ts_match_names(..., collapse_infra = TRUE)`'s internal deduplication
+  key, which used `paste0(..., sep = "_")` -- `paste0()` has no `sep`
+  argument, so the separator was silently dropped, joining name components
+  with no delimiter between them. This could in rare cases cause two
+  genuinely different names to be treated as duplicates during
+  deduplication if their concatenated components happened to coincide.
+  Found via static analysis while running `pkgcheck::pkgcheck()` ahead of
+  rOpenSci submission.
+
 # taxastand 2.0.0
 
 ## Major changes
