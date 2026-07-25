@@ -16,6 +16,8 @@
 * Use `vapply()` instead of `sapply()`, `anyDuplicated()` instead of
   `any(duplicated(x))`, and drop several redundant `x == TRUE`/`x == FALSE`
   comparisons
+* Fix a dead link in the README ("The Plant List", no longer online; now
+  links to a Wayback Machine snapshot)
 
 # taxastand 2.0.0
 
