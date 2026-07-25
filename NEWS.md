@@ -11,6 +11,12 @@
   Found via static analysis while running `pkgcheck::pkgcheck()` ahead of
   rOpenSci submission.
 
+## Minor improvements
+
+* Use `vapply()` instead of `sapply()`, `anyDuplicated()` instead of
+  `any(duplicated(x))`, and drop several redundant `x == TRUE`/`x == FALSE`
+  comparisons
+
 # taxastand 2.0.0
 
 ## Major changes

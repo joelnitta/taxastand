@@ -87,7 +87,7 @@ test_that("tt_matchnames matches docker matchnames -F across options", {
   samp <- sample(names_vec, 250)
   mis <- vapply(samp, function(s) {
     cs <- strsplit(s, "")[[1]]
-    pos <- which(grepl("[a-z]", cs))
+    pos <- grep("[a-z]", cs)
     if (length(pos) > 3) cs[pos[length(pos) %/% 2]] <- "x"
     paste(cs, collapse = "")
   }, character(1))
