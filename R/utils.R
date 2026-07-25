@@ -7,9 +7,7 @@
 #' @return Dataframe with two columns: `id` and `name`
 #' @keywords internal
 #' @examples
-#' \dontrun{
-#' ts_make_name_df("Foogenus x barspecies var. foosubsp (L.) F. Bar")
-#' }
+#' taxastand:::ts_make_name_df("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 ts_make_name_df <- function(taxa) {
   assertthat::assert_that(is.character(taxa))
   assertthat::assert_that(
