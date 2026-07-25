@@ -1,7 +1,8 @@
 #' Write out parsed names to a text file
 #'
 #' @param df Dataframe with parsed names
-#' @param path Path to write dataframe
+#' @param path Path to write dataframe. Callers use `tempfile()`; this
+#' function does not write anywhere outside of what `path` specifies.
 #'
 #' Writes out parsed names in pipe-delimited format (one name per line),
 #' as required by the internal matching engine.
