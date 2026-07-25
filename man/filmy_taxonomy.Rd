@@ -8,7 +8,7 @@
 A data frame with 2729 rows and 31 variables.
 }
 \source{
-\url{http://www.catalogueoflife.org/}
+\url{https://www.catalogueoflife.org/}
 }
 \usage{
 filmy_taxonomy
@@ -16,7 +16,7 @@ filmy_taxonomy
 \description{
 A dataset containing taxonomic names and associated metadata for the
 fern family Hymenophyllaceae. Downloaded from the
-\href{http://www.catalogueoflife.org/}{Catalog of Life}, Version 1.5.
+\href{https://www.catalogueoflife.org/}{Catalog of Life}, Version 1.5.
 All columns formatted according to
 \href{https://dwc.tdwg.org/terms/}{Darwin Core standard}. Only includes taxa
 at the species or infraspecies level.

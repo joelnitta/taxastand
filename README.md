@@ -34,7 +34,7 @@ standards](https://dwc.tdwg.org/). The user must provide this database
 (as a dataframe). There are many sources of taxonomic data online,
 including
 [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c),
-[Catalog of Life](http://www.catalogueoflife.org/), and
+[Catalog of Life](https://www.catalogueoflife.org/), and
 [ITIS](https://www.itis.gov/) to name a few. The
 [taxadb](https://github.com/ropensci/taxadb) package provides convenient
 functions for downloading various taxonomic databases that use Darwin

@@ -125,7 +125,7 @@ The matching algorithm will prefer match codes higher in the list; so if a name 
 
 Name resolution refers to the process of mapping a query name to its standard version. This could just be accounting for orthographic variations, or it could involve resolving synonyms: different names that actually refer to the same species.
 
-In order to conduct name resolution, we require a **taxonomic standard** in the form of a dataframe. `taxastand` requires that the taxonomic standard conform to [Darwin Core standards](https://dwc.tdwg.org/). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](http://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) among others.
+In order to conduct name resolution, we require a **taxonomic standard** in the form of a dataframe. `taxastand` requires that the taxonomic standard conform to [Darwin Core standards](https://dwc.tdwg.org/). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](https://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) among others.
 
 `taxastand` comes supplied with an example taxonomic standard for filmy ferns (family Hymenophyllaceae):
 
