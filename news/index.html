@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">taxastand</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0.9000</span>
       </span>
     </div>
 
@@ -60,6 +60,18 @@
       <small>Source: <a href="https://github.com/joelnitta/taxastand/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="2.0.0.9000" id="taxastand-2009000">taxastand 2.0.0.9000<a class="anchor" aria-label="anchor" href="#taxastand-2009000"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-2-0-0-9000">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-0-9000"></a></h3>
+<ul><li>Fix <code>ts_match_names(..., collapse_infra = TRUE)</code>’s internal deduplication key, which used <code>paste0(..., sep = "_")</code> – <code><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0()</a></code> has no <code>sep</code> argument, so the separator was silently dropped, joining name components with no delimiter between them. This could in rare cases cause two genuinely different names to be treated as duplicates during deduplication if their concatenated components happened to coincide. Found via static analysis while running <code>pkgcheck::pkgcheck()</code> ahead of rOpenSci submission.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="minor-improvements-2-0-0-9000">Minor improvements<a class="anchor" aria-label="anchor" href="#minor-improvements-2-0-0-9000"></a></h3>
+<ul><li>Use <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply()</a></code> instead of <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code> instead of <code>any(duplicated(x))</code>, and drop several redundant <code>x == TRUE</code>/<code>x == FALSE</code> comparisons</li>
+<li>Fix a dead link in the README (“The Plant List”, no longer online; now links to a Wayback Machine snapshot)</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="2.0.0" id="taxastand-200">taxastand 2.0.0<a class="anchor" aria-label="anchor" href="#taxastand-200"></a></h2>
 <div class="section level3">

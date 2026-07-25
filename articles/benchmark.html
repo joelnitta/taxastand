@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">taxastand</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0.9000</span>
       </span>
     </div>
 
@@ -181,7 +181,7 @@ the matching step is timed.</p>
 <span><span class="va">samp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">base</span>, <span class="fl">300</span><span class="op">)</span></span>
 <span><span class="va">mis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">samp</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">""</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
-<span>  <span class="va">pos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"[a-z]"</span>, <span class="va">cs</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">pos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grep</a></span><span class="op">(</span><span class="st">"[a-z]"</span>, <span class="va">cs</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pos</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">3</span><span class="op">)</span> <span class="va">cs</span><span class="op">[</span><span class="va">pos</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pos</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"x"</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">cs</span>, collapse <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
 <span><span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
