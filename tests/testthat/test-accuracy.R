@@ -124,9 +124,22 @@ test_that("author-less canonical fuzzy matching respects max_dist", {
   expect_equal(res$match_type, "no_match")
 })
 
-test_that("misspelled genus matches (known gap)", {
-  skip("Known gap: genus-level fuzzy matching, see #50")
+test_that("misspelled genus matches", {
   expect_equal(resolve_one("Aspelnium nidus L."), "Asplenium nidus L.")
+  # author-less
+  expect_equal(resolve_one("Aspelnium nidus"), "Asplenium nidus L.")
+  res <- suppressWarnings(
+    ts_match_names("Aspelnium nidus L.", ref$scientificName, simple = TRUE)
+  )
+  expect_equal(res$match_type, "auto_fuzzy_genus")
+  # can be switched off
+  res0 <- suppressWarnings(
+    ts_match_names(
+      "Aspelnium nidus L.", ref$scientificName,
+      max_dist_genus = 0, simple = TRUE
+    )
+  )
+  expect_equal(res0$match_type, "no_match")
 })
 
 test_that("names in other genera in the reference do not change results", {

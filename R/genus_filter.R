@@ -11,10 +11,23 @@
 # filter keeps everything that could match under those keys.
 
 # Normalised genus keys to keep, given the parsed query. This is the single
-# place to extend the set of genera considered (e.g. fuzzy-neighbour genera).
-.ts_genus_keep_keys <- function(query_parsed_df) {
+# place to extend the set of genera considered. Query genera that are not in
+# the reference are fuzzy-matched to reference genera within `max_dist_genus`
+# (see tt_matchnames()), so those neighbouring genera are kept too.
+.ts_genus_keep_keys <- function(query_parsed_df, ref_genus_keys = NULL,
+                                max_dist_genus = 0) {
   genera <- query_parsed_df$genus_name
-  unique(tt_depunct(genera[!is.na(genera)]))
+  keys <- unique(tt_depunct(genera[!is.na(genera)]))
+  if (max_dist_genus > 0 && length(ref_genus_keys)) {
+    ref_genus_keys <- unique(ref_genus_keys)
+    missing <- setdiff(keys, ref_genus_keys)
+    for (g in missing) {
+      d <- as.integer(utils::adist(g, ref_genus_keys))
+      keys <- c(keys, ref_genus_keys[!is.na(d) & d <= max_dist_genus])
+    }
+    keys <- unique(keys)
+  }
+  keys
 }
 
 # Cheap genus key from a raw (unparsed) name: its first word, ignoring a

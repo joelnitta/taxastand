@@ -9,6 +9,7 @@ ts_match_names(
   reference,
   manual_match = NULL,
   max_dist = 3,
+  max_dist_genus = 2,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -40,6 +41,14 @@ override any results from the name-matching engine. Must include columns,
 (total insertions, deletions and substitutions). The distance is computed on
 the whole name, including the author string, after removing punctuation and
 converting to lower case. Default: 3.}
+
+\item{max_dist_genus}{Max Levenshtein distance between the genus of a query
+and a genus in the reference, for correcting misspelled genera. Only used
+for queries whose genus is not in the reference; the candidates are then the
+names in reference genera within this distance, and the whole name (or the
+canonical name, for a query without an author) must still be within
+\code{max_dist}. Matches have the type \code{auto_fuzzy_genus}. Set to 0 to turn
+genus-level fuzzy matching off. Default: 2.}
 
 \item{match_no_auth}{Logical; If no author is given in the query and the name
 (without author) occurs only once in the reference, accept the name in the
@@ -184,6 +193,13 @@ queries without an author; for queries with an author, only when
 within \code{max_dist} of a reference name.
 \item \code{auto_fuzzy_canon}: query has no author; the canonical names are within
 \code{max_dist}. Which hits are returned is set by \code{fuzzy_canon_hits}.
+}
+
+\strong{Fuzzy genus matches (misspelled genus; always verify)}
+\itemize{
+\item \code{auto_fuzzy_genus}: the genus of the query is not in the reference, but is
+within \code{max_dist_genus} of a reference genus, and the rest of the name then
+matches within \code{max_dist} (the total distance includes the genus edits).
 }
 
 \strong{No match}

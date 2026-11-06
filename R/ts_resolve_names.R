@@ -31,6 +31,13 @@
 #' (total insertions, deletions and substitutions). The distance is computed on
 #' the whole name, including the author string, after removing punctuation and
 #' converting to lower case. Default: 3.
+#' @param max_dist_genus Max Levenshtein distance between the genus of a query
+#' and a genus in the reference, for correcting misspelled genera. Only used
+#' for queries whose genus is not in the reference; the candidates are then the
+#' names in reference genera within this distance, and the whole name (or the
+#' canonical name, for a query without an author) must still be within
+#' `max_dist`. Matches have the type `auto_fuzzy_genus`. Set to 0 to turn
+#' genus-level fuzzy matching off. See \code{\link{ts_match_names}()}. Default: 2.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
@@ -96,6 +103,7 @@ ts_resolve_names <- function(
   query,
   ref_taxonomy,
   max_dist = 3,
+  max_dist_genus = 2,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -127,6 +135,7 @@ ts_resolve_names <- function(
       query = query,
       reference = unique(ref_taxonomy$scientificName),
       max_dist = max_dist,
+      max_dist_genus = max_dist_genus,
       match_no_auth = match_no_auth,
       match_canon = match_canon,
       collapse_infra = collapse_infra,

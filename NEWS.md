@@ -2,6 +2,14 @@
 
 ## Major changes
 
+* **Breaking: misspelled genera are now fuzzy-matched (#50).** A query whose
+  genus is not in the reference (e.g. `"Aspelnium nidus L."`) used to give
+  `no_match`. Reference genera within the new argument `max_dist_genus`
+  (default 2) of the query genus are now tried, and the rest of the name must
+  still match within `max_dist` (the total distance includes the genus
+  edits). Such matches have the new `match_type` `auto_fuzzy_genus`. Set
+  `max_dist_genus = 0` to turn this off. Genera that are in the reference are
+  never replaced by a neighbour.
 * **Breaking: placeholder names are excluded (#41).** Names such as
   `"Genus sp."`, `"Genus spp."`, `"Genus indet."`, `"Genus stet."` or
   `"Genus sp. inc."` (an identification that stopped above species rank) used

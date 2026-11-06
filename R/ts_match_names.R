@@ -63,6 +63,11 @@
 #' - `auto_fuzzy_canon`: query has no author; the canonical names are within
 #'   `max_dist`. Which hits are returned is set by `fuzzy_canon_hits`.
 #'
+#' **Fuzzy genus matches (misspelled genus; always verify)**
+#' - `auto_fuzzy_genus`: the genus of the query is not in the reference, but is
+#'   within `max_dist_genus` of a reference genus, and the rest of the name then
+#'   matches within `max_dist` (the total distance includes the genus edits).
+#'
 #' **No match**
 #' - `no_match`: nothing in the reference was close enough.
 #'
@@ -89,6 +94,13 @@
 #' (total insertions, deletions and substitutions). The distance is computed on
 #' the whole name, including the author string, after removing punctuation and
 #' converting to lower case. Default: 3.
+#' @param max_dist_genus Max Levenshtein distance between the genus of a query
+#' and a genus in the reference, for correcting misspelled genera. Only used
+#' for queries whose genus is not in the reference; the candidates are then the
+#' names in reference genera within this distance, and the whole name (or the
+#' canonical name, for a query without an author) must still be within
+#' `max_dist`. Matches have the type `auto_fuzzy_genus`. Set to 0 to turn
+#' genus-level fuzzy matching off. Default: 2.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
@@ -206,6 +218,7 @@ ts_match_names <- function(
   reference,
   manual_match = NULL,
   max_dist = 3,
+  max_dist_genus = 2,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -226,6 +239,7 @@ ts_match_names <- function(
     msg = "reference must be of class 'data.frame' or a character vector"
   )
   assertthat::assert_that(assertthat::is.number(max_dist))
+  assertthat::assert_that(assertthat::is.number(max_dist_genus))
   assertthat::assert_that(is.logical(match_no_auth))
   assertthat::assert_that(is.logical(match_canon))
   assertthat::assert_that(is.logical(simple))
@@ -360,7 +374,14 @@ ts_match_names <- function(
 
   # Only reference names in a query genus can match (see R/genus_filter.R), so
   # drop the rest before the (expensive) parsing and key building
-  keep_keys <- .ts_genus_keep_keys(query_parsed_df)
+  ref_genus_keys <- if (is.character(reference)) {
+    .ts_raw_genus_key(reference)
+  } else {
+    tt_depunct(reference$genus_name)
+  }
+  keep_keys <- .ts_genus_keep_keys(
+    query_parsed_df, ref_genus_keys, max_dist_genus
+  )
 
   # Parse or load reference names
   if (is.character(reference)) {
@@ -411,7 +432,8 @@ ts_match_names <- function(
     max_dist = max_dist,
     match_no_auth = match_no_auth,
     match_canon = match_canon,
-    canon_closest = identical(fuzzy_canon_hits, "closest")
+    canon_closest = identical(fuzzy_canon_hits, "closest"),
+    max_dist_genus = max_dist_genus
   )
 
   # `results` has one row per match (17 columns): id_query, id_ref, match_type,

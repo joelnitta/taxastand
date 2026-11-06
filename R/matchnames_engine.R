@@ -121,6 +121,9 @@
 #' @param canon_closest Logical; for fuzzy canonical-name matches of queries
 #'   without an author, return only the hits at the smallest distance (ties
 #'   kept) instead of all hits within `max_dist`.
+#' @param max_dist_genus Integer; max Levenshtein distance between the query
+#'   genus and a reference genus for genus-level fuzzy matching, used only for
+#'   queries whose genus is not in the reference. 0 disables it.
 #' @return Data frame of character columns, one row per match (a query with
 #'   several fuzzy hits gets several rows; an unmatched query gets one row with
 #'   `match_type` "no_match"), with the 17 columns documented in `ts_match_names()` (`id_query`, `id_ref`,
@@ -132,8 +135,9 @@
 #' @noRd
 tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
                           match_no_auth = FALSE, match_canon = FALSE,
-                          canon_closest = FALSE) {
+                          canon_closest = FALSE, max_dist_genus = 0) {
   max_dist <- as.numeric(max_dist)
+  max_dist_genus <- as.numeric(max_dist_genus)
   noauthone <- isTRUE(match_no_auth)
   cfo <- isTRUE(match_canon)
 
@@ -269,6 +273,43 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     }
   }
 
+  # test_genusfuzzy: the query genus is not in the reference (typically a
+  # misspelling). Candidates are the names in reference genera within
+  # `max_dist_genus` of the query genus; they are then compared with the query
+  # as in the other fuzzy tests (author-less queries on the canonical name,
+  # others on the whole name), with the total distance, genus edits included,
+  # limited by `max_dist`. Match type "auto_fuzzy_genus".
+  test_genusfuzzy <- function(idx) {
+    ref_genera <- unique(B$genus)
+    ref_genera_key <- tt_depunct(ref_genera)
+    keys <- list(
+      canon = list(q = A$key("cfonly"), r = setNames(B$key("cfonly"), B$code)),
+      whole = list(q = A$key("punct"), r = setNames(B$key("punct"), B$code))
+    )
+    near <- list()
+    for (qi in idx) {
+      qg <- A$genus[qi]
+      if (is.null(near[[qg]])) {
+        d <- as.integer(adist(tt_depunct(qg), ref_genera_key))
+        near[[qg]] <- ref_genera[!is.na(d) & d <= max_dist_genus]
+      }
+      cand <- unique(unlist(genus_codes()[near[[qg]]], use.names = FALSE))
+      cand <- cand[cand != A$code[qi]]
+      if (!length(cand)) next
+      k <- keys[[if (A$no_auth[qi]) "canon" else "whole"]]
+      d <- as.integer(adist(k$q[qi], k$r[cand]))
+      keep <- !is.na(d) & d <= max_dist
+      if (canon_closest && A$no_auth[qi] && any(keep)) {
+        keep <- keep & d == min(d[keep])
+      }
+      if (any(keep)) {
+        res_code[[qi]] <<- cand[keep]
+        res_type[qi] <<- "auto_fuzzy_genus"
+        pending <<- setdiff(pending, qi)
+      }
+    }
+  }
+
   test_eq("exact", "exact")
   test_eq("punct", "auto_punct")
   if (noauthone) test_na()
@@ -298,6 +339,11 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   if (cfo && length(others)) {
     accept(others, lookup(A$key("cfonly")[others], "cfonly"), "auto_cfonly")
   }
+
+  # Genus-level fuzzy matching for queries whose genus is not in the reference
+  others <- pending[!A$auct[pending]]
+  others <- others[!A$genus[others] %in% B$genus]
+  if (max_dist_genus > 0 && length(others)) test_genusfuzzy(others)
 
   res_code[pending] <- list(NA_character_)
   res_type[pending] <- "no_match"
