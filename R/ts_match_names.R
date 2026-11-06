@@ -57,6 +57,12 @@
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
+#' @param strip_qualifiers Logical; if `TRUE`, remove standalone
+#' open-nomenclature qualifiers (`cf.`, `aff.`, `s.l.`/`sensu lato`,
+#' `s.str.`/`sensu stricto`) from names before parsing. See
+#' \code{\link{ts_parse_names}()} and its References section. Only has an
+#' effect when `query`/`reference` is a character vector; ignored if
+#' already-parsed data.frames are passed in. Default: `FALSE`.
 #'
 #' @return Dataframe with the following columns (if `simple` is `FALSE`):
 #' - query: Query name
@@ -80,6 +86,10 @@
 #' - author_ref: Taxonomic author of reference
 #'
 #' If `simple` is `TRUE`, only return the first three columns above.
+#'
+#' @references Sigovini, M., Keppel, E., & Tagliapietra, D. (2016). Open
+#' Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
+#' 7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 #'
 #' @autoglobal
 #' @export
@@ -141,7 +151,8 @@ ts_match_names <- function(
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
-  tbl_out = getOption("ts_tbl_out", default = FALSE)
+  tbl_out = getOption("ts_tbl_out", default = FALSE),
+  strip_qualifiers = FALSE
 ) {
   # Check input
   assertthat::assert_that(
@@ -158,6 +169,7 @@ ts_match_names <- function(
   assertthat::assert_that(is.logical(simple))
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(collapse_infra))
+  assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
@@ -235,7 +247,10 @@ ts_match_names <- function(
         unique()
     }
     # Parse the names (adds 'name' column)
-    query_parsed_df <- ts_parse_names(query)
+    query_parsed_df <- ts_parse_names(
+      query,
+      strip_qualifiers = strip_qualifiers
+    )
   } else {
     # Or, names are already parsed
     query_parsed_df <- query
@@ -282,7 +297,10 @@ ts_match_names <- function(
   # Parse or load reference names
   if (is.character(reference)) {
     # Parse the names (adds 'name' column)
-    ref_parsed_df <- ts_parse_names(reference)
+    ref_parsed_df <- ts_parse_names(
+      reference,
+      strip_qualifiers = strip_qualifiers
+    )
   } else {
     # Or, names are already parsed
     ref_parsed_df <- reference

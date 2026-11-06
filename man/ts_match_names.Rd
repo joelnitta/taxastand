@@ -14,7 +14,8 @@ ts_match_names(
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
-  tbl_out = getOption("ts_tbl_out", default = FALSE)
+  tbl_out = getOption("ts_tbl_out", default = FALSE),
+  strip_qualifiers = FALSE
 )
 }
 \arguments{
@@ -57,6 +58,13 @@ query name, matched reference name, and match type. Default: \code{FALSE}.}
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
 be controlled via the option \code{ts_tbl_out}; see Examples.}
+
+\item{strip_qualifiers}{Logical; if \code{TRUE}, remove standalone
+open-nomenclature qualifiers (\code{cf.}, \code{aff.}, \code{s.l.}/\verb{sensu lato},
+\code{s.str.}/\verb{sensu stricto}) from names before parsing. See
+\code{\link{ts_parse_names}()} and its References section. Only has an
+effect when \code{query}/\code{reference} is a character vector; ignored if
+already-parsed data.frames are passed in. Default: \code{FALSE}.}
 }
 \value{
 Dataframe with the following columns (if \code{simple} is \code{FALSE}):
@@ -163,4 +171,9 @@ ts_match_names(
   simple = TRUE
 )
 
+}
+\references{
+Sigovini, M., Keppel, E., & Tagliapietra, D. (2016). Open
+Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
+7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 }

@@ -1,5 +1,13 @@
 # taxastand 2.0.0.9000
 
+## Major changes
+
+* Add `strip_qualifiers` argument to `ts_parse_names()`, `ts_match_names()`,
+  and `ts_resolve_names()`, so that open-nomenclature qualifiers (`cf.`,
+  `aff.`, `s.l.`/`sensu lato`, `s.str.`/`sensu stricto`) can optionally be
+  removed from names before parsing/matching, instead of being mis-captured
+  as the specific epithet. Off by default (#40)
+
 ## Bug fixes
 
 * Fix `ts_match_names(..., collapse_infra = TRUE)`'s internal deduplication

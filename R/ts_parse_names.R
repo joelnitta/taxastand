@@ -10,6 +10,15 @@
 #' be controlled via the option `ts_tbl_out`; see Examples.
 #' @param quiet Logical; if TRUE, suppress warning messages that would normally
 #' be issued
+#' @param strip_qualifiers Logical; if `TRUE`, remove standalone
+#' open-nomenclature qualifiers (`cf.` and `aff.`, as reviewed by Sigovini,
+#' Keppel, and Tagliapietra (2016); see References) from names before
+#' parsing, so e.g. `"Tectaria cf. crenata"` parses the same as `"Tectaria
+#' crenata"` instead of mis-capturing the qualifier as the specific epithet.
+#' Also strips `s.l.`/`sensu lato` and `s.str.`/`sensu stricto`, an older,
+#' separate circumscription convention not covered by that review but
+#' included here as a taxastand extension. Default: `FALSE`, to preserve
+#' prior behavior.
 #'
 #' @return A dataframe including the following columns.
 #' - id: A unique ID number assigned to the input name
@@ -21,6 +30,10 @@
 #' - infraspecific_rank: Infraspecific rank
 #' - infraspecific_epithet: Infraspecific epithet (name)
 #' - author: Name of taxon
+#'
+#' @references Sigovini, M., Keppel, E., & Tagliapietra, D. (2016). Open
+#' Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
+#' 7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 #'
 #' @autoglobal
 #' @export
@@ -37,10 +50,14 @@
 #' ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 #' ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 #'
+#' # Strip an open-nomenclature qualifier before parsing
+#' ts_parse_names("Tectaria cf. crenata", strip_qualifiers = TRUE)
+#'
 ts_parse_names <- function(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  quiet = FALSE
+  quiet = FALSE,
+  strip_qualifiers = FALSE
 ) {
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
@@ -53,6 +70,7 @@ ts_parse_names <- function(
     msg = "Input taxa must be unique"
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
+  assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
 
   # Format input names for parsing as `id|taxon_name` records, for example
   # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar` # nolint: commented_code_linter.
@@ -60,7 +78,10 @@ ts_parse_names <- function(
   taxa_tbl$record <- paste(taxa_tbl$id, taxa_tbl$name, sep = "|")
 
   # Parse names (pure-R reimplementation of taxon-tools `parsenames`)
-  parsed_lines <- tt_parsenames(taxa_tbl$record)
+  parsed_lines <- tt_parsenames(
+    taxa_tbl$record,
+    strip_qualifiers = strip_qualifiers
+  )
 
   # Read in results of parsing, format as dataframe
 

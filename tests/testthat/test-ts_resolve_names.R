@@ -28,3 +28,12 @@ test_that("Produces expected output", {
   )
   expect_snapshot(match_results)
 })
+
+test_that("strip_qualifiers = TRUE resolves a name with an open-nomenclature qualifier", {
+  resolved <- ts_resolve_names(
+    "Gonocormus cf. minutum",
+    filmy_taxonomy,
+    strip_qualifiers = TRUE
+  )
+  expect_equal(resolved$resolved_name, "Crepidomanes minutum (Bl.) K. Iwats.")
+})
