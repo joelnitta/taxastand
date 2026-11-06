@@ -35,26 +35,58 @@ ts_make_name_df <- function(taxa) {
 #'
 #' @return Dataframe with column `result_type` added
 #' @keywords internal
+#' @importFrom stats ave
 #' @autoglobal
 ts_classify_result <- function(match_results) {
   assertthat::assert_that(
     inherits(match_results, "data.frame"),
     msg = "match_results must be of class 'data.frame'"
   )
-  result <- match_results %>%
-    dplyr::add_count(query) %>%
-    dplyr::mutate(
-      result_type = dplyr::case_when(
-        match_type != "no_match" & n == 1 ~ "single_match",
-        match_type != "no_match" & n > 1 ~ "mult_match",
-        match_type == "no_match" ~ "no_match",
-        TRUE ~ NA_character_
-      )
+  result <- as.data.frame(match_results)
+  n <- ave(seq_len(nrow(result)), result$query, FUN = length)
+  matched <- result$match_type != "no_match"
+  result$result_type <- ifelse(
+    matched & n == 1, "single_match",
+    ifelse(matched & n > 1, "mult_match",
+      ifelse(!matched, "no_match", NA_character_)
     )
+  )
   assertthat::assert_that(
     !anyNA(result$result_type),
     msg = "result_type must not be NA"
   )
-  result %>%
-    dplyr::select(-n)
+  result
+}
+
+# Left join of data frames `x` and `y` in base R (replaces dplyr joins).
+# `y` rows matching a key in `x` are expanded (many-to-many as in dplyr); the
+# key column of `y` is dropped. If `inner`, unmatched `x` rows are dropped.
+.ts_join <- function(x, y, by_x, by_y, inner = FALSE) {
+  x <- as.data.frame(x)
+  y <- as.data.frame(y)
+  rows_y <- split(seq_len(nrow(y)), y[[by_y]])
+  hits <- rows_y[match(x[[by_x]], names(rows_y))]
+  n_hit <- lengths(hits)
+  xi <- rep(seq_len(nrow(x)), pmax(n_hit, 1L))
+  yi <- unlist(lapply(hits, function(h) if (length(h)) h else NA_integer_),
+    use.names = FALSE
+  )
+  out <- x[xi, , drop = FALSE]
+  y <- y[, setdiff(colnames(y), by_y), drop = FALSE]
+  for (col in colnames(y)) out[[col]] <- y[[col]][yi]
+  if (inner) out <- out[n_hit[xi] > 0L, , drop = FALSE]
+  rownames(out) <- NULL
+  out
+}
+
+# Convert to a tibble (tibble is only a suggested package)
+.ts_as_tibble <- function(x) {
+  if (!requireNamespace("tibble", quietly = TRUE)) {
+    stop(
+      "Package 'tibble' is required for `tbl_out = TRUE`; ",
+      "please install it.",
+      call. = FALSE
+    )
+  }
+  tibble::as_tibble(x)
 }

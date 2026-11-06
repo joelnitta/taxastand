@@ -149,9 +149,11 @@ ts_parse_names <- function(
       taxa_tbl$name[taxa_tbl$id %in% failed_ids],
       collapse = ", "
     )
-    warning(glue::glue(
-      "The following names could not be parsed and are excluded from results: {failed_names}"
-    ))
+    warning(
+      "The following names could not be parsed and are excluded from results: ",
+      failed_names,
+      call. = FALSE
+    )
   }
 
   # Add back in original name
@@ -165,7 +167,7 @@ ts_parse_names <- function(
   results <- parsed_names[, c("name", "id", name_parts)]
 
   if (isTRUE(tbl_out)) {
-    return(tibble::as_tibble(results))
+    return(.ts_as_tibble(results))
   }
 
   results
