@@ -21,7 +21,7 @@
 # leading hybrid sign, normalised with tt_depunct().
 .ts_raw_genus_key <- function(x) {
   x <- sub("^[[:space:]]+", "", x)
-  x <- sub("^(×[[:space:]]*|x[[:space:]]+)", "", x)
+  x <- sub("^(\u00d7[[:space:]]*|x[[:space:]]+)", "", x)
   tt_depunct(sub("[[:space:]].*$", "", x))
 }
 
