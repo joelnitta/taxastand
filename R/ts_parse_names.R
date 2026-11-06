@@ -77,7 +77,7 @@ ts_parse_names <- function(
   taxa_tbl <- ts_make_name_df(taxa)
   taxa_tbl$record <- paste(taxa_tbl$id, taxa_tbl$name, sep = "|")
 
-  # Parse names 
+  # Parse names
   parsed_lines <- tt_parsenames(
     taxa_tbl$record,
     strip_qualifiers = strip_qualifiers
