@@ -86,9 +86,6 @@ ts_parse_names <- function(
   # Read in results of parsing, format as dataframe
 
   # The output is one record per line, with fields separated by '|' (pipe symbol)
-  parsed_names <- data.frame(record = parsed_lines)
-
-  # Split these into separate columns
   name_parts <- c(
     "genus_hybrid_sign",
     "genus_name",
@@ -99,24 +96,20 @@ ts_parse_names <- function(
     "author"
   )
 
-  parsed_names <- tidyr::separate(
-    data = parsed_names,
-    col = record,
-    into = c("id", name_parts),
-    sep = "\\|",
-    fill = "right",
-    remove = FALSE
+  # Split into the id and the name parts (8 fields; fields may be empty). Fill
+  # in NA if that name part is missing.
+  parsed_names <- data.frame(
+    id = .tt_split_field(parsed_lines, 1L),
+    stringsAsFactors = FALSE
   )
-
-  # Fill in NA if that name part is missing
-  parsed_names[parsed_names == ""] <- NA
+  for (i in seq_along(name_parts)) {
+    field <- .tt_split_field(parsed_lines, i + 1L)
+    field[field == ""] <- NA_character_
+    parsed_names[[name_parts[i]]] <- field
+  }
 
   # Add "fail" column if all name parts are missing (couldn't be parsed properly)
-  parsed_names$fail <- vapply(
-    seq_len(nrow(parsed_names)),
-    function(x) all(is.na(parsed_names[x, name_parts])),
-    logical(1)
-  )
+  parsed_names$fail <- rowSums(!is.na(parsed_names[, name_parts])) == 0
 
   # Early exit if everything failed
   assertthat::assert_that(
@@ -137,11 +130,7 @@ ts_parse_names <- function(
   }
 
   # Add back in original name
-  parsed_names <- dplyr::left_join(
-    parsed_names,
-    dplyr::select(taxa_tbl, id, name),
-    by = "id"
-  )
+  parsed_names$name <- taxa_tbl$name[match(parsed_names$id, taxa_tbl$id)]
 
   # Remove failures, drop "fail" column
   parsed_names <- parsed_names[!parsed_names$fail, ]

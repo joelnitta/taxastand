@@ -112,6 +112,14 @@ tt_depunct <- function(x) {
   tolower(x)
 }
 
+# Extract field i (1-based) of `|`-delimited lines of the id plus the seven
+# name parts. Fields may be empty, and a line with fewer than 8 fields (e.g. a
+# name that could not be parsed) yields "" for the missing ones.
+.tt_split_field <- function(x, i) {
+  x <- paste0(x, "|||||||")
+  sub(paste0("^([^|]*\\|){", i - 1L, "}([^|]*).*$"), "\\2", x)
+}
+
 # Helper: extract field i (1-based) from a string with exactly 6 pipes.
 .tt_field <- function(x, i) {
   if (i == 1) {

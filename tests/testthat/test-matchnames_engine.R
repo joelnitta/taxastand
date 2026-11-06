@@ -48,3 +48,11 @@ test_that("tt_matchnames: fuzzy hits are returned in reference order", {
   res <- tt_matchnames("q1||Foo||bar|||L.", ref, max_dist = 3)
   expect_equal(res$id_ref, c("r9", "r10", "r2"))
 })
+
+test_that(".tt_split_field splits parser output, incl. short and empty fields", {
+  x <- c("id1|×|Foo|||bar||L.", "id2|||||||", "id3")
+  expect_equal(.tt_split_field(x, 1L), c("id1", "id2", "id3"))
+  expect_equal(.tt_split_field(x, 2L), c("×", "", ""))
+  expect_equal(.tt_split_field(x, 3L), c("Foo", "", ""))
+  expect_equal(.tt_split_field(x, 8L), c("L.", "", ""))
+})
