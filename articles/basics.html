@@ -320,19 +320,19 @@ unambiguously:</p>
 <code class="sourceCode R"><span><span class="va">natalense_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Hymenophyllum natalense"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">natalense_res</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                     query resolved_name                   matched_name</span></span>
-<span><span class="co">#&gt; 1 Hymenophyllum natalense          &lt;NA&gt;     Hymenophyllum puellum Ces.</span></span>
-<span><span class="co">#&gt; 2 Hymenophyllum natalense          &lt;NA&gt;   Hymenophyllum baldwinii Eat.</span></span>
-<span><span class="co">#&gt; 3 Hymenophyllum natalense          &lt;NA&gt;       Hymenophyllum alatum Sw.</span></span>
-<span><span class="co">#&gt; 4 Hymenophyllum natalense          &lt;NA&gt; Hymenophyllum alternatum Fosb.</span></span>
-<span><span class="co">#&gt; 5 Hymenophyllum natalense          &lt;NA&gt;     Hymenophyllum sprucei Bak.</span></span>
-<span><span class="co">#&gt; 6 Hymenophyllum natalense          &lt;NA&gt;   Hymenophyllum amabile Morton</span></span>
+<span><span class="co">#&gt; 1 Hymenophyllum natalense          &lt;NA&gt; Hymenophyllum alternatum Fosb.</span></span>
+<span><span class="co">#&gt; 2 Hymenophyllum natalense          &lt;NA&gt;     Hymenophyllum sprucei Bak.</span></span>
+<span><span class="co">#&gt; 3 Hymenophyllum natalense          &lt;NA&gt;   Hymenophyllum amabile Morton</span></span>
+<span><span class="co">#&gt; 4 Hymenophyllum natalense          &lt;NA&gt;  Hymenophyllum atrovirens Col.</span></span>
+<span><span class="co">#&gt; 5 Hymenophyllum natalense          &lt;NA&gt;    Hymenophyllum daedaleum Bl.</span></span>
+<span><span class="co">#&gt; 6 Hymenophyllum natalense          &lt;NA&gt;       Hymenophyllum erosum Bl.</span></span>
 <span><span class="co">#&gt;   resolved_status    matched_status match_type</span></span>
 <span><span class="co">#&gt; 1            &lt;NA&gt;           synonym auto_fuzzy</span></span>
 <span><span class="co">#&gt; 2            &lt;NA&gt;           synonym auto_fuzzy</span></span>
-<span><span class="co">#&gt; 3            &lt;NA&gt; ambiguous synonym auto_fuzzy</span></span>
-<span><span class="co">#&gt; 4            &lt;NA&gt;           synonym auto_fuzzy</span></span>
+<span><span class="co">#&gt; 3            &lt;NA&gt;     accepted name auto_fuzzy</span></span>
+<span><span class="co">#&gt; 4            &lt;NA&gt; ambiguous synonym auto_fuzzy</span></span>
 <span><span class="co">#&gt; 5            &lt;NA&gt;           synonym auto_fuzzy</span></span>
-<span><span class="co">#&gt; 6            &lt;NA&gt;     accepted name auto_fuzzy</span></span>
+<span><span class="co">#&gt; 6            &lt;NA&gt;           synonym auto_fuzzy</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">natalense_res</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 120   6</span></span></code></pre></div>
 <p>In this case, name resolution using the default settings produced 120
