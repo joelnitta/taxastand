@@ -78,7 +78,9 @@
 * Lighter installation (#48): dplyr, tidyr, fs and glue are no longer
   dependencies (the resolve and match steps now use base R, with identical
   output), and tibble moved to Suggests. `tbl_out = TRUE` (or the `ts_tbl_out`
-  option) now requires the tibble package to be installed.
+  option) now requires the tibble package to be installed. magrittr is also
+  no longer a dependency, so **breaking:** `%>%` is no longer re-exported;
+  load magrittr or dplyr, or use the native pipe `|>`.
 * Document the `match_type` values in a new "Match types" section of
   `?ts_match_names`, grouped by how far each can be trusted (#52); the match
   type codes themselves are unchanged
