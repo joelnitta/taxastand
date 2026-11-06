@@ -8,8 +8,8 @@
 ref <- data.frame(
   taxonID = as.character(1:8),
   scientificName = c(
-    "Crepidomanes minutum (Blume) K.Iwats.", # accepted
-    "Trichomanes minutum Blume", # synonym of 1
+    "Pteridium aquilinum (L.) Kuhn", # accepted
+    "Pteris aquilina L.", # synonym of 1
     "Asplenium nidus L.", # accepted
     "Hymenophyllum taiwanense (Tagawa) C.V.Morton", # accepted
     "Hymenophyllum taiwanense Tagawa", # same epithet, different author
@@ -43,8 +43,8 @@ test_that("exact matches resolve to themselves", {
 
 test_that("synonyms resolve to the accepted name", {
   expect_equal(
-    resolve_one("Trichomanes minutum Blume"),
-    "Crepidomanes minutum (Blume) K.Iwats."
+    resolve_one("Pteris aquilina L."),
+    "Pteridium aquilinum (L.) Kuhn"
   )
   expect_equal(
     resolve_one("Hymenophyllum taiwanense Tagawa"),
@@ -72,8 +72,8 @@ test_that("a missing basionym author is tolerated", {
 
 test_that("misspelled epithets with the right author match", {
   expect_equal(
-    resolve_one("Crepidomanes minutom (Blume) K.Iwats."),
-    "Crepidomanes minutum (Blume) K.Iwats."
+    resolve_one("Pteridium aquilinim (L.) Kuhn"),
+    "Pteridium aquilinum (L.) Kuhn"
   )
   expect_equal(
     resolve_one("Asplenium nidis L."),
@@ -106,8 +106,8 @@ test_that("names absent from the reference are not forced to a match", {
 test_that("author-less query with a misspelled epithet matches (known gap)", {
   skip("Known gap: author-less fuzzy matching, see #49")
   expect_equal(
-    resolve_one("Crepidomanes minutom"),
-    "Crepidomanes minutum (Blume) K.Iwats."
+    resolve_one("Pteridium aquilinim"),
+    "Pteridium aquilinum (L.) Kuhn"
   )
 })
 
