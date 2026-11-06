@@ -12,6 +12,7 @@ permissions: read-all
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 25
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -21,9 +22,9 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-24.04,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-24.04,   r: 'release'}
-          - {os: ubuntu-24.04,   r: 'oldrel-1'}
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,   r: 'release'}
+          - {os: ubuntu-latest,   r: 'oldrel-1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -31,6 +32,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      # Work around slow azure.archive.ubuntu.com apt mirrors on GitHub-hosted
+      # Ubuntu runners (https://github.com/actions/runner-images/issues/14823):
+      # apt's timeout never fires on a mirror that is merely slow, so it never
+      # fails over to archive.ubuntu.com. Drop the Azure mirror (keeping at
+      # least one other) so downloads go straight to archive.ubuntu.com.
+      # Remove once that issue is resolved.
+      - name: Avoid slow Azure apt mirror
+        if: runner.os == 'Linux'
+        run: |
+          f=/etc/apt/apt-mirrors.txt
+          echo "Before:"; cat "$f" || true
+          if [ -f "$f" ] && grep -qv 'azure\.archive\.ubuntu\.com' "$f"; then
+            sudo sed -i '/azure\.archive\.ubuntu\.com/d' "$f"
+          fi
+          echo "After:"; cat "$f" || true
 
       - uses: r-lib/actions/setup-pandoc@v2
 
