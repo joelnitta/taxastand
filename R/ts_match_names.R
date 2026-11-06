@@ -290,16 +290,30 @@ ts_match_names <- function(
   if (fs::file_exists(query_parsed_txt)) fs::file_delete(query_parsed_txt)
   ts_write_names(query_parsed_df, query_parsed_txt)
 
+  # Only reference names in a query genus can match (see R/genus_filter.R), so
+  # drop the rest before the (expensive) parsing and key building
+  keep_keys <- .ts_genus_keep_keys(query_parsed_df)
+
   # Parse or load reference names
   if (is.character(reference)) {
     # Parse the names (adds 'name' column)
-    ref_parsed_df <- ts_parse_names(
-      reference,
-      strip_qualifiers = strip_qualifiers
-    )
+    reference <- .ts_filter_raw_reference(reference, keep_keys)
+    ref_parsed_df <- if (length(reference)) {
+      ts_parse_names(reference, strip_qualifiers = strip_qualifiers)
+    } else {
+      .ts_empty_parsed_df()
+    }
+    # IDs from ts_parse_names() are a hash of the input plus a counter, so a
+    # reference vector identical to the query vector would get identical IDs
+    # and every pair would be mistaken for a self-match. Keep them distinct.
+    if (any(ref_parsed_df$id %in% query_parsed_df$id)) {
+      ref_parsed_df$id <- paste0("ref-", ref_parsed_df$id)[
+        seq_len(nrow(ref_parsed_df))
+      ]
+    }
   } else {
     # Or, names are already parsed
-    ref_parsed_df <- reference
+    ref_parsed_df <- .ts_filter_parsed_reference(reference, keep_keys)
   }
 
   # Check that manually matched ref names are in data

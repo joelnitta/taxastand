@@ -1,0 +1,53 @@
+# Genus pre-filter for the reference
+#
+# Every key used by the matcher embeds the genus, and fuzzy matching only
+# compares names within a genus, so reference names whose genus cannot match
+# any query genus can never match. Dropping them before parsing and key
+# building is a large speed-up when the reference is much bigger than the set
+# of query genera.
+#
+# Genera are compared in normalised form (tt_depunct(): lower-cased, punctuation
+# and diacritics removed), which is how the matcher's keys compare them, so the
+# filter keeps everything that could match under those keys.
+
+# Normalised genus keys to keep, given the parsed query. This is the single
+# place to extend the set of genera considered (e.g. fuzzy-neighbour genera).
+.ts_genus_keep_keys <- function(query_parsed_df) {
+  genera <- query_parsed_df$genus_name
+  unique(tt_depunct(genera[!is.na(genera)]))
+}
+
+# Cheap genus key from a raw (unparsed) name: its first word, ignoring a
+# leading hybrid sign, normalised with tt_depunct().
+.ts_raw_genus_key <- function(x) {
+  x <- sub("^[[:space:]]+", "", x)
+  x <- sub("^(×[[:space:]]*|x[[:space:]]+)", "", x)
+  tt_depunct(sub("[[:space:]].*$", "", x))
+}
+
+# Subset raw reference names to those that could match a query genus
+.ts_filter_raw_reference <- function(reference, keep_keys) {
+  reference[.ts_raw_genus_key(reference) %in% keep_keys]
+}
+
+# Subset a parsed reference data frame to those that could match a query genus
+.ts_filter_parsed_reference <- function(ref_parsed_df, keep_keys) {
+  ref_parsed_df[tt_depunct(ref_parsed_df$genus_name) %in% keep_keys, ]
+}
+
+# Zero-row parsed-names data frame (same columns as ts_parse_names() output),
+# used when no reference name is in a query genus
+.ts_empty_parsed_df <- function() {
+  data.frame(
+    name = character(),
+    id = character(),
+    genus_hybrid_sign = character(),
+    genus_name = character(),
+    species_hybrid_sign = character(),
+    specific_epithet = character(),
+    infraspecific_rank = character(),
+    infraspecific_epithet = character(),
+    author = character(),
+    stringsAsFactors = FALSE
+  )
+}

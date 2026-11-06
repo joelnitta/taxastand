@@ -115,3 +115,25 @@ test_that("misspelled genus matches (known gap)", {
   skip("Known gap: genus-level fuzzy matching, see #50")
   expect_equal(resolve_one("Aspelnium nidus L."), "Asplenium nidus L.")
 })
+
+test_that("names in other genera in the reference do not change results", {
+  # Reference rows are pre-filtered to the query genera for speed; results
+  # must be the same as when the reference contains only that genus.
+  only_genus <- ref[grepl("^Asplenium", ref$scientificName), ]
+  a <- suppressWarnings(
+    ts_resolve_names("Asplenium nidis L.", ref, max_dist = 3)
+  )
+  b <- suppressWarnings(
+    ts_resolve_names("Asplenium nidis L.", only_genus, max_dist = 3)
+  )
+  expect_equal(a, b)
+})
+
+test_that("a query list identical to the reference still resolves", {
+  # (IDs are derived from a hash of the input; they must not collide)
+  res <- suppressWarnings(
+    ts_resolve_names("Asplenium nidus L.", ref[ref$scientificName == "Asplenium nidus L.", ])
+  )
+  expect_equal(res$resolved_name, "Asplenium nidus L.")
+  expect_equal(res$match_type, "exact")
+})

@@ -229,8 +229,9 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
 
   # test_allfuzzy: every same-genus ref within max_dist
   test_allfuzzy <- function(idx) {
-    # genus -> ascending-sorted ref codes
-    genus_codes <- lapply(split(B$code, B$genus), function(x) sort(unique(x)))
+    # genus -> ref codes, in reference order (so hit order does not depend on
+    # the arbitrary id strings or on which reference names were filtered out)
+    genus_codes <- lapply(split(B$code, B$genus), unique)
     punct_by_code <- setNames(B$key("punct"), B$code)
     qpunct <- A$key("punct")
     for (qi in idx) {
