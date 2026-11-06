@@ -66,7 +66,7 @@
 #' - `matched_name`: Name matched to query
 #' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref_taxonomy`)
 #' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref_taxonomy`)
-#' - `match_type`: Type of match (for a summary of match types, see `vignette("basics")`)
+#' - `match_type`: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
 #'
 #' Names that could not be matched or resolve to multiple, different synonyms
 #' have `NA` for `resolved_name`.

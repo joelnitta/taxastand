@@ -100,7 +100,7 @@ ts_match_names(
 
 The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `auto_basio-` means an automatic match based on excluding the basionym author from the reference. **It is recommended to always check any results that weren't identical** (`exact`) to verify that the matching algorithm worked correctly, especially for fuzzy matches (`auto_fuzzy`). 
 
-Here is a summary of the values taken by `match_type`:
+Here is a summary of the values taken by `match_type` (also documented in the "Match types" section of `?ts_match_names`, grouped by how much each can be trusted):
 
 - `exact`: Exact match to all parts of the name (genus hybrid marker, genus name, species hybrid marker, species epithet, infraspecific rank signifier, infraspecific rank, author string).
 - `auto_punct`: Exact match to all parts of the name after removing mis-matching spaces, periods, non-ASCII author name characters, etc.

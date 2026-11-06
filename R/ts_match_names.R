@@ -23,6 +23,56 @@
 #' `match_type` will be "exact" even though the literal query and the matched
 #' name are different (see example below).
 #'
+#' @section Match types:
+#' The `match_type` column says how a query was matched. Types are tried in
+#' the order listed below, and the first one that finds a match is reported, so
+#' earlier types are more certain than later ones. Always check results that
+#' are not `exact`.
+#'
+#' **Identical after normalization (safe to accept)**
+#' - `exact`: all parts of the name, including the author, are identical.
+#' - `auto_punct`: identical after ignoring differences in spaces, periods,
+#'   capitalization, and accented or other non-ASCII characters.
+#'
+#' **Differences in how the author is cited (usually safe)**
+#' - `auto_noauth`: query and reference both lack an author and the name is
+#'   unique in the reference (only when `match_no_auth = TRUE`).
+#' - `auto_basio-`, `auto_basio+`: identical once the basionym author, e.g.
+#'   `(Turcz.)` in `Cardaminopsis umbrosa (Turcz.) Czerep.`, is dropped from
+#'   the reference (`-`) or the query (`+`).
+#' - `auto_in-`, `auto_in+`: identical once "in" elements (`Tagawa in Morton`
+#'   becomes `Tagawa`) are dropped from the reference or the query.
+#' - `auto_ex-`, `auto_ex+`: as above, dropping both "in" and "ex" elements
+#'   (`Willd. ex Schkuhr` becomes `Willd.`).
+#' - `auto_basexin`: identical once basionym authors and "in"/"ex" elements are
+#'   dropped from both query and reference.
+#' - `auto_irank`: identical except for the infraspecific rank (e.g. `var.`
+#'   vs. `subsp.`).
+#'
+#' **Canonical-name matches (the author is ignored; check the result)**
+#'
+#' The canonical name is genus + specific epithet + infraspecific epithet.
+#' - `auto_cfonly`: canonical names are identical. Used automatically for
+#'   queries without an author; for queries with an author, only when
+#'   `match_canon = TRUE`. Several reference names can share a canonical name
+#'   (homonyms), giving multiple hits.
+#'
+#' **Fuzzy matches (misspellings; always verify)**
+#' - `auto_fuzzy`: query has an author; the whole name (author included) is
+#'   within `max_dist` of a reference name.
+#' - `auto_fuzzy_canon`: query has no author; the canonical names are within
+#'   `max_dist`. Which hits are returned is set by `fuzzy_canon_hits`.
+#'
+#' **No match**
+#' - `no_match`: nothing in the reference was close enough.
+#'
+#' Fuzzy matching is computed with the
+#' [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance)
+#' (total insertions, deletions, and substitutions). The rules for authorship
+#' fit plants, algae, and fungi, where the basionym author is given in
+#' parentheses and the year is usually omitted; animal names, which normally
+#' include the year, may match less well.
+#'
 #' @param query Character vector or dataframe; taxonomic names to be queried.
 #' If a character vector, missing values not allowed and all values must be
 #' unique.
@@ -72,7 +122,7 @@
 #' @return Dataframe with the following columns (if `simple` is `FALSE`):
 #' - query: Query name
 #' - reference: Matched reference name
-#' - match_type: Type of match (for a summary of match types, see `vignette("basics")`)
+#' - match_type: Type of match (see the "Match types" section)
 #' - id_query: Unique ID of query
 #' - id_ref: Unique ID of reference
 #' - genus_hybrid_sign_query: Genus hybrid sign in query
