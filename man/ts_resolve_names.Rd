@@ -12,7 +12,8 @@ ts_resolve_names(
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
-  tbl_out = getOption("ts_tbl_out", default = FALSE)
+  tbl_out = getOption("ts_tbl_out", default = FALSE),
+  strip_qualifiers = FALSE
 )
 }
 \arguments{
@@ -54,6 +55,12 @@ exactly, or they won't be excluded.}
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
 be controlled via the option \code{ts_tbl_out}; see Examples.}
+
+\item{strip_qualifiers}{Logical; if \code{TRUE}, remove standalone
+open-nomenclature qualifiers (\code{cf.}, \code{aff.}, \code{s.l.}/\verb{sensu lato},
+\code{s.str.}/\verb{sensu stricto}) from names before parsing. See
+\code{\link{ts_parse_names}()} and its References section. Only has an
+effect when \code{query} is a character vector. Default: \code{FALSE}.}
 }
 \value{
 Dataframe; results of resolving synonyms in matched taxonomic names.
@@ -97,4 +104,9 @@ ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 options(ts_tbl_out = TRUE)
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 
+}
+\references{
+Sigovini, M., Keppel, E., & Tagliapietra, D. (2016). Open
+Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
+7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 }

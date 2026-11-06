@@ -44,6 +44,11 @@
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
+#' @param strip_qualifiers Logical; if `TRUE`, remove standalone
+#' open-nomenclature qualifiers (`cf.`, `aff.`, `s.l.`/`sensu lato`,
+#' `s.str.`/`sensu stricto`) from names before parsing. See
+#' \code{\link{ts_parse_names}()} and its References section. Only has an
+#' effect when `query` is a character vector. Default: `FALSE`.
 #'
 #' @return Dataframe; results of resolving synonyms in matched taxonomic names.
 #' Includes the following columns:
@@ -56,6 +61,10 @@
 #'
 #' Names that could not be matched or resolve to multiple, different synonyms
 #' have `NA` for `resolved_name`.
+#'
+#' @references Sigovini, M., Keppel, E., & Tagliapietra, D. (2016). Open
+#' Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
+#' 7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 #'
 #' @autoglobal
 #' @export
@@ -77,7 +86,8 @@ ts_resolve_names <- function(
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
-  tbl_out = getOption("ts_tbl_out", default = FALSE)
+  tbl_out = getOption("ts_tbl_out", default = FALSE),
+  strip_qualifiers = FALSE
 ) {
   # Check input
   assertthat::assert_that(
@@ -89,6 +99,7 @@ ts_resolve_names <- function(
     msg = "ref_taxonomy must be of class 'data.frame'"
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
+  assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
@@ -103,7 +114,8 @@ ts_resolve_names <- function(
       match_canon = match_canon,
       collapse_infra = collapse_infra,
       collapse_infra_exclude = collapse_infra_exclude,
-      simple = TRUE
+      simple = TRUE,
+      strip_qualifiers = strip_qualifiers
     )
   } else if (is.data.frame(query)) {
     match_results <- query

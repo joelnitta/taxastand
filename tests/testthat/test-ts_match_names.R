@@ -85,6 +85,17 @@ test_that("Manually matched names work with collapsed infrasp names", {
   expect_snapshot(match_res)
 })
 
+test_that("strip_qualifiers = TRUE resolves an open-nomenclature qualifier to the right match", {
+  match_res <- ts_match_names(
+    query = "Tectaria cf. crenata",
+    reference = c("Tectaria crenata", "Tectaria subvariolosa"),
+    strip_qualifiers = TRUE,
+    simple = TRUE
+  )
+  expect_equal(match_res$reference, "Tectaria crenata")
+  expect_equal(match_res$match_type, "exact")
+})
+
 test_that("Incorrectly specified manual match fails", {
   expect_error(
     ts_match_names(

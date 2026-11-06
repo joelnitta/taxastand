@@ -7,7 +7,8 @@
 ts_parse_names(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  quiet = FALSE
+  quiet = FALSE,
+  strip_qualifiers = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,15 @@ be controlled via the option \code{ts_tbl_out}; see Examples.}
 
 \item{quiet}{Logical; if TRUE, suppress warning messages that would normally
 be issued}
+
+\item{strip_qualifiers}{Logical; if \code{TRUE}, remove standalone
+open-nomenclature qualifiers (\code{cf.} and \code{aff.}, as reviewed by Sigovini,
+Keppel, and Tagliapietra (2016); see References) from names before
+parsing, so e.g. \code{"Tectaria cf. crenata"} parses the same as \code{"Tectaria crenata"} instead of mis-capturing the qualifier as the specific epithet.
+Also strips \code{s.l.}/\verb{sensu lato} and \code{s.str.}/\verb{sensu stricto}, an older,
+separate circumscription convention not covered by that review but
+included here as a taxastand extension. Default: \code{FALSE}, to preserve
+prior behavior.}
 }
 \value{
 A dataframe including the following columns.
@@ -52,4 +62,12 @@ options(ts_tbl_out = TRUE)
 ts_parse_names("Foogenus x barspecies var. foosubsp (L.) F. Bar")
 ts_parse_names("Crepidomanes minutum (Blume) K. Iwats.")
 
+# Strip an open-nomenclature qualifier before parsing
+ts_parse_names("Tectaria cf. crenata", strip_qualifiers = TRUE)
+
+}
+\references{
+Sigovini, M., Keppel, E., & Tagliapietra, D. (2016). Open
+Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
+7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 }

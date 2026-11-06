@@ -42,6 +42,25 @@
 .tt_v5 <- "^([a-z]+\\.?|\\[infrasp\\.unranked\\])?$"
 .tt_v6 <- "^([a-z\ufb02-][a-z\ufb02_-]+)?$"
 
+# Open-nomenclature qualifier tokens (not part of taxon-tools; taxastand
+# extension, opt-in via `strip_qualifiers`). Matches whole tokens only, via
+# zero-width lookaround on surrounding whitespace/string boundaries, so
+# words that merely contain these substrings (e.g. "affine") are untouched.
+# `cf.`/`aff.` are open nomenclature (ON) qualifiers as reviewed by Sigovini,
+# Keppel & Tagliapietra (2016) <doi:10.1111/2041-210X.12594>; `s.l.`/`s.str.`
+# (sensu lato/stricto) are a separate, older circumscription convention (not
+# part of that ON review) included here as a taxastand extension.
+.tt_qualifier_re <- paste0(
+  "(?<=\\s|^)(",
+  "cf\\.?|",
+  "aff\\.?|",
+  "sensu stricto|",
+  "sensu lato|",
+  "s\\.str\\.?|",
+  "s\\.l\\.?",
+  ")(?=\\s|$)"
+)
+
 #' Remove punctuation and flatten diacritics (taxon-tools `depunct`)
 #'
 #' Faithful port of the `depunct()` gawk function shared by parsenames and
@@ -105,10 +124,14 @@ tt_depunct <- function(x) {
 #' (all parsed fields empty), exactly as the original tool emits them.
 #'
 #' @param records Character vector of `id|name` lines.
+#' @param strip_qualifiers Logical; if `TRUE`, remove standalone
+#' open-nomenclature qualifier tokens (`cf.`, `aff.`, `s.l.`/`sensu lato`,
+#' `s.str.`/`sensu stricto`) before parsing. Not part of upstream
+#' `taxon-tools`; a taxastand extension, off by default.
 #' @return Character vector of parsed `|`-delimited lines.
 #' @keywords internal
 #' @noRd
-tt_parsenames <- function(records) {
+tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   if (length(records) == 0) {
     return(character(0))
   }
@@ -116,6 +139,12 @@ tt_parsenames <- function(records) {
   records <- enc2utf8(records)
   id <- sub("\\|.*$", "", records)
   name <- sub("^[^|]*\\|", "", records)
+
+  # Optional taxastand extension: strip open-nomenclature qualifiers before
+  # the whitespace clean-up below removes the double space left behind.
+  if (isTRUE(strip_qualifiers)) {
+    name <- gsub(.tt_qualifier_re, "", name, perl = TRUE)
+  }
 
   # Main-block preprocessing (parsenames lines 14-18)
   name <- gsub("  *", " ", name)
