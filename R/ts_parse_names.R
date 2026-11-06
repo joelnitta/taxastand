@@ -19,6 +19,12 @@
 #' separate circumscription convention not covered by that review but
 #' included here as a taxastand extension. Default: `FALSE`, to preserve
 #' prior behavior.
+#' @param exclude_placeholders Logical; if `TRUE` (default), names that are
+#' placeholders for an identification that stopped above species rank (`sp.`,
+#' `spp.`, `indet.`, `stet.`, `inc.`, and their long forms; see References) are
+#' excluded from the results with a warning, like names that cannot be parsed.
+#' Otherwise `"Genus sp."` would be parsed as if `"sp"` were a real specific
+#' epithet and could then be fuzzy-matched to unrelated species.
 #'
 #' @return A dataframe including the following columns.
 #' - id: A unique ID number assigned to the input name
@@ -57,7 +63,8 @@ ts_parse_names <- function(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   quiet = FALSE,
-  strip_qualifiers = FALSE
+  strip_qualifiers = FALSE,
+  exclude_placeholders = TRUE
 ) {
   # Check input: must be character vector, no NA values, all unique
   assertthat::assert_that(is.character(taxa))
@@ -71,6 +78,7 @@ ts_parse_names <- function(
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
+  assertthat::assert_that(assertthat::is.flag(exclude_placeholders))
 
   # Format input names for parsing as `id|taxon_name` records, for example
   # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar` # nolint: commented_code_linter.
@@ -111,6 +119,22 @@ ts_parse_names <- function(
   # Add "fail" column if all name parts are missing (couldn't be parsed properly)
   parsed_names$fail <- rowSums(!is.na(parsed_names[, name_parts])) == 0
 
+  # Placeholder names (e.g. "Genus sp.") are not species names: exclude them
+  placeholder <- rep(FALSE, nrow(parsed_names))
+  if (exclude_placeholders) {
+    orig_name <- taxa_tbl$name[match(parsed_names$id, taxa_tbl$id)]
+    placeholder <- .ts_is_placeholder(orig_name) & !parsed_names$fail
+    if (any(placeholder) && !quiet) {
+      warning(
+        "The following names are placeholders for an identification above ",
+        "species rank and are excluded from results: ",
+        paste(orig_name[placeholder], collapse = ", "),
+        call. = FALSE
+      )
+    }
+    parsed_names$fail <- parsed_names$fail | placeholder
+  }
+
   # Early exit if everything failed
   assertthat::assert_that(
     !all(parsed_names$fail),
@@ -118,8 +142,9 @@ ts_parse_names <- function(
   )
 
   # Emit warning for failures
-  if (sum(parsed_names$fail) > 0 && !quiet) {
-    failed_ids <- parsed_names$id[parsed_names$fail]
+  unparsed <- parsed_names$fail & !placeholder
+  if (any(unparsed) && !quiet) {
+    failed_ids <- parsed_names$id[unparsed]
     failed_names <- paste(
       taxa_tbl$name[taxa_tbl$id %in% failed_ids],
       collapse = ", "
@@ -144,4 +169,17 @@ ts_parse_names <- function(
   }
 
   results
+}
+
+# Tokens marking an identification that stopped above species rank (open
+# nomenclature; Sigovini et al. 2016): sp./spp., inc./incerta, indet./
+# indeterminabilis, stet./stetit. Whole whitespace-delimited tokens only.
+.ts_placeholder_re <- paste0(
+  "(?<=\\s)(",
+  "spp?\\.?|inc\\.?|incerta|indet\\.?|indeterminabilis|stet\\.?|stetit",
+  ")(?=\\s|$)"
+)
+
+.ts_is_placeholder <- function(x) {
+  grepl(.ts_placeholder_re, x, perl = TRUE)
 }

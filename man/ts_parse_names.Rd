@@ -8,7 +8,8 @@ ts_parse_names(
   taxa,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   quiet = FALSE,
-  strip_qualifiers = FALSE
+  strip_qualifiers = FALSE,
+  exclude_placeholders = TRUE
 )
 }
 \arguments{
@@ -30,6 +31,13 @@ Also strips \code{s.l.}/\verb{sensu lato} and \code{s.str.}/\verb{sensu stricto}
 separate circumscription convention not covered by that review but
 included here as a taxastand extension. Default: \code{FALSE}, to preserve
 prior behavior.}
+
+\item{exclude_placeholders}{Logical; if \code{TRUE} (default), names that are
+placeholders for an identification that stopped above species rank (\code{sp.},
+\code{spp.}, \code{indet.}, \code{stet.}, \code{inc.}, and their long forms; see References) are
+excluded from the results with a warning, like names that cannot be parsed.
+Otherwise \code{"Genus sp."} would be parsed as if \code{"sp"} were a real specific
+epithet and could then be fuzzy-matched to unrelated species.}
 }
 \value{
 A dataframe including the following columns.
