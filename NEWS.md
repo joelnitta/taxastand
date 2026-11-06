@@ -15,6 +15,17 @@
   removed from names before parsing/matching, instead of being mis-captured
   as the specific epithet. Off by default (#40)
 
+## Performance
+
+* Name matching is much faster for large references (e.g. ~20 s to ~1 s for
+  5 queries against the 78k-name PPG taxonomy). `ts_match_names()` and
+  `ts_resolve_names()` now ignore reference names whose genus cannot match any
+  query genus before parsing the reference (#43); match keys are computed
+  lazily and looked up in vectorised passes instead of per-key hash maps
+  (#45); and `tt_matchnames()` returns a data frame instead of delimited
+  strings (#46). Results are unchanged, except that multiple fuzzy matches to
+  one query are now returned in reference order.
+
 ## Bug fixes
 
 * Fix `ts_match_names(..., collapse_infra = TRUE)`'s internal deduplication

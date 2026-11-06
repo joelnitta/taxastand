@@ -42,3 +42,9 @@ test_that("tt_matchnames: fuzzy matches can return several rows per query", {
   expect_equal(res$match_type, c("auto_fuzzy", "auto_fuzzy"))
   expect_setequal(res$id_ref, c("r1", "r2"))
 })
+
+test_that("tt_matchnames: fuzzy hits are returned in reference order", {
+  ref <- c("r9||Foo||barn|||L.", "r10||Foo||bart|||L.", "r2||Foo||barx|||L.")
+  res <- tt_matchnames("q1||Foo||bar|||L.", ref, max_dist = 3)
+  expect_equal(res$id_ref, c("r9", "r10", "r2"))
+})
