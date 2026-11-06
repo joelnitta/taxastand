@@ -9,10 +9,6 @@
 #' 2. Names are fuzzily matched following taxonomic rules using the component
 #' parts.
 #'
-#' For more information on rules used for matching,
-#' [see taxon-tools manual](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes),
-#' which uses the same logic.
-#'
 #' Parsing is fairly fast (much faster than matching) but can take some time if
 #' the number of names is very large. If multiple queries will be made (e.g., to
 #' the same large reference database), it is recommended to first parse the
@@ -67,7 +63,7 @@
 #' @return Dataframe with the following columns (if `simple` is `FALSE`):
 #' - query: Query name
 #' - reference: Matched reference name
-#' - match_type: Type of match (for a summary of match types, [see taxon-tools manual](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes))
+#' - match_type: Type of match (for a summary of match types, see `vignette("basics")`)
 #' - id_query: Unique ID of query
 #' - id_ref: Unique ID of reference
 #' - genus_hybrid_sign_query: Genus hybrid sign in query

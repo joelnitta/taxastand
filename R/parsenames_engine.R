@@ -1,8 +1,10 @@
 # Pure-R reimplementation of taxon-tools `parsenames`
 #
-# Faithful port of the gawk script `parsenames` from taxon-tools v1.3.0
-# (camwebb/taxon-tools, upstream commit 8f8b5e2). The goal is byte-for-byte
-# identical output to the original tool. Non-ASCII characters in the original
+# Originally ported from the gawk script `parsenames` in taxon-tools v1.3.0
+# (camwebb/taxon-tools, upstream commit 8f8b5e2). Strict fidelity to it is
+# NOT a goal: taxastand aims to be
+# accurate, fast, and flexible, so this code may diverge from the original.
+# Non-ASCII characters in the original
 # regexes are written here as \u escapes so this source stays ASCII/portable;
 # see the inline comments for the literal character each escape represents.
 #
@@ -61,10 +63,9 @@
   ")(?=\\s|$)"
 )
 
-#' Remove punctuation and flatten diacritics (taxon-tools `depunct`)
+#' Remove punctuation and flatten diacritics
 #'
-#' Faithful port of the `depunct()` gawk function shared by parsenames and
-#' matchnames. Vectorised over `x`.
+#' Used by name parsing and matching. Vectorised over `x`.
 #'
 #' @param x Character vector.
 #' @return Character vector, depunctuated and lower-cased.
@@ -116,7 +117,7 @@ tt_depunct <- function(x) {
   }
 }
 
-#' Parse taxonomic names (taxon-tools `parsenames`)
+#' Parse taxonomic names
 #'
 #' Faithful pure-R port. Takes a character vector of `id|name` records and
 #' returns a character vector of `id|g_hybrid|genus|s_hybrid|species|rank|
@@ -126,8 +127,7 @@ tt_depunct <- function(x) {
 #' @param records Character vector of `id|name` lines.
 #' @param strip_qualifiers Logical; if `TRUE`, remove standalone
 #' open-nomenclature qualifier tokens (`cf.`, `aff.`, `s.l.`/`sensu lato`,
-#' `s.str.`/`sensu stricto`) before parsing. Not part of upstream
-#' `taxon-tools`; a taxastand extension, off by default.
+#' `s.str.`/`sensu stricto`) before parsing. Off by default.
 #' @return Character vector of parsed `|`-delimited lines.
 #' @keywords internal
 #' @noRd

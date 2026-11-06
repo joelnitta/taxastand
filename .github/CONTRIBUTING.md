@@ -59,11 +59,6 @@ styler::style_pkg()
 devtools::check()
 ```
 
-Some tests compare taxastand's pure-R matching engine against the
-original [taxon-tools](https://github.com/camwebb/taxon-tools) Docker
-image; these are skipped automatically if Docker isn't available, so
-you don't need Docker to contribute.
-
 ## Code style
 
 Code is formatted with [styler](https://styler.r-lib.org/) and linted

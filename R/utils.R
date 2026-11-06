@@ -58,18 +58,3 @@ ts_classify_result <- function(match_results) {
   result %>%
     dplyr::select(-n)
 }
-
-
-# Helper function for tests: skip test if docker is not available. Used only by
-# the docker-gated differential test that validates the pure-R engines against
-# the original taxon-tools image; the package itself has no docker dependency.
-skip_if_no_docker <- function() {
-  ok <- tryCatch(
-    system2("docker", "info", stdout = FALSE, stderr = FALSE) == 0,
-    error = function(e) FALSE
-  )
-  if (isTRUE(ok)) {
-    return(invisible(TRUE))
-  }
-  testthat::skip("docker not available")
-}

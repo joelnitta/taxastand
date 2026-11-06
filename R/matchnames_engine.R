@@ -1,12 +1,14 @@
 # Pure-R reimplementation of taxon-tools `matchnames` (the `-F` / ALLFUZZY,
 # non-interactive mode, which is the only mode taxastand uses).
 #
-# Faithful port of the gawk script `matchnames` from taxon-tools v1.3.0
-# (camwebb/taxon-tools, upstream commit 8f8b5e2). The interactive `-f`
+# Originally ported from the gawk script `matchnames` in taxon-tools v1.3.0
+# (camwebb/taxon-tools, upstream commit 8f8b5e2). Strict fidelity to it is
+# NOT a goal: taxastand aims to be
+# accurate, fast, and flexible, so this code may diverge from the original.
+# The interactive `-f`
 # matching, the `-m` manual-choices file, and stdin prompting are intentionally
 # omitted (out of scope; never invoked by taxastand). Variable names below
-# (A, B, Bmap, etc.) intentionally mirror the gawk source's array names for
-# traceability against the upstream script.
+# (A, B, Bmap, etc.) still mirror the gawk source's array names.
 # nolint start: object_name_linter.
 #
 # Input is the parsed pipe-delimited format produced by tt_parsenames /
@@ -130,7 +132,7 @@
   }
 }
 
-#' Match taxonomic names (taxon-tools `matchnames -F`)
+#' Match taxonomic names
 #'
 #' Faithful pure-R port of the non-interactive all-fuzzy matching mode.
 #'

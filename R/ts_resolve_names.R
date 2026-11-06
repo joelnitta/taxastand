@@ -57,7 +57,7 @@
 #' - `matched_name`: Name matched to query
 #' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref_taxonomy`)
 #' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref_taxonomy`)
-#' - `match_type`: Type of match (for a summary of match types, [see taxon-tools manual](https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes))
+#' - `match_type`: Type of match (for a summary of match types, see `vignette("basics")`)
 #'
 #' Names that could not be matched or resolve to multiple, different synonyms
 #' have `NA` for `resolved_name`.

@@ -2,6 +2,13 @@
 
 ## Major changes
 
+* Design philosophy change: taxastand is no longer a strict port of
+  taxon-tools. Goals are now to standardize names accurately (including
+  authors), quickly, and flexibly (custom reference databases), rather than
+  to implement taxon-tools in R. Output may diverge from taxon-tools in
+  future releases. The docker differential test and the "pure R vs.
+  taxon-tools" benchmark vignette were removed.
+
 * Add `strip_qualifiers` argument to `ts_parse_names()`, `ts_match_names()`,
   and `ts_resolve_names()`, so that open-nomenclature qualifiers (`cf.`,
   `aff.`, `s.l.`/`sensu lato`, `s.str.`/`sensu stricto`) can optionally be
