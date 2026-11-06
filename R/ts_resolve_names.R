@@ -28,7 +28,9 @@
 #' - `scientificName`: [The full scientific name of the taxon](https://dwc.tdwg.org/terms/#dwc:scientificName),
 #' with authorship and date information if known.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
-#' (total insertions, deletions and substitutions). Default: 10.
+#' (total insertions, deletions and substitutions). The distance is computed on
+#' the whole name, including the author string, after removing punctuation and
+#' converting to lower case. Default: 3.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
@@ -50,6 +52,13 @@
 #' \code{\link{ts_parse_names}()} and its References section. Only has an
 #' effect when `query` is a character vector. Default: `FALSE`.
 #'
+#' @param fuzzy_canon_hits Either `"all"` (default) or `"closest"`. Controls
+#' which hits are returned when a query *without an author* has no identical
+#' canonical name in the reference and is fuzzy-matched on its canonical name
+#' (match type `auto_fuzzy_canon`). `"all"` returns every reference name within
+#' `max_dist`, which is the most informative but can include many unrelated
+#' names when epithets are short. `"closest"` returns only the names at the
+#' smallest distance found (ties are all kept, so real ambiguity still shows).
 #' @return Dataframe; results of resolving synonyms in matched taxonomic names.
 #' Includes the following columns:
 #' - `query`: Query name
@@ -81,13 +90,14 @@
 ts_resolve_names <- function(
   query,
   ref_taxonomy,
-  max_dist = 10,
+  max_dist = 3,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  strip_qualifiers = FALSE
+  strip_qualifiers = FALSE,
+  fuzzy_canon_hits = c("all", "closest")
 ) {
   # Check input
   assertthat::assert_that(
@@ -100,6 +110,7 @@ ts_resolve_names <- function(
   )
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
+  fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
@@ -115,7 +126,8 @@ ts_resolve_names <- function(
       collapse_infra = collapse_infra,
       collapse_infra_exclude = collapse_infra_exclude,
       simple = TRUE,
-      strip_qualifiers = strip_qualifiers
+      strip_qualifiers = strip_qualifiers,
+      fuzzy_canon_hits = fuzzy_canon_hits
     )
   } else if (is.data.frame(query)) {
     match_results <- query

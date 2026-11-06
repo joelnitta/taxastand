@@ -56,3 +56,46 @@ test_that(".tt_split_field splits parser output, incl. short and empty fields", 
   expect_equal(.tt_split_field(x, 3L), c("Foo", "", ""))
   expect_equal(.tt_split_field(x, 8L), c("L.", "", ""))
 })
+
+test_that("tt_matchnames: author-less queries match on canonical name", {
+  ref <- c(
+    "r1||Foo||bart|||Smith",
+    "r2||Foo||barn|||Jones",
+    "r3||Foo||zzzzzz|||Smith"
+  )
+  # Misspelled, author-less: author differences must not count
+  res <- tt_matchnames("q1||Foo||bar|||", ref, max_dist = 1)
+  expect_equal(res$match_type, c("auto_fuzzy_canon", "auto_fuzzy_canon"))
+  expect_equal(res$id_ref, c("r1", "r2"))
+  # Exact canonical name wins over looser hits and all of them are returned
+  ref2 <- c(ref, "r4||Foo||bar|||Brown", "r5||Foo||bar|||Green")
+  res2 <- tt_matchnames("q1||Foo||bar|||", ref2, max_dist = 3)
+  expect_equal(res2$match_type, c("auto_cfonly", "auto_cfonly"))
+  expect_equal(res2$id_ref, c("r4", "r5"))
+  # With an author, matching is still on the whole name (author counts)
+  res3 <- tt_matchnames("q1||Foo||bar|||Smyth", ref2, max_dist = 1)
+  expect_equal(res3$match_type, "no_match")
+})
+
+test_that("tt_matchnames: plain Levenshtein distance, no trailing penalty", {
+  # The reference is the query plus extra trailing text, so the distance is
+  # exactly max_dist. taxon-tools' gawk amatch() added +1 here and rejected it.
+  res <- tt_matchnames("q1||Foo||bar|||Sm", "r1||Foo||bar|||Smit", max_dist = 2)
+  expect_equal(res$match_type, "auto_fuzzy")
+  res2 <- tt_matchnames("q1||Foo||bar|||Sm", "r1||Foo||bar|||Smith", max_dist = 3)
+  expect_equal(res2$match_type, "auto_fuzzy")
+  # One below the distance is still a non-match
+  res3 <- tt_matchnames("q1||Foo||bar|||Sm", "r1||Foo||bar|||Smith", max_dist = 2)
+  expect_equal(res3$match_type, "no_match")
+})
+
+test_that("tt_matchnames: canon_closest keeps only the nearest canonical hits", {
+  ref <- c("r1||Foo||bart|||A", "r2||Foo||barnn|||B", "r3||Foo||bar t|||C")
+  all_hits <- tt_matchnames("q1||Foo||bar|||", ref, max_dist = 3)
+  expect_setequal(all_hits$id_ref, c("r1", "r2", "r3"))
+  closest <- tt_matchnames("q1||Foo||bar|||", ref, max_dist = 3, canon_closest = TRUE)
+  # r1 ("bart") and r3 ("bar t" -> "bart" once depunctuated) are both at
+  # distance 1; r2 is at distance 2
+  expect_setequal(closest$id_ref, c("r1", "r3"))
+  expect_true(all(closest$match_type == "auto_fuzzy_canon"))
+})

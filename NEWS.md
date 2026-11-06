@@ -2,6 +2,25 @@
 
 ## Major changes
 
+* **Breaking: fuzzy matching of queries without an author (#49).** The author
+  string used to count towards the edit distance, so author-less queries could
+  only fuzzy-match (loosely, and only because the old default `max_dist` was
+  large). They are now fuzzy-matched on the canonical name (genus + specific
+  epithet + infraspecific epithet), ignoring the author. A canonical-name match
+  is reported as `auto_cfonly`, and a misspelled one as the new match type
+  `auto_fuzzy_canon`; all reference names within `max_dist` are returned, so
+  ambiguity shows up in `ts_resolve_names()`. The new argument
+  `fuzzy_canon_hits = "closest"` instead keeps only the nearest hits (ties kept),
+  which avoids unrelated names with short epithets. Queries with an author are
+  still matched on the whole name (`auto_fuzzy`).
+
+* **Breaking: the default `max_dist` is now 3 (was 10) (#47).** `max_dist` is
+  the Levenshtein distance on the whole depunctuated name including the author,
+  and 10 was very loose (for example, 5 queries against PPG returned 275 result
+  rows). The distance is also now plain Levenshtein distance: the extra +1
+  penalty taxon-tools applied when the reference merely has extra trailing text
+  was removed, which can add matches at exactly `max_dist`.
+
 * Design philosophy change: taxastand is no longer a strict port of
   taxon-tools. Goals are now to standardize names accurately (including
   authors), quickly, and flexibly (custom reference databases), rather than

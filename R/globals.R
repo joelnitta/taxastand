@@ -6,12 +6,8 @@ utils::globalVariables(c(
   "namestring", # <ts_match_names>
   "id", # <ts_match_names>
   "key_id", # <ts_match_names>
-  "record", # <ts_match_names>
   "name", # <ts_match_names>
   "match_type", # <ts_match_names>
-  "record", # <ts_parse_names>
-  "id", # <ts_parse_names>
-  "name", # <ts_parse_names>
   "reference", # <ts_resolve_names>
   "match_type", # <ts_resolve_names>
   "result_type", # <ts_resolve_names>
