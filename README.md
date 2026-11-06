@@ -61,8 +61,9 @@ remotes::install_github("joelnitta/taxastand")
 
 - [taxon-tools](https://github.com/camwebb/taxon-tools) is a
   command-line interface program that was the inspiration for
-  `taxastand`. `taxastand` originally required it as a dependency, but
-  this was removed in v2.0.
+  `taxastand`. `taxastand` originally required it as a dependency
+  (removed in v2.0) and was a faithful port of its algorithms, but
+  `taxastand` is now developed independently and may diverge from it.
 
 - [taxize](https://github.com/ropensci/taxize) is the “granddaddy” of
   taxonomy packages in R. It can search around 20 different taxonomic

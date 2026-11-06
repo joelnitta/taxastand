@@ -71,7 +71,7 @@ Dataframe with the following columns (if \code{simple} is \code{FALSE}):
 \itemize{
 \item query: Query name
 \item reference: Matched reference name
-\item match_type: Type of match (for a summary of match types, \href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual})
+\item match_type: Type of match (for a summary of match types, see \code{vignette("basics")})
 \item id_query: Unique ID of query
 \item id_ref: Unique ID of reference
 \item genus_hybrid_sign_query: Genus hybrid sign in query
@@ -104,10 +104,6 @@ variety, author, etc).
 \item Names are fuzzily matched following taxonomic rules using the component
 parts.
 }
-
-For more information on rules used for matching,
-\href{https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes}{see taxon-tools manual},
-which uses the same logic.
 
 Parsing is fairly fast (much faster than matching) but can take some time if
 the number of names is very large. If multiple queries will be made (e.g., to
