@@ -82,7 +82,7 @@ Includes the following columns:
 \item \code{matched_name}: Name matched to query
 \item \code{resolved_status}: Taxonomic status of the resolved name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
 \item \code{matched_status}: Taxonomic status of the matched name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
-\item \code{match_type}: Type of match (for a summary of match types, see \code{vignette("basics")})
+\item \code{match_type}: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
 }
 
 Names that could not be matched or resolve to multiple, different synonyms

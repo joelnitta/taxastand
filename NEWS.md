@@ -60,6 +60,9 @@
 
 ## Minor improvements
 
+* Document the `match_type` values in a new "Match types" section of
+  `?ts_match_names`, grouped by how far each can be trusted (#52); the match
+  type codes themselves are unchanged
 * Use `vapply()` instead of `sapply()`, `anyDuplicated()` instead of
   `any(duplicated(x))`, and drop several redundant `x == TRUE`/`x == FALSE`
   comparisons

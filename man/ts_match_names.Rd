@@ -82,7 +82,7 @@ Dataframe with the following columns (if \code{simple} is \code{FALSE}):
 \itemize{
 \item query: Query name
 \item reference: Matched reference name
-\item match_type: Type of match (for a summary of match types, see \code{vignette("basics")})
+\item match_type: Type of match (see the "Match types" section)
 \item id_query: Unique ID of query
 \item id_ref: Unique ID of reference
 \item genus_hybrid_sign_query: Genus hybrid sign in query
@@ -130,6 +130,68 @@ be queried instead of "Blechnum lunare var. lunare". Note that the
 \code{match_type} will be "exact" even though the literal query and the matched
 name are different (see example below).
 }
+\section{Match types}{
+
+The \code{match_type} column says how a query was matched. Types are tried in
+the order listed below, and the first one that finds a match is reported, so
+earlier types are more certain than later ones. Always check results that
+are not \code{exact}.
+
+\strong{Identical after normalization (safe to accept)}
+\itemize{
+\item \code{exact}: all parts of the name, including the author, are identical.
+\item \code{auto_punct}: identical after ignoring differences in spaces, periods,
+capitalization, and accented or other non-ASCII characters.
+}
+
+\strong{Differences in how the author is cited (usually safe)}
+\itemize{
+\item \code{auto_noauth}: query and reference both lack an author and the name is
+unique in the reference (only when \code{match_no_auth = TRUE}).
+\item \verb{auto_basio-}, \verb{auto_basio+}: identical once the basionym author, e.g.
+\code{(Turcz.)} in \verb{Cardaminopsis umbrosa (Turcz.) Czerep.}, is dropped from
+the reference (\code{-}) or the query (\code{+}).
+\item \verb{auto_in-}, \verb{auto_in+}: identical once "in" elements (\verb{Tagawa in Morton}
+becomes \code{Tagawa}) are dropped from the reference or the query.
+\item \verb{auto_ex-}, \verb{auto_ex+}: as above, dropping both "in" and "ex" elements
+(\verb{Willd. ex Schkuhr} becomes \code{Willd.}).
+\item \code{auto_basexin}: identical once basionym authors and "in"/"ex" elements are
+dropped from both query and reference.
+\item \code{auto_irank}: identical except for the infraspecific rank (e.g. \code{var.}
+vs. \code{subsp.}).
+}
+
+\strong{Canonical-name matches (the author is ignored; check the result)}
+
+The canonical name is genus + specific epithet + infraspecific epithet.
+\itemize{
+\item \code{auto_cfonly}: canonical names are identical. Used automatically for
+queries without an author; for queries with an author, only when
+\code{match_canon = TRUE}. Several reference names can share a canonical name
+(homonyms), giving multiple hits.
+}
+
+\strong{Fuzzy matches (misspellings; always verify)}
+\itemize{
+\item \code{auto_fuzzy}: query has an author; the whole name (author included) is
+within \code{max_dist} of a reference name.
+\item \code{auto_fuzzy_canon}: query has no author; the canonical names are within
+\code{max_dist}. Which hits are returned is set by \code{fuzzy_canon_hits}.
+}
+
+\strong{No match}
+\itemize{
+\item \code{no_match}: nothing in the reference was close enough.
+}
+
+Fuzzy matching is computed with the
+\href{https://en.wikipedia.org/wiki/Levenshtein_distance}{Levenshtein distance}
+(total insertions, deletions, and substitutions). The rules for authorship
+fit plants, algae, and fungi, where the basionym author is given in
+parentheses and the year is usually omitted; animal names, which normally
+include the year, may match less well.
+}
+
 \examples{
 ts_match_names(
   "Crepidomanes minutus",
