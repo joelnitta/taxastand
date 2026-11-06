@@ -72,29 +72,36 @@
 #' @keywords internal
 #' @noRd
 tt_depunct <- function(x) {
-  # Diacritic flattening (precomposed Latin-1 / Latin Extended letters)
-  x <- gsub("[\u00f9\u00fa\u00fb\u00fc]", "u", x) # \u00f9\u00fa\u00fb\u00fc
-  x <- gsub("[\u00d1]", "N", x) # \u00d1
-  x <- gsub("[\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5]", "A", x) # \u00c0\u00c1\u00c2\u00c3\u00c4\u00c5
-  x <- gsub("[\u00ec\u00ed\u00ee\u00ef]", "i", x) # \u00ec\u00ed\u00ee\u00ef
-  x <- gsub("[\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8]", "O", x) # \u00d2\u00d3\u00d4\u00d5\u00d6\u00d8
-  x <- gsub("[\u00c7]", "C", x) # \u00c7
-  x <- gsub("[\u00e6]", "ae", x) # \u00e6
-  x <- gsub("[\u00d0]", "D", x) # \u00d0
-  x <- gsub("[\u00fd\u00ff]", "y", x) # \u00fd\u00ff
-  x <- gsub("[\u00c8\u00c9\u00ca\u00cb]", "E", x) # \u00c8\u00c9\u00ca\u00cb
-  x <- gsub("[\u00f1]", "n", x) # \u00f1
-  x <- gsub("[\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5]", "a", x) # \u00e0\u00e1\u00e2\u00e3\u00e4\u00e5
-  x <- gsub("[\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8]", "o", x) # \u00f2\u00f3\u00f4\u00f5\u00f6\u00f8
-  x <- gsub("[\u00df]", "b", x) # \u00df
-  x <- gsub("[\u00d9\u00da\u00db\u00dc]", "U", x) # \u00d9\u00da\u00db\u00dc
-  x <- gsub("[\u00de\u00fe]", "p", x) # \u00de\u00fe
-  x <- gsub("[\u00e7\u010d]", "c", x) # \u00e7\u010d
-  x <- gsub("[\u00cc\u00cd\u00ce\u00cf]", "I", x) # \u00cc\u00cd\u00ce\u00cf
-  x <- gsub("[\u00f0]", "d", x) # \u00f0
-  x <- gsub("[\u00e8\u00e9\u00ea\u00eb]", "e", x) # \u00e8\u00e9\u00ea\u00eb
-  x <- gsub("[\u00c6]", "Ae", x) # \u00c6
-  x <- gsub("[\u00dd]", "Y", x) # \u00dd
+  # Diacritic flattening (precomposed Latin-1 / Latin Extended letters). Almost
+  # all names are pure ASCII, so only run these passes on the (few) elements
+  # that contain non-ASCII characters.
+  nonascii <- which(nchar(x, type = "bytes") != nchar(x, type = "chars"))
+  if (length(nonascii)) {
+    y <- x[nonascii]
+    y <- gsub("[\u00f9\u00fa\u00fb\u00fc]", "u", y) # \u00f9\u00fa\u00fb\u00fc
+    y <- gsub("[\u00d1]", "N", y) # \u00d1
+    y <- gsub("[\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5]", "A", y) # \u00c0\u00c1\u00c2\u00c3\u00c4\u00c5
+    y <- gsub("[\u00ec\u00ed\u00ee\u00ef]", "i", y) # \u00ec\u00ed\u00ee\u00ef
+    y <- gsub("[\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8]", "O", y) # \u00d2\u00d3\u00d4\u00d5\u00d6\u00d8
+    y <- gsub("[\u00c7]", "C", y) # \u00c7
+    y <- gsub("[\u00e6]", "ae", y) # \u00e6
+    y <- gsub("[\u00d0]", "D", y) # \u00d0
+    y <- gsub("[\u00fd\u00ff]", "y", y) # \u00fd\u00ff
+    y <- gsub("[\u00c8\u00c9\u00ca\u00cb]", "E", y) # \u00c8\u00c9\u00ca\u00cb
+    y <- gsub("[\u00f1]", "n", y) # \u00f1
+    y <- gsub("[\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5]", "a", y) # \u00e0\u00e1\u00e2\u00e3\u00e4\u00e5
+    y <- gsub("[\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8]", "o", y) # \u00f2\u00f3\u00f4\u00f5\u00f6\u00f8
+    y <- gsub("[\u00df]", "b", y) # \u00df
+    y <- gsub("[\u00d9\u00da\u00db\u00dc]", "U", y) # \u00d9\u00da\u00db\u00dc
+    y <- gsub("[\u00de\u00fe]", "p", y) # \u00de\u00fe
+    y <- gsub("[\u00e7\u010d]", "c", y) # \u00e7\u010d
+    y <- gsub("[\u00cc\u00cd\u00ce\u00cf]", "I", y) # \u00cc\u00cd\u00ce\u00cf
+    y <- gsub("[\u00f0]", "d", y) # \u00f0
+    y <- gsub("[\u00e8\u00e9\u00ea\u00eb]", "e", y) # \u00e8\u00e9\u00ea\u00eb
+    y <- gsub("[\u00c6]", "Ae", y) # \u00c6
+    y <- gsub("[\u00dd]", "Y", y) # \u00dd
+    x[nonascii] <- y
+  }
 
   # Parentheses to underscore (later stripped); ' and / et ' to ' & '
   x <- gsub("[()]", "_", x)

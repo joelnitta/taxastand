@@ -26,8 +26,10 @@
   gsub("^ *", "", x)
 }
 
-# Compute, for a vector of parsed `id|...` lines, every key/field matchnames
-# needs (vectorised). Returns a list of equal-length vectors.
+# Parse a vector of parsed `id|...` lines into the fields matchnames needs.
+# Returns a list of equal-length vectors plus `key(method)`, which computes
+# (and memoises) the comparison key for a match method only when first asked
+# for, so a method no query ever reaches costs nothing.
 .tt_record_keys <- function(lines) {
   lines <- enc2utf8(lines)
   # Split into 8 fields (exactly 7 pipes); fields may be empty.
@@ -41,57 +43,64 @@
     }
   }
   code <- f(1)
-  xg <- f(2)
-  g <- f(3)
-  xs <- f(4)
-  s <- f(5)
-  st <- f(6)
-  ssp <- f(7)
-  a <- f(8)
 
   # Field cleaning (read_data lines 154-158): blank out NULL / \N, cleanspaces
   clean <- function(x) {
     x <- sub("^(NULL|\\\\N)$", "", x)
     .tt_cleanspaces(x)
   }
-  xg <- clean(xg)
-  g <- clean(g)
-  xs <- clean(xs)
-  s <- clean(s)
-  st <- clean(st)
-  ssp <- clean(ssp)
-  a <- clean(a)
-
-  exact <- .tt_cleanspaces(paste(xg, g, xs, s, st, ssp, a))
+  xg <- clean(f(2))
+  g <- clean(f(3))
+  xs <- clean(f(4))
+  s <- clean(f(5))
+  st <- clean(f(6))
+  ssp <- clean(f(7))
+  a <- clean(f(8))
 
   namex <- paste0(xg, g, xs, s, st, ssp) # all parts, no author
-  punct <- tt_depunct(paste0(namex, a))
-  noauth <- tt_depunct(namex)
-  cfonly <- tt_depunct(paste0(g, s, ssp))
-  irank <- tt_depunct(paste0(xg, g, xs, s, ssp, a))
-  a_basio <- sub("^\\([^)]+\\)", "", a)
-  basio <- tt_depunct(paste0(namex, a_basio))
-  a_in <- sub(" [iI]n .*$", "", a)
-  in_ <- tt_depunct(paste0(namex, a_in))
-  a_exin <- sub(" ([eE]x|[iI]n) .*$", "", a)
-  exin <- tt_depunct(paste0(namex, a_exin))
-  a_bx <- sub("(^\\([^)]+\\)| ([eE]x|[iI]n) .*$)", "", a)
-  basexin <- tt_depunct(paste0(namex, a_bx))
+  exact <- .tt_cleanspaces(paste(xg, g, xs, s, st, ssp, a))
+  punct_in <- paste0(namex, a)
+
+  cache <- new.env(parent = emptyenv())
+
+  # tt_depunct() is a pure function of its input string, so a key that differs
+  # from the punct key only for some records is derived from it, re-depuncting
+  # just the records whose input string changed.
+  derive <- function(new_in) {
+    out <- key("punct")
+    chg <- new_in != punct_in
+    out[chg] <- tt_depunct(new_in[chg])
+    out
+  }
+
+  key <- function(method) {
+    if (!is.null(cache[[method]])) {
+      return(cache[[method]])
+    }
+    val <- switch(method,
+      exact = exact,
+      punct = tt_depunct(punct_in),
+      noauth = tt_depunct(namex),
+      cfonly = tt_depunct(paste0(g, s, ssp)),
+      irank = derive(paste0(xg, g, xs, s, ssp, a)),
+      basio = derive(paste0(namex, sub("^\\([^)]+\\)", "", a))),
+      `in` = derive(paste0(namex, sub(" [iI]n .*$", "", a))),
+      exin = derive(paste0(namex, sub(" ([eE]x|[iI]n) .*$", "", a))),
+      basexin = derive(
+        paste0(namex, sub("(^\\([^)]+\\)| ([eE]x|[iI]n) .*$)", "", a))
+      ),
+      stop("unknown key method: ", method)
+    )
+    assign(method, val, envir = cache)
+    val
+  }
 
   list(
     code = code, genus = g,
     fields = list(xg = xg, g = g, xs = xs, s = s, st = st, ssp = ssp, a = a),
     no_auth = (a == ""), auct = grepl("^auct\\.?$", a),
-    exact = exact, punct = punct, noauth = noauth, cfonly = cfonly,
-    irank = irank, basio = basio, `in` = in_, exin = exin, basexin = basexin
+    key = key
   )
-}
-
-# Build a hashed key -> code environment (last write wins, file order)
-.tt_build_map <- function(keys, codes) {
-  e <- new.env(hash = TRUE, size = max(1L, length(keys)))
-  for (j in seq_along(keys)) assign(paste0("k:", keys[j]), codes[j], envir = e)
-  e
 }
 
 # For boundary fuzzy pairs (Levenshtein distance == FUZZERR), decide whether
@@ -120,16 +129,6 @@
     if (full[k] < diag && full[k] < up) out[k] <- 1L
   }
   out
-}
-
-# Look up a key; return NA_character_ if absent
-.tt_get <- function(e, key) {
-  k <- paste0("k:", key)
-  if (exists(k, envir = e, inherits = FALSE)) {
-    get(k, envir = e, inherits = FALSE)
-  } else {
-    NA_character_
-  }
 }
 
 # Name of each parsed-name field, in record order, as used in the output
@@ -165,124 +164,136 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
 
   B <- .tt_record_keys(ref_lines)
   A <- .tt_record_keys(query_lines)
+  n_q <- length(A$code)
 
-  methods <- c(
-    "exact", "punct", "noauth", "cfonly", "irank",
-    "basio", "in", "exin", "basexin"
-  )
-  Bmap <- lapply(methods, function(m) .tt_build_map(B[[m]], B$code))
-  names(Bmap) <- methods
+  # Per query: matched ref code(s) and match type, filled in as tests succeed.
+  # `pending` holds the queries not yet matched.
+  res_code <- vector("list", n_q)
+  res_type <- rep(NA_character_, n_q)
+  pending <- seq_len(n_q)
 
-  # noauth-key counts (XNA)
-  Bxna <- table(B$noauth)
+  # Ref code whose `method` key equals each of `qkeys` (NA if none). If a key
+  # occurs more than once in the reference, the last record wins.
+  lookup <- function(qkeys, method) {
+    bk <- B$key(method)
+    B$code[length(bk) + 1L - match(qkeys, rev(bk))]
+  }
 
-  # Genus -> ascending-sorted ref codes (Gh, iterated in @ind_str_asc order)
-  Bgenus_codes <- lapply(split(B$code, B$genus), function(x) sort(unique(x)))
-  Bgenus_present <- names(Bgenus_codes)
-  # punct keyed by code for fuzzy candidate lookup
-  Bpunct_by_code <- setNames(B$punct, B$code)
-
-  # Each test returns NULL (no match) or list(codes = <ref codes>, type = <chr>)
-  hit <- function(codes, type) list(codes = codes, type = type)
+  # Accept matches (not to the query itself) for queries `idx`
+  accept <- function(idx, rc, type) {
+    ok <- !is.na(rc) & rc != A$code[idx]
+    if (any(ok)) {
+      res_code[idx[ok]] <<- as.list(rc[ok])
+      res_type[idx[ok]] <<- type
+      pending <<- setdiff(pending, idx[ok])
+    }
+  }
 
   # test_eq: query[method] key present in B[method]
-  test_eq <- function(qi, method, outtype) {
-    rc <- .tt_get(Bmap[[method]], A[[method]][qi])
-    if (!is.na(rc) && rc != A$code[qi]) hit(rc, outtype) else NULL
+  test_eq <- function(method, outtype) {
+    idx <- pending
+    if (length(idx)) accept(idx, lookup(A$key(method)[idx], method), outtype)
   }
+
   # test_na: noauth key unique in B
-  test_na <- function(qi) {
-    key <- A$noauth[qi]
-    rc <- .tt_get(Bmap[["noauth"]], key)
-    cnt <- Bxna[key]
-    if (!is.na(rc) && !is.na(cnt) && cnt == 1 && rc != A$code[qi]) {
-      hit(rc, "auto_noauth")
-    } else {
-      NULL
+  test_na <- function() {
+    idx <- pending[A$no_auth[pending]]
+    if (!length(idx)) {
+      return(invisible())
     }
+    bk <- B$key("noauth")
+    u <- unique(bk)
+    counts <- tabulate(match(bk, u), length(u))
+    qk <- A$key("noauth")[idx]
+    rc <- lookup(qk, "noauth")
+    rc[is.na(counts[match(qk, u)]) | counts[match(qk, u)] != 1L] <- NA
+    accept(idx, rc, "auto_noauth")
   }
+
   # test_pm: plus/minus variants using punct on the opposite side
-  test_pm <- function(qi, method) {
-    rc <- .tt_get(Bmap[[method]], A$punct[qi])
-    if (!is.na(rc) && rc != A$code[qi]) {
-      return(hit(rc, paste0("auto_", method, "-")))
+  test_pm <- function(method) {
+    idx <- pending
+    if (!length(idx)) {
+      return(invisible())
     }
-    rc <- .tt_get(Bmap[["punct"]], A[[method]][qi])
-    if (!is.na(rc) && rc != A$code[qi]) {
-      return(hit(rc, paste0("auto_", method, "+")))
+    accept(
+      idx, lookup(A$key("punct")[idx], method), paste0("auto_", method, "-")
+    )
+    idx <- pending
+    if (length(idx)) {
+      accept(
+        idx, lookup(A$key(method)[idx], "punct"), paste0("auto_", method, "+")
+      )
     }
-    NULL
   }
+
   # test_allfuzzy: every same-genus ref within max_dist
-  test_allfuzzy <- function(qi) {
-    cand <- Bgenus_codes[[A$genus[qi]]]
-    cand <- cand[cand != A$code[qi]]
-    if (!length(cand)) {
-      return(NULL)
+  test_allfuzzy <- function(idx) {
+    # genus -> ascending-sorted ref codes
+    genus_codes <- lapply(split(B$code, B$genus), function(x) sort(unique(x)))
+    punct_by_code <- setNames(B$key("punct"), B$code)
+    qpunct <- A$key("punct")
+    for (qi in idx) {
+      cand <- genus_codes[[A$genus[qi]]]
+      cand <- cand[cand != A$code[qi]]
+      if (!length(cand)) next
+      qp <- qpunct[qi]
+      rp <- punct_by_code[cand]
+      # gawk's amatch(text = ref, "^query$", FUZZERR) accepts a pair when its
+      # cost <= FUZZERR. Probing aregex directly shows the cost equals the
+      # Levenshtein distance, plus exactly 1 when the optimal alignment must
+      # delete trailing character(s) off the end of the reference to reach the
+      # "$" anchor (a pure trailing append in the reference); all other edit
+      # patterns cost the plain distance. Since the penalty is at most 1, it
+      # only changes the outcome at the boundary distance == FUZZERR.
+      d <- as.integer(adist(qp, rp))
+      keep <- !is.na(d) & d < fuzzerr
+      bnd <- which(!is.na(d) & d == fuzzerr)
+      if (length(bnd)) {
+        keep[bnd] <- .tt_amatch_trailing(qp, rp[bnd], d[bnd]) == 0L
+      }
+      if (any(keep)) {
+        res_code[[qi]] <<- cand[keep]
+        res_type[qi] <<- "auto_fuzzy"
+        pending <<- setdiff(pending, qi)
+      }
     }
-    qp <- A$punct[qi]
-    rp <- Bpunct_by_code[cand]
-    # gawk's amatch(text = ref, "^query$", FUZZERR) accepts a pair when its
-    # cost <= FUZZERR. Probing aregex directly shows the cost equals the
-    # Levenshtein distance, plus exactly 1 when the optimal alignment must
-    # delete trailing character(s) off the end of the reference to reach the
-    # "$" anchor (a pure trailing append in the reference); all other edit
-    # patterns cost the plain distance. Since the penalty is at most 1, it only
-    # changes the outcome at the boundary distance == FUZZERR.
-    d <- as.integer(adist(qp, rp))
-    keep <- !is.na(d) & d < fuzzerr
-    bnd <- which(!is.na(d) & d == fuzzerr)
-    if (length(bnd)) {
-      keep[bnd] <- .tt_amatch_trailing(qp, rp[bnd], d[bnd]) == 0L
-    }
-    codes <- cand[keep]
-    if (!length(codes)) {
-      return(NULL)
-    }
-    hit(codes, "auto_fuzzy")
   }
 
-  # Accumulate matches as parallel (query index, ref code, type) vectors
-  n_q <- length(A$code)
-  res_qi <- vector("list", n_q)
-  res_rc <- vector("list", n_q)
-  res_type <- vector("list", n_q)
+  test_eq("exact", "exact")
+  test_eq("punct", "auto_punct")
+  if (noauthone) test_na()
+  test_pm("basio")
+  test_pm("in")
+  test_pm("exin")
+  test_eq("basexin", "auto_basexin")
+  test_eq("irank", "auto_irank")
 
-  for (qi in seq_len(n_q)) {
-    res <- test_eq(qi, "exact", "exact")
-    if (is.null(res)) res <- test_eq(qi, "punct", "auto_punct")
-    if (is.null(res) && A$no_auth[qi] && noauthone) res <- test_na(qi)
-    if (is.null(res)) res <- test_pm(qi, "basio")
-    if (is.null(res)) res <- test_pm(qi, "in")
-    if (is.null(res)) res <- test_pm(qi, "exin")
-    if (is.null(res)) res <- test_eq(qi, "basexin", "auto_basexin")
-    if (is.null(res)) res <- test_eq(qi, "irank", "auto_irank")
-
-    if (is.null(res) && A$auct[qi]) {
-      # auct.: only a canonical-form match is allowed, else no_match
-      if (cfo) {
-        res <- test_eq(qi, "cfonly", "auto_cfonly")
-      }
-    } else {
-      # all-fuzzy (only if genus present in reference)
-      if (is.null(res) && A$genus[qi] %in% Bgenus_present) {
-        res <- test_allfuzzy(qi)
-      }
-      if (is.null(res) && cfo) res <- test_eq(qi, "cfonly", "auto_cfonly")
-    }
-
-    if (is.null(res)) res <- hit(NA_character_, "no_match")
-    res_qi[[qi]] <- rep(qi, length(res$codes))
-    res_rc[[qi]] <- res$codes
-    res_type[[qi]] <- rep(res$type, length(res$codes))
+  # auct.: only a canonical-form match is allowed, else no_match
+  auct <- pending[A$auct[pending]]
+  if (cfo && length(auct)) {
+    accept(auct, lookup(A$key("cfonly")[auct], "cfonly"), "auto_cfonly")
   }
 
-  qi <- unlist(res_qi, use.names = FALSE)
-  rc <- unlist(res_rc, use.names = FALSE)
-  type <- unlist(res_type, use.names = FALSE)
+  # all-fuzzy (only if genus present in reference), then canonical form
+  others <- pending[!A$auct[pending]]
+  fuzzy <- others[A$genus[others] %in% B$genus]
+  if (length(fuzzy)) test_allfuzzy(fuzzy)
+  others <- pending[!A$auct[pending]]
+  if (cfo && length(others)) {
+    accept(others, lookup(A$key("cfonly")[others], "cfonly"), "auto_cfonly")
+  }
+
+  res_code[pending] <- list(NA_character_)
+  res_type[pending] <- "no_match"
+
+  n_hits <- lengths(res_code)
+  qi <- rep(seq_len(n_q), n_hits)
+  rc <- unlist(res_code, use.names = FALSE)
+  type <- rep(res_type, n_hits)
 
   # Ref row for each matched code. If a code is duplicated in the reference,
-  # the last record wins (as in the lookup maps).
+  # the last record wins.
   ri <- length(B$code) + 1L - match(rc, rev(B$code))
 
   na_empty <- function(x) {
