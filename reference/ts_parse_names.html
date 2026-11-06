@@ -69,7 +69,8 @@ author, etc).</p>
 <span>  <span class="va">taxa</span>,</span>
 <span>  tbl_out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_tbl_out"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  strip_qualifiers <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  strip_qualifiers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  exclude_placeholders <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -102,6 +103,15 @@ Also strips <code>s.l.</code>/<code>sensu lato</code> and <code>s.str.</code>/<c
 separate circumscription convention not covered by that review but
 included here as a taxastand extension. Default: <code>FALSE</code>, to preserve
 prior behavior.</p></dd>
+
+
+<dt id="arg-exclude-placeholders">exclude_placeholders<a class="anchor" aria-label="anchor" href="#arg-exclude-placeholders"></a></dt>
+<dd><p>Logical; if <code>TRUE</code> (default), names that are
+placeholders for an identification that stopped above species rank (<code>sp.</code>,
+<code>spp.</code>, <code>indet.</code>, <code>stet.</code>, <code>inc.</code>, and their long forms; see References) are
+excluded from the results with a warning, like names that cannot be parsed.
+Otherwise <code>"Genus sp."</code> would be parsed as if <code>"sp"</code> were a real specific
+epithet and could then be fuzzy-matched to unrelated species.</p></dd>
 
 </dl></div>
     <div id="value">
