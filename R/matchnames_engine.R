@@ -62,7 +62,6 @@
   ssp <- clean(ssp)
   a <- clean(a)
 
-  data <- paste(xg, g, xs, s, st, ssp, a, sep = "|")
   exact <- .tt_cleanspaces(paste(xg, g, xs, s, st, ssp, a))
 
   namex <- paste0(xg, g, xs, s, st, ssp) # all parts, no author
@@ -80,7 +79,8 @@
   basexin <- tt_depunct(paste0(namex, a_bx))
 
   list(
-    code = code, data = data, genus = g,
+    code = code, genus = g,
+    fields = list(xg = xg, g = g, xs = xs, s = s, st = st, ssp = ssp, a = a),
     no_auth = (a == ""), auct = grepl("^auct\\.?$", a),
     exact = exact, punct = punct, noauth = noauth, cfonly = cfonly,
     irank = irank, basio = basio, `in` = in_, exin = exin, basexin = basexin
@@ -132,15 +132,27 @@
   }
 }
 
+# Name of each parsed-name field, in record order, as used in the output
+# columns (suffixed `_query` / `_ref`)
+.tt_field_suffixes <- c(
+  "genus_hybrid_sign", "genus_name", "species_hybrid_sign", "specific_epithet",
+  "infraspecific_rank", "infraspecific_epithet", "author"
+)
+
 #' Match taxonomic names
 #'
-#' Faithful pure-R port of the non-interactive all-fuzzy matching mode.
+#' Non-interactive all-fuzzy matching of parsed query names against parsed
+#' reference names.
 #'
 #' @param query_lines,ref_lines Character vectors of parsed `id|...` lines.
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
 #' @param match_no_auth Logical; the `-1` option (NOAUTHONE).
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).
-#' @return Character vector of 17-field `|`-delimited result lines.
+#' @return Data frame of character columns, one row per match (a query with
+#'   several fuzzy hits gets several rows; an unmatched query gets one row with
+#'   `match_type` "no_match"), with the 17 columns documented in `ts_match_names()` (`id_query`, `id_ref`,
+#'   `match_type`, then the seven parsed name fields suffixed `_query` and
+#'   `_ref`). Empty values are `NA`.
 #' @keywords internal
 #' @importFrom stats setNames
 #' @importFrom utils adist
@@ -161,9 +173,8 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
   Bmap <- lapply(methods, function(m) .tt_build_map(B[[m]], B$code))
   names(Bmap) <- methods
 
-  # noauth-key counts (XNA) and code -> data lookup
+  # noauth-key counts (XNA)
   Bxna <- table(B$noauth)
-  Bdata <- .tt_build_map(B$code, B$data)
 
   # Genus -> ascending-sorted ref codes (Gh, iterated in @ind_str_asc order)
   Bgenus_codes <- lapply(split(B$code, B$genus), function(x) sort(unique(x)))
@@ -171,23 +182,13 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
   # punct keyed by code for fuzzy candidate lookup
   Bpunct_by_code <- setNames(B$punct, B$code)
 
-  out <- vector("list", length(A$code))
-
-  # emit a standard 17-field line: qcode|rcode|type|<qdata>|<rdata>
-  line_match <- function(qi, rcode, type) {
-    paste0(
-      A$code[qi], "|", rcode, "|", type, "|",
-      A$data[qi], "|", .tt_get(Bdata, rcode)
-    )
-  }
-  line_nomatch <- function(qi) {
-    paste0(A$code[qi], "||no_match|", A$data[qi], "|||||||")
-  }
+  # Each test returns NULL (no match) or list(codes = <ref codes>, type = <chr>)
+  hit <- function(codes, type) list(codes = codes, type = type)
 
   # test_eq: query[method] key present in B[method]
   test_eq <- function(qi, method, outtype) {
     rc <- .tt_get(Bmap[[method]], A[[method]][qi])
-    if (!is.na(rc) && rc != A$code[qi]) line_match(qi, rc, outtype) else NULL
+    if (!is.na(rc) && rc != A$code[qi]) hit(rc, outtype) else NULL
   }
   # test_na: noauth key unique in B
   test_na <- function(qi) {
@@ -195,7 +196,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
     rc <- .tt_get(Bmap[["noauth"]], key)
     cnt <- Bxna[key]
     if (!is.na(rc) && !is.na(cnt) && cnt == 1 && rc != A$code[qi]) {
-      line_match(qi, rc, "auto_noauth")
+      hit(rc, "auto_noauth")
     } else {
       NULL
     }
@@ -204,11 +205,11 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
   test_pm <- function(qi, method) {
     rc <- .tt_get(Bmap[[method]], A$punct[qi])
     if (!is.na(rc) && rc != A$code[qi]) {
-      return(line_match(qi, rc, paste0("auto_", method, "-")))
+      return(hit(rc, paste0("auto_", method, "-")))
     }
     rc <- .tt_get(Bmap[["punct"]], A[[method]][qi])
     if (!is.na(rc) && rc != A$code[qi]) {
-      return(line_match(qi, rc, paste0("auto_", method, "+")))
+      return(hit(rc, paste0("auto_", method, "+")))
     }
     NULL
   }
@@ -234,14 +235,20 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
     if (length(bnd)) {
       keep[bnd] <- .tt_amatch_trailing(qp, rp[bnd], d[bnd]) == 0L
     }
-    hit <- cand[keep]
-    if (!length(hit)) {
+    codes <- cand[keep]
+    if (!length(codes)) {
       return(NULL)
     }
-    vapply(hit, function(rc) line_match(qi, rc, "auto_fuzzy"), character(1))
+    hit(codes, "auto_fuzzy")
   }
 
-  for (qi in seq_along(A$code)) {
+  # Accumulate matches as parallel (query index, ref code, type) vectors
+  n_q <- length(A$code)
+  res_qi <- vector("list", n_q)
+  res_rc <- vector("list", n_q)
+  res_type <- vector("list", n_q)
+
+  for (qi in seq_len(n_q)) {
     res <- test_eq(qi, "exact", "exact")
     if (is.null(res)) res <- test_eq(qi, "punct", "auto_punct")
     if (is.null(res) && A$no_auth[qi] && noauthone) res <- test_na(qi)
@@ -256,19 +263,44 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
       if (cfo) {
         res <- test_eq(qi, "cfonly", "auto_cfonly")
       }
-      out[[qi]] <- if (is.null(res)) line_nomatch(qi) else res
-      next
+    } else {
+      # all-fuzzy (only if genus present in reference)
+      if (is.null(res) && A$genus[qi] %in% Bgenus_present) {
+        res <- test_allfuzzy(qi)
+      }
+      if (is.null(res) && cfo) res <- test_eq(qi, "cfonly", "auto_cfonly")
     }
 
-    # all-fuzzy (only if genus present in reference)
-    if (is.null(res) && A$genus[qi] %in% Bgenus_present) {
-      res <- test_allfuzzy(qi)
-    }
-    if (is.null(res) && cfo) res <- test_eq(qi, "cfonly", "auto_cfonly")
-
-    out[[qi]] <- if (is.null(res)) line_nomatch(qi) else res
+    if (is.null(res)) res <- hit(NA_character_, "no_match")
+    res_qi[[qi]] <- rep(qi, length(res$codes))
+    res_rc[[qi]] <- res$codes
+    res_type[[qi]] <- rep(res$type, length(res$codes))
   }
 
-  unlist(out, use.names = FALSE)
+  qi <- unlist(res_qi, use.names = FALSE)
+  rc <- unlist(res_rc, use.names = FALSE)
+  type <- unlist(res_type, use.names = FALSE)
+
+  # Ref row for each matched code. If a code is duplicated in the reference,
+  # the last record wins (as in the lookup maps).
+  ri <- length(B$code) + 1L - match(rc, rev(B$code))
+
+  na_empty <- function(x) {
+    x[!is.na(x) & x == ""] <- NA_character_
+    x
+  }
+  out <- list(
+    id_query = A$code[qi],
+    id_ref = rc,
+    match_type = type
+  )
+  for (k in seq_along(.tt_field_suffixes)) {
+    out[[paste0(.tt_field_suffixes[k], "_query")]] <- A$fields[[k]][qi]
+  }
+  for (k in seq_along(.tt_field_suffixes)) {
+    out[[paste0(.tt_field_suffixes[k], "_ref")]] <- B$fields[[k]][ri]
+  }
+  out <- lapply(out, na_empty)
+  as.data.frame(out, stringsAsFactors = FALSE)
 }
 # nolint end
