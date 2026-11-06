@@ -23,7 +23,9 @@
   query genus before parsing the reference (#43); match keys are computed
   lazily and looked up in vectorised passes instead of per-key hash maps
   (#45); and `tt_matchnames()` returns a data frame instead of delimited
-  strings (#46). Results are unchanged, except that multiple fuzzy matches to
+  strings (#46). `ts_parse_names()` is also about twice as fast, because the
+  per-row failure check and `tidyr::separate()` were replaced with vectorised
+  base R (#44). Results are unchanged, except that multiple fuzzy matches to
   one query are now returned in reference order.
 
 ## Bug fixes
