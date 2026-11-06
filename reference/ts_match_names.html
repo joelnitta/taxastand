@@ -170,7 +170,7 @@ smallest distance found (ties are all kept, so real ambiguity still shows).</p><
     <h2>Value</h2>
     <p>Dataframe with the following columns (if <code>simple</code> is <code>FALSE</code>):</p><ul><li><p>query: Query name</p></li>
 <li><p>reference: Matched reference name</p></li>
-<li><p>match_type: Type of match (for a summary of match types, see <code><a href="../articles/basics.html">vignette("basics")</a></code>)</p></li>
+<li><p>match_type: Type of match (see the "Match types" section)</p></li>
 <li><p>id_query: Unique ID of query</p></li>
 <li><p>id_ref: Unique ID of reference</p></li>
 <li><p>genus_hybrid_sign_query: Genus hybrid sign in query</p></li>
@@ -207,6 +207,47 @@ lunare". In this case, if <code>collapse_infra</code> is <code>TRUE</code>, "Ble
 be queried instead of "Blechnum lunare var. lunare". Note that the
 <code>match_type</code> will be "exact" even though the literal query and the matched
 name are different (see example below).</p>
+    </div>
+    <div id="match-types">
+    <h2>Match types</h2>
+
+
+<p>The <code>match_type</code> column says how a query was matched. Types are tried in
+the order listed below, and the first one that finds a match is reported, so
+earlier types are more certain than later ones. Always check results that
+are not <code>exact</code>.</p>
+<p><strong>Identical after normalization (safe to accept)</strong></p><ul><li><p><code>exact</code>: all parts of the name, including the author, are identical.</p></li>
+<li><p><code>auto_punct</code>: identical after ignoring differences in spaces, periods,
+capitalization, and accented or other non-ASCII characters.</p></li>
+</ul><p><strong>Differences in how the author is cited (usually safe)</strong></p><ul><li><p><code>auto_noauth</code>: query and reference both lack an author and the name is
+unique in the reference (only when <code>match_no_auth = TRUE</code>).</p></li>
+<li><p><code>auto_basio-</code>, <code>auto_basio+</code>: identical once the basionym author, e.g.
+<code>(Turcz.)</code> in <code>Cardaminopsis umbrosa (Turcz.) Czerep.</code>, is dropped from
+the reference (<code>-</code>) or the query (<code>+</code>).</p></li>
+<li><p><code>auto_in-</code>, <code>auto_in+</code>: identical once "in" elements (<code>Tagawa in Morton</code>
+becomes <code>Tagawa</code>) are dropped from the reference or the query.</p></li>
+<li><p><code>auto_ex-</code>, <code>auto_ex+</code>: as above, dropping both "in" and "ex" elements
+(<code>Willd. ex Schkuhr</code> becomes <code>Willd.</code>).</p></li>
+<li><p><code>auto_basexin</code>: identical once basionym authors and "in"/"ex" elements are
+dropped from both query and reference.</p></li>
+<li><p><code>auto_irank</code>: identical except for the infraspecific rank (e.g. <code>var.</code>
+vs. <code>subsp.</code>).</p></li>
+</ul><p><strong>Canonical-name matches (the author is ignored; check the result)</strong></p>
+<p>The canonical name is genus + specific epithet + infraspecific epithet.</p><ul><li><p><code>auto_cfonly</code>: canonical names are identical. Used automatically for
+queries without an author; for queries with an author, only when
+<code>match_canon = TRUE</code>. Several reference names can share a canonical name
+(homonyms), giving multiple hits.</p></li>
+</ul><p><strong>Fuzzy matches (misspellings; always verify)</strong></p><ul><li><p><code>auto_fuzzy</code>: query has an author; the whole name (author included) is
+within <code>max_dist</code> of a reference name.</p></li>
+<li><p><code>auto_fuzzy_canon</code>: query has no author; the canonical names are within
+<code>max_dist</code>. Which hits are returned is set by <code>fuzzy_canon_hits</code>.</p></li>
+</ul><p><strong>No match</strong></p><ul><li><p><code>no_match</code>: nothing in the reference was close enough.</p></li>
+</ul><p>Fuzzy matching is computed with the
+<a href="https://en.wikipedia.org/wiki/Levenshtein_distance" class="external-link">Levenshtein distance</a>
+(total insertions, deletions, and substitutions). The rules for authorship
+fit plants, algae, and fungi, where the basionym author is given in
+parentheses and the year is usually omitted; animal names, which normally
+include the year, may match less well.</p>
     </div>
     <div id="references">
     <h2>References</h2>
