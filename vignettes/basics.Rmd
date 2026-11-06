@@ -113,11 +113,12 @@ Here is a summary of the values taken by `match_type`:
 - `auto_ex+`: Match after excluding all *in* and *ex* elements from query.
 - `auto_basexin`: Match after excluding all basionym authors and all *in* and *ex* elements from query and reference.
 - `auto_irank`: Match where all elements agree except for infraspecific rank.
-- `auto_fuzzy`: Fuzzy match; match between scientific names allowed up to threshold given by `max_dist`, the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) including total insertions, deletions and substitutions.
-- `cfonly`: Match by "canonical form", i.e., genus plus specific epithet plus infraspecific epithet (if present), not including the infraspecific specifier ("subsp.", etc.).
+- `auto_fuzzy`: Fuzzy match for a query that has an author; match between whole scientific names (including the author) allowed up to the threshold given by `max_dist`, the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) including total insertions, deletions and substitutions.
+- `auto_fuzzy_canon`: Fuzzy match for a query that has **no** author; match between "canonical forms" (see `auto_cfonly`) allowed up to the threshold given by `max_dist`. The author string is ignored, so it does not count towards the distance. All reference names within the threshold are returned.
+- `auto_cfonly`: Match by "canonical form", i.e., genus plus specific epithet plus infraspecific epithet (if present), not including the infraspecific specifier ("subsp.", etc.). This is used automatically for queries without an author; for queries with an author, it is only used if `match_canon` is `TRUE`.
 - `no_match`: No match detected.
 
-The matching algorithm will prefer match codes higher in the list; so if a name could be matched both by `auto_punct` and `auto_fuzzy`, it will be matched based on `auto_punct`[^2].
+The matching algorithm will prefer match codes higher in the list; so if a name could be matched both by `auto_punct` and `auto_fuzzy`, it will be matched based on `auto_punct`[^2]. For queries without an author, an identical canonical name (`auto_cfonly`) is preferred over a fuzzy canonical match (`auto_fuzzy_canon`).
 
 [^2]: The algorithm used by `taxastand` is optimized for plants, algae, and fungi, which vary in their [taxonomic rules](https://www.iapt-taxon.org/nomen/main.php) somewhat from animals. For example, plants include basionym authors in parentheses followed by the combination author, and typically don't include the year, whereas animals normally include the year and may not provide the combination author.
 

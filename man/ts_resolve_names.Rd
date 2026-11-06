@@ -7,13 +7,14 @@
 ts_resolve_names(
   query,
   ref_taxonomy,
-  max_dist = 10,
+  max_dist = 3,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  strip_qualifiers = FALSE
+  strip_qualifiers = FALSE,
+  fuzzy_canon_hits = c("all", "closest")
 )
 }
 \arguments{
@@ -34,7 +35,9 @@ with authorship and date information if known.
 }}
 
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
-(total insertions, deletions and substitutions). Default: 10.}
+(total insertions, deletions and substitutions). The distance is computed on
+the whole name, including the author string, after removing punctuation and
+converting to lower case. Default: 3.}
 
 \item{match_no_auth}{Logical; If no author is given in the query and the name
 (without author) occurs only once in the reference, accept the name in the
@@ -61,6 +64,14 @@ open-nomenclature qualifiers (\code{cf.}, \code{aff.}, \code{s.l.}/\verb{sensu l
 \code{s.str.}/\verb{sensu stricto}) from names before parsing. See
 \code{\link{ts_parse_names}()} and its References section. Only has an
 effect when \code{query} is a character vector. Default: \code{FALSE}.}
+
+\item{fuzzy_canon_hits}{Either \code{"all"} (default) or \code{"closest"}. Controls
+which hits are returned when a query \emph{without an author} has no identical
+canonical name in the reference and is fuzzy-matched on its canonical name
+(match type \code{auto_fuzzy_canon}). \code{"all"} returns every reference name within
+\code{max_dist}, which is the most informative but can include many unrelated
+names when epithets are short. \code{"closest"} returns only the names at the
+smallest distance found (ties are all kept, so real ambiguity still shows).}
 }
 \value{
 Dataframe; results of resolving synonyms in matched taxonomic names.

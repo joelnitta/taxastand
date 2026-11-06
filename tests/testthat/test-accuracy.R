@@ -103,12 +103,25 @@ test_that("names absent from the reference are not forced to a match", {
   expect_true(is.na(resolve_one("Cyathea medullaris Hook.")))
 })
 
-test_that("author-less query with a misspelled epithet matches (known gap)", {
-  skip("Known gap: author-less fuzzy matching, see #49")
+test_that("author-less queries are fuzzy-matched on the canonical name", {
+  # The author string must not count towards the distance
   expect_equal(
     resolve_one("Pteridium aquilinim"),
     "Pteridium aquilinum (L.) Kuhn"
   )
+  # ... and an author-less canonical match works too
+  expect_equal(
+    resolve_one("Pteridium aquilinum"),
+    "Pteridium aquilinum (L.) Kuhn"
+  )
+  expect_equal(resolve_one("Asplenium nidus"), "Asplenium nidus L.")
+})
+
+test_that("author-less canonical fuzzy matching respects max_dist", {
+  res <- suppressWarnings(
+    ts_match_names("Pteridium aquilinim", ref$scientificName, max_dist = 0)
+  )
+  expect_equal(res$match_type, "no_match")
 })
 
 test_that("misspelled genus matches (known gap)", {
@@ -136,4 +149,28 @@ test_that("a query list identical to the reference still resolves", {
   )
   expect_equal(res$resolved_name, "Asplenium nidus L.")
   expect_equal(res$match_type, "exact")
+})
+
+test_that("fuzzy_canon_hits = 'closest' resolves ambiguity from distant hits", {
+  extra <- data.frame(
+    taxonID = c("101", "102"),
+    scientificName = c("Pteridium aquilxnxm Foo", "Pteridium aquilinaxx Bar"), # distance 2, 3
+    taxonomicStatus = "accepted",
+    acceptedNameUsageID = NA,
+    stringsAsFactors = FALSE
+  )
+  ref2 <- rbind(ref, extra)
+  q <- "Pteridium aquilinim"
+  all_hits <- suppressWarnings(
+    ts_match_names(q, ref2$scientificName, max_dist = 3)
+  )
+  closest <- suppressWarnings(
+    ts_match_names(q, ref2$scientificName, max_dist = 3, fuzzy_canon_hits = "closest")
+  )
+  expect_equal(nrow(all_hits), 3)
+  expect_equal(closest$reference, "Pteridium aquilinum (L.) Kuhn")
+  expect_error(
+    ts_match_names(q, ref2$scientificName, fuzzy_canon_hits = "none"),
+    "should be one of"
+  )
 })

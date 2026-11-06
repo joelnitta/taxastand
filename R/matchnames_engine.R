@@ -15,9 +15,8 @@
 # ts_write_names: id|g_hybrid|genus|s_hybrid|species|rank|infrasp|author # nolint: commented_code_linter.
 # Output is the 17-field result format documented in ts_match_names().
 #
-# Fuzzy matching uses base adist() (Levenshtein); the original uses gawk's
-# anchored amatch(), documented in-source as equivalent to
-# levenshtein(...) <= FUZZERR. # nolint: commented_code_linter.
+# Fuzzy matching uses base adist() (Levenshtein distance); a pair is a fuzzy
+# match when the distance is <= max_dist.
 
 # Collapse internal/leading/trailing spaces (matchnames `cleanspaces`)
 .tt_cleanspaces <- function(x) {
@@ -103,34 +102,6 @@
   )
 }
 
-# For boundary fuzzy pairs (Levenshtein distance == FUZZERR), decide whether
-# gawk's amatch adds its trailing-deletion penalty. The penalty applies when
-# matching "^query$" against the reference requires deleting trailing
-# character(s) off the end of the reference, i.e. when the deletion-from-ref
-# step is the *unique* optimal final step of the alignment (no equally cheap
-# match/substitution or insertion ending). Returns an integer 0/1 per ref.
-# `full` is the precomputed adist(query, ref) for each ref.
-.tt_amatch_trailing <- function(query, refs, full) {
-  m <- nchar(query, type = "chars")
-  pm <- if (m > 0) substr(query, 1, m - 1) else ""
-  qlast <- if (m > 0) substr(query, m, m) else ""
-  out <- integer(length(refs))
-  for (k in seq_along(refs)) {
-    t <- refs[k]
-    n <- nchar(t, type = "chars")
-    if (n == 0) next
-    # deletion of the last ref char must itself be an optimal final step
-    del <- as.integer(adist(query, substr(t, 1, n - 1))) + 1L
-    if (del != full[k]) next
-    tlast <- substr(t, n, n)
-    diag <- as.integer(adist(pm, substr(t, 1, n - 1))) +
-      (if (m > 0 && qlast == tlast) 0L else 1L)
-    up <- as.integer(adist(pm, t)) + 1L
-    if (full[k] < diag && full[k] < up) out[k] <- 1L
-  }
-  out
-}
-
 # Name of each parsed-name field, in record order, as used in the output
 # columns (suffixed `_query` / `_ref`)
 .tt_field_suffixes <- c(
@@ -147,6 +118,9 @@
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
 #' @param match_no_auth Logical; the `-1` option (NOAUTHONE).
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).
+#' @param canon_closest Logical; for fuzzy canonical-name matches of queries
+#'   without an author, return only the hits at the smallest distance (ties
+#'   kept) instead of all hits within `max_dist`.
 #' @return Data frame of character columns, one row per match (a query with
 #'   several fuzzy hits gets several rows; an unmatched query gets one row with
 #'   `match_type` "no_match"), with the 17 columns documented in `ts_match_names()` (`id_query`, `id_ref`,
@@ -156,9 +130,10 @@
 #' @importFrom stats setNames
 #' @importFrom utils adist
 #' @noRd
-tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
-                          match_no_auth = FALSE, match_canon = FALSE) {
-  fuzzerr <- as.numeric(max_dist)
+tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
+                          match_no_auth = FALSE, match_canon = FALSE,
+                          canon_closest = FALSE) {
+  max_dist <- as.numeric(max_dist)
   noauthone <- isTRUE(match_no_auth)
   cfo <- isTRUE(match_canon)
 
@@ -227,32 +202,62 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
     }
   }
 
+  # genus -> ref codes, in reference order (so hit order does not depend on the
+  # arbitrary id strings or on which reference names were filtered out); built
+  # on first use
+  genus_cache <- new.env(parent = emptyenv())
+  genus_codes <- function() {
+    if (is.null(genus_cache$codes)) {
+      genus_cache$codes <- lapply(split(B$code, B$genus), unique)
+    }
+    genus_cache$codes
+  }
+
+  # test_canonfuzzy: a query without an author is compared with the reference
+  # on canonical name (genus + epithet + infraspecific epithet) so that the
+  # author string does not count towards the distance. All same-genus refs with
+  # an identical canonical name are returned ("auto_cfonly"); failing that, all
+  # within max_dist ("auto_fuzzy_canon"), or only the closest of those if
+  # `canon_closest`. Plain Levenshtein distance.
+  test_canonfuzzy <- function(idx) {
+    cf_by_code <- setNames(B$key("cfonly"), B$code)
+    qcf <- A$key("cfonly")
+    for (qi in idx) {
+      cand <- genus_codes()[[A$genus[qi]]]
+      cand <- cand[cand != A$code[qi]]
+      if (!length(cand)) next
+      d <- as.integer(adist(qcf[qi], cf_by_code[cand]))
+      if (any(d == 0L, na.rm = TRUE)) {
+        keep <- !is.na(d) & d == 0L
+        type <- "auto_cfonly"
+      } else {
+        keep <- !is.na(d) & d <= max_dist
+        if (canon_closest && any(keep)) keep <- keep & d == min(d[keep])
+        type <- "auto_fuzzy_canon"
+      }
+      if (any(keep)) {
+        res_code[[qi]] <<- cand[keep]
+        res_type[qi] <<- type
+        pending <<- setdiff(pending, qi)
+      }
+    }
+  }
+
   # test_allfuzzy: every same-genus ref within max_dist
   test_allfuzzy <- function(idx) {
-    # genus -> ref codes, in reference order (so hit order does not depend on
-    # the arbitrary id strings or on which reference names were filtered out)
-    genus_codes <- lapply(split(B$code, B$genus), unique)
     punct_by_code <- setNames(B$key("punct"), B$code)
     qpunct <- A$key("punct")
     for (qi in idx) {
-      cand <- genus_codes[[A$genus[qi]]]
+      cand <- genus_codes()[[A$genus[qi]]]
       cand <- cand[cand != A$code[qi]]
       if (!length(cand)) next
       qp <- qpunct[qi]
       rp <- punct_by_code[cand]
-      # gawk's amatch(text = ref, "^query$", FUZZERR) accepts a pair when its
-      # cost <= FUZZERR. Probing aregex directly shows the cost equals the
-      # Levenshtein distance, plus exactly 1 when the optimal alignment must
-      # delete trailing character(s) off the end of the reference to reach the
-      # "$" anchor (a pure trailing append in the reference); all other edit
-      # patterns cost the plain distance. Since the penalty is at most 1, it
-      # only changes the outcome at the boundary distance == FUZZERR.
+      # Plain Levenshtein distance on the depunctuated names. (taxon-tools'
+      # gawk amatch() adds +1 to pairs where the reference merely has extra
+      # trailing text; that quirk is intentionally not reproduced.)
       d <- as.integer(adist(qp, rp))
-      keep <- !is.na(d) & d < fuzzerr
-      bnd <- which(!is.na(d) & d == fuzzerr)
-      if (length(bnd)) {
-        keep[bnd] <- .tt_amatch_trailing(qp, rp[bnd], d[bnd]) == 0L
-      }
+      keep <- !is.na(d) & d <= max_dist
       if (any(keep)) {
         res_code[[qi]] <<- cand[keep]
         res_type[qi] <<- "auto_fuzzy"
@@ -276,10 +281,16 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 10,
     accept(auct, lookup(A$key("cfonly")[auct], "cfonly"), "auto_cfonly")
   }
 
-  # all-fuzzy (only if genus present in reference), then canonical form
+  # Fuzzy matching (only if the genus is present in the reference): queries
+  # without an author on canonical name, others on the whole name
   others <- pending[!A$auct[pending]]
-  fuzzy <- others[A$genus[others] %in% B$genus]
-  if (length(fuzzy)) test_allfuzzy(fuzzy)
+  others <- others[A$genus[others] %in% B$genus]
+  canon <- others[A$no_auth[others]]
+  if (length(canon)) test_canonfuzzy(canon)
+  whole <- others[!A$no_auth[others]]
+  if (length(whole)) test_allfuzzy(whole)
+
+  # Optional canonical-form match for anything still unmatched
   others <- pending[!A$auct[pending]]
   if (cfo && length(others)) {
     accept(others, lookup(A$key("cfonly")[others], "cfonly"), "auto_cfonly")

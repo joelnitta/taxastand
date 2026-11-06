@@ -36,7 +36,9 @@
 #' override any results from the name-matching engine. Must include columns,
 #' `query` and `match`. Can only be used if `query` is a character vector.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
-#' (total insertions, deletions and substitutions). Default: 10.
+#' (total insertions, deletions and substitutions). The distance is computed on
+#' the whole name, including the author string, after removing punctuation and
+#' converting to lower case. Default: 3.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
@@ -60,6 +62,13 @@
 #' effect when `query`/`reference` is a character vector; ignored if
 #' already-parsed data.frames are passed in. Default: `FALSE`.
 #'
+#' @param fuzzy_canon_hits Either `"all"` (default) or `"closest"`. Controls
+#' which hits are returned when a query *without an author* has no identical
+#' canonical name in the reference and is fuzzy-matched on its canonical name
+#' (match type `auto_fuzzy_canon`). `"all"` returns every reference name within
+#' `max_dist`, which is the most informative but can include many unrelated
+#' names when epithets are short. `"closest"` returns only the names at the
+#' smallest distance found (ties are all kept, so real ambiguity still shows).
 #' @return Dataframe with the following columns (if `simple` is `FALSE`):
 #' - query: Query name
 #' - reference: Matched reference name
@@ -141,14 +150,15 @@ ts_match_names <- function(
   query,
   reference,
   manual_match = NULL,
-  max_dist = 10,
+  max_dist = 3,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
   collapse_infra_exclude = NULL,
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
-  strip_qualifiers = FALSE
+  strip_qualifiers = FALSE,
+  fuzzy_canon_hits = c("all", "closest")
 ) {
   # Check input
   assertthat::assert_that(
@@ -166,6 +176,7 @@ ts_match_names <- function(
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(collapse_infra))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
+  fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
@@ -338,7 +349,8 @@ ts_match_names <- function(
     ref_lines = readLines(ref_parsed_txt),
     max_dist = max_dist,
     match_no_auth = match_no_auth,
-    match_canon = match_canon
+    match_canon = match_canon,
+    canon_closest = identical(fuzzy_canon_hits, "closest")
   )
 
   # `results` has one row per match (17 columns): id_query, id_ref, match_type,
