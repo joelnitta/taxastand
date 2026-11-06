@@ -50,9 +50,6 @@
 <li>
       <a href="../articles/basics.html">The basics</a>
     </li>
-    <li>
-      <a href="../articles/benchmark.html">Benchmark: pure R vs. taxon-tools</a>
-    </li>
   </ul>
 </li>
 <li>
@@ -136,9 +133,8 @@ and returns a dataframe:</p>
 <code>id</code> is a unique identifier attached to the name. The rest of
 the columns are <a href="https://joelnitta.github.io/taxastand/reference/ts_parse_names.html#value" class="external-link">the
 parsed components of the name</a>.</p>
-<p>Note that the <a href="https://github.com/camwebb/taxon-tools#parsenames" class="external-link">name parsing
-algorithm</a> used by <code>taxastand</code> is case-sensitive! It
-assumes that the <a href="https://en.wikipedia.org/wiki/Binomial_nomenclature#Writing_binomial_names" class="external-link">standard
+<p>Note that the name parsing algorithm used by <code>taxastand</code>
+is case-sensitive! It assumes that the <a href="https://en.wikipedia.org/wiki/Binomial_nomenclature#Writing_binomial_names" class="external-link">standard
 capitalization of scientific names</a> is being used: genus is
 capitalized, specific epithet is lower case, author is capitalized as a
 proper noun, etc. <strong>Name parsing probably won’t work without this
@@ -201,8 +197,7 @@ basionym author from the reference. <strong>It is recommended to always
 check any results that weren’t identical</strong> (<code>exact</code>)
 to verify that the matching algorithm worked correctly, especially for
 fuzzy matches (<code>auto_fuzzy</code>).</p>
-<p>Here is a summary of the values taken by <code>match_type</code> from
-<a href="https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes" class="external-link"><code>taxon-tools</code></a>:</p>
+<p>Here is a summary of the values taken by <code>match_type</code>:</p>
 <ul>
 <li>
 <code>exact</code>: Exact match to all parts of the name (genus

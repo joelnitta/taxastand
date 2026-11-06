@@ -35,9 +35,6 @@ fuzzy matching on parsed taxonomic names."><meta property="og:image" content="/l
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/basics.html">The basics</a>
     </li>
-    <li>
-      <a href="../articles/benchmark.html">Benchmark: pure R vs. taxon-tools</a>
-    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -160,7 +157,7 @@ already-parsed data.frames are passed in. Default: <code>FALSE</code>.</p></dd>
     <h2>Value</h2>
     <p>Dataframe with the following columns (if <code>simple</code> is <code>FALSE</code>):</p><ul><li><p>query: Query name</p></li>
 <li><p>reference: Matched reference name</p></li>
-<li><p>match_type: Type of match (for a summary of match types, <a href="https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes" class="external-link">see taxon-tools manual</a>)</p></li>
+<li><p>match_type: Type of match (for a summary of match types, see <code><a href="../articles/basics.html">vignette("basics")</a></code>)</p></li>
 <li><p>id_query: Unique ID of query</p></li>
 <li><p>id_ref: Unique ID of reference</p></li>
 <li><p>genus_hybrid_sign_query: Genus hybrid sign in query</p></li>
@@ -185,10 +182,7 @@ already-parsed data.frames are passed in. Default: <code>FALSE</code>.</p></dd>
 variety, author, etc).</p></li>
 <li><p>Names are fuzzily matched following taxonomic rules using the component
 parts.</p></li>
-</ol><p>For more information on rules used for matching,
-<a href="https://github.com/camwebb/taxon-tools/blob/master/doc/matchnames.md#matching-rules-and-output-codes" class="external-link">see taxon-tools manual</a>,
-which uses the same logic.</p>
-<p>Parsing is fairly fast (much faster than matching) but can take some time if
+</ol><p>Parsing is fairly fast (much faster than matching) but can take some time if
 the number of names is very large. If multiple queries will be made (e.g., to
 the same large reference database), it is recommended to first parse the
 names using <code><a href="ts_parse_names.html">ts_parse_names()</a></code>, and use the results as input to

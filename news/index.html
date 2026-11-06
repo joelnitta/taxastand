@@ -34,9 +34,6 @@
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/basics.html">The basics</a>
     </li>
-    <li>
-      <a href="../articles/benchmark.html">Benchmark: pure R vs. taxon-tools</a>
-    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -64,7 +61,8 @@
 <h2 class="page-header" data-toc-text="2.0.0.9000" id="taxastand-2009000">taxastand 2.0.0.9000<a class="anchor" aria-label="anchor" href="#taxastand-2009000"></a></h2>
 <div class="section level3">
 <h3 id="major-changes-2-0-0-9000">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-2-0-0-9000"></a></h3>
-<ul><li>Add <code>strip_qualifiers</code> argument to <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code>, <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code>, and <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code>, so that open-nomenclature qualifiers (<code>cf.</code>, <code>aff.</code>, <code>s.l.</code>/<code>sensu lato</code>, <code>s.str.</code>/<code>sensu stricto</code>) can optionally be removed from names before parsing/matching, instead of being mis-captured as the specific epithet. Off by default (<a href="https://github.com/joelnitta/taxastand/issues/40" class="external-link">#40</a>)</li>
+<ul><li><p>Design philosophy change: taxastand is no longer a strict port of taxon-tools. Goals are now to standardize names accurately (including authors), quickly, and flexibly (custom reference databases), rather than to implement taxon-tools in R. Output may diverge from taxon-tools in future releases. The docker differential test and the “pure R vs. taxon-tools” benchmark vignette were removed.</p></li>
+<li><p>Add <code>strip_qualifiers</code> argument to <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code>, <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code>, and <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code>, so that open-nomenclature qualifiers (<code>cf.</code>, <code>aff.</code>, <code>s.l.</code>/<code>sensu lato</code>, <code>s.str.</code>/<code>sensu stricto</code>) can optionally be removed from names before parsing/matching, instead of being mis-captured as the specific epithet. Off by default (<a href="https://github.com/joelnitta/taxastand/issues/40" class="external-link">#40</a>)</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-2-0-0-9000">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-0-9000"></a></h3>
