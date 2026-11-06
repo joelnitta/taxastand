@@ -51,6 +51,11 @@
 #' `s.str.`/`sensu stricto`) from names before parsing. See
 #' \code{\link{ts_parse_names}()} and its References section. Only has an
 #' effect when `query` is a character vector. Default: `FALSE`.
+#' @param exclude_placeholders Logical; exclude placeholder names such as
+#' `"Genus sp."` or `"Genus indet."` (identification stopped above species
+#' rank) with a warning, instead of matching them as if they were species. See
+#' \code{\link{ts_parse_names}()}. Only has an effect when `query` is a
+#' character vector. Default: `TRUE`.
 #'
 #' @param fuzzy_canon_hits Either `"all"` (default) or `"closest"`. Controls
 #' which hits are returned when a query *without an author* has no identical
@@ -97,6 +102,7 @@ ts_resolve_names <- function(
   collapse_infra_exclude = NULL,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
+  exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest")
 ) {
   # Check input
@@ -127,6 +133,7 @@ ts_resolve_names <- function(
       collapse_infra_exclude = collapse_infra_exclude,
       simple = TRUE,
       strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = exclude_placeholders,
       fuzzy_canon_hits = fuzzy_canon_hits
     )
   } else if (is.data.frame(query)) {

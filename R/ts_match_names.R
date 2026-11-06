@@ -111,6 +111,11 @@
 #' \code{\link{ts_parse_names}()} and its References section. Only has an
 #' effect when `query`/`reference` is a character vector; ignored if
 #' already-parsed data.frames are passed in. Default: `FALSE`.
+#' @param exclude_placeholders Logical; exclude placeholder names such as
+#' `"Genus sp."` or `"Genus indet."` (identification stopped above species
+#' rank) with a warning, instead of matching them as if they were species. See
+#' \code{\link{ts_parse_names}()}. Only has an effect when `query` is a
+#' character vector. Default: `TRUE`.
 #'
 #' @param fuzzy_canon_hits Either `"all"` (default) or `"closest"`. Controls
 #' which hits are returned when a query *without an author* has no identical
@@ -208,6 +213,7 @@ ts_match_names <- function(
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
+  exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest")
 ) {
   # Check input
@@ -306,7 +312,8 @@ ts_match_names <- function(
     # Parse the names (adds 'name' column)
     query_parsed_df <- ts_parse_names(
       query,
-      strip_qualifiers = strip_qualifiers
+      strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = exclude_placeholders
     )
   } else {
     # Or, names are already parsed
@@ -360,7 +367,11 @@ ts_match_names <- function(
     # Parse the names (adds 'name' column)
     reference <- .ts_filter_raw_reference(reference, keep_keys)
     ref_parsed_df <- if (length(reference)) {
-      ts_parse_names(reference, strip_qualifiers = strip_qualifiers)
+      ts_parse_names(
+        reference,
+        strip_qualifiers = strip_qualifiers,
+        exclude_placeholders = FALSE
+      )
     } else {
       .ts_empty_parsed_df()
     }

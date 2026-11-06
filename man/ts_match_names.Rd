@@ -16,6 +16,7 @@ ts_match_names(
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
+  exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest")
 )
 }
@@ -68,6 +69,12 @@ open-nomenclature qualifiers (\code{cf.}, \code{aff.}, \code{s.l.}/\verb{sensu l
 \code{\link{ts_parse_names}()} and its References section. Only has an
 effect when \code{query}/\code{reference} is a character vector; ignored if
 already-parsed data.frames are passed in. Default: \code{FALSE}.}
+
+\item{exclude_placeholders}{Logical; exclude placeholder names such as
+\code{"Genus sp."} or \code{"Genus indet."} (identification stopped above species
+rank) with a warning, instead of matching them as if they were species. See
+\code{\link{ts_parse_names}()}. Only has an effect when \code{query} is a
+character vector. Default: \code{TRUE}.}
 
 \item{fuzzy_canon_hits}{Either \code{"all"} (default) or \code{"closest"}. Controls
 which hits are returned when a query \emph{without an author} has no identical

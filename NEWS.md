@@ -2,6 +2,13 @@
 
 ## Major changes
 
+* **Breaking: placeholder names are excluded (#41).** Names such as
+  `"Genus sp."`, `"Genus spp."`, `"Genus indet."`, `"Genus stet."` or
+  `"Genus sp. inc."` (an identification that stopped above species rank) used
+  to be parsed with `"sp"` as the specific epithet and could be fuzzy-matched
+  to unrelated species. They are now dropped by `ts_parse_names()`,
+  `ts_match_names()` and `ts_resolve_names()` with a warning. Use the new
+  argument `exclude_placeholders = FALSE` for the old behaviour.
 * **Breaking: fuzzy matching of queries without an author (#49).** The author
   string used to count towards the edit distance, so author-less queries could
   only fuzzy-match (loosely, and only because the old default `max_dist` was
