@@ -207,10 +207,13 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # on first use
   genus_cache <- new.env(parent = emptyenv())
   genus_codes <- function() {
-    if (is.null(genus_cache$codes)) {
-      genus_cache$codes <- lapply(split(B$code, B$genus), unique)
+    if (!exists("codes", envir = genus_cache, inherits = FALSE)) {
+      assign(
+        "codes", lapply(split(B$code, B$genus), unique),
+        envir = genus_cache
+      )
     }
-    genus_cache$codes
+    get("codes", envir = genus_cache, inherits = FALSE)
   }
 
   # test_canonfuzzy: a query without an author is compared with the reference
