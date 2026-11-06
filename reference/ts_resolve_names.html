@@ -69,6 +69,7 @@ function resolves synonyms to their accepted names.</p>
 <span>  <span class="va">query</span>,</span>
 <span>  <span class="va">ref_taxonomy</span>,</span>
 <span>  max_dist <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  max_dist_genus <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_canon <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -107,6 +108,16 @@ with authorship and date information if known.</p></li>
 (total insertions, deletions and substitutions). The distance is computed on
 the whole name, including the author string, after removing punctuation and
 converting to lower case. Default: 3.</p></dd>
+
+
+<dt id="arg-max-dist-genus">max_dist_genus<a class="anchor" aria-label="anchor" href="#arg-max-dist-genus"></a></dt>
+<dd><p>Max Levenshtein distance between the genus of a query
+and a genus in the reference, for correcting misspelled genera. Only used
+for queries whose genus is not in the reference; the candidates are then the
+names in reference genera within this distance, and the whole name (or the
+canonical name, for a query without an author) must still be within
+<code>max_dist</code>. Matches have the type <code>auto_fuzzy_genus</code>. Set to 0 to turn
+genus-level fuzzy matching off. See <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: 2.</p></dd>
 
 
 <dt id="arg-match-no-auth">match_no_auth<a class="anchor" aria-label="anchor" href="#arg-match-no-auth"></a></dt>

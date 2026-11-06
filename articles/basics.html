@@ -267,6 +267,12 @@ it is only used if <code>match_canon</code> is <code>TRUE</code>.</li>
 count towards the distance. All reference names within the threshold are
 returned.</li>
 <li>
+<code>auto_fuzzy_genus</code>: Fuzzy match for a query whose genus
+is not in the reference (e.g., a misspelled genus): reference genera
+within <code>max_dist_genus</code> of the query genus are tried, and the
+rest of the name must still be within <code>max_dist</code> (the total
+distance includes the genus edits).</li>
+<li>
 <code>no_match</code>: No match detected.</li>
 </ul>
 <p>The matching algorithm will prefer match codes higher in the list; so

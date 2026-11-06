@@ -70,6 +70,7 @@ fuzzy matching on parsed taxonomic names.</p>
 <span>  <span class="va">reference</span>,</span>
 <span>  manual_match <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_dist <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  max_dist_genus <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_canon <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -112,6 +113,16 @@ override any results from the name-matching engine. Must include columns,
 (total insertions, deletions and substitutions). The distance is computed on
 the whole name, including the author string, after removing punctuation and
 converting to lower case. Default: 3.</p></dd>
+
+
+<dt id="arg-max-dist-genus">max_dist_genus<a class="anchor" aria-label="anchor" href="#arg-max-dist-genus"></a></dt>
+<dd><p>Max Levenshtein distance between the genus of a query
+and a genus in the reference, for correcting misspelled genera. Only used
+for queries whose genus is not in the reference; the candidates are then the
+names in reference genera within this distance, and the whole name (or the
+canonical name, for a query without an author) must still be within
+<code>max_dist</code>. Matches have the type <code>auto_fuzzy_genus</code>. Set to 0 to turn
+genus-level fuzzy matching off. Default: 2.</p></dd>
 
 
 <dt id="arg-match-no-auth">match_no_auth<a class="anchor" aria-label="anchor" href="#arg-match-no-auth"></a></dt>
@@ -250,6 +261,9 @@ queries without an author; for queries with an author, only when
 within <code>max_dist</code> of a reference name.</p></li>
 <li><p><code>auto_fuzzy_canon</code>: query has no author; the canonical names are within
 <code>max_dist</code>. Which hits are returned is set by <code>fuzzy_canon_hits</code>.</p></li>
+</ul><p><strong>Fuzzy genus matches (misspelled genus; always verify)</strong></p><ul><li><p><code>auto_fuzzy_genus</code>: the genus of the query is not in the reference, but is
+within <code>max_dist_genus</code> of a reference genus, and the rest of the name then
+matches within <code>max_dist</code> (the total distance includes the genus edits).</p></li>
 </ul><p><strong>No match</strong></p><ul><li><p><code>no_match</code>: nothing in the reference was close enough.</p></li>
 </ul><p>Fuzzy matching is computed with the
 <a href="https://en.wikipedia.org/wiki/Levenshtein_distance" class="external-link">Levenshtein distance</a>
