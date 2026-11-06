@@ -318,10 +318,8 @@ ts_match_names <- function(
   if (fs::file_exists(ref_parsed_txt)) fs::file_delete(ref_parsed_txt)
   ts_write_names(ref_parsed_df, ref_parsed_txt)
 
-  # Run matching (pure-R reimplementation of taxon-tools `matchnames -F`, the
-  # non-interactive all-fuzzy mode). `match_no_auth` and `match_canon`
-  # correspond to the tool's `-1` and `-c` options.
-  match_lines <- tt_matchnames(
+  # Run matching
+  results <- tt_matchnames(
     query_lines = readLines(query_parsed_txt),
     ref_lines = readLines(ref_parsed_txt),
     max_dist = max_dist,
@@ -329,50 +327,10 @@ ts_match_names <- function(
     match_canon = match_canon
   )
 
-  # Read in results
-  # Each line represents a single name from the query list (list A).
-  # Seventeen pipe-delimited ("|") fields per row:
-  #  1. User ID code in list A,
-  #  2. Code in list B (if matched),
-  #  3. Match type (see codes below),
-  #  4-10. Parsed elements of name in list A.
-  #  11-17 (in same format as name input), Parsed elements of name in list B.
-  matchnames_cols <- c(
-    "id_query",
-    "id_ref",
-    "match_type",
-    "genus_hybrid_sign_query",
-    "genus_name_query",
-    "species_hybrid_sign_query",
-    "specific_epithet_query",
-    "infraspecific_rank_query",
-    "infraspecific_epithet_query",
-    "author_query",
-    "genus_hybrid_sign_ref",
-    "genus_name_ref",
-    "species_hybrid_sign_ref",
-    "specific_epithet_ref",
-    "infraspecific_rank_ref",
-    "infraspecific_epithet_ref",
-    "author_ref"
-  )
-
-  results <- data.frame(record = match_lines)
-
-  results <- tidyr::separate(
-    data = results,
-    col = record,
-    into = matchnames_cols,
-    sep = "\\|",
-    fill = "right",
-    remove = TRUE
-  )
-
-  # Convert empty strings to NA
-  results <- dplyr::mutate(
-    results,
-    dplyr::across(dplyr::everything(), ~ dplyr::na_if(.x, ""))
-  )
+  # `results` has one row per match (17 columns): id_query, id_ref, match_type,
+  # then the parsed elements of the query name (genus hybrid sign, genus,
+  # species hybrid sign, specific epithet, infraspecific rank, infraspecific
+  # epithet, author), then the same for the reference name.
 
   # Add back in the original search terms (query and reference)
   results <- dplyr::left_join(
