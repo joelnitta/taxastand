@@ -152,80 +152,91 @@ ts_resolve_names <- function(
   }
 
   # Classify results of matching
-  match_results_classified <-
-    match_results %>%
-    ts_classify_result() %>%
-    dplyr::select(query, reference, match_type, result_type) %>%
-    dplyr::left_join(ref_taxonomy, by = c(reference = "scientificName"))
+  match_results_classified <- ts_classify_result(match_results)
+  match_results_classified <- match_results_classified[
+    , c("query", "reference", "match_type", "result_type")
+  ]
+  ref_info <- data.frame(
+    scientificName = ref_taxonomy$scientificName,
+    taxonID = ref_taxonomy$taxonID,
+    acceptedNameUsageID = ref_taxonomy$acceptedNameUsageID,
+    taxonomicStatus = ref_taxonomy$taxonomicStatus,
+    stringsAsFactors = FALSE
+  )
+  match_results_classified <- .ts_join(
+    match_results_classified, ref_info, "reference", "scientificName"
+  )
+  aid <- match_results_classified$acceptedNameUsageID
+  tid <- match_results_classified$taxonID
 
   # Separate out single matches to an accepted name (success type 1)
-  accepted_single_match <-
-    match_results_classified %>%
-    # consider accepted names have either no acceptedNameUsageID or acceptedNameUsageID is same as taxonID
-    dplyr::filter(
-      (is.na(acceptedNameUsageID) |
-        acceptedNameUsageID == "" |
-        taxonID == acceptedNameUsageID) &
-        result_type == "single_match"
-    ) %>%
-    dplyr::select(
-      query,
-      resolved_name = reference,
-      matched_name = reference,
-      resolved_status = taxonomicStatus,
-      matched_status = taxonomicStatus,
-      match_type
-    )
+  # consider accepted names have either no acceptedNameUsageID or
+  # acceptedNameUsageID is same as taxonID
+  is_accepted <- (is.na(aid) | aid == "" | tid == aid) &
+    match_results_classified$result_type == "single_match"
+  accepted <- match_results_classified[is_accepted %in% TRUE, , drop = FALSE]
+  accepted_single_match <- data.frame(
+    query = accepted$query,
+    resolved_name = accepted$reference,
+    matched_name = accepted$reference,
+    resolved_status = accepted$taxonomicStatus,
+    matched_status = accepted$taxonomicStatus,
+    match_type = accepted$match_type,
+    stringsAsFactors = FALSE
+  )
 
   # Separate out matches to a single synonym (success type 2)
-  accepted_single_synonyms <-
-    match_results_classified %>%
-    # Consider synonym anything with acceptedNameUsageID not matching taxonID
-    dplyr::filter(!is.na(acceptedNameUsageID)) %>%
-    dplyr::filter(acceptedNameUsageID != "") %>%
-    dplyr::filter(acceptedNameUsageID != taxonID) %>%
-    # Join resolved names via synonym
-    dplyr::left_join(
-      dplyr::select(
-        ref_taxonomy,
-        taxonID,
-        resolved_name = scientificName,
-        resolved_status = taxonomicStatus
-      ),
-      by = c(acceptedNameUsageID = "taxonID")
-    ) %>%
-    dplyr::select(
-      query,
-      resolved_name,
-      matched_name = reference,
-      resolved_status,
-      matched_status = taxonomicStatus,
-      match_type
-    ) %>%
-    dplyr::group_by(query) %>%
-    # Add count of number of resolved, accepted names per query
-    dplyr::mutate(n = dplyr::n_distinct(resolved_name)) %>%
-    dplyr::ungroup() %>%
-    # Only keep those that resolve to the same name
-    dplyr::filter(n == 1) %>%
-    dplyr::select(-n)
+  # Consider synonym anything with acceptedNameUsageID not matching taxonID
+  is_syn <- !is.na(aid) & aid != "" & aid != tid
+  syn <- match_results_classified[is_syn %in% TRUE, , drop = FALSE]
+  syn <- .ts_join(
+    syn,
+    data.frame(
+      acceptedNameUsageID = ref_info$taxonID,
+      resolved_name = ref_taxonomy$scientificName,
+      resolved_status = ref_taxonomy$taxonomicStatus,
+      stringsAsFactors = FALSE
+    ),
+    "acceptedNameUsageID", "acceptedNameUsageID"
+  )
+  # Count of number of resolved, accepted names per query; only keep those
+  # that resolve to the same name
+  n_resolved <- ave(
+    as.integer(factor(syn$resolved_name, exclude = NULL)),
+    syn$query,
+    FUN = function(z) length(unique(z))
+  )
+  syn <- syn[n_resolved == 1, , drop = FALSE]
+  accepted_single_synonyms <- data.frame(
+    query = syn$query,
+    resolved_name = syn$resolved_name,
+    matched_name = syn$reference,
+    resolved_status = syn$resolved_status,
+    matched_status = syn$taxonomicStatus,
+    match_type = syn$match_type,
+    stringsAsFactors = FALSE
+  )
 
   # Combine name resolution successes
-  success <- dplyr::bind_rows(accepted_single_match, accepted_single_synonyms)
+  success <- rbind(accepted_single_match, accepted_single_synonyms)
 
   # Anything else is a failure
-  failure <-
-    match_results_classified %>%
-    dplyr::select(
-      query,
-      match_type,
-      matched_status = taxonomicStatus,
-      matched_name = reference
-    ) %>%
-    dplyr::anti_join(success, by = "query")
+  failure <- match_results_classified[
+    !match_results_classified$query %in% success$query, ,
+    drop = FALSE
+  ]
+  failure <- data.frame(
+    query = failure$query,
+    resolved_name = rep(NA_character_, nrow(failure)),
+    matched_name = failure$reference,
+    resolved_status = rep(NA_character_, nrow(failure)),
+    matched_status = failure$taxonomicStatus,
+    match_type = failure$match_type,
+    stringsAsFactors = FALSE
+  )
 
   # Combine into final results
-  results_raw <- dplyr::bind_rows(success, failure)
+  results_raw <- rbind(success, failure)
   assertthat::assert_that(
     all(results_raw$query %in% match_results$query),
     msg = "query values in results must all be present in match_results"
@@ -234,19 +245,17 @@ ts_resolve_names <- function(
     all(match_results$query %in% results_raw$query),
     msg = "query values in match_results must all be present in results"
   )
-  results <- results_raw %>%
-    dplyr::select(
-      query,
-      resolved_name,
-      matched_name,
-      resolved_status,
-      matched_status,
-      match_type
+  results <- results_raw[
+    , c(
+      "query", "resolved_name", "matched_name", "resolved_status",
+      "matched_status", "match_type"
     )
+  ]
+  rownames(results) <- NULL
 
   # Return as tibble or dataframe
   if (isTRUE(tbl_out)) {
-    return(tibble::as_tibble(results))
+    return(.ts_as_tibble(results))
   }
 
   results

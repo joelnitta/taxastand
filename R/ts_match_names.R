@@ -304,24 +304,16 @@ ts_match_names <- function(
     # Optional: for manual matches, use matched name instead of query
     # to generate exact match
     if (!is.null(manual_match)) {
-      manual_replacement_df <-
-        data.frame(
-          query_original = query
-        ) |>
-        dplyr::left_join(
-          dplyr::select(
-            manual_match,
-            query_original = query,
-            query_new = match
-          ),
-          by = "query_original",
-          relationship = "one-to-one"
-        ) |>
-        dplyr::mutate(
-          query_new = dplyr::coalesce(query_new, query_original)
-        )
-      query <- manual_replacement_df$query_new |>
-        unique()
+      manual_replacement_df <- data.frame(
+        query_original = query,
+        stringsAsFactors = FALSE
+      )
+      manual_replacement_df$query_new <- ifelse(
+        is.na(match(query, manual_match$query)),
+        query,
+        manual_match$match[match(query, manual_match$query)]
+      )
+      query <- unique(manual_replacement_df$query_new)
     }
     # Parse the names (adds 'name' column)
     query_parsed_df <- ts_parse_names(
@@ -353,11 +345,15 @@ ts_match_names <- function(
     query_parsed_df$infraspecific_rank[query_parsed_df$same_infra_species] <- NA
     query_parsed_df$same_infra_species <- NULL
     # Account for duplicates created after collapsing names: drop them
-    query_parsed_df <- add_namestring(query_parsed_df) |>
-      dplyr::group_by(namestring) |>
-      dplyr::mutate(key_id = dplyr::first(id)) |>
-      dplyr::ungroup()
-    id_map <- dplyr::select(query_parsed_df, id_query = key_id, id)
+    query_parsed_df <- add_namestring(query_parsed_df)
+    # First id with the same name string stands for all of them
+    query_parsed_df$key_id <-
+      query_parsed_df$id[match(query_parsed_df$namestring, query_parsed_df$namestring)]
+    id_map <- data.frame(
+      id_query = query_parsed_df$key_id,
+      id = query_parsed_df$id,
+      stringsAsFactors = FALSE
+    )
     query_parsed_df <- query_parsed_df[
       !duplicated(query_parsed_df$namestring),
     ]
@@ -369,7 +365,7 @@ ts_match_names <- function(
     pattern = digest::digest(query),
     fileext = ".txt"
   )
-  if (fs::file_exists(query_parsed_txt)) fs::file_delete(query_parsed_txt)
+  if (file.exists(query_parsed_txt)) unlink(query_parsed_txt)
   ts_write_names(query_parsed_df, query_parsed_txt)
 
   # Only reference names in a query genus can match (see R/genus_filter.R), so
@@ -422,7 +418,7 @@ ts_match_names <- function(
     pattern = digest::digest(reference),
     fileext = ".txt"
   )
-  if (fs::file_exists(ref_parsed_txt)) fs::file_delete(ref_parsed_txt)
+  if (file.exists(ref_parsed_txt)) unlink(ref_parsed_txt)
   ts_write_names(ref_parsed_df, ref_parsed_txt)
 
   # Run matching
@@ -442,70 +438,54 @@ ts_match_names <- function(
   # epithet, author), then the same for the reference name.
 
   # Add back in the original search terms (query and reference)
-  results <- dplyr::left_join(
-    results,
-    dplyr::select(query_parsed_df, id_query = id, query = name),
-    by = "id_query"
-  )
-
-  results <- dplyr::left_join(
-    results,
-    dplyr::select(ref_parsed_df, id_ref = id, reference = name),
-    by = "id_ref"
-  )
-
-  results <- dplyr::select(
-    results,
-    query,
-    reference,
-    match_type,
-    dplyr::everything()
-  )
+  results$query <- query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
+  results$reference <- ref_parsed_df$name[match(results$id_ref, ref_parsed_df$id)]
+  .front <- function(df) {
+    df[, c("query", "reference", "match_type", setdiff(
+      colnames(df), c("query", "reference", "match_type")
+    ))]
+  }
+  results <- .front(results)
 
   # Add back in names that were duplicated due to collapsed infrasp names
   if (isTRUE(collapse_infra)) {
-    results <-
-      dplyr::select(
-        query_parsed_df_original,
-        query = name,
-        id
-      ) |>
-      dplyr::left_join(id_map, by = "id") |>
-      dplyr::left_join(
-        dplyr::select(results, -query),
-        by = "id_query"
-      ) |>
-      dplyr::select(-id) |>
-      dplyr::select(query, reference, match_type, dplyr::everything())
+    results_unexpanded <- results[, setdiff(colnames(results), "query")]
+    results <- data.frame(
+      query = query_parsed_df_original$name,
+      id = query_parsed_df_original$id,
+      stringsAsFactors = FALSE
+    )
+    results <- .ts_join(results, id_map, "id", "id")
+    results <- .ts_join(
+      results, results_unexpanded, "id_query", "id_query"
+    )
+    results$id <- NULL
+    results <- .front(results)
   }
 
   # For manual matches, restore back to original query input, and specify
   # that match was made manually
   if (!is.null(manual_match)) {
-    results <-
-      manual_replacement_df |>
-      dplyr::inner_join(
-        results,
-        by = dplyr::join_by(query_new == query)
-      ) |>
-      dplyr::mutate(
-        match_type = dplyr::case_when(
-          query_original %in% manual_match$query ~ "manual",
-          .default = match_type
-        )
-      ) |>
-      dplyr::select(
-        query = query_original,
-        dplyr::everything()
-      )
+    results <- .ts_join(
+      manual_replacement_df, results, "query_new", "query",
+      inner = TRUE
+    )
+    results$match_type <- ifelse(
+      results$query_original %in% manual_match$query,
+      "manual",
+      results$match_type
+    )
+    results$query <- results$query_original
+    results$query_original <- NULL
+    results <- results[, c("query", setdiff(colnames(results), "query"))]
   }
 
   if (simple) {
-    results <- dplyr::select(results, query, reference, match_type)
+    results <- results[, c("query", "reference", "match_type")]
   }
 
   if (isTRUE(tbl_out)) {
-    return(tibble::as_tibble(results))
+    return(.ts_as_tibble(results))
   }
 
   results

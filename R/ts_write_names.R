@@ -30,22 +30,22 @@ ts_write_names <- function(df, path) {
   )
   assertthat::assert_that(
     isTRUE(all(tt_col_names %in% colnames(df))),
-    msg = glue::glue(
-      "df must include the following columns: {paste(tt_col_names, collapse = ', ')}"
+    msg = paste0(
+      "df must include the following columns: ",
+      paste(tt_col_names, collapse = ", ")
     )
   )
 
-  # Replace NA values with ""
-  df <- dplyr::mutate(
-    df,
-    dplyr::across(dplyr::everything(), ~ tidyr::replace_na(., ""))
-  )
-
-  # Subset to only taxon-tools columns, in order
-  df <- df[, tt_col_names]
+  # Subset to only taxon-tools columns, in order; replace NA values with ""
+  df <- as.data.frame(df)[, tt_col_names]
+  df[] <- lapply(df, function(x) {
+    x <- as.character(x)
+    x[is.na(x)] <- ""
+    x
+  })
 
   # taxon-tools uses pipe as separator
-  df <- tidyr::unite(df, col = "text", dplyr::all_of(tt_col_names), sep = "|")
+  df$text <- do.call(paste, c(unname(as.list(df[, tt_col_names])), sep = "|"))
 
   # write out text
   writeLines(df$text, path)
