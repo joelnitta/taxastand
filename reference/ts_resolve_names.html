@@ -70,6 +70,7 @@ function resolves synonyms to their accepted names.</p>
 <span>  <span class="va">ref_taxonomy</span>,</span>
 <span>  max_dist <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  max_dist_genus <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  transpositions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_canon <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -118,6 +119,14 @@ names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
 <code>max_dist</code>. Matches have the type <code>auto_fuzzy_genus</code>. Set to 0 to turn
 genus-level fuzzy matching off. See <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: 2.</p></dd>
+
+
+<dt id="arg-transpositions">transpositions<a class="anchor" aria-label="anchor" href="#arg-transpositions"></a></dt>
+<dd><p>Logical; count a swap of two adjacent letters (e.g.
+<code>Qurecus</code> for <code>Quercus</code>, a common typing error) as one edit instead of two
+when computing fuzzy-match distances (optimal string alignment distance
+rather than plain Levenshtein distance). Set to <code>FALSE</code> for plain
+Levenshtein distance, which is somewhat faster. See <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-match-no-auth">match_no_auth<a class="anchor" aria-label="anchor" href="#arg-match-no-auth"></a></dt>

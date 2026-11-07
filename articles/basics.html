@@ -251,8 +251,10 @@ infraspecific rank.</li>
 <code>auto_fuzzy</code>: Fuzzy match for a query that has an author;
 match between whole scientific names (including the author) allowed up
 to the threshold given by <code>max_dist</code>, the <a href="https://en.wikipedia.org/wiki/Levenshtein_distance" class="external-link">Levenshtein
-distance</a> including total insertions, deletions and
-substitutions.</li>
+distance</a> including total insertions, deletions and substitutions
+(with <code>transpositions = TRUE</code>, a swap of two adjacent letters
+counts as one edit instead of two). The distance of each fuzzy hit is
+given in the <code>dist</code> column of the full output.</li>
 <li>
 <code>auto_cfonly</code>: Match by “canonical form”, i.e., genus
 plus specific epithet plus infraspecific epithet (if present), not
