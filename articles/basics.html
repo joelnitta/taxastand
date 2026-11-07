@@ -248,6 +248,16 @@ reference.</li>
 <code>auto_irank</code>: Match where all elements agree except for
 infraspecific rank.</li>
 <li>
+<code>auto_orthvar</code>: Match after folding standard Latin
+spelling variants in the epithets together
+(<code>ae</code>/<code>oe</code> = <code>e</code>, <code>y</code> =
+<code>i</code>, <code>ph</code> = <code>f</code>, <code>rh</code> =
+<code>r</code>, <code>th</code> = <code>t</code>, final <code>ii</code>
+= <code>i</code>), e.g., <code>sylvestris</code>
+vs. <code>silvestris</code>. For queries without an author, canonical
+names are compared. Occasionally this merges epithets that are genuinely
+different.</li>
+<li>
 <code>auto_fuzzy</code>: Fuzzy match for a query that has an author;
 match between whole scientific names (including the author) allowed up
 to the threshold given by <code>max_dist</code>, the <a href="https://en.wikipedia.org/wiki/Levenshtein_distance" class="external-link">Levenshtein

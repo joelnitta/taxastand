@@ -268,6 +268,12 @@ vs. <code>subsp.</code>).</p></li>
 queries without an author; for queries with an author, only when
 <code>match_canon = TRUE</code>. Several reference names can share a canonical name
 (homonyms), giving multiple hits.</p></li>
+</ul><p><strong>Latin spelling variants (check the result)</strong></p><ul><li><p><code>auto_orthvar</code>: identical once standard Latin orthographic variants in the
+epithets are folded together: <code>ae</code>/<code>oe</code> = <code>e</code>, <code>y</code> = <code>i</code>, <code>ph</code> = <code>f</code>,
+<code>rh</code> = <code>r</code>, <code>th</code> = <code>t</code>, and a final <code>ii</code> = <code>i</code> (e.g. <code>sylvestris</code> and
+<code>silvestris</code>, <code>caerulea</code> and <code>coerulea</code>). For queries without an author,
+canonical names are compared. This can occasionally merge epithets that
+are genuinely different.</p></li>
 </ul><p><strong>Fuzzy matches (misspellings; always verify)</strong></p><ul><li><p><code>auto_fuzzy</code>: query has an author; the whole name (author included) is
 within <code>max_dist</code> of a reference name.</p></li>
 <li><p><code>auto_fuzzy_canon</code>: query has no author; the canonical names are within
