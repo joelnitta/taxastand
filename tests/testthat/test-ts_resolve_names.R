@@ -37,3 +37,13 @@ test_that("strip_qualifiers = TRUE resolves a name with an open-nomenclature qua
   )
   expect_equal(resolved$resolved_name, "Crepidomanes minutum (Bl.) K. Iwats.")
 })
+
+test_that("ts_resolve_names validates collapse_infra_exclude", {
+  data(filmy_taxonomy)
+  expect_error(
+    ts_resolve_names(
+      "Gonocormus minutum", filmy_taxonomy, collapse_infra_exclude = 1
+    ),
+    "character vector"
+  )
+})
