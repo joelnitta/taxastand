@@ -8,3 +8,6 @@ docs
 inst/doc
 /doc/
 /Meta/
+
+# Local output of data-raw/benchmark-vs-taxify.R
+data-raw/benchmark-results/
