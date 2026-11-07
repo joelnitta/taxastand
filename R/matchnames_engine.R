@@ -215,267 +215,300 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
                           match_no_auth = FALSE, match_canon = FALSE,
                           canon_closest = FALSE, max_dist_genus = 0,
                           transpositions = FALSE) {
-  max_dist <- as.numeric(max_dist)
-  max_dist_genus <- as.numeric(max_dist_genus)
-  noauthone <- isTRUE(match_no_auth)
-  cfo <- isTRUE(match_canon)
+  m <- .tt_new_match(
+    A = .tt_record_keys(query_lines),
+    B = .tt_record_keys(ref_lines),
+    max_dist = as.numeric(max_dist),
+    max_dist_genus = as.numeric(max_dist_genus),
+    canon_closest = canon_closest,
+    transpositions = transpositions
+  )
+  A <- m$A
+  B <- m$B
 
-  B <- .tt_record_keys(ref_lines)
-  A <- .tt_record_keys(query_lines)
-  n_q <- length(A$code)
-
-  # Per query: matched ref code(s) and match type, filled in as tests succeed.
-  # `pending` holds the queries not yet matched.
-  res_code <- vector("list", n_q)
-  res_type <- rep(NA_character_, n_q)
-  res_dist <- vector("list", n_q)
-  pending <- seq_len(n_q)
-
-  # Ref code whose `method` key equals each of `qkeys` (NA if none). If a key
-  # occurs more than once in the reference, the last record wins.
-  lookup <- function(qkeys, method) {
-    bk <- B$key(method)
-    B$code[length(bk) + 1L - match(qkeys, rev(bk))]
-  }
-
-  # Accept matches (not to the query itself) for queries `idx`
-  accept <- function(idx, rc, type) {
-    ok <- !is.na(rc) & rc != A$code[idx]
-    if (any(ok)) {
-      res_code[idx[ok]] <<- as.list(rc[ok])
-      res_type[idx[ok]] <<- type
-      pending <<- setdiff(pending, idx[ok])
-    }
-  }
-
-  # test_eq: query[method] key present in B[method]
-  test_eq <- function(method, outtype) {
-    idx <- pending
-    if (length(idx)) accept(idx, lookup(A$key(method)[idx], method), outtype)
-  }
-
-  # test_na: noauth key unique in B
-  test_na <- function() {
-    idx <- pending[A$no_auth[pending]]
-    if (!length(idx)) {
-      return(invisible())
-    }
-    bk <- B$key("noauth")
-    u <- unique(bk)
-    counts <- tabulate(match(bk, u), length(u))
-    qk <- A$key("noauth")[idx]
-    rc <- lookup(qk, "noauth")
-    rc[is.na(counts[match(qk, u)]) | counts[match(qk, u)] != 1L] <- NA
-    accept(idx, rc, "auto_noauth")
-  }
-
-  # test_pm: plus/minus variants using punct on the opposite side
-  test_pm <- function(method) {
-    idx <- pending
-    if (!length(idx)) {
-      return(invisible())
-    }
-    accept(
-      idx, lookup(A$key("punct")[idx], method), paste0("auto_", method, "-")
-    )
-    idx <- pending
-    if (length(idx)) {
-      accept(
-        idx, lookup(A$key(method)[idx], "punct"), paste0("auto_", method, "+")
-      )
-    }
-  }
-
-  # genus -> reference rows (one per distinct code), in reference order (so hit
-  # order does not depend on the arbitrary id strings or on which reference
-  # names were filtered out); built on first use
-  genus_cache <- new.env(parent = emptyenv())
-  genus_rows <- function() {
-    if (!exists("rows", envir = genus_cache, inherits = FALSE)) {
-      first <- !duplicated(B$code)
-      assign(
-        "rows", split(which(first), B$genus[first]),
-        envir = genus_cache
-      )
-    }
-    get("rows", envir = genus_cache, inherits = FALSE)
-  }
-
-  # Edit distance between query key `q` and reference keys `r`: Levenshtein
-  # (adist), then, if `transpositions`, lowered by one per swap of two adjacent
-  # letters (optimal string alignment). A swap needs a swapped bigram of `q` to
-  # occur in `r`; with k such bigrams, OSA >= Levenshtein - k. The exact (slow)
-  # calculation therefore only runs on pairs where a swap could matter: a
-  # swapped bigram is present, and OSA could be within max_dist.
-  fuzzy_dist <- function(q, r) {
-    d <- as.integer(adist(q, r))
-    if (!transpositions || is.na(q) || nchar(q) < 2L) {
-      return(d)
-    }
-    ch <- strsplit(q, "", fixed = TRUE)[[1]]
-    n <- length(ch)
-    swapped <- unique(paste0(ch[-1], ch[-n])[ch[-1] != ch[-n]])
-    todo <- which(!is.na(d) & d >= 2L & d <= 2 * max_dist)
-    if (length(swapped) && length(todo)) {
-      rt <- r[todo]
-      k <- 0L
-      for (bg in swapped) k <- k + grepl(bg, rt, fixed = TRUE)
-      todo <- todo[k >= 1L & d[todo] - k <= max_dist]
-      for (i in todo) d[i] <- .tt_osa(ch, r[i])
-    }
-    d
-  }
-
-  # test_canonfuzzy: a query without an author is compared with the reference
-  # on canonical name (genus + epithet + infraspecific epithet) so that the
-  # author string does not count towards the distance. All same-genus refs with
-  # an identical canonical name are returned ("auto_canon"); failing that, all
-  # within max_dist ("auto_fuzzy_canon"), or only the closest of those if
-  # `canon_closest`.
-  test_canonfuzzy <- function(idx) {
-    rcf <- B$key("canon")
-    qcf <- A$key("canon")
-    orth <- NULL # canonical orthvar keys, built when first needed
-    for (qi in idx) {
-      rows <- genus_rows()[[A$genus[qi]]]
-      rows <- rows[B$code[rows] != A$code[qi]]
-      if (!length(rows)) next
-      cand <- B$code[rows]
-      d <- fuzzy_dist(qcf[qi], rcf[rows])
-      if (any(d == 0L, na.rm = TRUE)) {
-        keep <- !is.na(d) & d == 0L
-        type <- "auto_canon"
-      } else {
-        if (is.null(orth)) {
-          orth <- list(q = A$key("canonorth"), r = B$key("canonorth"))
-        }
-        same <- !is.na(orth$r[rows]) & orth$r[rows] == orth$q[qi]
-        if (any(same)) {
-          keep <- same
-          type <- "auto_orthvar"
-        } else {
-          keep <- !is.na(d) & d <= max_dist
-          if (canon_closest && any(keep)) keep <- keep & d == min(d[keep])
-          type <- "auto_fuzzy_canon"
-        }
-      }
-      if (any(keep)) {
-        res_code[[qi]] <<- cand[keep]
-        res_type[qi] <<- type
-        if (type == "auto_fuzzy_canon") res_dist[[qi]] <<- d[keep]
-        pending <<- setdiff(pending, qi)
-      }
-    }
-  }
-
-  # test_allfuzzy: every same-genus ref within max_dist
-  test_allfuzzy <- function(idx) {
-    rpunct <- B$key("punct")
-    qpunct <- A$key("punct")
-    for (qi in idx) {
-      rows <- genus_rows()[[A$genus[qi]]]
-      rows <- rows[B$code[rows] != A$code[qi]]
-      if (!length(rows)) next
-      cand <- B$code[rows]
-      qp <- qpunct[qi]
-      rp <- rpunct[rows]
-      # Distance on the depunctuated names
-      d <- fuzzy_dist(qp, rp)
-      keep <- !is.na(d) & d <= max_dist
-      if (any(keep)) {
-        res_code[[qi]] <<- cand[keep]
-        res_type[qi] <<- "auto_fuzzy"
-        res_dist[[qi]] <<- d[keep]
-        pending <<- setdiff(pending, qi)
-      }
-    }
-  }
-
-  # test_genusfuzzy: the query genus is not in the reference (typically a
-  # misspelling). Candidates are the names in reference genera within
-  # `max_dist_genus` of the query genus; they are then compared with the query
-  # as in the other fuzzy tests (author-less queries on the canonical name,
-  # others on the whole name), with the total distance, genus edits included,
-  # limited by `max_dist`. Match type "auto_fuzzy_genus".
-  test_genusfuzzy <- function(idx) {
-    ref_genera <- unique(B$genus)
-    ref_genera_key <- tt_depunct(ref_genera)
-    keys <- list(
-      canon = list(q = A$key("canon"), r = B$key("canon")),
-      whole = list(q = A$key("punct"), r = B$key("punct"))
-    )
-    near <- list()
-    for (qi in idx) {
-      qg <- A$genus[qi]
-      if (is.null(near[[qg]])) {
-        d <- as.integer(adist(tt_depunct(qg), ref_genera_key))
-        near[[qg]] <- ref_genera[!is.na(d) & d <= max_dist_genus]
-      }
-      rows <- unique(unlist(genus_rows()[near[[qg]]], use.names = FALSE))
-      rows <- rows[B$code[rows] != A$code[qi]]
-      if (!length(rows)) next
-      cand <- B$code[rows]
-      k <- keys[[if (A$no_auth[qi]) "canon" else "whole"]]
-      d <- fuzzy_dist(k$q[qi], k$r[rows])
-      keep <- !is.na(d) & d <= max_dist
-      if (canon_closest && A$no_auth[qi] && any(keep)) {
-        keep <- keep & d == min(d[keep])
-      }
-      if (any(keep)) {
-        res_code[[qi]] <<- cand[keep]
-        res_type[qi] <<- "auto_fuzzy_genus"
-        res_dist[[qi]] <<- d[keep]
-        pending <<- setdiff(pending, qi)
-      }
-    }
-  }
-
-  test_eq("exact", "exact")
-  test_eq("punct", "auto_punct")
-  if (noauthone) test_na()
-  test_pm("basio")
-  test_pm("in")
-  test_pm("exin")
-  test_eq("basexin", "auto_basexin")
-  test_eq("irank", "auto_irank")
-  test_eq("orthvar", "auto_orthvar")
+  # Exact and rule-based stages, most certain first
+  .tt_stage_eq(m, "exact", "exact")
+  .tt_stage_eq(m, "punct", "auto_punct")
+  if (isTRUE(match_no_auth)) .tt_stage_noauth(m)
+  .tt_stage_pm(m, "basio")
+  .tt_stage_pm(m, "in")
+  .tt_stage_pm(m, "exin")
+  .tt_stage_eq(m, "basexin", "auto_basexin")
+  .tt_stage_eq(m, "irank", "auto_irank")
+  .tt_stage_eq(m, "orthvar", "auto_orthvar")
 
   # auct.: only a canonical-form match is allowed, else no_match
-  auct <- pending[A$auct[pending]]
+  cfo <- isTRUE(match_canon)
+  auct <- m$pending[A$auct[m$pending]]
   if (cfo && length(auct)) {
-    accept(auct, lookup(A$key("canon")[auct], "canon"), "auto_canon")
+    .tt_accept(m, auct, .tt_lookup(m, A$key("canon")[auct], "canon"), "auto_canon")
   }
 
   # Fuzzy matching (only if the genus is present in the reference): queries
   # without an author on canonical name, others on the whole name
-  others <- pending[!A$auct[pending]]
+  others <- m$pending[!A$auct[m$pending]]
   others <- others[A$genus[others] %in% B$genus]
   canon <- others[A$no_auth[others]]
-  if (length(canon)) test_canonfuzzy(canon)
+  if (length(canon)) .tt_stage_canonfuzzy(m, canon)
   whole <- others[!A$no_auth[others]]
-  if (length(whole)) test_allfuzzy(whole)
+  if (length(whole)) .tt_stage_allfuzzy(m, whole)
 
   # Optional canonical-form match for anything still unmatched
-  others <- pending[!A$auct[pending]]
+  others <- m$pending[!A$auct[m$pending]]
   if (cfo && length(others)) {
-    accept(others, lookup(A$key("canon")[others], "canon"), "auto_canon")
+    .tt_accept(m, others, .tt_lookup(m, A$key("canon")[others], "canon"), "auto_canon")
   }
 
   # Genus-level fuzzy matching for queries whose genus is not in the reference
-  others <- pending[!A$auct[pending]]
+  others <- m$pending[!A$auct[m$pending]]
   others <- others[!A$genus[others] %in% B$genus]
-  if (max_dist_genus > 0 && length(others)) test_genusfuzzy(others)
+  if (m$max_dist_genus > 0 && length(others)) .tt_stage_genusfuzzy(m, others)
 
-  res_code[pending] <- list(NA_character_)
-  res_type[pending] <- "no_match"
+  .tt_assemble(m)
+}
 
-  n_hits <- lengths(res_code)
+# ---- Matching state and stages -----------------------------------------------
+# The state lives in an environment `m` so the stage functions can update the
+# per-query results without `<<-`: `res_code` (list of matched ref codes),
+# `res_type`, `res_dist` (list of fuzzy distances) and `pending` (queries not
+# yet matched).
+.tt_new_match <- function(A, B, max_dist, max_dist_genus, canon_closest,
+                          transpositions) {
+  m <- new.env(parent = emptyenv())
+  m$A <- A
+  m$B <- B
+  m$max_dist <- max_dist
+  m$max_dist_genus <- max_dist_genus
+  m$canon_closest <- canon_closest
+  m$transpositions <- transpositions
+  n_q <- length(A$code)
+  m$res_code <- vector("list", n_q)
+  m$res_type <- rep(NA_character_, n_q)
+  m$res_dist <- vector("list", n_q)
+  m$pending <- seq_len(n_q)
+  m$genus_rows <- NULL
+  m
+}
+
+# Ref code whose `method` key equals each of `qkeys` (NA if none). If a key
+# occurs more than once in the reference, the last record wins.
+.tt_lookup <- function(m, qkeys, method) {
+  bk <- m$B$key(method)
+  m$B$code[length(bk) + 1L - match(qkeys, rev(bk))]
+}
+
+# Accept matches (not to the query itself) for queries `idx`
+.tt_accept <- function(m, idx, rc, type) {
+  ok <- !is.na(rc) & rc != m$A$code[idx]
+  if (any(ok)) {
+    m$res_code[idx[ok]] <- as.list(rc[ok])
+    m$res_type[idx[ok]] <- type
+    m$pending <- setdiff(m$pending, idx[ok])
+  }
+}
+
+# Record several (fuzzy) hits `codes` for query `qi`, with distances `dist`
+.tt_record_hits <- function(m, qi, codes, type, dist = NULL) {
+  m$res_code[[qi]] <- codes
+  m$res_type[qi] <- type
+  if (!is.null(dist)) m$res_dist[[qi]] <- dist
+  m$pending <- setdiff(m$pending, qi)
+}
+
+# Stage: query[method] key present in the reference
+.tt_stage_eq <- function(m, method, outtype) {
+  idx <- m$pending
+  if (length(idx)) {
+    .tt_accept(m, idx, .tt_lookup(m, m$A$key(method)[idx], method), outtype)
+  }
+}
+
+# Stage: author-less query whose noauth key is unique in the reference
+.tt_stage_noauth <- function(m) {
+  idx <- m$pending[m$A$no_auth[m$pending]]
+  if (!length(idx)) {
+    return(invisible())
+  }
+  bk <- m$B$key("noauth")
+  u <- unique(bk)
+  counts <- tabulate(match(bk, u), length(u))
+  qk <- m$A$key("noauth")[idx]
+  rc <- .tt_lookup(m, qk, "noauth")
+  rc[is.na(counts[match(qk, u)]) | counts[match(qk, u)] != 1L] <- NA
+  .tt_accept(m, idx, rc, "auto_noauth")
+}
+
+# Stage: plus/minus variants using the punct key on the opposite side
+.tt_stage_pm <- function(m, method) {
+  idx <- m$pending
+  if (!length(idx)) {
+    return(invisible())
+  }
+  .tt_accept(
+    m, idx, .tt_lookup(m, m$A$key("punct")[idx], method),
+    paste0("auto_", method, "-")
+  )
+  idx <- m$pending
+  if (length(idx)) {
+    .tt_accept(
+      m, idx, .tt_lookup(m, m$A$key(method)[idx], "punct"),
+      paste0("auto_", method, "+")
+    )
+  }
+}
+
+# genus -> reference rows (one per distinct code), in reference order (so hit
+# order does not depend on the arbitrary id strings or on which reference names
+# were filtered out); built on first use
+.tt_genus_rows <- function(m) {
+  if (is.null(m$genus_rows)) {
+    first <- !duplicated(m$B$code)
+    m$genus_rows <- split(which(first), m$B$genus[first])
+  }
+  m$genus_rows
+}
+
+# Edit distance between query key `q` and reference keys `r`: Levenshtein
+# (adist), then, if `transpositions`, lowered by one per swap of two adjacent
+# letters (optimal string alignment). A swap needs a swapped bigram of `q` to
+# occur in `r`; with k such bigrams, OSA >= Levenshtein - k. The exact (slow)
+# calculation therefore only runs on pairs where a swap could matter: a
+# swapped bigram is present, and OSA could be within max_dist.
+.tt_fuzzy_dist <- function(m, q, r) {
+  d <- as.integer(adist(q, r))
+  if (!m$transpositions || is.na(q) || nchar(q) < 2L) {
+    return(d)
+  }
+  ch <- strsplit(q, "", fixed = TRUE)[[1]]
+  n <- length(ch)
+  swapped <- unique(paste0(ch[-1], ch[-n])[ch[-1] != ch[-n]])
+  todo <- which(!is.na(d) & d >= 2L & d <= 2 * m$max_dist)
+  if (length(swapped) && length(todo)) {
+    rt <- r[todo]
+    k <- 0L
+    for (bg in swapped) k <- k + grepl(bg, rt, fixed = TRUE)
+    todo <- todo[k >= 1L & d[todo] - k <= m$max_dist]
+    for (i in todo) d[i] <- .tt_osa(ch, r[i])
+  }
+  d
+}
+
+# Reference rows (not the query itself) among `rows`
+.tt_not_self <- function(m, rows, qi) {
+  rows[m$B$code[rows] != m$A$code[qi]]
+}
+
+# Stage: a query without an author is compared with the reference on canonical
+# name (genus + epithet + infraspecific epithet) so that the author string does
+# not count towards the distance. All same-genus refs with an identical
+# canonical name are returned ("auto_canon"); failing that, those whose
+# canonical name differs only by Latin spelling variants ("auto_orthvar");
+# failing that, all within max_dist ("auto_fuzzy_canon"), or only the closest
+# of those if `canon_closest`.
+.tt_stage_canonfuzzy <- function(m, idx) {
+  rcf <- m$B$key("canon")
+  qcf <- m$A$key("canon")
+  orth <- NULL # canonical orthvar keys, built when first needed
+  for (qi in idx) {
+    rows <- .tt_not_self(m, .tt_genus_rows(m)[[m$A$genus[qi]]], qi)
+    if (!length(rows)) next
+    d <- .tt_fuzzy_dist(m, qcf[qi], rcf[rows])
+    if (any(d == 0L, na.rm = TRUE)) {
+      keep <- !is.na(d) & d == 0L
+      type <- "auto_canon"
+    } else {
+      if (is.null(orth)) {
+        orth <- list(q = m$A$key("canonorth"), r = m$B$key("canonorth"))
+      }
+      same <- !is.na(orth$r[rows]) & orth$r[rows] == orth$q[qi]
+      if (any(same)) {
+        keep <- same
+        type <- "auto_orthvar"
+      } else {
+        keep <- !is.na(d) & d <= m$max_dist
+        if (m$canon_closest && any(keep)) keep <- keep & d == min(d[keep])
+        type <- "auto_fuzzy_canon"
+      }
+    }
+    if (any(keep)) {
+      .tt_record_hits(
+        m, qi, m$B$code[rows][keep], type,
+        if (type == "auto_fuzzy_canon") d[keep]
+      )
+    }
+  }
+}
+
+# Stage: every same-genus ref within max_dist of the whole (depunctuated) name
+.tt_stage_allfuzzy <- function(m, idx) {
+  rpunct <- m$B$key("punct")
+  qpunct <- m$A$key("punct")
+  for (qi in idx) {
+    rows <- .tt_not_self(m, .tt_genus_rows(m)[[m$A$genus[qi]]], qi)
+    if (!length(rows)) next
+    d <- .tt_fuzzy_dist(m, qpunct[qi], rpunct[rows])
+    keep <- !is.na(d) & d <= m$max_dist
+    if (any(keep)) {
+      .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy", d[keep])
+    }
+  }
+}
+
+# Stage: the query genus is not in the reference (typically a misspelling).
+# Candidates are the names in reference genera within `max_dist_genus` of the
+# query genus; they are then compared with the query as in the other fuzzy
+# stages (author-less queries on the canonical name, others on the whole name),
+# with the total distance, genus edits included, limited by `max_dist`. Match
+# type "auto_fuzzy_genus".
+.tt_stage_genusfuzzy <- function(m, idx) {
+  ref_genera <- unique(m$B$genus)
+  ref_genera_key <- tt_depunct(ref_genera)
+  keys <- list(
+    canon = list(q = m$A$key("canon"), r = m$B$key("canon")),
+    whole = list(q = m$A$key("punct"), r = m$B$key("punct"))
+  )
+  near <- list()
+  for (qi in idx) {
+    qg <- m$A$genus[qi]
+    if (is.null(near[[qg]])) {
+      d <- as.integer(adist(tt_depunct(qg), ref_genera_key))
+      near[[qg]] <- ref_genera[!is.na(d) & d <= m$max_dist_genus]
+    }
+    rows <- unique(unlist(.tt_genus_rows(m)[near[[qg]]], use.names = FALSE))
+    rows <- .tt_not_self(m, rows, qi)
+    if (!length(rows)) next
+    k <- keys[[if (m$A$no_auth[qi]) "canon" else "whole"]]
+    d <- .tt_fuzzy_dist(m, k$q[qi], k$r[rows])
+    keep <- !is.na(d) & d <= m$max_dist
+    if (m$canon_closest && m$A$no_auth[qi] && any(keep)) {
+      keep <- keep & d == min(d[keep])
+    }
+    if (any(keep)) {
+      .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy_genus", d[keep])
+    }
+  }
+}
+
+# Combine the per-query results into the output data frame (one row per match;
+# unmatched queries get one "no_match" row)
+.tt_assemble <- function(m) {
+  A <- m$A
+  B <- m$B
+  n_q <- length(A$code)
+  m$res_code[m$pending] <- list(NA_character_)
+  m$res_type[m$pending] <- "no_match"
+
+  n_hits <- lengths(m$res_code)
   qi <- rep(seq_len(n_q), n_hits)
-  rc <- unlist(res_code, use.names = FALSE)
-  type <- rep(res_type, n_hits)
+  rc <- unlist(m$res_code, use.names = FALSE)
+  type <- rep(m$res_type, n_hits)
   dist <- unlist(
     lapply(seq_len(n_q), function(i) {
-      if (is.null(res_dist[[i]])) rep(NA_integer_, n_hits[i]) else res_dist[[i]]
+      if (is.null(m$res_dist[[i]])) {
+        rep(NA_integer_, n_hits[i])
+      } else {
+        m$res_dist[[i]]
+      }
     }),
     use.names = FALSE
   )
