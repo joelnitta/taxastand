@@ -38,6 +38,11 @@
 #' canonical name, for a query without an author) must still be within
 #' `max_dist`. Matches have the type `auto_fuzzy_genus`. Set to 0 to turn
 #' genus-level fuzzy matching off. See \code{\link{ts_match_names}()}. Default: 2.
+#' @param transpositions Logical; count a swap of two adjacent letters (e.g.
+#' `Qurecus` for `Quercus`, a common typing error) as one edit instead of two
+#' when computing fuzzy-match distances (optimal string alignment distance
+#' rather than plain Levenshtein distance). Set to `FALSE` for plain
+#' Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}()}. Default: `TRUE`.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
@@ -104,6 +109,7 @@ ts_resolve_names <- function(
   ref_taxonomy,
   max_dist = 3,
   max_dist_genus = 2,
+  transpositions = TRUE,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -136,6 +142,7 @@ ts_resolve_names <- function(
       reference = unique(ref_taxonomy$scientificName),
       max_dist = max_dist,
       max_dist_genus = max_dist_genus,
+      transpositions = transpositions,
       match_no_auth = match_no_auth,
       match_canon = match_canon,
       collapse_infra = collapse_infra,

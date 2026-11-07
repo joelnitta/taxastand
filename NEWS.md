@@ -2,6 +2,16 @@
 
 ## Major changes
 
+* **Breaking: swapped letters count as one edit, and results gain a `dist`
+  column (#67).** Fuzzy matching now uses the optimal string alignment
+  distance, so swapping two adjacent letters (`Qurecus` for `Quercus`) is one
+  edit instead of two. With `max_dist = 1`, 188 swapped-letter PPG queries were
+  all found, versus none before; at the default of 3 the typical fuzzy hit is
+  unchanged but a few more distant names (those at 4 plain edits, 3 with a
+  swap) are returned. Use the new argument `transpositions = FALSE` for plain
+  Levenshtein distance (slightly faster). `ts_match_names()` output has a new
+  `dist` column with the edit distance of each fuzzy hit (`NA` for other match
+  types).
 * **Breaking: misspelled genera are now fuzzy-matched (#50).** A query whose
   genus is not in the reference (e.g. `"Aspelnium nidus L."`) used to give
   `no_match`. Reference genera within the new argument `max_dist_genus`

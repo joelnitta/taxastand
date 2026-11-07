@@ -10,6 +10,7 @@ ts_match_names(
   manual_match = NULL,
   max_dist = 3,
   max_dist_genus = 2,
+  transpositions = TRUE,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -49,6 +50,12 @@ names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
 \code{max_dist}. Matches have the type \code{auto_fuzzy_genus}. Set to 0 to turn
 genus-level fuzzy matching off. Default: 2.}
+
+\item{transpositions}{Logical; count a swap of two adjacent letters (e.g.
+\code{Qurecus} for \code{Quercus}, a common typing error) as one edit instead of two
+when computing fuzzy-match distances (optimal string alignment distance
+rather than plain Levenshtein distance). Set to \code{FALSE} for plain
+Levenshtein distance, which is somewhat faster. Default: \code{TRUE}.}
 
 \item{match_no_auth}{Logical; If no author is given in the query and the name
 (without author) occurs only once in the reference, accept the name in the
@@ -99,6 +106,8 @@ Dataframe with the following columns (if \code{simple} is \code{FALSE}):
 \item query: Query name
 \item reference: Matched reference name
 \item match_type: Type of match (see the "Match types" section)
+\item dist: Edit distance between query and reference for fuzzy matches
+(\code{auto_fuzzy}, \code{auto_fuzzy_canon}, \code{auto_fuzzy_genus}), \code{NA} otherwise
 \item id_query: Unique ID of query
 \item id_ref: Unique ID of reference
 \item genus_hybrid_sign_query: Genus hybrid sign in query
