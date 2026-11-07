@@ -139,3 +139,37 @@ test_that("tt_matchnames: dist is set for author-less and genus fuzzy hits", {
   expect_equal(genus$match_type, "auto_fuzzy_genus")
   expect_equal(genus$dist, 1L)
 })
+
+test_that(".tt_orthfold folds Latin spelling variants", {
+  expect_equal(
+    .tt_orthfold(c("sylvestris", "silvestris", "caeruleus", "coeruleus", "ceruleus")),
+    c("silvestris", "silvestris", "ceruleus", "ceruleus", "ceruleus")
+  )
+  expect_equal(.tt_orthfold(c("thalii", "rhodo", "phyllum")), c("tali", "rodo", "fillum"))
+  # only a final ii is folded
+  expect_equal(.tt_orthfold("iinus"), "iinus")
+})
+
+test_that("tt_matchnames: auto_orthvar for Latin spelling variants", {
+  ref <- c("r1||Foo||sylvestris|||L.", "r2||Foo||caeruleus|||Sm.")
+  # with the same author
+  res <- tt_matchnames("q1||Foo||silvestris|||L.", ref)
+  expect_equal(res$match_type, "auto_orthvar")
+  expect_equal(res$id_ref, "r1")
+  expect_true(is.na(res$dist))
+  # without an author (canonical name)
+  res <- tt_matchnames("q1||Foo||coeruleus|||", ref)
+  expect_equal(res$match_type, "auto_orthvar")
+  expect_equal(res$id_ref, "r2")
+  # identical names stay exact; spelling variants never override exact
+  res <- tt_matchnames(c("q1||Foo||sylvestris|||L.", "q2||Foo||silvestris|||L."),
+    c(ref, "r3||Foo||silvestris|||L."))
+  expect_equal(res$match_type, c("exact", "exact"))
+  expect_equal(res$id_ref, c("r1", "r3"))
+})
+
+test_that("tt_matchnames: orthvar also applies to infraspecific epithets", {
+  ref <- "r1||Foo||bar|var.|sylvestris|L."
+  res <- tt_matchnames("q1||Foo||bar|var.|silvestris|L.", ref)
+  expect_equal(res$match_type, "auto_orthvar")
+})

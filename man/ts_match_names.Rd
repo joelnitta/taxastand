@@ -196,6 +196,16 @@ queries without an author; for queries with an author, only when
 (homonyms), giving multiple hits.
 }
 
+\strong{Latin spelling variants (check the result)}
+\itemize{
+\item \code{auto_orthvar}: identical once standard Latin orthographic variants in the
+epithets are folded together: \code{ae}/\code{oe} = \code{e}, \code{y} = \code{i}, \code{ph} = \code{f},
+\code{rh} = \code{r}, \code{th} = \code{t}, and a final \code{ii} = \code{i} (e.g. \code{sylvestris} and
+\code{silvestris}, \code{caerulea} and \code{coerulea}). For queries without an author,
+canonical names are compared. This can occasionally merge epithets that
+are genuinely different.
+}
+
 \strong{Fuzzy matches (misspellings; always verify)}
 \itemize{
 \item \code{auto_fuzzy}: query has an author; the whole name (author included) is

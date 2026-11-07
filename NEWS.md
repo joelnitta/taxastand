@@ -2,6 +2,13 @@
 
 ## Major changes
 
+* **New match type `auto_orthvar` (#68).** Epithets that differ only by
+  standard Latin spelling variants (`sylvestris`/`silvestris`,
+  `caerulea`/`coerulea`; `ae`/`oe` = `e`, `y` = `i`, `ph` = `f`, `rh` = `r`,
+  `th` = `t`, final `ii` = `i`) are now matched exactly after folding, before
+  fuzzy matching, instead of being reported as fuzzy matches. Code that
+  filters on `match_type` may see `auto_orthvar` where it saw `auto_fuzzy` or
+  `auto_fuzzy_canon`.
 * **New `dist` column and optional swap-aware distance (#67).**
   `ts_match_names()` output has a new `dist` column with the edit distance of
   each fuzzy hit (`NA` for other match types; a new column, so code that
@@ -69,6 +76,8 @@
 
 ## Minor improvements
 
+* Faster fuzzy matching: candidates are looked up by reference row rather than
+  by name (a 600-query PPG run took 2.4 s, now 2.1 s; results identical).
 * Faster parsing and key building (#66): fewer and cheaper regex passes, and
   pipe-delimited records are split once instead of once per field. Output is
   identical; e.g. parsing 149,000 names takes about 1.2 s instead of 3.2 s.
