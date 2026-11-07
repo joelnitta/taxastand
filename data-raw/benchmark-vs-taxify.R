@@ -76,7 +76,7 @@ run_taxastand <- function(q) {
   data.frame(
     query = m$query, hit = ppg$canonical[match(m$reference, ppg$full)],
     accepted = ppg$accepted[match(m$reference, ppg$full)],
-    stringsAsFactors = FALSE
+    full = m$reference, stringsAsFactors = FALSE
   )
 }
 resolve_taxastand <- function(q) {
@@ -91,7 +91,9 @@ run_taxify <- function(q) {
   ok <- !is.na(r$matched_name)
   data.frame(
     query = r$input_name[ok], hit = r$matched_name[ok],
-    accepted = r$accepted_name[ok], stringsAsFactors = FALSE
+    accepted = r$accepted_name[ok],
+    full = trimws(paste(r$matched_name[ok], r$authorship[ok])),
+    stringsAsFactors = FALSE
   )
 }
 
@@ -125,11 +127,28 @@ discriminates <- function(run) {
   }
   aa <- vapply(pairs$a, acc, "")
   bb_ <- vapply(pairs$b, acc, "")
-  c(
+  # "held": the tool returned the very name queried, author included (taxify
+  # can only separate homonyms its backbone holds; it reports a match with a
+  # different author's name as `exact`)
+  held_q <- function(q) {
+    f <- h$full[h$query == q]
+    any(tt_depunct(f) == tt_depunct(q))
+  }
+  held <- vapply(pairs$a, held_q, NA) & vapply(pairs$b, held_q, NA)
+  ok <- !is.na(aa) & !is.na(bb_)
+  out <- c(
     pairs = nrow(pairs),
-    both_resolved = sum(!is.na(aa) & !is.na(bb_)),
-    different = sum(!is.na(aa) & !is.na(bb_) & aa != bb_)
+    both_resolved = sum(ok),
+    different = sum(ok & aa != bb_),
+    both_held = sum(held),
+    different_among_held = sum(held & ok & aa != bb_)
   )
+  # per-pair accepted names, to inspect the pairs a tool failed to separate
+  attr(out, "detail") <- data.frame(
+    a = pairs$a, b = pairs$b, accepted_a = aa, accepted_b = bb_,
+    stringsAsFactors = FALSE
+  )
+  out
 }
 homonyms <- list(taxastand = discriminates(run_taxastand))
 # taxastand's own check against PPG truth (resolved to the right accepted name)
@@ -183,7 +202,23 @@ recall <- function(run) {
   agg$n <- as.vector(table(typos$kind, typos$authored)[cbind(agg$kind, ifelse(agg$authored, "TRUE", "FALSE"))])
   agg
 }
-typo_res <- list(taxastand = recall(run_taxastand))
+# taxastand returns every hit within max_dist by default; "closest" keeps only
+# the nearest ones, which is the fairer comparison with taxify's single pick
+run_taxastand_closest <- function(q) {
+  m <- suppressWarnings(ts_match_names(
+    q, ref_tax$scientificName, simple = TRUE, fuzzy_canon_hits = "closest"
+  ))
+  m <- m[m$match_type != "no_match", ]
+  data.frame(
+    query = m$query, hit = ppg$canonical[match(m$reference, ppg$full)],
+    accepted = ppg$accepted[match(m$reference, ppg$full)],
+    full = m$reference, stringsAsFactors = FALSE
+  )
+}
+typo_res <- list(
+  taxastand = recall(run_taxastand),
+  taxastand_closest = recall(run_taxastand_closest)
+)
 if (have_taxify) typo_res$taxify <- recall(run_taxify)
 
 # ---- 3. Speed ----------------------------------------------------------------
@@ -198,11 +233,15 @@ timing <- function(run, label) {
   }))
 }
 speed <- timing(run_taxastand, "taxastand")
+speed <- rbind(speed, timing(run_taxastand_closest, "taxastand_closest"))
 if (have_taxify) speed <- rbind(speed, timing(run_taxify, "taxify"))
 
 # ---- Report and save ---------------------------------------------------------
 cat("\n== Homonyms (pairs whose two authored queries should differ) ==\n")
-print(homonyms)
+print(lapply(homonyms, function(x) {
+  attr(x, "detail") <- NULL
+  x
+}))
 cat("\n== Typos: share of queries whose original name is among the hits ==\n")
 print(typo_res)
 cat("\n== Speed (seconds, best of 3) ==\n")
@@ -213,7 +252,8 @@ res <- list(
   taxastand_version = as.character(utils::packageVersion("taxastand")),
   taxify_version = if (have_taxify) as.character(utils::packageVersion("taxify")),
   r_version = R.version.string, platform = R.version$platform,
-  homonym_pairs = pairs, homonyms = homonyms, typo_queries = typos,
+  homonym_pairs = pairs, homonyms = homonyms,
+  homonym_detail = lapply(homonyms[c("taxastand", "taxify")], attr, "detail"), typo_queries = typos,
   typos = typo_res, speed = speed
 )
 saveRDS(res, file.path(out_dir, "benchmark-vs-taxify.rds"))
