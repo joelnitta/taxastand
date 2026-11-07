@@ -3,8 +3,8 @@
     Code
       match_res
     Output
-                       query            reference       match_type   id_query
-      1 Crepidomanes minutus Crepidomanes minutum auto_fuzzy_canon c1ad73ec-1
+                       query            reference       match_type dist   id_query
+      1 Crepidomanes minutus Crepidomanes minutum auto_fuzzy_canon    1 c1ad73ec-1
             id_ref genus_hybrid_sign_query genus_name_query species_hybrid_sign_query
       1 19b861c8-1                    <NA>     Crepidomanes                      <NA>
         specific_epithet_query infraspecific_rank_query infraspecific_epithet_query

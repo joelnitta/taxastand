@@ -13,7 +13,7 @@
 #
 # Input is the parsed pipe-delimited format produced by tt_parsenames /
 # ts_write_names: id|g_hybrid|genus|s_hybrid|species|rank|infrasp|author # nolint: commented_code_linter.
-# Output is the 17-field result format documented in ts_match_names().
+# Output is the 18-field result format documented in ts_match_names().
 #
 # Fuzzy matching uses base adist() (Levenshtein distance); a pair is a fuzzy
 # match when the distance is <= max_dist.
@@ -107,6 +107,43 @@
   "infraspecific_rank", "infraspecific_epithet", "author"
 )
 
+# Optimal string alignment distance (Levenshtein plus swaps of two adjacent
+# letters) between the characters `a` (a character vector) and the string `b`.
+# Row by row; within a row the insertion step, d[j] = min(t[j], d[j - 1] + 1),
+# is a running minimum of t[j] - j, which keeps each row vectorised.
+.tt_osa <- function(a, b) {
+  b <- strsplit(b, "", fixed = TRUE)[[1]]
+  n <- length(a)
+  m <- length(b)
+  if (n == 0L || m == 0L) {
+    return(max(n, m))
+  }
+  j <- seq_len(m)
+  idx <- 0:m
+  prev2 <- NULL
+  prev <- idx
+  for (i in seq_len(n)) {
+    x <- prev[j + 1L] + 1L
+    y <- prev[j] + (a[i] != b)
+    t <- x
+    lo <- y < x
+    t[lo] <- y[lo]
+    if (i > 1L && m > 1L) {
+      swap <- which(a[i] == b[-m] & a[i - 1L] == b[-1L])
+      if (length(swap)) {
+        # swap of a[i - 1], a[i] against b[j - 1], b[j], at columns j = swap + 1
+        z <- prev2[swap] + 1L
+        at <- swap + 1L
+        t[at] <- z - (z > t[at]) * (z - t[at])
+      }
+    }
+    cur <- cummin(c(i, t) - idx) + idx
+    prev2 <- prev
+    prev <- cur
+  }
+  prev[m + 1L]
+}
+
 #' Match taxonomic names
 #'
 #' Non-interactive all-fuzzy matching of parsed query names against parsed
@@ -122,10 +159,12 @@
 #' @param max_dist_genus Integer; max Levenshtein distance between the query
 #'   genus and a reference genus for genus-level fuzzy matching, used only for
 #'   queries whose genus is not in the reference. 0 disables it.
+#' @param transpositions Logical; count a swap of two adjacent letters as one
+#'   edit (optimal string alignment distance) instead of two (Levenshtein).
 #' @return Data frame of character columns, one row per match (a query with
 #'   several fuzzy hits gets several rows; an unmatched query gets one row with
-#'   `match_type` "no_match"), with the 17 columns documented in `ts_match_names()` (`id_query`, `id_ref`,
-#'   `match_type`, then the seven parsed name fields suffixed `_query` and
+#'   `match_type` "no_match"), with the 18 columns documented in `ts_match_names()` (`id_query`, `id_ref`,
+#'   `match_type`, `dist` (integer edit distance of fuzzy hits, else `NA`), then the seven parsed name fields suffixed `_query` and
 #'   `_ref`). Empty values are `NA`.
 #' @keywords internal
 #' @importFrom stats setNames
@@ -133,7 +172,8 @@
 #' @noRd
 tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
                           match_no_auth = FALSE, match_canon = FALSE,
-                          canon_closest = FALSE, max_dist_genus = 0) {
+                          canon_closest = FALSE, max_dist_genus = 0,
+                          transpositions = TRUE) {
   max_dist <- as.numeric(max_dist)
   max_dist_genus <- as.numeric(max_dist_genus)
   noauthone <- isTRUE(match_no_auth)
@@ -147,6 +187,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # `pending` holds the queries not yet matched.
   res_code <- vector("list", n_q)
   res_type <- rep(NA_character_, n_q)
+  res_dist <- vector("list", n_q)
   pending <- seq_len(n_q)
 
   # Ref code whose `method` key equals each of `qkeys` (NA if none). If a key
@@ -218,12 +259,37 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     get("codes", envir = genus_cache, inherits = FALSE)
   }
 
+  # Edit distance between query key `q` and reference keys `r`: Levenshtein
+  # (adist), then, if `transpositions`, lowered by one per swap of two adjacent
+  # letters (optimal string alignment). A swap needs a swapped bigram of `q` to
+  # occur in `r`; with k such bigrams, OSA >= Levenshtein - k. The exact (slow)
+  # calculation therefore only runs on pairs where a swap could matter: a
+  # swapped bigram is present, and OSA could be within max_dist.
+  fuzzy_dist <- function(q, r) {
+    d <- as.integer(adist(q, r))
+    if (!transpositions || is.na(q) || nchar(q) < 2L) {
+      return(d)
+    }
+    ch <- strsplit(q, "", fixed = TRUE)[[1]]
+    n <- length(ch)
+    swapped <- unique(paste0(ch[-1], ch[-n])[ch[-1] != ch[-n]])
+    todo <- which(!is.na(d) & d >= 2L & d <= 2 * max_dist)
+    if (length(swapped) && length(todo)) {
+      rt <- r[todo]
+      k <- 0L
+      for (bg in swapped) k <- k + grepl(bg, rt, fixed = TRUE)
+      todo <- todo[k >= 1L & d[todo] - k <= max_dist]
+      for (i in todo) d[i] <- .tt_osa(ch, r[i])
+    }
+    d
+  }
+
   # test_canonfuzzy: a query without an author is compared with the reference
   # on canonical name (genus + epithet + infraspecific epithet) so that the
   # author string does not count towards the distance. All same-genus refs with
   # an identical canonical name are returned ("auto_cfonly"); failing that, all
   # within max_dist ("auto_fuzzy_canon"), or only the closest of those if
-  # `canon_closest`. Plain Levenshtein distance.
+  # `canon_closest`.
   test_canonfuzzy <- function(idx) {
     cf_by_code <- setNames(B$key("cfonly"), B$code)
     qcf <- A$key("cfonly")
@@ -231,7 +297,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       cand <- genus_codes()[[A$genus[qi]]]
       cand <- cand[cand != A$code[qi]]
       if (!length(cand)) next
-      d <- as.integer(adist(qcf[qi], cf_by_code[cand]))
+      d <- fuzzy_dist(qcf[qi], cf_by_code[cand])
       if (any(d == 0L, na.rm = TRUE)) {
         keep <- !is.na(d) & d == 0L
         type <- "auto_cfonly"
@@ -243,6 +309,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       if (any(keep)) {
         res_code[[qi]] <<- cand[keep]
         res_type[qi] <<- type
+        if (type == "auto_fuzzy_canon") res_dist[[qi]] <<- d[keep]
         pending <<- setdiff(pending, qi)
       }
     }
@@ -258,14 +325,13 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       if (!length(cand)) next
       qp <- qpunct[qi]
       rp <- punct_by_code[cand]
-      # Plain Levenshtein distance on the depunctuated names. (taxon-tools'
-      # gawk amatch() adds +1 to pairs where the reference merely has extra
-      # trailing text; that quirk is intentionally not reproduced.)
-      d <- as.integer(adist(qp, rp))
+      # Distance on the depunctuated names
+      d <- fuzzy_dist(qp, rp)
       keep <- !is.na(d) & d <= max_dist
       if (any(keep)) {
         res_code[[qi]] <<- cand[keep]
         res_type[qi] <<- "auto_fuzzy"
+        res_dist[[qi]] <<- d[keep]
         pending <<- setdiff(pending, qi)
       }
     }
@@ -295,7 +361,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       cand <- cand[cand != A$code[qi]]
       if (!length(cand)) next
       k <- keys[[if (A$no_auth[qi]) "canon" else "whole"]]
-      d <- as.integer(adist(k$q[qi], k$r[cand]))
+      d <- fuzzy_dist(k$q[qi], k$r[cand])
       keep <- !is.na(d) & d <= max_dist
       if (canon_closest && A$no_auth[qi] && any(keep)) {
         keep <- keep & d == min(d[keep])
@@ -303,6 +369,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       if (any(keep)) {
         res_code[[qi]] <<- cand[keep]
         res_type[qi] <<- "auto_fuzzy_genus"
+        res_dist[[qi]] <<- d[keep]
         pending <<- setdiff(pending, qi)
       }
     }
@@ -350,6 +417,13 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   qi <- rep(seq_len(n_q), n_hits)
   rc <- unlist(res_code, use.names = FALSE)
   type <- rep(res_type, n_hits)
+  dist <- unlist(
+    lapply(seq_len(n_q), function(i) {
+      if (is.null(res_dist[[i]])) rep(NA_integer_, n_hits[i]) else res_dist[[i]]
+    }),
+    use.names = FALSE
+  )
+  if (is.null(dist)) dist <- integer(0)
 
   # Ref row for each matched code. If a code is duplicated in the reference,
   # the last record wins.
@@ -362,7 +436,8 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   out <- list(
     id_query = A$code[qi],
     id_ref = rc,
-    match_type = type
+    match_type = type,
+    dist = dist
   )
   for (k in seq_along(.tt_field_suffixes)) {
     out[[paste0(.tt_field_suffixes[k], "_query")]] <- A$fields[[k]][qi]
@@ -370,7 +445,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   for (k in seq_along(.tt_field_suffixes)) {
     out[[paste0(.tt_field_suffixes[k], "_ref")]] <- B$fields[[k]][ri]
   }
-  out <- lapply(out, na_empty)
+  out[-4] <- lapply(out[-4], na_empty)
   as.data.frame(out, stringsAsFactors = FALSE)
 }
 # nolint end

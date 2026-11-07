@@ -17,7 +17,8 @@ test_that("tt_matchnames returns the documented columns", {
   expect_equal(res$id_ref, "r1")
   expect_equal(res$author_ref, "L.")
   expect_true(is.na(res$infraspecific_rank_ref))
-  expect_equal(ncol(res), 17)
+  expect_equal(ncol(res), 18)
+  expect_true(is.na(res$dist))
 })
 
 test_that("tt_matchnames: last reference record wins for duplicate keys", {
@@ -98,4 +99,41 @@ test_that("tt_matchnames: canon_closest keeps only the nearest canonical hits", 
   # distance 1; r2 is at distance 2
   expect_setequal(closest$id_ref, c("r1", "r3"))
   expect_true(all(closest$match_type == "auto_fuzzy_canon"))
+})
+
+test_that(".tt_osa counts an adjacent swap as one edit", {
+  osa <- function(a, b) .tt_osa(strsplit(a, "")[[1]], b)
+  expect_equal(osa("qurecus", "quercus"), 1L)
+  expect_equal(osa("abc", "axc"), 1L)
+  expect_equal(osa("abcd", "badc"), 2L)
+  expect_equal(osa("abc", "abc"), 0L)
+  expect_equal(osa("ab", "xyz"), 3L)
+})
+
+test_that("tt_matchnames: dist column and swap-aware distance", {
+  ref <- c("r1||Foo||quercus|||L.", "r2||Foo||quercxx|||L.")
+  q <- "q1||Foo||qurecus|||L."
+  swap <- tt_matchnames(q, ref, max_dist = 1)
+  expect_equal(swap$match_type, "auto_fuzzy")
+  expect_equal(swap$id_ref, "r1")
+  expect_equal(swap$dist, 1L)
+  # plain Levenshtein: a swap is two edits, so not within max_dist = 1
+  plain <- tt_matchnames(q, ref, max_dist = 1, transpositions = FALSE)
+  expect_equal(plain$match_type, "no_match")
+  plain2 <- tt_matchnames(q, ref, max_dist = 2, transpositions = FALSE)
+  expect_equal(plain2$dist, 2L)
+  # exact matches have no distance
+  expect_true(is.na(tt_matchnames("q||Foo||quercus|||L.", ref)$dist))
+})
+
+test_that("tt_matchnames: dist is set for author-less and genus fuzzy hits", {
+  ref <- c("r1||Foo||quercus|||L.", "r2||Barus||zzz|||L.")
+  canon <- tt_matchnames("q1||Foo||qurecus|||", ref, max_dist = 2)
+  expect_equal(canon$match_type, "auto_fuzzy_canon")
+  expect_equal(canon$dist, 1L)
+  genus <- tt_matchnames(
+    "q1||Fo||quercus|||L.", ref, max_dist = 3, max_dist_genus = 2
+  )
+  expect_equal(genus$match_type, "auto_fuzzy_genus")
+  expect_equal(genus$dist, 1L)
 })

@@ -101,6 +101,11 @@
 #' canonical name, for a query without an author) must still be within
 #' `max_dist`. Matches have the type `auto_fuzzy_genus`. Set to 0 to turn
 #' genus-level fuzzy matching off. Default: 2.
+#' @param transpositions Logical; count a swap of two adjacent letters (e.g.
+#' `Qurecus` for `Quercus`, a common typing error) as one edit instead of two
+#' when computing fuzzy-match distances (optimal string alignment distance
+#' rather than plain Levenshtein distance). Set to `FALSE` for plain
+#' Levenshtein distance, which is somewhat faster. Default: `TRUE`.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
@@ -140,6 +145,8 @@
 #' - query: Query name
 #' - reference: Matched reference name
 #' - match_type: Type of match (see the "Match types" section)
+#' - dist: Edit distance between query and reference for fuzzy matches
+#'   (`auto_fuzzy`, `auto_fuzzy_canon`, `auto_fuzzy_genus`), `NA` otherwise
 #' - id_query: Unique ID of query
 #' - id_ref: Unique ID of reference
 #' - genus_hybrid_sign_query: Genus hybrid sign in query
@@ -219,6 +226,7 @@ ts_match_names <- function(
   manual_match = NULL,
   max_dist = 3,
   max_dist_genus = 2,
+  transpositions = TRUE,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -240,6 +248,7 @@ ts_match_names <- function(
   )
   assertthat::assert_that(assertthat::is.number(max_dist))
   assertthat::assert_that(assertthat::is.number(max_dist_genus))
+  assertthat::assert_that(assertthat::is.flag(transpositions))
   assertthat::assert_that(is.logical(match_no_auth))
   assertthat::assert_that(is.logical(match_canon))
   assertthat::assert_that(is.logical(simple))
@@ -429,10 +438,11 @@ ts_match_names <- function(
     match_no_auth = match_no_auth,
     match_canon = match_canon,
     canon_closest = identical(fuzzy_canon_hits, "closest"),
-    max_dist_genus = max_dist_genus
+    max_dist_genus = max_dist_genus,
+    transpositions = transpositions
   )
 
-  # `results` has one row per match (17 columns): id_query, id_ref, match_type,
+  # `results` has one row per match (18 columns): id_query, id_ref, match_type, dist,
   # then the parsed elements of the query name (genus hybrid sign, genus,
   # species hybrid sign, specific epithet, infraspecific rank, infraspecific
   # epithet, author), then the same for the reference name.
@@ -441,9 +451,8 @@ ts_match_names <- function(
   results$query <- query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
   results$reference <- ref_parsed_df$name[match(results$id_ref, ref_parsed_df$id)]
   .front <- function(df) {
-    df[, c("query", "reference", "match_type", setdiff(
-      colnames(df), c("query", "reference", "match_type")
-    ))]
+    front <- c("query", "reference", "match_type", "dist")
+    df[, c(front, setdiff(colnames(df), front))]
   }
   results <- .front(results)
 

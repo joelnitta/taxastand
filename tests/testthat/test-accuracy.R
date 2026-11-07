@@ -142,6 +142,22 @@ test_that("misspelled genus matches", {
   expect_equal(res0$match_type, "no_match")
 })
 
+test_that("a swap of adjacent letters is one edit", {
+  # "Asplenium ndius" needs 2 plain edits but is one swap away
+  res <- suppressWarnings(
+    ts_match_names("Asplenium ndius L.", ref$scientificName, max_dist = 1)
+  )
+  expect_equal(res$reference, "Asplenium nidus L.")
+  expect_equal(res$dist, 1L)
+  res0 <- suppressWarnings(
+    ts_match_names(
+      "Asplenium ndius L.", ref$scientificName,
+      max_dist = 1, transpositions = FALSE
+    )
+  )
+  expect_equal(res0$match_type, "no_match")
+})
+
 test_that("names in other genera in the reference do not change results", {
   # Reference rows are pre-filtered to the query genera for speed; results
   # must be the same as when the reference contains only that genus.
