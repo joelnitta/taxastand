@@ -245,7 +245,98 @@ ts_match_names <- function(
   exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest")
 ) {
-  # Check input
+  .ts_check_match_args(
+    query, reference, manual_match, max_dist, max_dist_genus, transpositions,
+    match_no_auth, match_canon, simple, tbl_out, collapse_infra,
+    collapse_infra_exclude, strip_qualifiers
+  )
+  fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
+
+  # Parse or load query names. For manual matches, the matched name is used
+  # instead of the query to generate an exact match.
+  manual_replacement_df <- NULL
+  if (is.character(query)) {
+    if (!is.null(manual_match)) {
+      manual_replacement_df <- .ts_manual_replacement(query, manual_match)
+      query <- unique(manual_replacement_df$query_new)
+    }
+    query_parsed_df <- ts_parse_names(
+      query,
+      strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = exclude_placeholders
+    )
+  } else {
+    query_parsed_df <- query # already parsed
+  }
+
+  # Optionally collapse infraspecific name
+  collapsed <- NULL
+  if (isTRUE(collapse_infra)) {
+    collapsed <- .ts_collapse_infra(query_parsed_df, collapse_infra_exclude)
+    query_parsed_df <- collapsed$parsed
+  }
+
+  ref_parsed_df <- .ts_prepare_reference(
+    reference, query_parsed_df, max_dist_genus, strip_qualifiers
+  )
+
+  # Check that manually matched ref names are in data
+  if (!is.null(manual_match)) {
+    assertthat::assert_that(
+      isTRUE(all(manual_match$match %in% ref_parsed_df$name)),
+      msg = "One or more manually matched reference names not in reference data"
+    )
+  }
+
+  # Run matching (one row per match; see .tt_assemble() for the columns)
+  results <- tt_matchnames(
+    query_lines = .ts_parsed_lines(query_parsed_df, query),
+    ref_lines = .ts_parsed_lines(ref_parsed_df, reference),
+    max_dist = max_dist,
+    match_no_auth = match_no_auth,
+    match_canon = match_canon,
+    canon_closest = identical(fuzzy_canon_hits, "closest"),
+    max_dist_genus = max_dist_genus,
+    transpositions = transpositions
+  )
+
+  # Add back in the original search terms (query and reference)
+  results$query <-
+    query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
+  results$reference <-
+    ref_parsed_df$name[match(results$id_ref, ref_parsed_df$id)]
+  results <- .ts_front_cols(results)
+
+  # Add back in names that were duplicated due to collapsed infrasp names
+  if (!is.null(collapsed)) {
+    results <- .ts_expand_collapsed(results, collapsed)
+  }
+
+  # For manual matches, restore back to original query input, and specify
+  # that match was made manually
+  if (!is.null(manual_match)) {
+    results <- .ts_restore_manual(results, manual_replacement_df, manual_match)
+  }
+
+  if (simple) {
+    results <- results[, c("query", "reference", "match_type")]
+  }
+
+  if (isTRUE(tbl_out)) {
+    return(.ts_as_tibble(results))
+  }
+
+  results
+}
+
+# ---- Helpers for ts_match_names() --------------------------------------------
+
+# Validate the arguments of ts_match_names()
+.ts_check_match_args <- function(
+  query, reference, manual_match, max_dist, max_dist_genus, transpositions,
+  match_no_auth, match_canon, simple, tbl_out, collapse_infra,
+  collapse_infra_exclude, strip_qualifiers
+) {
   assertthat::assert_that(
     is.character(query) | inherits(query, "data.frame"),
     msg = "query must be of class 'data.frame' or a character vector"
@@ -263,7 +354,6 @@ ts_match_names <- function(
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(collapse_infra))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
-  fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
   if (!is.null(collapse_infra_exclude)) {
     assertthat::assert_that(is.character(collapse_infra_exclude))
   }
@@ -273,23 +363,12 @@ ts_match_names <- function(
       msg = "manual_match must be of class 'data.frame'"
     )
     assertthat::assert_that(
-      isTRUE(
-        all(c("query", "match") %in% colnames(manual_match))
-      ),
+      isTRUE(all(c("query", "match") %in% colnames(manual_match))),
       msg = "manual_match must have `query` and `match` columns"
     )
-    assertthat::assert_that(
-      is.character(manual_match$query)
-    )
-    assertthat::assert_that(
-      is.character(manual_match$match)
-    )
-    assertthat::assert_that(
-      assertthat::noNA(manual_match$query)
-    )
-    assertthat::assert_that(
-      assertthat::noNA(manual_match$query)
-    )
+    assertthat::assert_that(is.character(manual_match$query))
+    assertthat::assert_that(is.character(manual_match$match))
+    assertthat::assert_that(assertthat::noNA(manual_match$query))
     assertthat::assert_that(
       !anyDuplicated(manual_match$query),
       msg = "All values of manual_match$query must be unique"
@@ -299,92 +378,53 @@ ts_match_names <- function(
       msg = "manual_match can only be used if query is a character vector"
     )
   }
+  invisible(TRUE)
+}
 
-  # Helper function to add a namestring to a dataframe of parsed names
-  add_namestring <- function(df) {
-    df$namestring <-
-      paste(
-        df$genus_hybrid_sign,
-        df$genus_name,
-        df$species_hybrid_sign,
-        df$specific_epithet,
-        df$infraspecific_rank,
-        df$infraspecific_epithet,
-        df$author,
-        sep = "_"
-      )
-    df
-  }
+# Data frame of each query and the name to match in its place (the manually
+# matched name if there is one, else the query itself)
+.ts_manual_replacement <- function(query, manual_match) {
+  out <- data.frame(query_original = query)
+  hit <- match(query, manual_match$query)
+  out$query_new <- ifelse(is.na(hit), query, manual_match$match[hit])
+  out
+}
 
-  # Parse or load query names
-  if (is.character(query)) {
-    # Optional: for manual matches, use matched name instead of query
-    # to generate exact match
-    if (!is.null(manual_match)) {
-      manual_replacement_df <- data.frame(
-        query_original = query
-      )
-      manual_replacement_df$query_new <- ifelse(
-        is.na(match(query, manual_match$query)),
-        query,
-        manual_match$match[match(query, manual_match$query)]
-      )
-      query <- unique(manual_replacement_df$query_new)
-    }
-    # Parse the names (adds 'name' column)
-    query_parsed_df <- ts_parse_names(
-      query,
-      strip_qualifiers = strip_qualifiers,
-      exclude_placeholders = exclude_placeholders
+# Collapse the infraspecific epithet of queries where it is the same as the
+# specific epithet (except for names in `exclude`), and drop the duplicate names
+# this creates. Returns the reduced parsed names, the unmodified ones, and a map
+# from the id of each dropped name to the id of the first identical one.
+.ts_collapse_infra <- function(parsed, exclude) {
+  original <- parsed
+  same <- (parsed$specific_epithet == parsed$infraspecific_epithet) %in% TRUE &
+    !parsed$name %in% exclude
+  assertthat::assert_that(!anyNA(same))
+  parsed$infraspecific_epithet[same] <- NA
+  parsed$infraspecific_rank[same] <- NA
+  namestring <- do.call(
+    paste,
+    c(
+      unname(as.list(parsed[, c(
+        "genus_hybrid_sign", "genus_name", "species_hybrid_sign",
+        "specific_epithet", "infraspecific_rank", "infraspecific_epithet",
+        "author"
+      )])),
+      sep = "_"
     )
-  } else {
-    # Or, names are already parsed
-    query_parsed_df <- query
-  }
-
-  # Optionally collapse infraspecific name
-  if (isTRUE(collapse_infra)) {
-    # Save a copy of original unmodified parsed query
-    query_parsed_df_original <- query_parsed_df
-    # Identify rows where infraspecific_epithet is the same as specific_epithet
-    query_parsed_df$same_infra_species <-
-      (query_parsed_df$specific_epithet ==
-        query_parsed_df$infraspecific_epithet) %in%
-        TRUE &
-        !query_parsed_df$name %in% collapse_infra_exclude
-    assertthat::assert_that(!anyNA(query_parsed_df$same_infra_species))
-    # For rows where infraspecific_epithet is the same as specific_epithet,
-    # delete infraspecific_epithet and infraspecific_rank
-    query_parsed_df$infraspecific_epithet[
-      query_parsed_df$same_infra_species
-    ] <- NA
-    query_parsed_df$infraspecific_rank[query_parsed_df$same_infra_species] <- NA
-    query_parsed_df$same_infra_species <- NULL
-    # Account for duplicates created after collapsing names: drop them
-    query_parsed_df <- add_namestring(query_parsed_df)
-    # First id with the same name string stands for all of them
-    query_parsed_df$key_id <-
-      query_parsed_df$id[match(query_parsed_df$namestring, query_parsed_df$namestring)]
-    id_map <- data.frame(
-      id_query = query_parsed_df$key_id,
-      id = query_parsed_df$id
-    )
-    query_parsed_df <- query_parsed_df[
-      !duplicated(query_parsed_df$namestring),
-    ]
-    query_parsed_df$namestring <- NULL
-  }
-
-  # Write out parsed names to temporary file
-  query_parsed_txt <- tempfile(
-    pattern = digest::digest(query),
-    fileext = ".txt"
   )
-  if (file.exists(query_parsed_txt)) unlink(query_parsed_txt)
-  ts_write_names(query_parsed_df, query_parsed_txt)
+  key_id <- parsed$id[match(namestring, namestring)]
+  list(
+    parsed = parsed[!duplicated(namestring), ],
+    original = original,
+    id_map = data.frame(id_query = key_id, id = parsed$id)
+  )
+}
 
-  # Only reference names in a query genus can match (see R/genus_filter.R), so
-  # drop the rest before the (expensive) parsing and key building
+# Parsed reference names, restricted to those that could match a query genus
+# (see R/genus_filter.R) before the expensive parsing and key building
+.ts_prepare_reference <- function(
+  reference, query_parsed_df, max_dist_genus, strip_qualifiers
+) {
   ref_genus_keys <- if (is.character(reference)) {
     .ts_raw_genus_key(reference)
   } else {
@@ -393,114 +433,72 @@ ts_match_names <- function(
   keep_keys <- .ts_genus_keep_keys(
     query_parsed_df, ref_genus_keys, max_dist_genus
   )
-
-  # Parse or load reference names
-  if (is.character(reference)) {
-    # Parse the names (adds 'name' column)
-    reference <- .ts_filter_raw_reference(reference, keep_keys)
-    ref_parsed_df <- if (length(reference)) {
-      ts_parse_names(
-        reference,
-        strip_qualifiers = strip_qualifiers,
-        exclude_placeholders = FALSE
-      )
-    } else {
-      .ts_empty_parsed_df()
-    }
-    # IDs from ts_parse_names() are a hash of the input plus a counter, so a
-    # reference vector identical to the query vector would get identical IDs
-    # and every pair would be mistaken for a self-match. Keep them distinct.
-    if (any(ref_parsed_df$id %in% query_parsed_df$id)) {
-      ref_parsed_df$id <- paste0("ref-", ref_parsed_df$id)[
-        seq_len(nrow(ref_parsed_df))
-      ]
-    }
+  if (!is.character(reference)) {
+    return(.ts_filter_parsed_reference(reference, keep_keys))
+  }
+  reference <- .ts_filter_raw_reference(reference, keep_keys)
+  ref_parsed_df <- if (length(reference)) {
+    ts_parse_names(
+      reference,
+      strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = FALSE
+    )
   } else {
-    # Or, names are already parsed
-    ref_parsed_df <- .ts_filter_parsed_reference(reference, keep_keys)
+    .ts_empty_parsed_df()
   }
-
-  # Check that manually matched ref names are in data
-  if (!is.null(manual_match)) {
-    assertthat::assert_that(
-      isTRUE(all(manual_match$match %in% ref_parsed_df$name)),
-      msg = "One or more manually matched reference names not in reference data"
-    )
+  # IDs from ts_parse_names() are a hash of the input plus a counter, so a
+  # reference vector identical to the query vector would get identical IDs and
+  # every pair would be mistaken for a self-match. Keep them distinct.
+  if (any(ref_parsed_df$id %in% query_parsed_df$id)) {
+    ref_parsed_df$id <- paste0("ref-", ref_parsed_df$id)[
+      seq_len(nrow(ref_parsed_df))
+    ]
   }
+  ref_parsed_df
+}
 
-  # Write out parsed names to temporary file
-  ref_parsed_txt <- tempfile(
-    pattern = digest::digest(reference),
-    fileext = ".txt"
+# Parsed names as the pipe-delimited lines the matching engine reads (written
+# via a temporary file, as ts_write_names() does)
+.ts_parsed_lines <- function(parsed_df, key) {
+  path <- tempfile(pattern = digest::digest(key), fileext = ".txt")
+  on.exit(unlink(path))
+  ts_write_names(parsed_df, path)
+  readLines(path)
+}
+
+# Put the main result columns first
+.ts_front_cols <- function(df) {
+  front <- c("query", "reference", "match_type", "dist")
+  df[, c(front, setdiff(colnames(df), front))]
+}
+
+# Give every original query its results back, including the ones dropped as
+# duplicates when infraspecific epithets were collapsed
+.ts_expand_collapsed <- function(results, collapsed) {
+  results_unexpanded <- results[, setdiff(colnames(results), "query")]
+  out <- data.frame(
+    query = collapsed$original$name,
+    id = collapsed$original$id
   )
-  if (file.exists(ref_parsed_txt)) unlink(ref_parsed_txt)
-  ts_write_names(ref_parsed_df, ref_parsed_txt)
+  out <- .ts_join(out, collapsed$id_map, "id", "id")
+  out <- .ts_join(out, results_unexpanded, "id_query", "id_query")
+  out$id <- NULL
+  .ts_front_cols(out)
+}
 
-  # Run matching
-  results <- tt_matchnames(
-    query_lines = readLines(query_parsed_txt),
-    ref_lines = readLines(ref_parsed_txt),
-    max_dist = max_dist,
-    match_no_auth = match_no_auth,
-    match_canon = match_canon,
-    canon_closest = identical(fuzzy_canon_hits, "closest"),
-    max_dist_genus = max_dist_genus,
-    transpositions = transpositions
+# Restore the original query input for manual matches and mark those matches
+# as "manual"
+.ts_restore_manual <- function(results, manual_replacement_df, manual_match) {
+  out <- .ts_join(
+    manual_replacement_df, results, "query_new", "query",
+    inner = TRUE
   )
-
-  # `results` has one row per match (18 columns): id_query, id_ref, match_type, dist,
-  # then the parsed elements of the query name (genus hybrid sign, genus,
-  # species hybrid sign, specific epithet, infraspecific rank, infraspecific
-  # epithet, author), then the same for the reference name.
-
-  # Add back in the original search terms (query and reference)
-  results$query <- query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
-  results$reference <- ref_parsed_df$name[match(results$id_ref, ref_parsed_df$id)]
-  .front <- function(df) {
-    front <- c("query", "reference", "match_type", "dist")
-    df[, c(front, setdiff(colnames(df), front))]
-  }
-  results <- .front(results)
-
-  # Add back in names that were duplicated due to collapsed infrasp names
-  if (isTRUE(collapse_infra)) {
-    results_unexpanded <- results[, setdiff(colnames(results), "query")]
-    results <- data.frame(
-      query = query_parsed_df_original$name,
-      id = query_parsed_df_original$id
-    )
-    results <- .ts_join(results, id_map, "id", "id")
-    results <- .ts_join(
-      results, results_unexpanded, "id_query", "id_query"
-    )
-    results$id <- NULL
-    results <- .front(results)
-  }
-
-  # For manual matches, restore back to original query input, and specify
-  # that match was made manually
-  if (!is.null(manual_match)) {
-    results <- .ts_join(
-      manual_replacement_df, results, "query_new", "query",
-      inner = TRUE
-    )
-    results$match_type <- ifelse(
-      results$query_original %in% manual_match$query,
-      "manual",
-      results$match_type
-    )
-    results$query <- results$query_original
-    results$query_original <- NULL
-    results <- results[, c("query", setdiff(colnames(results), "query"))]
-  }
-
-  if (simple) {
-    results <- results[, c("query", "reference", "match_type")]
-  }
-
-  if (isTRUE(tbl_out)) {
-    return(.ts_as_tibble(results))
-  }
-
-  results
+  out$match_type <- ifelse(
+    out$query_original %in% manual_match$query,
+    "manual",
+    out$match_type
+  )
+  out$query <- out$query_original
+  out$query_original <- NULL
+  out[, c("query", setdiff(colnames(out), "query"))]
 }
