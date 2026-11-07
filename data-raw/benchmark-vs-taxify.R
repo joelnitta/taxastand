@@ -148,14 +148,21 @@ sp <- ppg[ppg$taxonRank == "species" & ppg$canonical %in% held & !is.na(ppg$scie
 sp <- sp[sample(nrow(sp), min(300, nrow(sp))), ]
 genus <- sub(" .*", "", sp$canonical)
 epi <- sub("^\\S+ (\\S+).*", "\\1", sp$canonical)
-sub1 <- function(e) { i <- sample(nchar(e), 1); `substr<-`(e, i, i, "q") }
+sub1 <- function(e) {
+  i <- sample(nchar(e), 1)
+  `substr<-`(e, i, i, "q")
+}
 swp <- function(e) {
   if (nchar(e) < 3) return(e)
   i <- sample(nchar(e) - 1, 1)
-  a <- substr(e, i, i); b <- substr(e, i + 1, i + 1)
+  a <- substr(e, i, i)
+  b <- substr(e, i + 1, i + 1)
   `substr<-`(e, i, i + 1, paste0(b, a))
 }
-del <- function(e) { i <- sample(nchar(e), 1); paste0(substr(e, 1, i - 1), substr(e, i + 1, nchar(e))) }
+del <- function(e) {
+  i <- sample(nchar(e), 1)
+  paste0(substr(e, 1, i - 1), substr(e, i + 1, nchar(e)))
+}
 kinds <- list(substitution = sub1, swap = swp, deletion = del)
 typos <- do.call(rbind, lapply(names(kinds), function(k) {
   e2 <- vapply(epi, kinds[[k]], "", USE.NAMES = FALSE)
