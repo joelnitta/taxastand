@@ -2,31 +2,15 @@
 
 ## Major changes
 
-* **Breaking: swapped letters count as one edit, and results gain a `dist`
-  column (#67).** Fuzzy matching now uses the optimal string alignment
-  distance, so swapping two adjacent letters (`Qurecus` for `Quercus`) is one
-  edit instead of two. With `max_dist = 1`, 188 swapped-letter PPG queries were
-  all found, versus none before; at the default of 3 the typical fuzzy hit is
-  unchanged but a few more distant names (those at 4 plain edits, 3 with a
-  swap) are returned. Use the new argument `transpositions = FALSE` for plain
-  Levenshtein distance (slightly faster). `ts_match_names()` output has a new
-  `dist` column with the edit distance of each fuzzy hit (`NA` for other match
-  types).
-* **Breaking: misspelled genera are now fuzzy-matched (#50).** A query whose
-  genus is not in the reference (e.g. `"Aspelnium nidus L."`) used to give
-  `no_match`. Reference genera within the new argument `max_dist_genus`
-  (default 2) of the query genus are now tried, and the rest of the name must
-  still match within `max_dist` (the total distance includes the genus
-  edits). Such matches have the new `match_type` `auto_fuzzy_genus`. Set
-  `max_dist_genus = 0` to turn this off. Genera that are in the reference are
-  never replaced by a neighbour.
-* **Breaking: placeholder names are excluded (#41).** Names such as
-  `"Genus sp."`, `"Genus spp."`, `"Genus indet."`, `"Genus stet."` or
-  `"Genus sp. inc."` (an identification that stopped above species rank) used
-  to be parsed with `"sp"` as the specific epithet and could be fuzzy-matched
-  to unrelated species. They are now dropped by `ts_parse_names()`,
-  `ts_match_names()` and `ts_resolve_names()` with a warning. Use the new
-  argument `exclude_placeholders = FALSE` for the old behaviour.
+* **New `dist` column and optional swap-aware distance (#67).**
+  `ts_match_names()` output has a new `dist` column with the edit distance of
+  each fuzzy hit (`NA` for other match types; a new column, so code that
+  selects columns by position may need updating). The new argument
+  `transpositions = TRUE` counts a swap of two adjacent letters (`Qurecus` for
+  `Quercus`) as one edit instead of two. It is off by default (plain
+  Levenshtein distance, as before, and somewhat faster). With `max_dist = 1`,
+  188 swapped-letter PPG queries were all found with it on, versus none with
+  it off; at the default `max_dist = 3` the effect is small.
 * **Breaking: fuzzy matching of queries without an author (#49).** The author
   string used to count towards the edit distance, so author-less queries could
   only fuzzy-match (loosely, and only because the old default `max_dist` was

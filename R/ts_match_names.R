@@ -226,7 +226,7 @@ ts_match_names <- function(
   manual_match = NULL,
   max_dist = 3,
   max_dist_genus = 2,
-  transpositions = TRUE,
+  transpositions = FALSE,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,

@@ -9,7 +9,7 @@ ts_resolve_names(
   ref_taxonomy,
   max_dist = 3,
   max_dist_genus = 2,
-  transpositions = TRUE,
+  transpositions = FALSE,
   match_no_auth = FALSE,
   match_canon = FALSE,
   collapse_infra = FALSE,
@@ -54,7 +54,7 @@ genus-level fuzzy matching off. See \code{\link{ts_match_names}()}. Default: 2.}
 \code{Qurecus} for \code{Quercus}, a common typing error) as one edit instead of two
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to \code{FALSE} for plain
-Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}()}. Default: \code{TRUE}.}
+Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}()}. Default: \code{FALSE}.}
 
 \item{match_no_auth}{Logical; If no author is given in the query and the name
 (without author) occurs only once in the reference, accept the name in the
