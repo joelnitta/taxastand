@@ -161,9 +161,9 @@ different authors, <em>Hymenophyllum wilsonii</em> Fée and
 <span>  <span class="op">)</span>,</span>
 <span>  simple <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;                    query                    reference  match_type</span></span>
-<span><span class="co">#&gt; 1 Hymenophyllum wilsonii   Hymenophyllum wilsonii Fée auto_cfonly</span></span>
-<span><span class="co">#&gt; 2 Hymenophyllum wilsonii Hymenophyllum wilsonii Hook. auto_cfonly</span></span></code></pre></div>
+<span><span class="co">#&gt;                    query                    reference match_type</span></span>
+<span><span class="co">#&gt; 1 Hymenophyllum wilsonii   Hymenophyllum wilsonii Fée auto_canon</span></span>
+<span><span class="co">#&gt; 2 Hymenophyllum wilsonii Hymenophyllum wilsonii Hook. auto_canon</span></span></code></pre></div>
 <p><code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> matches both scientific names<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, because
 the algorithm it can’t distinguish between them without additional
 information. So <strong>it is almost always better to include the
@@ -266,15 +266,15 @@ distance</a> including total insertions, deletions and substitutions
 counts as one edit instead of two). The distance of each fuzzy hit is
 given in the <code>dist</code> column of the full output.</li>
 <li>
-<code>auto_cfonly</code>: Match by “canonical form”, i.e., genus
-plus specific epithet plus infraspecific epithet (if present), not
-including the infraspecific specifier (“subsp.”, etc.). This is used
-automatically for queries without an author; for queries with an author,
-it is only used if <code>match_canon</code> is <code>TRUE</code>.</li>
+<code>auto_canon</code>: Match by “canonical form”, i.e., genus plus
+specific epithet plus infraspecific epithet (if present), not including
+the infraspecific specifier (“subsp.”, etc.). This is used automatically
+for queries without an author; for queries with an author, it is only
+used if <code>match_canon</code> is <code>TRUE</code>.</li>
 <li>
 <code>auto_fuzzy_canon</code>: Fuzzy match for a query that has
 <strong>no</strong> author; match between “canonical forms” (see
-<code>auto_cfonly</code>) allowed up to the threshold given by
+<code>auto_canon</code>) allowed up to the threshold given by
 <code>max_dist</code>. The author string is ignored, so it does not
 count towards the distance. All reference names within the threshold are
 returned.</li>
@@ -291,7 +291,7 @@ distance includes the genus edits).</li>
 if a name could be matched both by <code>auto_punct</code> and
 <code>auto_fuzzy</code>, it will be matched based on
 <code>auto_punct</code><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. For queries without an author, an
-identical canonical name (<code>auto_cfonly</code>) is preferred over a
+identical canonical name (<code>auto_canon</code>) is preferred over a
 fuzzy canonical match (<code>auto_fuzzy_canon</code>).</p>
 </div>
 <div class="section level2">
@@ -362,14 +362,14 @@ unambiguously:</p>
 <span><span class="co">#&gt;                  query resolved_name                         matched_name</span></span>
 <span><span class="co">#&gt; 1 Didymoglossum alatum          &lt;NA&gt;     Didymoglossum alatum (Sw.) Desv.</span></span>
 <span><span class="co">#&gt; 2 Didymoglossum alatum          &lt;NA&gt; Didymoglossum alatum (Schkuhr) Presl</span></span>
-<span><span class="co">#&gt;   resolved_status    matched_status  match_type</span></span>
-<span><span class="co">#&gt; 1            &lt;NA&gt; ambiguous synonym auto_cfonly</span></span>
-<span><span class="co">#&gt; 2            &lt;NA&gt; ambiguous synonym auto_cfonly</span></span></code></pre></div>
+<span><span class="co">#&gt;   resolved_status    matched_status match_type</span></span>
+<span><span class="co">#&gt; 1            &lt;NA&gt; ambiguous synonym auto_canon</span></span>
+<span><span class="co">#&gt; 2            &lt;NA&gt; ambiguous synonym auto_canon</span></span></code></pre></div>
 <p>In this case, name resolution using the default settings produced 2
 possible answers, but no <code>resolved_name</code>. The trouble is that
 our query lacked an author. A query without an author is matched on its
 canonical name (genus, specific epithet, and infraspecific epithet),
-ignoring the author (match type <code>auto_cfonly</code>, or
+ignoring the author (match type <code>auto_canon</code>, or
 <code>auto_fuzzy_canon</code> if the name also needs fuzzy matching).
 Here the reference contains two different names with the same canonical
 name, <em>Didymoglossum alatum</em> (Sw.) Desv. and <em>Didymoglossum
