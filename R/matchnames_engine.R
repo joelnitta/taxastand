@@ -173,7 +173,7 @@
 tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
                           match_no_auth = FALSE, match_canon = FALSE,
                           canon_closest = FALSE, max_dist_genus = 0,
-                          transpositions = TRUE) {
+                          transpositions = FALSE) {
   max_dist <- as.numeric(max_dist)
   max_dist_genus <- as.numeric(max_dist_genus)
   noauthone <- isTRUE(match_no_auth)

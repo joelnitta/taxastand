@@ -145,14 +145,16 @@ test_that("misspelled genus matches", {
 test_that("a swap of adjacent letters is one edit", {
   # "Asplenium ndius" needs 2 plain edits but is one swap away
   res <- suppressWarnings(
-    ts_match_names("Asplenium ndius L.", ref$scientificName, max_dist = 1)
+    ts_match_names(
+      "Asplenium ndius L.", ref$scientificName,
+      max_dist = 1, transpositions = TRUE
+    )
   )
   expect_equal(res$reference, "Asplenium nidus L.")
   expect_equal(res$dist, 1L)
   res0 <- suppressWarnings(
     ts_match_names(
-      "Asplenium ndius L.", ref$scientificName,
-      max_dist = 1, transpositions = FALSE
+      "Asplenium ndius L.", ref$scientificName, max_dist = 1
     )
   )
   expect_equal(res0$match_type, "no_match")

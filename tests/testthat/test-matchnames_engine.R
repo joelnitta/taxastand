@@ -113,14 +113,14 @@ test_that(".tt_osa counts an adjacent swap as one edit", {
 test_that("tt_matchnames: dist column and swap-aware distance", {
   ref <- c("r1||Foo||quercus|||L.", "r2||Foo||quercxx|||L.")
   q <- "q1||Foo||qurecus|||L."
-  swap <- tt_matchnames(q, ref, max_dist = 1)
+  swap <- tt_matchnames(q, ref, max_dist = 1, transpositions = TRUE)
   expect_equal(swap$match_type, "auto_fuzzy")
   expect_equal(swap$id_ref, "r1")
   expect_equal(swap$dist, 1L)
-  # plain Levenshtein: a swap is two edits, so not within max_dist = 1
-  plain <- tt_matchnames(q, ref, max_dist = 1, transpositions = FALSE)
+  # plain Levenshtein (the default): a swap is two edits
+  plain <- tt_matchnames(q, ref, max_dist = 1)
   expect_equal(plain$match_type, "no_match")
-  plain2 <- tt_matchnames(q, ref, max_dist = 2, transpositions = FALSE)
+  plain2 <- tt_matchnames(q, ref, max_dist = 2)
   expect_equal(plain2$dist, 2L)
   # exact matches have no distance
   expect_true(is.na(tt_matchnames("q||Foo||quercus|||L.", ref)$dist))
@@ -128,7 +128,9 @@ test_that("tt_matchnames: dist column and swap-aware distance", {
 
 test_that("tt_matchnames: dist is set for author-less and genus fuzzy hits", {
   ref <- c("r1||Foo||quercus|||L.", "r2||Barus||zzz|||L.")
-  canon <- tt_matchnames("q1||Foo||qurecus|||", ref, max_dist = 2)
+  canon <- tt_matchnames(
+    "q1||Foo||qurecus|||", ref, max_dist = 2, transpositions = TRUE
+  )
   expect_equal(canon$match_type, "auto_fuzzy_canon")
   expect_equal(canon$dist, 1L)
   genus <- tt_matchnames(
