@@ -152,10 +152,8 @@ ts_resolve_names <- function(
       exclude_placeholders = exclude_placeholders,
       fuzzy_canon_hits = fuzzy_canon_hits
     )
-  } else if (is.data.frame(query)) {
-    match_results <- query
   } else {
-    stop("query must be of class 'data.frame' or a character vector")
+    match_results <- query # already matched with ts_match_names()
   }
 
   # Classify results of matching

@@ -175,3 +175,67 @@ test_that("tt_matchnames: orthvar also applies to infraspecific epithets", {
   res <- tt_matchnames("q1||Foo||bar|var.|silvestris|L.", ref)
   expect_equal(res$match_type, "auto_orthvar")
 })
+
+test_that("tt_matchnames: match_no_auth matches a unique author-less name", {
+  ref <- c("r1||Foo||bar|||L.", "r2||Foo||baz|||L.")
+  q <- "q1||Foo||bar|||"
+  expect_equal(tt_matchnames(q, ref)$match_type, "auto_canon")
+  res <- tt_matchnames(q, ref, match_no_auth = TRUE)
+  expect_equal(res$match_type, "auto_noauth")
+  expect_equal(res$id_ref, "r1")
+  # not unique in the reference: no auto_noauth, both are canonical hits
+  ref2 <- c(ref, "r3||Foo||bar|||Sm.")
+  res2 <- tt_matchnames(q, ref2, match_no_auth = TRUE)
+  expect_equal(res2$match_type, c("auto_canon", "auto_canon"))
+  expect_setequal(res2$id_ref, c("r1", "r3"))
+})
+
+test_that("tt_matchnames: match_canon matches on canonical name only", {
+  ref <- "r1||Foo||bar|||L."
+  far <- "q1||Foo||bar|||Zzzzzzzzzzz."
+  expect_equal(tt_matchnames(far, ref)$match_type, "no_match")
+  res <- tt_matchnames(far, ref, match_canon = TRUE)
+  expect_equal(res$match_type, "auto_canon")
+  expect_equal(res$id_ref, "r1")
+  # auct. queries are never fuzzy-matched, only canonically (if allowed)
+  auct <- "q1||Foo||bar|||auct."
+  expect_equal(tt_matchnames(auct, ref)$match_type, "no_match")
+  expect_equal(tt_matchnames(auct, ref, match_canon = TRUE)$match_type, "auto_canon")
+})
+
+test_that("tt_matchnames: a name never matches itself", {
+  rec <- "a||Foo||bar|||L."
+  expect_equal(tt_matchnames(rec, rec)$match_type, "no_match")
+  expect_equal(tt_matchnames("a||Foo||bar|||", rec)$match_type, "no_match")
+})
+
+test_that("tt_matchnames: closest-only applies to genus-level fuzzy hits", {
+  ref <- c("r1||Foo||bar|||", "r2||Foo||baxxx|||")
+  q <- "q1||Fo||bar|||"
+  all <- tt_matchnames(q, ref, max_dist = 4, max_dist_genus = 2)
+  expect_equal(nrow(all), 2)
+  closest <- tt_matchnames(
+    q, ref, max_dist = 4, max_dist_genus = 2, canon_closest = TRUE
+  )
+  expect_equal(closest$id_ref, "r1")
+  expect_equal(closest$match_type, "auto_fuzzy_genus")
+})
+
+test_that("tt_matchnames handles no queries; .tt_osa handles empty strings", {
+  res <- tt_matchnames(character(0), "r1||Foo||bar|||L.")
+  expect_equal(nrow(res), 0)
+  expect_equal(ncol(res), 18)
+  expect_equal(.tt_osa(character(0), "ab"), 2L)
+  expect_equal(.tt_osa(c("a", "b"), ""), 2L)
+})
+
+test_that("tt_matchnames: match_no_auth is a no-op for queries with an author", {
+  res <- tt_matchnames(
+    "q1||Foo||bar|||L.", "r1||Foo||bar|||Sm.", match_no_auth = TRUE
+  )
+  expect_equal(res$match_type, "auto_fuzzy")
+})
+
+test_that("tt_parsenames returns nothing for no records", {
+  expect_equal(tt_parsenames(character(0)), character(0))
+})
