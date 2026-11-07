@@ -75,6 +75,9 @@
 
 ## Minor improvements
 
+* Faster parsing and key building (#66): fewer and cheaper regex passes, and
+  pipe-delimited records are split once instead of once per field. Output is
+  identical; e.g. parsing 149,000 names takes about 1.2 s instead of 3.2 s.
 * Lighter installation (#48): dplyr, tidyr, fs and glue are no longer
   dependencies (the resolve and match steps now use base R, with identical
   output), and tibble moved to Suggests. `tbl_out = TRUE` (or the `ts_tbl_out`

@@ -33,9 +33,11 @@
 # Cheap genus key from a raw (unparsed) name: its first word, ignoring a
 # leading hybrid sign, normalised with tt_depunct().
 .ts_raw_genus_key <- function(x) {
-  x <- sub("^[[:space:]]+", "", x)
-  x <- sub("^(\u00d7[[:space:]]*|x[[:space:]]+)", "", x)
-  tt_depunct(sub("[[:space:]].*$", "", x))
+  tt_depunct(sub(
+    "^[[:space:]]*(?:\u00d7[[:space:]]*|x[[:space:]]+)?([^[:space:]]*).*$",
+    "\\1", x,
+    perl = TRUE
+  ))
 }
 
 # Subset raw reference names to those that could match a query genus
