@@ -322,8 +322,7 @@ ts_match_names <- function(
     # to generate exact match
     if (!is.null(manual_match)) {
       manual_replacement_df <- data.frame(
-        query_original = query,
-        stringsAsFactors = FALSE
+        query_original = query
       )
       manual_replacement_df$query_new <- ifelse(
         is.na(match(query, manual_match$query)),
@@ -368,8 +367,7 @@ ts_match_names <- function(
       query_parsed_df$id[match(query_parsed_df$namestring, query_parsed_df$namestring)]
     id_map <- data.frame(
       id_query = query_parsed_df$key_id,
-      id = query_parsed_df$id,
-      stringsAsFactors = FALSE
+      id = query_parsed_df$id
     )
     query_parsed_df <- query_parsed_df[
       !duplicated(query_parsed_df$namestring),
@@ -469,8 +467,7 @@ ts_match_names <- function(
     results_unexpanded <- results[, setdiff(colnames(results), "query")]
     results <- data.frame(
       query = query_parsed_df_original$name,
-      id = query_parsed_df_original$id,
-      stringsAsFactors = FALSE
+      id = query_parsed_df_original$id
     )
     results <- .ts_join(results, id_map, "id", "id")
     results <- .ts_join(

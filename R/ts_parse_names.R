@@ -107,7 +107,7 @@ ts_parse_names <- function(
   # Split into the id and the name parts (8 fields; fields may be empty). Fill
   # in NA if that name part is missing.
   fields <- .tt_split_fields(parsed_lines, length(name_parts) + 1L)
-  parsed_names <- data.frame(id = fields[[1]], stringsAsFactors = FALSE)
+  parsed_names <- data.frame(id = fields[[1]])
   for (i in seq_along(name_parts)) {
     field <- fields[[i + 1L]]
     field[field == ""] <- NA_character_
