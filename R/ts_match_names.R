@@ -52,7 +52,7 @@
 #' **Canonical-name matches (the author is ignored; check the result)**
 #'
 #' The canonical name is genus + specific epithet + infraspecific epithet.
-#' - `auto_cfonly`: canonical names are identical. Used automatically for
+#' - `auto_canon`: canonical names are identical. Used automatically for
 #'   queries without an author; for queries with an author, only when
 #'   `match_canon = TRUE`. Several reference names can share a canonical name
 #'   (homonyms), giving multiple hits.

@@ -190,7 +190,7 @@ vs. \code{subsp.}).
 
 The canonical name is genus + specific epithet + infraspecific epithet.
 \itemize{
-\item \code{auto_cfonly}: canonical names are identical. Used automatically for
+\item \code{auto_canon}: canonical names are identical. Used automatically for
 queries without an author; for queries with an author, only when
 \code{match_canon = TRUE}. Several reference names can share a canonical name
 (homonyms), giving multiple hits.

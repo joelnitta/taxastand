@@ -71,7 +71,7 @@ test_that("tt_matchnames: author-less queries match on canonical name", {
   # Exact canonical name wins over looser hits and all of them are returned
   ref2 <- c(ref, "r4||Foo||bar|||Brown", "r5||Foo||bar|||Green")
   res2 <- tt_matchnames("q1||Foo||bar|||", ref2, max_dist = 3)
-  expect_equal(res2$match_type, c("auto_cfonly", "auto_cfonly"))
+  expect_equal(res2$match_type, c("auto_canon", "auto_canon"))
   expect_equal(res2$id_ref, c("r4", "r5"))
   # With an author, matching is still on the whole name (author counts)
   res3 <- tt_matchnames("q1||Foo||bar|||Smyth", ref2, max_dist = 1)

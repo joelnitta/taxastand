@@ -2,6 +2,10 @@
 
 ## Major changes
 
+* **Breaking: match type `auto_cfonly` is renamed `auto_canon` (#82).** The old
+  name could be misread as a match on the taxonomic qualifier `cf.`; it means a
+  match on the canonical name (genus + specific epithet + infraspecific
+  epithet).
 * **New match type `auto_orthvar` (#68).** Epithets that differ only by
   standard Latin spelling variants (`sylvestris`/`silvestris`,
   `caerulea`/`coerulea`; `ae`/`oe` = `e`, `y` = `i`, `ph` = `f`, `rh` = `r`,
@@ -23,7 +27,7 @@
   only fuzzy-match (loosely, and only because the old default `max_dist` was
   large). They are now fuzzy-matched on the canonical name (genus + specific
   epithet + infraspecific epithet), ignoring the author. A canonical-name match
-  is reported as `auto_cfonly`, and a misspelled one as the new match type
+  is reported as `auto_canon`, and a misspelled one as the new match type
   `auto_fuzzy_canon`; all reference names within `max_dist` are returned, so
   ambiguity shows up in `ts_resolve_names()`. The new argument
   `fuzzy_canon_hits = "closest"` instead keeps only the nearest hits (ties kept),

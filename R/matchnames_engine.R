@@ -84,7 +84,7 @@
   }
 
   # Records whose epithets contain a letter group that .tt_orthfold() changes;
-  # all other records have the same orthvar key as their punct / cfonly key
+  # all other records have the same orthvar key as their punct / canon key
   orth_trigger <- function() {
     which(grepl("ae|oe|y|ph|rh|th|ii", tolower(paste(s, ssp)), perl = TRUE))
   }
@@ -97,7 +97,7 @@
       exact = exact,
       punct = tt_depunct(punct_in),
       noauth = tt_depunct(namex),
-      cfonly = tt_depunct(paste0(g, s, ssp)),
+      canon = tt_depunct(paste0(g, s, ssp)),
       irank = derive(paste0(xg, g, xs, s, ssp, a)),
       basio = derive(paste0(namex, sub("^\\([^)]+\\)", "", a))),
       `in` = derive(paste0(namex, sub(" [iI]n .*$", "", a))),
@@ -117,8 +117,8 @@
         )
         out
       },
-      cforth = {
-        out <- key("cfonly")
+      canonorth = {
+        out <- key("canon")
         i <- orth_trigger()
         out[i] <- paste0(
           tt_depunct(g[i]),
@@ -329,12 +329,12 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # test_canonfuzzy: a query without an author is compared with the reference
   # on canonical name (genus + epithet + infraspecific epithet) so that the
   # author string does not count towards the distance. All same-genus refs with
-  # an identical canonical name are returned ("auto_cfonly"); failing that, all
+  # an identical canonical name are returned ("auto_canon"); failing that, all
   # within max_dist ("auto_fuzzy_canon"), or only the closest of those if
   # `canon_closest`.
   test_canonfuzzy <- function(idx) {
-    rcf <- B$key("cfonly")
-    qcf <- A$key("cfonly")
+    rcf <- B$key("canon")
+    qcf <- A$key("canon")
     orth <- NULL # canonical orthvar keys, built when first needed
     for (qi in idx) {
       rows <- genus_rows()[[A$genus[qi]]]
@@ -344,10 +344,10 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       d <- fuzzy_dist(qcf[qi], rcf[rows])
       if (any(d == 0L, na.rm = TRUE)) {
         keep <- !is.na(d) & d == 0L
-        type <- "auto_cfonly"
+        type <- "auto_canon"
       } else {
         if (is.null(orth)) {
-          orth <- list(q = A$key("cforth"), r = B$key("cforth"))
+          orth <- list(q = A$key("canonorth"), r = B$key("canonorth"))
         }
         same <- !is.na(orth$r[rows]) & orth$r[rows] == orth$q[qi]
         if (any(same)) {
@@ -401,7 +401,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     ref_genera <- unique(B$genus)
     ref_genera_key <- tt_depunct(ref_genera)
     keys <- list(
-      canon = list(q = A$key("cfonly"), r = B$key("cfonly")),
+      canon = list(q = A$key("canon"), r = B$key("canon")),
       whole = list(q = A$key("punct"), r = B$key("punct"))
     )
     near <- list()
@@ -443,7 +443,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # auct.: only a canonical-form match is allowed, else no_match
   auct <- pending[A$auct[pending]]
   if (cfo && length(auct)) {
-    accept(auct, lookup(A$key("cfonly")[auct], "cfonly"), "auto_cfonly")
+    accept(auct, lookup(A$key("canon")[auct], "canon"), "auto_canon")
   }
 
   # Fuzzy matching (only if the genus is present in the reference): queries
@@ -458,7 +458,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # Optional canonical-form match for anything still unmatched
   others <- pending[!A$auct[pending]]
   if (cfo && length(others)) {
-    accept(others, lookup(A$key("cfonly")[others], "cfonly"), "auto_cfonly")
+    accept(others, lookup(A$key("canon")[others], "canon"), "auto_canon")
   }
 
   # Genus-level fuzzy matching for queries whose genus is not in the reference
