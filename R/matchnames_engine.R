@@ -20,9 +20,7 @@
 
 # Collapse internal/leading/trailing spaces (matchnames `cleanspaces`)
 .tt_cleanspaces <- function(x) {
-  x <- gsub("  *", " ", x)
-  x <- gsub(" *$", "", x)
-  gsub("^ *", "", x)
+  gsub("^ +| +$", "", gsub(" {2,}", " ", x, perl = TRUE), perl = TRUE)
 }
 
 # Parse a vector of parsed `id|...` lines into the fields matchnames needs.
@@ -32,20 +30,20 @@
 .tt_record_keys <- function(lines) {
   lines <- enc2utf8(lines)
   # Split into 8 fields (exactly 7 pipes); fields may be empty.
+  fields <- .tt_split_fields(lines, 8L)
   f <- function(i) {
-    if (i == 1) {
-      sub("^([^|]*)\\|.*$", "\\1", lines)
-    } else if (i == 8) {
-      sub("^([^|]*\\|){7}(.*)$", "\\2", lines)
+    if (i == 8L) {
+      # the author keeps everything after the 7th pipe
+      sub("^([^|]*\\|){7}(.*)$", "\\2", lines, perl = TRUE)
     } else {
-      sub(paste0("^([^|]*\\|){", i - 1, "}([^|]*)\\|.*$"), "\\2", lines)
+      fields[[i]]
     }
   }
   code <- f(1)
 
   # Field cleaning (read_data lines 154-158): blank out NULL / \N, cleanspaces
   clean <- function(x) {
-    x <- sub("^(NULL|\\\\N)$", "", x)
+    x[x == "NULL" | x == "\\N"] <- ""
     .tt_cleanspaces(x)
   }
   xg <- clean(f(2))

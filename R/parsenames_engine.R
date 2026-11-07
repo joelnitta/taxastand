@@ -103,33 +103,31 @@ tt_depunct <- function(x) {
     x[nonascii] <- y
   }
 
-  # Parentheses to underscore (later stripped); ' and / et ' to ' & '
-  x <- gsub("[()]", "_", x)
-  x <- gsub(" (and|et.?)  ", " \\& ", x)
+  # ' and / et ' to ' & '
+  x <- gsub(" (and|et.?)  ", " \\& ", x, perl = TRUE)
 
-  # Keep only letters, digits, &, and the hybrid sign; then lower-case
-  x <- gsub("[^A-Za-z0-9()&\u00d7]", "", x)
+  # Keep only letters, digits, &, and the hybrid sign (parentheses and every
+  # other character go); then lower-case
+  x <- gsub("[^A-Za-z0-9&\u00d7]", "", x, perl = TRUE)
   tolower(x)
 }
 
-# Extract field i (1-based) of `|`-delimited lines of the id plus the seven
-# name parts. Fields may be empty, and a line with fewer than 8 fields (e.g. a
-# name that could not be parsed) yields "" for the missing ones.
-.tt_split_field <- function(x, i) {
-  x <- paste0(x, "|||||||")
-  sub(paste0("^([^|]*\\|){", i - 1L, "}([^|]*).*$"), "\\2", x)
+# Fields 1..n of `|`-delimited lines, as a list of n character vectors. Fields
+# may be empty, and a line with fewer than n fields (e.g. a name that could not
+# be parsed) yields "" for the missing ones.
+.tt_split_fields <- function(x, n) {
+  if (!length(x)) {
+    return(rep(list(character(0)), n))
+  }
+  pieces <- strsplit(paste0(x, strrep("|", n)), "|", fixed = TRUE)
+  flat <- unlist(pieces, use.names = FALSE)
+  start <- cumsum(c(0L, lengths(pieces)[-length(pieces)]))
+  lapply(seq_len(n), function(i) flat[start + i])
 }
 
-# Helper: extract field i (1-based) from a string with exactly 6 pipes.
-.tt_field <- function(x, i) {
-  if (i == 1) {
-    sub("^([^|]*)\\|.*$", "\\1", x)
-  } else {
-    sub(
-      paste0("^([^|]*\\|){", i - 1, "}([^|]*)\\|.*$"),
-      "\\2", x
-    )
-  }
+# Extract field i (1-based) of `|`-delimited lines (see .tt_split_fields())
+.tt_split_field <- function(x, i) {
+  .tt_split_fields(x, i)[[i]]
 }
 
 #' Parse taxonomic names
@@ -152,8 +150,8 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   }
 
   records <- enc2utf8(records)
-  id <- sub("\\|.*$", "", records)
-  name <- sub("^[^|]*\\|", "", records)
+  id <- sub("\\|.*$", "", records, perl = TRUE)
+  name <- sub("^[^|]*\\|", "", records, perl = TRUE)
 
   # Optional taxastand extension: strip open-nomenclature qualifiers before
   # the whitespace clean-up below removes the double space left behind.
@@ -162,44 +160,44 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   }
 
   # Main-block preprocessing (parsenames lines 14-18)
-  name <- gsub("  *", " ", name)
-  name <- gsub("( *$|^ *)", "", name)
-  name <- gsub(" ssp\\. ", " subsp. ", name)
+  name <- gsub(" {2,}", " ", name, perl = TRUE)
+  name <- gsub("( +$|^ +)", "", name, perl = TRUE)
+  name <- gsub(" ssp. ", " subsp. ", name, fixed = TRUE)
 
   # parse_taxon_name: clean bad chars (lines 54-56)
-  name <- gsub("[\u00bf/\"]", "", name) # remove \u00bf / "
-  name <- gsub("\u00a0", " ", name) # non-breaking space -> space
-  name <- gsub("\u2014", "-", name) # em dash -> hyphen
+  name <- gsub("[\u00bf/\"]", "", name, perl = TRUE) # remove \u00bf / "
+  name <- gsub("\u00a0", " ", name, fixed = TRUE) # non-breaking space -> space
+  name <- gsub("\u2014", "-", name, fixed = TRUE) # em dash -> hyphen
 
   # The big anchored parse regex (line 61); perl = TRUE to match gawk captures
   parsed <- sub(.tt_parse_re, "\\1|\\2|\\3|\\4|\\5|\\6|\\7", name, perl = TRUE)
 
   # Fix-ups (lines 65, 73-78)
-  parsed <- gsub(" *\\|", "|", parsed)
-  parsed <- gsub("\\|(auctt?)\\|\\.", "||\\1.", parsed)
-  parsed <- gsub("\\|d\\|", "||d", parsed)
-  parsed <- gsub("\\|[xX]\\|", "|\u00d7|", parsed)
-  parsed <- gsub("^[xX]\\|", "\u00d7|", parsed)
+  parsed <- gsub(" +\\|", "|", parsed, perl = TRUE)
+  parsed <- gsub("\\|(auctt?)\\|\\.", "||\\1.", parsed, perl = TRUE)
+  parsed <- gsub("|d|", "||d", parsed, fixed = TRUE)
+  parsed <- gsub("\\|[xX]\\|", "|\u00d7|", parsed, perl = TRUE)
+  parsed <- gsub("^[xX]\\|", "\u00d7|", parsed, perl = TRUE)
 
   # Validation (test = 1; lines 87-101). A name fails if it produced no pipe,
   # any field regex fails, or the depuncted re-made string differs from input.
   matched <- grepl("|", parsed, fixed = TRUE)
 
-  remade <- gsub("\\|", " ", parsed)
-  remade <- gsub("  +", " ", remade)
-  remade <- gsub("^ ", "", remade)
-  remade <- gsub(" $", "", remade)
+  remade <- gsub("|", " ", parsed, fixed = TRUE)
+  remade <- gsub(" {2,}", " ", remade, perl = TRUE)
+  remade <- gsub("(^ | $)", "", remade, perl = TRUE)
 
-  p1 <- .tt_field(parsed, 1)
-  p2 <- .tt_field(parsed, 2)
-  p3 <- .tt_field(parsed, 3)
-  p4 <- .tt_field(parsed, 4)
-  p5 <- .tt_field(parsed, 5)
-  p6 <- .tt_field(parsed, 6)
+  fields <- .tt_split_fields(parsed, 6L)
+  p1 <- fields[[1]]
+  p2 <- fields[[2]]
+  p3 <- fields[[3]]
+  p4 <- fields[[4]]
+  p5 <- fields[[5]]
+  p6 <- fields[[6]]
 
   depunct_eq <-
-    gsub("\u00d7", "x", tt_depunct(remade)) ==
-      gsub("\u00d7", "x", tt_depunct(name))
+    gsub("\u00d7", "x", tt_depunct(remade), fixed = TRUE) ==
+      gsub("\u00d7", "x", tt_depunct(name), fixed = TRUE)
 
   fail <-
     !matched |
