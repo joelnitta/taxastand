@@ -62,7 +62,6 @@
     specific_epithet = character(),
     infraspecific_rank = character(),
     infraspecific_epithet = character(),
-    author = character(),
-    stringsAsFactors = FALSE
+    author = character()
   )
 }

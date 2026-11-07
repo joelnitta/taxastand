@@ -167,8 +167,7 @@ ts_resolve_names <- function(
     scientificName = ref_taxonomy$scientificName,
     taxonID = ref_taxonomy$taxonID,
     acceptedNameUsageID = ref_taxonomy$acceptedNameUsageID,
-    taxonomicStatus = ref_taxonomy$taxonomicStatus,
-    stringsAsFactors = FALSE
+    taxonomicStatus = ref_taxonomy$taxonomicStatus
   )
   match_results_classified <- .ts_join(
     match_results_classified, ref_info, "reference", "scientificName"
@@ -188,8 +187,7 @@ ts_resolve_names <- function(
     matched_name = accepted$reference,
     resolved_status = accepted$taxonomicStatus,
     matched_status = accepted$taxonomicStatus,
-    match_type = accepted$match_type,
-    stringsAsFactors = FALSE
+    match_type = accepted$match_type
   )
 
   # Separate out matches to a single synonym (success type 2)
@@ -201,8 +199,7 @@ ts_resolve_names <- function(
     data.frame(
       acceptedNameUsageID = ref_info$taxonID,
       resolved_name = ref_taxonomy$scientificName,
-      resolved_status = ref_taxonomy$taxonomicStatus,
-      stringsAsFactors = FALSE
+      resolved_status = ref_taxonomy$taxonomicStatus
     ),
     "acceptedNameUsageID", "acceptedNameUsageID"
   )
@@ -220,8 +217,7 @@ ts_resolve_names <- function(
     matched_name = syn$reference,
     resolved_status = syn$resolved_status,
     matched_status = syn$taxonomicStatus,
-    match_type = syn$match_type,
-    stringsAsFactors = FALSE
+    match_type = syn$match_type
   )
 
   # Combine name resolution successes
@@ -238,8 +234,7 @@ ts_resolve_names <- function(
     matched_name = failure$reference,
     resolved_status = rep(NA_character_, nrow(failure)),
     matched_status = failure$taxonomicStatus,
-    match_type = failure$match_type,
-    stringsAsFactors = FALSE
+    match_type = failure$match_type
   )
 
   # Combine into final results

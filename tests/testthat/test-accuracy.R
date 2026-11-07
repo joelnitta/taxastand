@@ -21,8 +21,7 @@ ref <- data.frame(
     "accepted", "synonym", "accepted", "accepted", "synonym",
     "accepted", "accepted", "accepted"
   ),
-  acceptedNameUsageID = c(NA, "1", NA, NA, "4", NA, NA, NA),
-  stringsAsFactors = FALSE
+  acceptedNameUsageID = c(NA, "1", NA, NA, "4", NA, NA, NA)
 )
 
 # Resolve one query; return the resolved name (NA if unresolved)
@@ -199,8 +198,7 @@ test_that("fuzzy_canon_hits = 'closest' resolves ambiguity from distant hits", {
     taxonID = c("101", "102"),
     scientificName = c("Pteridium aquilxnxm Foo", "Pteridium aquilinaxx Bar"), # distance 2, 3
     taxonomicStatus = "accepted",
-    acceptedNameUsageID = NA,
-    stringsAsFactors = FALSE
+    acceptedNameUsageID = NA
   )
   ref2 <- rbind(ref, extra)
   q <- "Pteridium aquilinim"

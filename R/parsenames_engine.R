@@ -125,11 +125,6 @@ tt_depunct <- function(x) {
   lapply(seq_len(n), function(i) flat[start + i])
 }
 
-# Extract field i (1-based) of `|`-delimited lines (see .tt_split_fields())
-.tt_split_field <- function(x, i) {
-  .tt_split_fields(x, i)[[i]]
-}
-
 #' Parse taxonomic names
 #'
 #' Faithful pure-R port. Takes a character vector of `id|name` records and

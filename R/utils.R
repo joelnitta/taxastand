@@ -45,12 +45,9 @@ ts_classify_result <- function(match_results) {
   result <- as.data.frame(match_results)
   n <- ave(seq_len(nrow(result)), result$query, FUN = length)
   matched <- result$match_type != "no_match"
-  result$result_type <- ifelse(
-    matched & n == 1, "single_match",
-    ifelse(matched & n > 1, "mult_match",
-      ifelse(!matched, "no_match", NA_character_)
-    )
-  )
+  result$result_type <- c("no_match", "single_match", "mult_match")[
+    1L + matched + (matched & n > 1)
+  ]
   assertthat::assert_that(
     !anyNA(result$result_type),
     msg = "result_type must not be NA"

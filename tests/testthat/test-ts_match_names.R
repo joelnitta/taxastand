@@ -45,9 +45,7 @@ test_that("Names that can't be parsed don't show up in results", {
       "Vanden kalamocarpa x Vanden nipponica x Vanden striata",
       "Crepidomanes minutus"
     ),
-    reference = c(
-      "Crepidomanes minutum"
-    ),
+    reference = "Crepidomanes minutum",
     simple = TRUE,
     tbl_out = TRUE
   )
@@ -138,8 +136,8 @@ test_that("Incorrectly specified manual match fails", {
       query = ts_parse_names("Hymenophyllum polyantha"),
       reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
-        query = c("Hymenophyllum polyantha"),
-        match = c("Hymenophyllum polyanthos")
+        query = "Hymenophyllum polyantha",
+        match = "Hymenophyllum polyanthos"
       ),
       simple = TRUE
     ),

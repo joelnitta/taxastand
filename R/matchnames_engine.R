@@ -502,6 +502,6 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     out[[paste0(.tt_field_suffixes[k], "_ref")]] <- B$fields[[k]][ri]
   }
   out[-4] <- lapply(out[-4], na_empty)
-  as.data.frame(out, stringsAsFactors = FALSE)
+  as.data.frame(out)
 }
 # nolint end
