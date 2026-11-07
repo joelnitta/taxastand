@@ -57,6 +57,14 @@
 #'   `match_canon = TRUE`. Several reference names can share a canonical name
 #'   (homonyms), giving multiple hits.
 #'
+#' **Latin spelling variants (check the result)**
+#' - `auto_orthvar`: identical once standard Latin orthographic variants in the
+#'   epithets are folded together: `ae`/`oe` = `e`, `y` = `i`, `ph` = `f`,
+#'   `rh` = `r`, `th` = `t`, and a final `ii` = `i` (e.g. `sylvestris` and
+#'   `silvestris`, `caerulea` and `coerulea`). For queries without an author,
+#'   canonical names are compared. This can occasionally merge epithets that
+#'   are genuinely different.
+#'
 #' **Fuzzy matches (misspellings; always verify)**
 #' - `auto_fuzzy`: query has an author; the whole name (author included) is
 #'   within `max_dist` of a reference name.

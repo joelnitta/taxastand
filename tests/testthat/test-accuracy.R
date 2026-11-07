@@ -160,6 +160,18 @@ test_that("a swap of adjacent letters is one edit", {
   expect_equal(res0$match_type, "no_match")
 })
 
+test_that("Latin spelling variants match without fuzzy matching", {
+  ref2 <- c("Quercus pyrenaica Willd.", "Silene caerulea L.")
+  r1 <- suppressWarnings(
+    ts_match_names("Quercus pirenaica Willd.", ref2, simple = TRUE)
+  )
+  expect_equal(r1$match_type, "auto_orthvar")
+  expect_equal(r1$reference, "Quercus pyrenaica Willd.")
+  r2 <- suppressWarnings(ts_match_names("Silene coerulea", ref2, simple = TRUE))
+  expect_equal(r2$match_type, "auto_orthvar")
+  expect_equal(r2$reference, "Silene caerulea L.")
+})
+
 test_that("names in other genera in the reference do not change results", {
   # Reference rows are pre-filtered to the query genera for speed; results
   # must be the same as when the reference contains only that genus.

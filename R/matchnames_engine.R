@@ -23,6 +23,19 @@
   gsub("^ +| +$", "", gsub(" {2,}", " ", x, perl = TRUE), perl = TRUE)
 }
 
+# Fold the standard Latin orthographic variants of an epithet to one spelling
+# (ICN Art. 60-61 variants): ae/oe -> e, y -> i, ph -> f, rh -> r, th -> t and
+# a final ii -> i. `x` must already be depunctuated (lower-case ASCII), so e.g.
+# "sylvestris" and "silvestris" both become "silvestris".
+.tt_orthfold <- function(x) {
+  x <- gsub("ae|oe", "e", x, perl = TRUE)
+  x <- gsub("ii$", "i", x, perl = TRUE)
+  x <- gsub("y", "i", x, fixed = TRUE)
+  x <- gsub("ph", "f", x, fixed = TRUE)
+  x <- gsub("rh", "r", x, fixed = TRUE)
+  gsub("th", "t", x, fixed = TRUE)
+}
+
 # Parse a vector of parsed `id|...` lines into the fields matchnames needs.
 # Returns a list of equal-length vectors plus `key(method)`, which computes
 # (and memoises) the comparison key for a match method only when first asked
@@ -70,6 +83,12 @@
     out
   }
 
+  # Records whose epithets contain a letter group that .tt_orthfold() changes;
+  # all other records have the same orthvar key as their punct / cfonly key
+  orth_trigger <- function() {
+    which(grepl("ae|oe|y|ph|rh|th|ii", tolower(paste(s, ssp)), perl = TRUE))
+  }
+
   key <- function(method) {
     if (!is.null(cache[[method]])) {
       return(cache[[method]])
@@ -86,6 +105,28 @@
       basexin = derive(
         paste0(namex, sub("(^\\([^)]+\\)| ([eE]x|[iI]n) .*$)", "", a))
       ),
+      orthvar = {
+        out <- key("punct")
+        i <- orth_trigger()
+        out[i] <- paste0(
+          tt_depunct(paste0(xg, g, xs))[i],
+          .tt_orthfold(tt_depunct(s[i])),
+          tt_depunct(st[i]),
+          .tt_orthfold(tt_depunct(ssp[i])),
+          tt_depunct(a[i])
+        )
+        out
+      },
+      cforth = {
+        out <- key("cfonly")
+        i <- orth_trigger()
+        out[i] <- paste0(
+          tt_depunct(g[i]),
+          .tt_orthfold(tt_depunct(s[i])),
+          .tt_orthfold(tt_depunct(ssp[i]))
+        )
+        out
+      },
       stop("unknown key method: ", method)
     )
     assign(method, val, envir = cache)
@@ -245,18 +286,19 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     }
   }
 
-  # genus -> ref codes, in reference order (so hit order does not depend on the
-  # arbitrary id strings or on which reference names were filtered out); built
-  # on first use
+  # genus -> reference rows (one per distinct code), in reference order (so hit
+  # order does not depend on the arbitrary id strings or on which reference
+  # names were filtered out); built on first use
   genus_cache <- new.env(parent = emptyenv())
-  genus_codes <- function() {
-    if (!exists("codes", envir = genus_cache, inherits = FALSE)) {
+  genus_rows <- function() {
+    if (!exists("rows", envir = genus_cache, inherits = FALSE)) {
+      first <- !duplicated(B$code)
       assign(
-        "codes", lapply(split(B$code, B$genus), unique),
+        "rows", split(which(first), B$genus[first]),
         envir = genus_cache
       )
     }
-    get("codes", envir = genus_cache, inherits = FALSE)
+    get("rows", envir = genus_cache, inherits = FALSE)
   }
 
   # Edit distance between query key `q` and reference keys `r`: Levenshtein
@@ -291,20 +333,31 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # within max_dist ("auto_fuzzy_canon"), or only the closest of those if
   # `canon_closest`.
   test_canonfuzzy <- function(idx) {
-    cf_by_code <- setNames(B$key("cfonly"), B$code)
+    rcf <- B$key("cfonly")
     qcf <- A$key("cfonly")
+    orth <- NULL # canonical orthvar keys, built when first needed
     for (qi in idx) {
-      cand <- genus_codes()[[A$genus[qi]]]
-      cand <- cand[cand != A$code[qi]]
-      if (!length(cand)) next
-      d <- fuzzy_dist(qcf[qi], cf_by_code[cand])
+      rows <- genus_rows()[[A$genus[qi]]]
+      rows <- rows[B$code[rows] != A$code[qi]]
+      if (!length(rows)) next
+      cand <- B$code[rows]
+      d <- fuzzy_dist(qcf[qi], rcf[rows])
       if (any(d == 0L, na.rm = TRUE)) {
         keep <- !is.na(d) & d == 0L
         type <- "auto_cfonly"
       } else {
-        keep <- !is.na(d) & d <= max_dist
-        if (canon_closest && any(keep)) keep <- keep & d == min(d[keep])
-        type <- "auto_fuzzy_canon"
+        if (is.null(orth)) {
+          orth <- list(q = A$key("cforth"), r = B$key("cforth"))
+        }
+        same <- !is.na(orth$r[rows]) & orth$r[rows] == orth$q[qi]
+        if (any(same)) {
+          keep <- same
+          type <- "auto_orthvar"
+        } else {
+          keep <- !is.na(d) & d <= max_dist
+          if (canon_closest && any(keep)) keep <- keep & d == min(d[keep])
+          type <- "auto_fuzzy_canon"
+        }
       }
       if (any(keep)) {
         res_code[[qi]] <<- cand[keep]
@@ -317,14 +370,15 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 
   # test_allfuzzy: every same-genus ref within max_dist
   test_allfuzzy <- function(idx) {
-    punct_by_code <- setNames(B$key("punct"), B$code)
+    rpunct <- B$key("punct")
     qpunct <- A$key("punct")
     for (qi in idx) {
-      cand <- genus_codes()[[A$genus[qi]]]
-      cand <- cand[cand != A$code[qi]]
-      if (!length(cand)) next
+      rows <- genus_rows()[[A$genus[qi]]]
+      rows <- rows[B$code[rows] != A$code[qi]]
+      if (!length(rows)) next
+      cand <- B$code[rows]
       qp <- qpunct[qi]
-      rp <- punct_by_code[cand]
+      rp <- rpunct[rows]
       # Distance on the depunctuated names
       d <- fuzzy_dist(qp, rp)
       keep <- !is.na(d) & d <= max_dist
@@ -347,8 +401,8 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     ref_genera <- unique(B$genus)
     ref_genera_key <- tt_depunct(ref_genera)
     keys <- list(
-      canon = list(q = A$key("cfonly"), r = setNames(B$key("cfonly"), B$code)),
-      whole = list(q = A$key("punct"), r = setNames(B$key("punct"), B$code))
+      canon = list(q = A$key("cfonly"), r = B$key("cfonly")),
+      whole = list(q = A$key("punct"), r = B$key("punct"))
     )
     near <- list()
     for (qi in idx) {
@@ -357,11 +411,12 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
         d <- as.integer(adist(tt_depunct(qg), ref_genera_key))
         near[[qg]] <- ref_genera[!is.na(d) & d <= max_dist_genus]
       }
-      cand <- unique(unlist(genus_codes()[near[[qg]]], use.names = FALSE))
-      cand <- cand[cand != A$code[qi]]
-      if (!length(cand)) next
+      rows <- unique(unlist(genus_rows()[near[[qg]]], use.names = FALSE))
+      rows <- rows[B$code[rows] != A$code[qi]]
+      if (!length(rows)) next
+      cand <- B$code[rows]
       k <- keys[[if (A$no_auth[qi]) "canon" else "whole"]]
-      d <- fuzzy_dist(k$q[qi], k$r[cand])
+      d <- fuzzy_dist(k$q[qi], k$r[rows])
       keep <- !is.na(d) & d <= max_dist
       if (canon_closest && A$no_auth[qi] && any(keep)) {
         keep <- keep & d == min(d[keep])
@@ -383,6 +438,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   test_pm("exin")
   test_eq("basexin", "auto_basexin")
   test_eq("irank", "auto_irank")
+  test_eq("orthvar", "auto_orthvar")
 
   # auct.: only a canonical-form match is allowed, else no_match
   auct <- pending[A$auct[pending]]
