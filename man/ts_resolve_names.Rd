@@ -35,7 +35,11 @@ following columns:
 \item \code{taxonomicStatus}: \href{https://dwc.tdwg.org/terms/#dwc:taxonomicStatus}{The status of the use of the \code{scientificName} as a label for the taxon}.
 \item \code{scientificName}: \href{https://dwc.tdwg.org/terms/#dwc:scientificName}{The full scientific name of the taxon},
 with authorship and date information if known.
-}}
+}
+
+Can also be the output of \code{\link{ts_prepare_reference}()} applied to
+such a dataframe, which saves the work of preparing the reference when
+resolving several times against the same large reference.}
 
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). The distance is computed on

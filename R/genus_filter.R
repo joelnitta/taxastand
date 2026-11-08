@@ -40,11 +40,6 @@
   ))
 }
 
-# Subset raw reference names to those that could match a query genus
-.ts_filter_raw_reference <- function(reference, keep_keys) {
-  reference[.ts_raw_genus_key(reference) %in% keep_keys]
-}
-
 # Subset a parsed reference data frame to those that could match a query genus
 .ts_filter_parsed_reference <- function(ref_parsed_df, keep_keys) {
   ref_parsed_df[tt_depunct(ref_parsed_df$genus_name) %in% keep_keys, ]

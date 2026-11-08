@@ -32,7 +32,9 @@ If a dataframe, should be taxonomic names parsed with
 \item{reference}{Character vector or dataframe; taxonomic names to use as
 reference. If a character vector, missing values not allowed and all values
 must be unique. If a dataframe, should be taxonomic names parsed with
-\code{\link{ts_parse_names}()}.}
+\code{\link{ts_parse_names}()}. Can also be the output of
+\code{\link{ts_prepare_reference}()}, which saves the work of preparing
+the reference when matching several times against the same large reference.}
 
 \item{manual_match}{Optional. Dataframe of manually matched names that will
 override any results from the name-matching engine. Must include columns,

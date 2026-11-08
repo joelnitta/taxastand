@@ -94,7 +94,9 @@
 #' @param reference  Character vector or dataframe; taxonomic names to use as
 #' reference. If a character vector, missing values not allowed and all values
 #' must be unique. If a dataframe, should be taxonomic names parsed with
-#' \code{\link{ts_parse_names}()}.
+#' \code{\link{ts_parse_names}()}. Can also be the output of
+#' \code{\link{ts_prepare_reference}()}, which saves the work of preparing
+#' the reference when matching several times against the same large reference.
 #' @param manual_match Optional. Dataframe of manually matched names that will
 #' override any results from the name-matching engine. Must include columns,
 #' `query` and `match`. Can only be used if `query` is a character vector.
@@ -276,9 +278,10 @@ ts_match_names <- function(
     query_parsed_df <- collapsed$parsed
   }
 
-  ref_parsed_df <- .ts_prepare_reference(
+  ref <- .ts_prepare_reference(
     reference, query_parsed_df, max_dist_genus, strip_qualifiers
   )
+  ref_parsed_df <- ref$parsed
 
   # Check that manually matched ref names are in data
   if (!is.null(manual_match)) {
@@ -291,7 +294,10 @@ ts_match_names <- function(
   # Run matching (one row per match; see .tt_assemble() for the columns)
   results <- tt_matchnames(
     query_lines = .ts_parsed_lines(query_parsed_df, query),
-    ref_lines = .ts_parsed_lines(ref_parsed_df, reference),
+    ref_lines = if (is.null(ref$keys)) {
+      .ts_parsed_lines(ref_parsed_df, reference)
+    },
+    ref_keys = ref$keys,
     max_dist = max_dist,
     match_no_auth = match_no_auth,
     match_canon = match_canon,
@@ -342,8 +348,12 @@ ts_match_names <- function(
     msg = "query must be of class 'data.frame' or a character vector"
   )
   assertthat::assert_that(
-    is.character(reference) | inherits(reference, "data.frame"),
-    msg = "reference must be of class 'data.frame' or a character vector"
+    is.character(reference) | inherits(reference, "data.frame") |
+      inherits(reference, "ts_reference"),
+    msg = paste(
+      "reference must be of class 'data.frame', a character vector,",
+      "or the output of ts_prepare_reference()"
+    )
   )
   assertthat::assert_that(assertthat::is.number(max_dist))
   assertthat::assert_that(assertthat::is.number(max_dist_genus))
@@ -420,41 +430,29 @@ ts_match_names <- function(
   )
 }
 
-# Parsed reference names, restricted to those that could match a query genus
-# (see R/genus_filter.R) before the expensive parsing and key building
+# Parsed reference names (and, when available, their match keys), restricted to
+# those that could match a query genus (see R/genus_filter.R) before the
+# expensive parsing and key building. A character vector is wrapped in a
+# temporary prepared reference, so there is a single code path; a prepared
+# reference keeps what it has built for later calls. Returns
+# `list(parsed, keys)`; `keys` is NULL for a reference that was already
+# parsed (a data frame of parsed names).
 .ts_prepare_reference <- function(
   reference, query_parsed_df, max_dist_genus, strip_qualifiers
 ) {
-  ref_genus_keys <- if (is.character(reference)) {
-    .ts_raw_genus_key(reference)
-  } else {
-    tt_depunct(reference$genus_name)
-  }
-  keep_keys <- .ts_genus_keep_keys(
-    query_parsed_df, ref_genus_keys, max_dist_genus
-  )
-  if (!is.character(reference)) {
-    return(.ts_filter_parsed_reference(reference, keep_keys))
-  }
-  reference <- .ts_filter_raw_reference(reference, keep_keys)
-  ref_parsed_df <- if (length(reference)) {
-    ts_parse_names(
-      reference,
-      strip_qualifiers = strip_qualifiers,
-      exclude_placeholders = FALSE
+  if (inherits(reference, "data.frame")) {
+    keep_keys <- .ts_genus_keep_keys(
+      query_parsed_df, tt_depunct(reference$genus_name), max_dist_genus
     )
-  } else {
-    .ts_empty_parsed_df()
+    return(list(
+      parsed = .ts_filter_parsed_reference(reference, keep_keys),
+      keys = NULL
+    ))
   }
-  # IDs from ts_parse_names() are a hash of the input plus a counter, so a
-  # reference vector identical to the query vector would get identical IDs and
-  # every pair would be mistaken for a self-match. Keep them distinct.
-  if (any(ref_parsed_df$id %in% query_parsed_df$id)) {
-    ref_parsed_df$id <- paste0("ref-", ref_parsed_df$id)[
-      seq_len(nrow(ref_parsed_df))
-    ]
+  if (!inherits(reference, "ts_reference")) {
+    reference <- .ts_new_reference(reference, strip_qualifiers)
   }
-  ref_parsed_df
+  .ts_ref_subset(reference, query_parsed_df, max_dist_genus)
 }
 
 # Parsed names as the pipe-delimited lines the matching engine reads (written

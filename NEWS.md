@@ -2,6 +2,17 @@
 
 ## Major changes
 
+* **New `ts_prepare_reference()` for repeated matching against a large
+  reference (#44).** Matching spends most of its time preparing the reference
+  (finding the genus of every name, parsing, building match keys). Pass the
+  result of `ts_prepare_reference(reference)` to `ts_match_names()` (as
+  `reference`) or `ts_resolve_names()` (as `ref_taxonomy`) and that work is
+  done once and reused: the genus of every name is found when the reference is
+  prepared, and each genus is parsed and keyed the first time a query needs
+  it. Results are identical. Against a 1.6M-name WFO reference, 100 queries
+  take about 0.6 s with a prepared reference once the genera are cached,
+  versus 5-8 s without; the first call that uses a genus pays for it, as
+  before. A prepared reference holds what it has built, so it grows with use.
 * **Breaking: match type `auto_cfonly` is renamed `auto_canon` (#82).** The old
   name could be misread as a match on the taxonomic qualifier `cf.`; it means a
   match on the canonical name (genus + specific epithet + infraspecific
