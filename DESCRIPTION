@@ -25,14 +25,13 @@ Imports:
     digest
 Roxygen: list(
     markdown = TRUE,
-    roclets = c("collate", "namespace", "rd", "roxyglobals::global_roclet"))
+    roclets = c("collate", "namespace", "rd"))
 Depends: R (>= 4.1.0)
 Suggests:
     covr,
     rmarkdown,
     tibble,
     knitr,
-    roxyglobals (>= 1.0.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

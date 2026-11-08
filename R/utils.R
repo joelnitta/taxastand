@@ -36,7 +36,6 @@ ts_make_name_df <- function(taxa) {
 #' @return Dataframe with column `result_type` added
 #' @keywords internal
 #' @importFrom stats ave
-#' @autoglobal
 ts_classify_result <- function(match_results) {
   assertthat::assert_that(
     inherits(match_results, "data.frame"),

@@ -7,7 +7,6 @@
 #' Writes out parsed names in pipe-delimited format (one name per line),
 #' as required by the internal matching engine.
 #'
-#' @autoglobal
 #' @return Path to parsed names
 #' @keywords internal
 #' @noRd

@@ -247,19 +247,6 @@ references:
   year: '2026'
   doi: 10.32614/CRAN.package.knitr
 - type: software
-  title: roxyglobals
-  abstract: 'roxyglobals: ''Roxygen2'' Global Variable Declarations'
-  notes: Suggests
-  url: https://github.com/anthonynorth/roxyglobals
-  repository: https://CRAN.R-project.org/package=roxyglobals
-  authors:
-  - family-names: North
-    given-names: Anthony
-    email: anthony.jl.north@gmail.com
-  year: '2026'
-  doi: 10.32614/CRAN.package.roxyglobals
-  version: '>= 1.0.0'
-- type: software
   title: testthat
   abstract: 'testthat: Unit Testing for R'
   notes: Suggests
