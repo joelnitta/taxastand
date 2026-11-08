@@ -27,6 +27,10 @@
 #' - `taxonomicStatus`: [The status of the use of the `scientificName` as a label for the taxon](https://dwc.tdwg.org/terms/#dwc:taxonomicStatus).
 #' - `scientificName`: [The full scientific name of the taxon](https://dwc.tdwg.org/terms/#dwc:scientificName),
 #' with authorship and date information if known.
+#'
+#' Can also be the output of \code{\link{ts_prepare_reference}()} applied to
+#' such a dataframe, which saves the work of preparing the reference when
+#' resolving several times against the same large reference.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
 #' (total insertions, deletions and substitutions). The distance is computed on
 #' the whole name, including the author string, after removing punctuation and
@@ -125,9 +129,27 @@ ts_resolve_names <- function(
     msg = "query must be of class 'data.frame' or a character vector"
   )
   assertthat::assert_that(
-    inherits(ref_taxonomy, "data.frame"),
-    msg = "ref_taxonomy must be of class 'data.frame'"
+    inherits(ref_taxonomy, "data.frame") | inherits(ref_taxonomy, "ts_reference"),
+    msg = paste(
+      "ref_taxonomy must be of class 'data.frame'",
+      "or the output of ts_prepare_reference()"
+    )
   )
+  reference <- NULL
+  if (inherits(ref_taxonomy, "ts_reference")) {
+    reference <- ref_taxonomy
+    ref_taxonomy <- reference$taxonomy
+    assertthat::assert_that(
+      all(c("taxonID", "acceptedNameUsageID", "taxonomicStatus") %in%
+        colnames(ref_taxonomy)),
+      msg = paste(
+        "ref_taxonomy was prepared from names only; prepare a Darwin Core",
+        "data.frame with ts_prepare_reference() to resolve synonyms"
+      )
+    )
+  } else {
+    reference <- unique(ref_taxonomy$scientificName)
+  }
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
   fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
@@ -139,7 +161,7 @@ ts_resolve_names <- function(
   if (is.character(query)) {
     match_results <- ts_match_names(
       query = query,
-      reference = unique(ref_taxonomy$scientificName),
+      reference = reference,
       max_dist = max_dist,
       max_dist_genus = max_dist_genus,
       transpositions = transpositions,

@@ -191,6 +191,8 @@
 #' reference names.
 #'
 #' @param query_lines,ref_lines Character vectors of parsed `id|...` lines.
+#' @param ref_keys Optional output of `.tt_record_keys()` for the reference
+#'   (e.g. memoised by a prepared reference); used instead of `ref_lines`.
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
 #' @param match_no_auth Logical; the `-1` option (NOAUTHONE).
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).
@@ -214,10 +216,10 @@
 tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
                           match_no_auth = FALSE, match_canon = FALSE,
                           canon_closest = FALSE, max_dist_genus = 0,
-                          transpositions = FALSE) {
+                          transpositions = FALSE, ref_keys = NULL) {
   m <- .tt_new_match(
     A = .tt_record_keys(query_lines),
-    B = .tt_record_keys(ref_lines),
+    B = if (is.null(ref_keys)) .tt_record_keys(ref_lines) else ref_keys,
     max_dist = as.numeric(max_dist),
     max_dist_genus = as.numeric(max_dist_genus),
     canon_closest = canon_closest,
