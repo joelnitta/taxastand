@@ -96,7 +96,6 @@
 #' Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 #' 7(10), 1217-1225. \doi{10.1111/2041-210X.12594}
 #'
-#' @autoglobal
 #' @export
 #' @examples
 #' # Load reference taxonomy in Darwin Core format
