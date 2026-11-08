@@ -101,7 +101,9 @@ following columns:</p><ul><li><p><code>taxonID</code>: <a href="https://dwc.tdwg
 <li><p><code>taxonomicStatus</code>: <a href="https://dwc.tdwg.org/terms/#dwc:taxonomicStatus" class="external-link">The status of the use of the <code>scientificName</code> as a label for the taxon</a>.</p></li>
 <li><p><code>scientificName</code>: <a href="https://dwc.tdwg.org/terms/#dwc:scientificName" class="external-link">The full scientific name of the taxon</a>,
 with authorship and date information if known.</p></li>
-</ul></dd>
+</ul><p>Can also be the output of <code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code> applied to
+such a dataframe, which saves the work of preparing the reference when
+resolving several times against the same large reference.</p></dd>
 
 
 <dt id="arg-max-dist">max_dist<a class="anchor" aria-label="anchor" href="#arg-max-dist"></a></dt>

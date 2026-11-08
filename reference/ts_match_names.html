@@ -100,7 +100,9 @@ If a dataframe, should be taxonomic names parsed with
 <dd><p>Character vector or dataframe; taxonomic names to use as
 reference. If a character vector, missing values not allowed and all values
 must be unique. If a dataframe, should be taxonomic names parsed with
-<code><a href="ts_parse_names.html">ts_parse_names()</a></code>.</p></dd>
+<code><a href="ts_parse_names.html">ts_parse_names()</a></code>. Can also be the output of
+<code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code>, which saves the work of preparing
+the reference when matching several times against the same large reference.</p></dd>
 
 
 <dt id="arg-manual-match">manual_match<a class="anchor" aria-label="anchor" href="#arg-manual-match"></a></dt>
@@ -338,7 +340,7 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 20</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   query        reference match_type  dist id_query id_ref genus_hybrid_sign_qu…¹</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomane… Crepidom… auto_fuzz…     1 c1ad73e… 19b86… <span style="color: #BB0000;">NA</span>                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomane… Crepidom… auto_fuzz…     1 c1ad73e… ref-1  <span style="color: #BB0000;">NA</span>                    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ abbreviated name: ¹​genus_hybrid_sign_query</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 13 more variables: genus_name_query &lt;chr&gt;, species_hybrid_sign_query &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   specific_epithet_query &lt;chr&gt;, infraspecific_rank_query &lt;chr&gt;,</span></span>
