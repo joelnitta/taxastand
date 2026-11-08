@@ -62,18 +62,40 @@ ts_prepare_reference <- function(reference, strip_qualifiers = FALSE) {
 #' @export
 print.ts_reference <- function(x, ...) {
   cat("<ts_reference>", length(x$names), "names in", length(x$genera), "genera\n")
-  cat(
-    "  genera parsed so far:", length(ls(x$cache, all.names = TRUE)), "\n"
-  )
+  cat("  genera parsed so far:", length(x$state$loaded), "\n")
   invisible(x)
 }
 
 # ---- Internals ----------------------------------------------------------------
-
-# Build the (cheap) skeleton: raw names, genus key of each, and an empty
-# per-genus cache that is filled as queries need genera.
+#
+# A prepared reference keeps its raw names and the genus key of each, plus a
+# mutable `state` environment holding a pool of every record parsed so far.
+# The pool is append-only: genera that no query has needed yet are parsed in one
+# batch and appended, so a call only has to select the rows of the genera it
+# uses (by index) and never has to combine per-genus pieces.
+#   loaded                genus keys already in the pool
+#   row                   position of each pool record in the reference
+#   genus_key             genus key of each pool record
+#   code, genus, fields,  as returned by .tt_record_keys(), concatenated over
+#   no_auth, auct         the batches
+#   batches               one .tt_record_keys() object per batch, whose lazy
+#                         key(method) fills `keys` (the pool-wide key vectors,
+#                         extended batch by batch as they are asked for)
 .ts_new_reference <- function(names, strip_qualifiers = FALSE, taxonomy = NULL) {
   genus_key <- .ts_raw_genus_key(names)
+  empty <- .tt_record_keys(character())
+  state <- new.env(parent = emptyenv())
+  state$loaded <- character()
+  state$row <- integer()
+  state$genus_key <- character()
+  state$code <- empty$code
+  state$genus <- empty$genus
+  state$fields <- empty$fields
+  state$no_auth <- empty$no_auth
+  state$auct <- empty$auct
+  state$batches <- list()
+  state$keys <- list()
+  state$keys_upto <- list()
   structure(
     list(
       names = names,
@@ -81,16 +103,17 @@ print.ts_reference <- function(x, ...) {
       genera = unique(genus_key),
       strip_qualifiers = strip_qualifiers,
       taxonomy = taxonomy,
-      cache = new.env(parent = emptyenv())
+      state = state
     ),
     class = "ts_reference"
   )
 }
 
-# Make sure the genera `keys` are parsed and keyed in the cache. All genera
-# that are not cached yet are parsed in one batch, then split by genus.
+# Make sure the genera `keys` are in the pool. All genera that are not there yet
+# are parsed together and appended as one batch.
 .ts_ref_fill <- function(ref, keys) {
-  cold <- keys[!vapply(keys, exists, NA, envir = ref$cache, inherits = FALSE)]
+  st <- ref$state
+  cold <- setdiff(keys, st$loaded)
   if (!length(cold)) {
     return(invisible())
   }
@@ -110,71 +133,60 @@ print.ts_reference <- function(x, ...) {
     }
   )
   # Names that could not be parsed are dropped (with a warning); map the rest
-  # back to their position in the reference. The ID encodes that position,
-  # which also restores the original order of records when genera combine.
+  # back to their position in the reference. The ID encodes that position.
   rows <- rows[match(parsed$name, ref$names[rows])]
   parsed$id <- sprintf("ref-%d", rows)
-  lines <- .ts_parsed_lines(parsed, rows)
-  by_genus <- split(seq_along(rows), ref$genus_key[rows])
-  for (key in setdiff(cold, names(by_genus))) {
-    by_genus[[key]] <- integer()
-  }
-  for (key in names(by_genus)) {
-    i <- by_genus[[key]]
-    assign(
-      key,
-      list(rows = rows[i], parsed = parsed[i, ], keys = .tt_record_keys(lines[i])),
-      envir = ref$cache
-    )
-  }
+  batch <- .tt_record_keys(.ts_parsed_lines(parsed, rows))
+  st$loaded <- c(st$loaded, cold)
+  st$row <- c(st$row, rows)
+  st$genus_key <- c(st$genus_key, ref$genus_key[rows])
+  st$code <- c(st$code, batch$code)
+  st$genus <- c(st$genus, batch$genus)
+  st$fields <- Map(c, st$fields, batch$fields)
+  st$no_auth <- c(st$no_auth, batch$no_auth)
+  st$auct <- c(st$auct, batch$auct)
+  st$batches[[length(st$batches) + 1L]] <- batch
   invisible()
 }
 
-# Parsed names and match keys of the reference restricted to the genera that
-# could match the query (see R/genus_filter.R), in original reference order
-.ts_ref_subset <- function(ref, query_parsed_df, max_dist_genus) {
-  keep_keys <- .ts_genus_keep_keys(query_parsed_df, ref$genera, max_dist_genus)
-  keep_keys <- keep_keys[keep_keys %in% ref$genera]
-  .ts_ref_fill(ref, keep_keys)
-  parts <- lapply(keep_keys, get, envir = ref$cache, inherits = FALSE)
-  parts <- parts[lengths(lapply(parts, `[[`, "rows")) > 0L]
-  .ts_merge_parts(parts)
+# Comparison key `method` for every record in the pool, built for the batches
+# added since it was last asked for
+.ts_pool_key <- function(st, method) {
+  done <- if (is.null(st$keys_upto[[method]])) 0L else st$keys_upto[[method]]
+  n <- length(st$batches)
+  if (done < n) {
+    new <- unlist(
+      lapply(st$batches[(done + 1L):n], function(b) b$key(method)),
+      use.names = FALSE
+    )
+    st$keys[[method]] <- c(st$keys[[method]], new)
+    st$keys_upto[[method]] <- n
+  }
+  st$keys[[method]]
 }
 
-# Combine per-genus entries into one parsed data frame and one keys object, with
-# records in original reference order
-.ts_merge_parts <- function(parts) {
-  if (!length(parts)) {
-    return(list(parsed = .ts_empty_parsed_df(), keys = .tt_record_keys(character())))
-  }
-  if (length(parts) == 1L) {
-    return(list(parsed = parts[[1]]$parsed, keys = parts[[1]]$keys))
-  }
-  rows <- unlist(lapply(parts, `[[`, "rows"), use.names = FALSE)
-  ord <- order(rows)
-  parsed <- do.call(rbind, lapply(parts, `[[`, "parsed"))[ord, , drop = FALSE]
-  rownames(parsed) <- NULL
-  keys <- lapply(parts, `[[`, "keys")
-  gather <- function(get) unlist(lapply(keys, get), use.names = FALSE)[ord]
+# The part of the reference that could match the query (see R/genus_filter.R),
+# in original reference order: the IDs and names of the records, and their
+# match keys in the form the engine reads
+.ts_ref_subset <- function(ref, query_parsed_df, max_dist_genus) {
+  keep_keys <- .ts_genus_keep_keys(query_parsed_df, ref$genera, max_dist_genus)
+  .ts_ref_fill(ref, keep_keys[keep_keys %in% ref$genera])
+  st <- ref$state
+  sel <- which(st$genus_key %in% keep_keys)
+  sel <- sel[order(st$row[sel])]
   cache <- new.env(parent = emptyenv())
-  field_names <- names(keys[[1]]$fields)
-  list(
-    parsed = parsed,
-    keys = list(
-      code = gather(function(k) k$code),
-      genus = gather(function(k) k$genus),
-      fields = stats::setNames(
-        lapply(field_names, function(f) gather(function(k) k$fields[[f]])),
-        field_names
-      ),
-      no_auth = gather(function(k) k$no_auth),
-      auct = gather(function(k) k$auct),
-      key = function(method) {
-        if (is.null(cache[[method]])) {
-          assign(method, gather(function(k) k$key(method)), envir = cache)
-        }
-        cache[[method]]
+  keys <- list(
+    code = st$code[sel],
+    genus = st$genus[sel],
+    fields = lapply(st$fields, function(x) x[sel]),
+    no_auth = st$no_auth[sel],
+    auct = st$auct[sel],
+    key = function(method) {
+      if (is.null(cache[[method]])) {
+        assign(method, .ts_pool_key(st, method)[sel], envir = cache)
       }
-    )
+      cache[[method]]
+    }
   )
+  list(ids = keys$code, names = ref$names[st$row[sel]], keys = keys)
 }

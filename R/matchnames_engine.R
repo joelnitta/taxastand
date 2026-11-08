@@ -295,8 +295,16 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # Ref code whose `method` key equals each of `qkeys` (NA if none). If a key
 # occurs more than once in the reference, the last record wins.
 .tt_lookup <- function(m, qkeys, method) {
+  # Hash the (few) distinct query keys and probe them with the reference keys,
+  # rather than hashing the whole reference; later records overwrite earlier
+  # ones, so the last record wins.
   bk <- m$B$key(method)
-  m$B$code[length(bk) + 1L - match(qkeys, rev(bk))]
+  u <- unique(qkeys)
+  i <- match(bk, u)
+  hit <- which(!is.na(i))
+  last <- rep(NA_integer_, length(u))
+  last[i[hit]] <- hit
+  m$B$code[last[match(qkeys, u)]]
 }
 
 # Accept matches (not to the query itself) for queries `idx`
@@ -309,12 +317,19 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   }
 }
 
-# Record several (fuzzy) hits `codes` for query `qi`, with distances `dist`
+# Record several (fuzzy) hits `codes` for query `qi`, with distances `dist`.
+# The caller drops the matched queries from `pending` once it has gone through
+# all its queries (.tt_sync_pending()), which is much cheaper than doing it for
+# every query.
 .tt_record_hits <- function(m, qi, codes, type, dist = NULL) {
   m$res_code[[qi]] <- codes
   m$res_type[qi] <- type
   if (!is.null(dist)) m$res_dist[[qi]] <- dist
-  m$pending <- setdiff(m$pending, qi)
+}
+
+# Drop queries that have a result from `pending`
+.tt_sync_pending <- function(m) {
+  m$pending <- m$pending[is.na(m$res_type[m$pending])]
 }
 
 # Stage: query[method] key present in the reference
@@ -376,8 +391,15 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # occur in `r`; with k such bigrams, OSA >= Levenshtein - k. The exact (slow)
 # calculation therefore only runs on pairs where a swap could matter: a
 # swapped bigram is present, and OSA could be within max_dist.
+#
+# Keys whose length differs from `q` by more than max_dist cannot be within
+# max_dist edits (each edit, a swap included, changes the length by at most
+# one), so they are not compared and their distance is left `NA`; every
+# distance that is <= max_dist is unchanged.
 .tt_fuzzy_dist <- function(m, q, r) {
-  d <- as.integer(adist(q, r))
+  d <- rep(NA_integer_, length(r))
+  near <- which(abs(nchar(r) - nchar(q)) <= m$max_dist)
+  d[near] <- as.integer(adist(q, r[near]))
   if (!m$transpositions || is.na(q) || nchar(q) < 2L) {
     return(d)
   }
@@ -439,6 +461,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       )
     }
   }
+  .tt_sync_pending(m)
 }
 
 # Stage: every same-genus ref within max_dist of the whole (depunctuated) name
@@ -454,6 +477,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy", d[keep])
     }
   }
+  .tt_sync_pending(m)
 }
 
 # Stage: the query genus is not in the reference (typically a misspelling).
@@ -489,6 +513,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy_genus", d[keep])
     }
   }
+  .tt_sync_pending(m)
 }
 
 # Combine the per-query results into the output data frame (one row per match;

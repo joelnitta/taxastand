@@ -281,12 +281,11 @@ ts_match_names <- function(
   ref <- .ts_prepare_reference(
     reference, query_parsed_df, max_dist_genus, strip_qualifiers
   )
-  ref_parsed_df <- ref$parsed
 
   # Check that manually matched ref names are in data
   if (!is.null(manual_match)) {
     assertthat::assert_that(
-      isTRUE(all(manual_match$match %in% ref_parsed_df$name)),
+      isTRUE(all(manual_match$match %in% ref$names)),
       msg = "One or more manually matched reference names not in reference data"
     )
   }
@@ -295,7 +294,7 @@ ts_match_names <- function(
   results <- tt_matchnames(
     query_lines = .ts_parsed_lines(query_parsed_df, query),
     ref_lines = if (is.null(ref$keys)) {
-      .ts_parsed_lines(ref_parsed_df, reference)
+      .ts_parsed_lines(ref$parsed, reference)
     },
     ref_keys = ref$keys,
     max_dist = max_dist,
@@ -309,8 +308,7 @@ ts_match_names <- function(
   # Add back in the original search terms (query and reference)
   results$query <-
     query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
-  results$reference <-
-    ref_parsed_df$name[match(results$id_ref, ref_parsed_df$id)]
+  results$reference <- ref$names[match(results$id_ref, ref$ids)]
   results <- .ts_front_cols(results)
 
   # Add back in names that were duplicated due to collapsed infrasp names
@@ -434,9 +432,10 @@ ts_match_names <- function(
 # those that could match a query genus (see R/genus_filter.R) before the
 # expensive parsing and key building. A character vector is wrapped in a
 # temporary prepared reference, so there is a single code path; a prepared
-# reference keeps what it has built for later calls. Returns
-# `list(parsed, keys)`; `keys` is NULL for a reference that was already
-# parsed (a data frame of parsed names).
+# reference keeps what it has built for later calls. Returns the `ids` and
+# `names` of the reference records, and their match `keys`; for a reference that
+# was already parsed (a data frame of parsed names) `keys` is NULL and the
+# records are returned as `parsed`.
 .ts_prepare_reference <- function(
   reference, query_parsed_df, max_dist_genus, strip_qualifiers
 ) {
@@ -444,9 +443,9 @@ ts_match_names <- function(
     keep_keys <- .ts_genus_keep_keys(
       query_parsed_df, tt_depunct(reference$genus_name), max_dist_genus
     )
+    parsed <- .ts_filter_parsed_reference(reference, keep_keys)
     return(list(
-      parsed = .ts_filter_parsed_reference(reference, keep_keys),
-      keys = NULL
+      ids = parsed$id, names = parsed$name, parsed = parsed, keys = NULL
     ))
   }
   if (!inherits(reference, "ts_reference")) {
