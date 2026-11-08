@@ -176,3 +176,28 @@ test_that("ts_prepare_reference() checks its input", {
     "ts_prepare_reference"
   )
 })
+
+test_that("keys build up correctly as genera are added in batches", {
+  prepared <- ts_prepare_reference(ref_names)
+  batches <- list(
+    "Asplenium nidis L.",
+    c("Pteridium aquilinum (L.) Kuhn", "Quercus pirenaica Willd."),
+    c("Asplenium nidis L.", "Cyathea medullaris Sw.", "Polypodium vulgare")
+  )
+  for (q in batches) {
+    expect_equal(
+      without_ref_id(suppressWarnings(ts_match_names(q, prepared))),
+      without_ref_id(suppressWarnings(ts_match_names(q, ref_names)))
+    )
+  }
+  # a key that no earlier call needed is built for all the batches added so far
+  q <- c("Asplenium nidus", "Hymenophyllum taiwanense", "Quercus pyrenaica")
+  expect_equal(
+    without_ref_id(suppressWarnings(
+      ts_match_names(q, prepared, match_no_auth = TRUE)
+    )),
+    without_ref_id(suppressWarnings(
+      ts_match_names(q, ref_names, match_no_auth = TRUE)
+    ))
+  )
+})

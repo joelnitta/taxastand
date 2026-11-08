@@ -10,9 +10,15 @@
   done once and reused: the genus of every name is found when the reference is
   prepared, and each genus is parsed and keyed the first time a query needs
   it. Results are identical. Against a 1.6M-name WFO reference, 100 queries
-  take about 0.6 s with a prepared reference once the genera are cached,
-  versus 5-8 s without; the first call that uses a genus pays for it, as
-  before. A prepared reference holds what it has built, so it grows with use.
+  take about 0.2 s and 1000 queries about 1.2 s with a prepared reference once
+  the genera are cached, versus about 4 s and 11 s without; the first call that
+  uses a genus pays for parsing it, as before. A prepared reference holds what
+  it has built, so it grows with use.
+* Fuzzy matching is faster for large references, with identical results (#44).
+  Reference names whose length differs from the query's by more than `max_dist`
+  can never be within `max_dist` edits, so they are no longer compared; the
+  per-query bookkeeping of the matching stages was also made linear in the
+  number of queries, and exact-key lookups no longer hash the whole reference.
 * **Breaking: match type `auto_cfonly` is renamed `auto_canon` (#82).** The old
   name could be misread as a match on the taxonomic qualifier `cf.`; it means a
   match on the canonical name (genus + specific epithet + infraspecific

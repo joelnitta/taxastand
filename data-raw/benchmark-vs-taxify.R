@@ -4,12 +4,23 @@
 # that must be downloaded first (install_backbones("wfo") is ~800 MB), so run
 # this by hand:
 #
-#   Rscript data-raw/benchmark-vs-taxify.R [ppg.csv] [taxify_backbone] [out_dir]
+#   Rscript data-raw/benchmark-vs-taxify.R [ppg.csv] [taxify_backbone] [out_dir] [reference]
 #
 # Defaults: PPG v2.0.0 is downloaded to a temp file; taxify backbone "wfo";
-# results go to data-raw/benchmark-results/. Run from the package root (uses
-# devtools::load_all(), so it measures the working tree). If taxify is not
-# installed, only the taxastand half runs (useful as a smoke test).
+# results go to data-raw/benchmark-results/; reference "ppg". Run from the
+# package root (uses devtools::load_all(), so it measures the working tree). If
+# taxify is not installed, only the taxastand half runs (useful as a smoke
+# test).
+#
+# `reference` is what taxastand matches against:
+# - "ppg" (default): PPG, ~72k ferns and lycophytes. taxify still matches
+#   against its backbone (WFO, ~1.6M names), so the two tools see different
+#   references and the speed comparison favours the smaller one.
+# - "taxify": taxify's installed backbone, read from its data directory (needs
+#   taxify and its vectra dependency). Both tools then match the same names, so
+#   speed and accuracy are like for like. Expect this run to take a while
+#   (several minutes with "wfo"): matching against 1.6M names without a
+#   prepared reference is slow.
 #
 # What is compared
 # - Homonyms (author-sensitive): PPG names whose canonical name (genus +
@@ -34,10 +45,12 @@ ppg_version <- "v2.0.0"
 ppg_path <- if (length(args) >= 1) args[[1]] else file.path(tempdir(), "ppg.csv")
 bb <- if (length(args) >= 2) args[[2]] else "wfo"
 out_dir <- if (length(args) >= 3) args[[3]] else "data-raw/benchmark-results"
+reference <- if (length(args) >= 4) args[[4]] else "ppg"
+stopifnot(reference %in% c("ppg", "taxify"))
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 set.seed(20261107)
 
-if (!file.exists(ppg_path)) {
+if (reference == "ppg" && !file.exists(ppg_path)) {
   utils::download.file(
     sprintf("https://raw.githubusercontent.com/pteridogroup/ppg/%s/data/ppg.csv", ppg_version),
     ppg_path, quiet = TRUE
@@ -46,12 +59,45 @@ if (!file.exists(ppg_path)) {
 suppressMessages(devtools::load_all(quiet = TRUE))
 have_taxify <- requireNamespace("taxify", quietly = TRUE)
 if (!have_taxify) message("taxify is not installed: running the taxastand half only")
+if (reference == "taxify" && !have_taxify) {
+  stop("reference = \"taxify\" needs taxify installed (its backbone is the reference)")
+}
 
-# ---- Reference (PPG) ---------------------------------------------------------
-ppg <- utils::read.csv(ppg_path, stringsAsFactors = FALSE, na.strings = "NA")
-ppg <- ppg[!is.na(ppg$scientificName) & ppg$taxonRank %in% c("species", "subspecies", "variety", "form"), ]
+# ---- Reference -----------------------------------------------------------------
+# One row per name, with the columns used below (named after PPG's):
+# scientificName (canonical name), scientificNameAuthorship, taxonRank,
+# taxonID, acceptedNameUsageID (NA for accepted names), taxonomicStatus
+load_ppg <- function() {
+  x <- utils::read.csv(ppg_path, stringsAsFactors = FALSE, na.strings = "NA")
+  x[!is.na(x$scientificName), ]
+}
+# taxify keeps each backbone as a vectra file in its data directory
+load_taxify_backbone <- function(bb) {
+  f <- file.path(taxify::taxify_data_dir(), bb, "latest", paste0(bb, ".vtr"))
+  if (!file.exists(f)) stop("taxify backbone not found: ", f)
+  x <- as.data.frame(vectra::collect(vectra::tbl(f)))
+  need <- c(
+    "taxon_id", "canonical_name", "authorship", "taxon_rank",
+    "taxonomic_status", "accepted_taxon_id"
+  )
+  if (!all(need %in% colnames(x))) {
+    stop("taxify backbone lacks columns: ", paste(setdiff(need, colnames(x)), collapse = ", "))
+  }
+  data.frame(
+    taxonID = x$taxon_id, scientificName = x$canonical_name,
+    scientificNameAuthorship = x$authorship, taxonRank = tolower(x$taxon_rank),
+    taxonomicStatus = tolower(x$taxonomic_status),
+    acceptedNameUsageID = ifelse(
+      x$accepted_taxon_id == x$taxon_id, NA_character_, x$accepted_taxon_id
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+ppg <- if (reference == "ppg") load_ppg() else load_taxify_backbone(bb)
+ppg <- ppg[ppg$taxonRank %in% c("species", "subspecies", "variety", "form"), ]
 ppg$canonical <- ppg$scientificName
-has_auth <- !is.na(ppg$scientificNameAuthorship)
+has_auth <- !is.na(ppg$scientificNameAuthorship) & ppg$scientificNameAuthorship != ""
+ppg$scientificNameAuthorship[!has_auth] <- NA
 ppg$full <- ppg$canonical
 ppg$full[has_auth] <- paste(ppg$canonical[has_auth], ppg$scientificNameAuthorship[has_auth])
 ppg <- ppg[!duplicated(ppg$full), ]
@@ -60,6 +106,7 @@ ref_tax <- data.frame(
   taxonomicStatus = ppg$taxonomicStatus, scientificName = ppg$full,
   stringsAsFactors = FALSE
 )
+cat("Reference:", reference, " names:", nrow(ref_tax), "\n")
 accepted_canonical <- function(i) {
   id <- ppg$acceptedNameUsageID[i]
   j <- match(id, ppg$taxonID)
@@ -70,17 +117,30 @@ ppg$accepted <- accepted_canonical(seq_len(nrow(ppg)))
 # ---- Tool wrappers -----------------------------------------------------------
 # Each returns a data frame with one row per hit: query, hit (canonical name),
 # accepted (accepted canonical name, NA if not resolved)
-run_taxastand <- function(q) {
-  m <- suppressWarnings(ts_match_names(q, ref_tax$scientificName, simple = TRUE))
-  m <- m[m$match_type != "no_match", ]
-  data.frame(
-    query = m$query, hit = ppg$canonical[match(m$reference, ppg$full)],
-    accepted = ppg$accepted[match(m$reference, ppg$full)],
-    full = m$reference, stringsAsFactors = FALSE
-  )
+# `reference` is the names, or the output of ts_prepare_reference()
+make_taxastand <- function(reference, closest = FALSE) {
+  hits <- if (closest) "closest" else "all"
+  function(q) {
+    m <- suppressWarnings(ts_match_names(
+      q, reference, simple = TRUE, fuzzy_canon_hits = hits
+    ))
+    m <- m[m$match_type != "no_match", ]
+    data.frame(
+      query = m$query, hit = ppg$canonical[match(m$reference, ppg$full)],
+      accepted = ppg$accepted[match(m$reference, ppg$full)],
+      full = m$reference, stringsAsFactors = FALSE
+    )
+  }
 }
+run_taxastand <- make_taxastand(ref_tax$scientificName)
+run_taxastand_closest <- make_taxastand(ref_tax$scientificName, closest = TRUE)
+# A prepared reference gives the same results; accuracy is evaluated with it
+# (faster), and speed is timed both ways
+ref_prepared <- ts_prepare_reference(ref_tax)
+run_taxastand_prepared <- make_taxastand(ref_prepared)
+run_taxastand_prepared_closest <- make_taxastand(ref_prepared, closest = TRUE)
 resolve_taxastand <- function(q) {
-  r <- suppressWarnings(ts_resolve_names(q, ref_tax))
+  r <- suppressWarnings(ts_resolve_names(q, ref_prepared))
   r$resolved_name[match(q, r$query)]
 }
 run_taxify <- function(q) {
@@ -99,16 +159,21 @@ run_taxify <- function(q) {
 
 # ---- Evaluable set: names the taxify backbone holds --------------------------
 canon_pool <- unique(ppg$canonical[ppg$taxonRank == "species"])
-if (have_taxify) {
+if (have_taxify && reference == "ppg") {
   probe <- run_taxify(canon_pool)
   held <- canon_pool[canon_pool %in% probe$hit[probe$query == probe$hit]]
 } else {
   held <- canon_pool
 }
-cat("Names in PPG:", length(canon_pool), " also in backbone:", length(held), "\n")
+cat("Names in reference:", length(canon_pool), " also in backbone:", length(held), "\n")
 
 # ---- 1. Homonyms -------------------------------------------------------------
 hom <- ppg[!is.na(ppg$scientificNameAuthorship) & ppg$canonical %in% held, ]
+# only canonical names with more than one author can form a pair; sample them
+# first so a large reference does not make this loop slow
+multi <- unique(hom$canonical[duplicated(hom$canonical)])
+if (length(multi) > 2000) multi <- sample(multi, 2000)
+hom <- hom[hom$canonical %in% multi, ]
 by_name <- split(seq_len(nrow(hom)), hom$canonical)
 pairs <- do.call(rbind, lapply(by_name, function(ix) {
   if (length(ix) < 2) return(NULL)
@@ -150,7 +215,7 @@ discriminates <- function(run) {
   )
   out
 }
-homonyms <- list(taxastand = discriminates(run_taxastand))
+homonyms <- list(taxastand = discriminates(run_taxastand_prepared))
 # taxastand's own check against PPG truth (resolved to the right accepted name)
 truth_a <- ppg$accepted[match(pairs$a, ppg$full)]
 truth_b <- ppg$accepted[match(pairs$b, ppg$full)]
@@ -204,20 +269,9 @@ recall <- function(run) {
 }
 # taxastand returns every hit within max_dist by default; "closest" keeps only
 # the nearest ones, which is the fairer comparison with taxify's single pick
-run_taxastand_closest <- function(q) {
-  m <- suppressWarnings(ts_match_names(
-    q, ref_tax$scientificName, simple = TRUE, fuzzy_canon_hits = "closest"
-  ))
-  m <- m[m$match_type != "no_match", ]
-  data.frame(
-    query = m$query, hit = ppg$canonical[match(m$reference, ppg$full)],
-    accepted = ppg$accepted[match(m$reference, ppg$full)],
-    full = m$reference, stringsAsFactors = FALSE
-  )
-}
 typo_res <- list(
-  taxastand = recall(run_taxastand),
-  taxastand_closest = recall(run_taxastand_closest)
+  taxastand = recall(run_taxastand_prepared),
+  taxastand_closest = recall(run_taxastand_prepared_closest)
 )
 if (have_taxify) typo_res$taxify <- recall(run_taxify)
 
@@ -232,8 +286,13 @@ timing <- function(run, label) {
     data.frame(tool = label, n_queries = n, seconds = round(t, 2))
   }))
 }
+# "taxastand" prepares the reference on every call; "taxastand_prepared" reuses
+# a prepared reference (best of 3 runs, so each genus is parsed before the
+# timed repeat), the like-for-like counterpart of taxify's pre-loaded backbone
 speed <- timing(run_taxastand, "taxastand")
 speed <- rbind(speed, timing(run_taxastand_closest, "taxastand_closest"))
+speed <- rbind(speed, timing(run_taxastand_prepared, "taxastand_prepared"))
+speed <- rbind(speed, timing(run_taxastand_prepared_closest, "taxastand_prepared_closest"))
 if (have_taxify) speed <- rbind(speed, timing(run_taxify, "taxify"))
 
 # ---- Report and save ---------------------------------------------------------
@@ -248,7 +307,8 @@ cat("\n== Speed (seconds, best of 3) ==\n")
 print(speed)
 
 res <- list(
-  date = Sys.time(), ppg_version = ppg_version, taxify_backbone = if (have_taxify) bb,
+  date = Sys.time(), reference = reference, reference_names = nrow(ref_tax),
+  ppg_version = if (reference == "ppg") ppg_version, taxify_backbone = if (have_taxify) bb,
   taxastand_version = as.character(utils::packageVersion("taxastand")),
   taxify_version = if (have_taxify) as.character(utils::packageVersion("taxify")),
   r_version = R.version.string, platform = R.version$platform,

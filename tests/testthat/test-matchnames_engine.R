@@ -239,3 +239,49 @@ test_that("tt_matchnames: match_no_auth is a no-op for queries with an author", 
 test_that("tt_parsenames returns nothing for no records", {
   expect_equal(tt_parsenames(character(0)), character(0))
 })
+
+# ---- Speed-ups that must not change results ----------------------------------
+
+test_that("the length bound loses no fuzzy hit", {
+  set.seed(1)
+  rand <- function(n) {
+    vapply(
+      seq_len(n),
+      function(i) {
+        paste(sample(letters[1:4], sample(3:12, 1), replace = TRUE), collapse = "")
+      },
+      ""
+    )
+  }
+  r <- unique(rand(300))
+  for (max_dist in c(0, 1, 2, 3)) {
+    m <- new.env()
+    m$max_dist <- max_dist
+    for (transpositions in c(FALSE, TRUE)) {
+      m$transpositions <- transpositions
+      for (q in rand(15)) {
+        d <- .tt_fuzzy_dist(m, q, r)
+        full <- if (transpositions) {
+          vapply(r, function(x) .tt_osa(strsplit(q, "")[[1]], x), 0, USE.NAMES = FALSE)
+        } else {
+          as.integer(adist(q, r))
+        }
+        expect_equal(which(!is.na(d) & d <= max_dist), which(full <= max_dist))
+        hit <- which(full <= max_dist)
+        expect_equal(d[hit], as.integer(full[hit]))
+      }
+    }
+  }
+})
+
+test_that("a reference key lookup takes the last record and handles NA", {
+  m <- new.env()
+  m$B <- list(
+    code = c("a", "b", "c", "d"),
+    key = function(method) c("x", "y", "x", NA)
+  )
+  got <- .tt_lookup(m, c("x", "x", "z", NA, "y"), "exact")
+  expect_equal(got, c("c", "c", NA, "d", "b"))
+  m$B <- list(code = character(), key = function(method) character())
+  expect_equal(.tt_lookup(m, c("x", "y"), "exact"), c(NA_character_, NA_character_))
+})
