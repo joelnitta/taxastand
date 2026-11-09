@@ -86,3 +86,18 @@ ts_classify_result <- function(match_results) {
   }
   tibble::as_tibble(x)
 }
+
+# Use a renamed argument's old name. `old` is NULL unless the old name was given.
+# When both are given they must agree.
+.ts_alias <- function(new, old, new_missing, new_name, old_name) {
+  if (is.null(old)) {
+    return(new)
+  }
+  if (!new_missing && !identical(new, old)) {
+    stop(
+      "`", old_name, "` is an alias of `", new_name, "`; give only one of them",
+      call. = FALSE
+    )
+  }
+  old
+}

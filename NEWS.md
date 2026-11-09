@@ -19,12 +19,18 @@
   can never be within `max_dist` edits, so they are no longer compared; the
   per-query bookkeeping of the matching stages was also made linear in the
   number of queries, and exact-key lookups no longer hash the whole reference.
-* **Breaking: with `collapse_infra = TRUE`, an autonym that matches exactly
+* **Breaking: with `match_autonyms = TRUE`, an autonym that matches exactly
   after being collapsed now has `match_type` `autonym` instead of `exact`
   (#95).** For example, the query "Blechnum lunare var. lunare" matching the
   reference name "Blechnum lunare" was reported as `exact` although the two
   names differ. Plain species names that match exactly are still `exact`, and a
   collapsed name that matches by another route keeps that match type.
+* The `collapse_infra` and `collapse_infra_exclude` arguments of
+  `ts_match_names()` and `ts_resolve_names()` are renamed `match_autonyms` and
+  `match_autonyms_exclude` (#101), since they are about autonyms, the
+  infraspecific names that repeat the specific epithet. The old names still
+  work as aliases, so existing code is unaffected; giving both an alias and its
+  new name with different values is an error.
 * **Breaking: match type `auto_cfonly` is renamed `auto_canon` (#82).** The old
   name could be misread as a match on the taxonomic qualifier `cf.`; it means a
   match on the canonical name (genus + specific epithet + infraspecific

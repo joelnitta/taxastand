@@ -75,8 +75,8 @@ test_that("Manually matched names work with collapsed infrasp names", {
     max_dist = 10,
     match_no_auth = FALSE,
     match_canon = FALSE,
-    collapse_infra = TRUE,
-    collapse_infra_exclude = NULL,
+    match_autonyms = TRUE,
+    match_autonyms_exclude = NULL,
     simple = TRUE,
     tbl_out = TRUE
   )
@@ -91,7 +91,7 @@ test_that("collapsed autonyms that match exactly get match_type 'autonym'", {
       "Blechnum lunarr var. lunarr"
     ),
     ref,
-    collapse_infra = TRUE, simple = TRUE
+    match_autonyms = TRUE, simple = TRUE
   )
   expect_equal(
     res$match_type,
@@ -103,16 +103,53 @@ test_that("collapsed autonyms that match exactly get match_type 'autonym'", {
   # an excluded name is not collapsed, so it matches exactly if it is present
   res_ex <- ts_match_names(
     "Blechnum lunare var. lunare", c(ref, "Blechnum lunare var. lunare"),
-    collapse_infra = TRUE,
-    collapse_infra_exclude = "Blechnum lunare var. lunare", simple = TRUE
+    match_autonyms = TRUE,
+    match_autonyms_exclude = "Blechnum lunare var. lunare", simple = TRUE
   )
   expect_equal(res_ex$match_type, "exact")
-  # without collapse_infra the autonym only matches if the reference has it
+  # without match_autonyms the autonym only matches if the reference has it
   res_no <- ts_match_names(
     "Blechnum lunare var. lunare", c(ref, "Blechnum lunare var. lunare"),
     simple = TRUE
   )
   expect_equal(res_no$match_type, "exact")
+})
+
+test_that("collapse_infra and collapse_infra_exclude still work as aliases", {
+  q <- c("Blechnum lunare var. lunare", "Blechnum lunare", "Foo bar var. bar")
+  ref <- c("Blechnum lunare", "Foo bar")
+  new <- ts_match_names(
+    q, ref,
+    match_autonyms = TRUE, match_autonyms_exclude = "Foo bar var. bar"
+  )
+  old <- ts_match_names(
+    q, ref,
+    collapse_infra = TRUE, collapse_infra_exclude = "Foo bar var. bar"
+  )
+  expect_equal(old, new)
+  expect_equal(old$match_type[1], "autonym")
+  # the same value under both names is fine; different values are an error
+  expect_equal(
+    ts_match_names(q, ref, match_autonyms = TRUE, collapse_infra = TRUE),
+    ts_match_names(q, ref, match_autonyms = TRUE)
+  )
+  expect_error(
+    ts_match_names(q, ref, match_autonyms = TRUE, collapse_infra = FALSE),
+    "alias of `match_autonyms`"
+  )
+  expect_error(
+    ts_match_names(
+      q, ref,
+      match_autonyms = TRUE, match_autonyms_exclude = "Foo bar var. bar",
+      collapse_infra_exclude = "Blechnum lunare var. lunare"
+    ),
+    "alias of `match_autonyms_exclude`"
+  )
+  # an alias is validated like the new name
+  expect_error(
+    ts_match_names("Foo bar", "Foo bar", collapse_infra_exclude = 1),
+    "character vector"
+  )
 })
 
 test_that("strip_qualifiers = TRUE resolves an open-nomenclature qualifier to the right match", {
@@ -247,9 +284,9 @@ test_that("ts_match_names accepts pre-parsed query and reference", {
   )
 })
 
-test_that("ts_match_names validates collapse_infra_exclude", {
+test_that("ts_match_names validates match_autonyms_exclude", {
   expect_error(
-    ts_match_names("Foo bar", "Foo bar", collapse_infra_exclude = 1),
+    ts_match_names("Foo bar", "Foo bar", match_autonyms_exclude = 1),
     "character vector"
   )
 })
