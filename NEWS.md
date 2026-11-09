@@ -19,6 +19,13 @@
   can never be within `max_dist` edits, so they are no longer compared; the
   per-query bookkeeping of the matching stages was also made linear in the
   number of queries, and exact-key lookups no longer hash the whole reference.
+* **Breaking: a query can now match several reference records at any stage
+  (#105).** When several reference records reduce to the same name at the
+  exact, punctuation, basionym, *in*, *ex*, rank or spelling-variant stages
+  (for example "Willd. ex Less." and "Willd. ex DC." for the query "Willd."),
+  `ts_match_names()` returned only one of them, chosen by reference order. It now
+  returns every one, as it already did for canonical-name and fuzzy matches, so
+  the ambiguity is visible. Queries that matched a single record are unchanged.
 * **Breaking: with `match_autonyms = TRUE`, an autonym that matches exactly
   after being collapsed now has `match_type` `autonym` instead of `exact`
   (#95).** For example, the query "Blechnum lunare var. lunare" matching the

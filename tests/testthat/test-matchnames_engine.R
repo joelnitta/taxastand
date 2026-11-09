@@ -21,10 +21,31 @@ test_that("tt_matchnames returns the documented columns", {
   expect_true(is.na(res$dist))
 })
 
-test_that("tt_matchnames: last reference record wins for duplicate keys", {
+test_that("tt_matchnames: every reference record sharing a key is returned", {
   ref <- c("r1||Foo||bar|||L.", "r2||Foo||bar|||L.")
   res <- tt_matchnames("q1||Foo||bar|||L.", ref)
-  expect_equal(res$id_ref, "r2")
+  expect_equal(res$id_ref, c("r1", "r2"))
+  expect_equal(res$match_type, c("exact", "exact"))
+  res2 <- tt_matchnames("q1||Foo||bar|||L.", rev(ref))
+  expect_setequal(res2$id_ref, c("r1", "r2"))
+})
+
+test_that("tt_matchnames: ties at the author/form stages return all records", {
+  cases <- list(
+    auto_punct = list("q1||Foo||bar|||Willd,", c("r1||Foo||bar|||Willd.", "r2||Foo||bar|||Willd")),
+    `auto_exin-` = list("q1||Foo||bar|||Willd.", c("r1||Foo||bar|||Willd. ex Less.", "r2||Foo||bar|||Willd. ex DC.")),
+    `auto_in-` = list("q1||Foo||bar|||Willd.", c("r1||Foo||bar|||Willd. in Less.", "r2||Foo||bar|||Willd. in DC.")),
+    `auto_basio-` = list("q1||Foo||bar|||Willd.", c("r1||Foo||bar|||(L.) Willd.", "r2||Foo||bar|||(DC.) Willd.")),
+    auto_irank = list("q1||Foo||bar|f.|baz|Willd.", c("r1||Foo||bar|var.|baz|Willd.", "r2||Foo||bar|subsp.|baz|Willd."))
+  )
+  for (type in names(cases)) {
+    ref <- cases[[type]][[2]]
+    for (r in list(ref, rev(ref))) {
+      res <- tt_matchnames(cases[[type]][[1]], r)
+      expect_setequal(res$id_ref, c("r1", "r2"))
+      expect_true(all(res$match_type == type), info = type)
+    }
+  }
 })
 
 test_that("tt_matchnames: unmatched query gives one no_match row", {
@@ -274,14 +295,16 @@ test_that("the length bound loses no fuzzy hit", {
   }
 })
 
-test_that("a reference key lookup takes the last record and handles NA", {
+test_that("a reference key lookup returns all records and handles NA", {
   m <- new.env()
   m$B <- list(
     code = c("a", "b", "c", "d"),
     key = function(method) c("x", "y", "x", NA)
   )
   got <- .tt_lookup(m, c("x", "x", "z", NA, "y"), "exact")
-  expect_equal(got, c("c", "c", NA, "d", "b"))
+  expect_equal(got, list(c("a", "c"), c("a", "c"), character(0), "d", "b"),
+               ignore_attr = TRUE)
   m$B <- list(code = character(), key = function(method) character())
-  expect_equal(.tt_lookup(m, c("x", "y"), "exact"), c(NA_character_, NA_character_))
+  expect_equal(lengths(.tt_lookup(m, c("x", "y"), "exact")), c(0L, 0L),
+               ignore_attr = TRUE)
 })
