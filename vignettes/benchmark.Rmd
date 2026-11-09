@@ -1,8 +1,8 @@
 ---
-title: "How taxastand compares with similar packages"
+title: "Benchmarks"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{How taxastand compares with similar packages}
+  %\VignetteIndexEntry{Benchmarks}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options:
@@ -37,6 +37,28 @@ speed_labels <- replace(
   tool_labels, c("taxastand", "taxastand_oneoff"),
   c("taxastand (prepared)", "taxastand (unprepared)")
 )
+# the kinds of error, in the order of the tables, and what each changes
+what <- c(
+  exact = "Nothing: the full name with its author",
+  epithet_substitution = "One letter of the epithet is replaced",
+  epithet_deletion = "One letter of the epithet is deleted",
+  epithet_swap = "Two neighbouring letters of the epithet are swapped",
+  two_edits = "Two letters of the epithet are changed",
+  short_epithet = "One letter deleted from an epithet of five letters or fewer",
+  genus_deletion = "One letter of the genus is deleted",
+  author_punctuation = "Periods removed from the author",
+  author_typo = "One letter deleted from the author",
+  no_author_exact = "The name without its author",
+  no_author_epithet_deletion = "The name without its author, with a letter of the epithet deleted",
+  homonym = "A name that several records share, queried with its own author",
+  homonym_typo = "The same, with a letter of the epithet deleted",
+  basionym_missing = "The basionym author (in parentheses) is missing",
+  ex_dropped = "The *ex* element of the author is dropped",
+  rank_changed = "The infraspecific rank is changed (var. or subsp.)",
+  spelling_variant = "A standard Latin spelling variant of the epithet (y/i, ph/f, th/t, rh/r, ae/e)"
+)
+# the nomenclatural kinds (differences that taxastand checks explicitly)
+nomen <- c("basionym_missing", "ex_dropped", "rank_changed", "spelling_variant")
 # a metric for one tool and kind of error
 val <- function(tool, kind, metric = "recall") {
   a <- res$accuracy[[tool]]
@@ -50,7 +72,7 @@ secs <- function(tool, n) {
 }
 # one column per tool, one row per kind of error
 wide <- function(metric) {
-  kinds <- res$accuracy[[1]]$kind
+  kinds <- intersect(names(what), res$accuracy[[1]]$kind)
   out <- data.frame(kind = kinds, stringsAsFactors = FALSE)
   for (tool in shown) {
     a <- res$accuracy[[tool]]
@@ -126,6 +148,22 @@ that produced them is [shown below](#code). Please read the
   slightly better than taxastand on misspelt genera
   (`r pct(val("utaxonstand", "genus_deletion"))` and
   `r pct(val("worldflora", "genus_deletion"))`).
+- For the nomenclatural differences that taxastand checks explicitly (a
+  missing basionym author, a dropped *ex* element, a changed infraspecific rank
+  and a Latin spelling variant), taxastand found the right record for at least
+  `r pct(min(sapply(nomen, function(k) val("taxastand", k))))` of the queries.
+  The others did nearly as well on most of these, with some exceptions: taxify
+  on a changed rank (`r pct(val("taxify", "rank_changed"))`) and U.Taxonstand on
+  a dropped *ex* element (`r pct(val("utaxonstand", "ex_dropped"))`) and a
+  changed rank (`r pct(val("utaxonstand", "rank_changed"))`). WorldFlora found
+  the right record for at least
+  `r pct(min(sapply(nomen, function(k) val("worldflora", k))))` of them, but
+  returned other records as well for many (it returned only the right record
+  for `r pct(min(sapply(nomen, function(k) val("worldflora", k, "unambiguous"))))`
+  to `r pct(max(sapply(nomen, function(k) val("worldflora", k, "unambiguous"))))`),
+  and its single answer was right for
+  `r pct(val("worldflora", "ex_dropped", "pick_precision"))` of the dropped
+  *ex* queries.
 - taxastand does not guess. When several records fit equally well it returns
   all of them, so on names without an author it gives a single answer less
   often than packages that always choose one. Its single answers were right
@@ -153,21 +191,6 @@ from the reference, so the correct record is known. There are
 not change the name), drawn at random. The query code is in [The code](#code).
 
 ```{r, echo = FALSE}
-what <- c(
-  exact = "Nothing: the full name with its author",
-  epithet_substitution = "One letter of the epithet is replaced",
-  epithet_deletion = "One letter of the epithet is deleted",
-  epithet_swap = "Two neighbouring letters of the epithet are swapped",
-  two_edits = "Two letters of the epithet are changed",
-  short_epithet = "One letter deleted from an epithet of five letters or fewer",
-  genus_deletion = "One letter of the genus is deleted",
-  author_punctuation = "Periods removed from the author",
-  author_typo = "One letter deleted from the author",
-  no_author_exact = "The name without its author",
-  no_author_epithet_deletion = "The name without its author, with a letter of the epithet deleted",
-  homonym = "A name that several records share, queried with its own author",
-  homonym_typo = "The same, with a letter of the epithet deleted"
-)
 ex <- res$examples[match(names(what), res$examples$kind), ]
 knitr::kable(
   data.frame(
@@ -177,6 +200,12 @@ knitr::kable(
   )
 )
 ```
+
+The last four kinds change how the name is written, not how it is spelled.
+They are differences that taxastand checks for explicitly (see the "Match
+types" section of `?ts_match_names`). A fifth, dropping an *in* element
+(`Tagawa in Morton` queried as `Tagawa`), could not be made, because WFO has
+almost no names with an *in* element.
 
 **What is measured.** Every query is scored by record ID:
 
@@ -199,7 +228,7 @@ knitr::kable(wide("recall"), caption = "Share of queries for which the right rec
 
 ```{r}
 single <- function() {
-  kinds <- res$accuracy[[1]]$kind
+  kinds <- intersect(names(what), res$accuracy[[1]]$kind)
   out <- data.frame(kind = kinds, stringsAsFactors = FALSE)
   for (tool in shown) {
     a <- res$accuracy[[tool]]
@@ -257,6 +286,14 @@ a genus is used costs more than later calls.
   `acceptedNameUsageID.match = FALSE` and `WFO.one(Auth.dist = ...)` aside; see
   the code below). Settings such as the thresholds for fuzzy matching can be
   changed, and a package tuned to your own data could give different results.
+  How a name is passed in also matters: WorldFlora was given infraspecific
+  names as separate genus, species and infraspecific epithet columns, the way
+  to ask for a match that ignores the rank. Given as one string, a variety that
+  is queried as a subspecies is not found.
+- The four nomenclatural kinds were run separately from the others, on
+  `r res$extra_date` (the others on `r res$date`), on the same machine, with the
+  same reference and package versions. Their queries do not depend on the other
+  kinds, so a single run would have given the same queries.
 - Only matching was scored. Resolving synonyms to accepted names, which all of
   these packages also do, was not.
 - Only plants (WFO) were tested. Results on other groups or on messier
@@ -270,7 +307,9 @@ a genus is used costs more than later calls.
 
 This is the code that produced the results above, shown unchanged. It is also
 installed with taxastand (`system.file("benchmark", package = "taxastand")`).
-The script that runs it, `data-raw/benchmark-vignette.R`, is in the source
+The scripts that run it, `data-raw/benchmark-vignette.R` (including the
+`kinds` and `speed` arguments used to run the nomenclatural kinds separately)
+and `data-raw/benchmark-combine.R` (which merges the runs), are in the source
 repository.
 
 ### Reference
@@ -306,6 +345,13 @@ show_code("scoring")
 Each adapter builds its package's reference from the shared table and returns
 the records matched for a set of queries, plus the package's own single
 answer.
+
+U.Taxonstand and WorldFlora take the name and the author separately, so this
+helper splits a query first.
+
+```{r split-query, echo = FALSE, results = "asis"}
+show_code("split-query")
+```
 
 ```{r adapter-taxastand, echo = FALSE, results = "asis"}
 show_code("adapter-taxastand")

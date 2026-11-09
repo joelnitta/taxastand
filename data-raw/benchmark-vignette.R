@@ -17,6 +17,11 @@
 #              Default: ppg -> taxastand,utaxonstand,worldflora;
 #              wfo -> taxastand,taxify
 #   sizes      query counts for the speed test (default 1,10,100,1000)
+#   kinds      comma-separated kinds of error to run (default: all). The queries
+#              of a kind do not depend on which other kinds are run, so a
+#              later run of some kinds can be merged into an earlier one
+#              (see benchmark-combine.R)
+#   speed      yes (default) or no: whether to time the tools
 #   slow_sizes query counts for the speed test of utaxonstand and worldflora,
 #              which take minutes per 1000 queries on a large reference
 #              (default 1,10,100)
@@ -42,6 +47,8 @@ tools <- strsplit(
 )[[1]]
 sizes <- as.integer(strsplit(opt("sizes", "1,10,100,1000"), ",")[[1]])
 slow_sizes <- as.integer(strsplit(opt("slow_sizes", "1,10,100"), ",")[[1]])
+kinds <- if ("kinds" %in% names(args)) strsplit(args[["kinds"]], ",")[[1]]
+do_speed <- identical(opt("speed", "yes"), "yes")
 out <- opt("out", sprintf("data-raw/benchmark-results/benchmark-%s.rds", reference))
 dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
 
@@ -51,6 +58,10 @@ source("inst/benchmark/benchmark-lib.R")
 ref <- load_reference(reference, ppg_path = opt("ppg", NULL))
 cat("Reference:", reference, " records:", nrow(ref), "\n")
 queries <- make_queries(ref, n = n)
+if (!is.null(kinds)) {
+  stopifnot(all(kinds %in% queries$kind))
+  queries <- queries[queries$kind %in% kinds, ]
+}
 cat("Queries:", nrow(queries), "\n")
 print(table(queries$kind))
 
@@ -78,9 +89,11 @@ for (tool in tools) {
   scores <- score_queries(queries, hits)
   accuracy[[tool]] <- summarise_scores(scores)
   print(accuracy[[tool]])
-  tool_sizes <- if (tool %in% c("utaxonstand", "worldflora")) slow_sizes else sizes
-  speed[[tool]] <- cbind(tool = tool, time_adapter(adapter, queries$query, tool_sizes))
-  print(speed[[tool]])
+  if (do_speed) {
+    tool_sizes <- if (tool %in% c("utaxonstand", "worldflora")) slow_sizes else sizes
+    speed[[tool]] <- cbind(tool = tool, time_adapter(adapter, queries$query, tool_sizes))
+    print(speed[[tool]])
+  }
 }
 
 res <- list(
