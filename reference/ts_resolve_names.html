@@ -76,12 +76,14 @@ function resolves synonyms to their accepted names.</p>
 <span>  transpositions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_canon <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  match_autonyms <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  match_autonyms_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tbl_out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_tbl_out"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  strip_qualifiers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  exclude_placeholders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span></span>
+<span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span>,</span>
+<span>  collapse_infra <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -146,16 +148,17 @@ species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (<code>FALSE</code>).</p></dd>
 
 
-<dt id="arg-collapse-infra">collapse_infra<a class="anchor" aria-label="anchor" href="#arg-collapse-infra"></a></dt>
+<dt id="arg-match-autonyms">match_autonyms<a class="anchor" aria-label="anchor" href="#arg-match-autonyms"></a></dt>
 <dd><p>Logical; if the specific epithet and infraspecific
-epithet are the same, drop the infraspecific rank and epithet from the query.
-For more information, see <code><a href="ts_match_names.html">ts_match_names()</a></code>.</p></dd>
+epithet are the same (an autonym), drop the infraspecific rank and epithet
+from the query. For more information, see
+<code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-collapse-infra-exclude">collapse_infra_exclude<a class="anchor" aria-label="anchor" href="#arg-collapse-infra-exclude"></a></dt>
+<dt id="arg-match-autonyms-exclude">match_autonyms_exclude<a class="anchor" aria-label="anchor" href="#arg-match-autonyms-exclude"></a></dt>
 <dd><p>Character vector; taxonomic names to exclude
-collapsing with <code>collapse_infra</code>. Any names used must match those in <code>query</code>
-exactly, or they won't be excluded.</p></dd>
+from collapsing with <code>match_autonyms</code>. Any names used must match those in
+<code>query</code> exactly, or they won't be excluded.</p></dd>
 
 
 <dt id="arg-tbl-out">tbl_out<a class="anchor" aria-label="anchor" href="#arg-tbl-out"></a></dt>
@@ -189,6 +192,11 @@ canonical name in the reference and is fuzzy-matched on its canonical name
 names when epithets are short. <code>"closest"</code> returns only the names at the
 smallest distance found (ties are all kept, so real ambiguity still shows).</p></dd>
 
+
+<dt id="arg-collapse-infra-collapse-infra-exclude">collapse_infra, collapse_infra_exclude<a class="anchor" aria-label="anchor" href="#arg-collapse-infra-collapse-infra-exclude"></a></dt>
+<dd><p>Aliases of <code>match_autonyms</code> and
+<code>match_autonyms_exclude</code>, kept so that existing code keeps working.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -210,6 +218,10 @@ the output of <code><a href="ts_match_names.html">ts_match_names()</a></code>. I
 resolve synonyms. If the latter, the scientific names in <code>ref_taxonomy</code>
 should be the same used as reference with <code><a href="ts_match_names.html">ts_match_names()</a></code>
 (this is not checked).</p>
+<p>If multiple queries will be made against the same large reference (e.g., a
+database such as World Flora Online), prepare it once with
+<code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code> and use the result as <code>ref_taxonomy</code>,
+so that the reference is not parsed again on every call.</p>
 <p><code>ref_taxonomy</code> must be taxonomic data adhering to the <a href="https://dwc.tdwg.org/terms/#taxon" class="external-link">Darwin Core standard</a>.
 Darwin Core includes many terms, but only four (<code>taxonID</code>,
 <code>acceptedNameUsageID</code>, <code>taxonomicStatus</code>, and <code>scientificName</code>) are required

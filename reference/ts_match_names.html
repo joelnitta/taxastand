@@ -77,13 +77,15 @@ fuzzy matching on parsed taxonomic names.</p>
 <span>  transpositions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_canon <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  collapse_infra <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  match_autonyms <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  match_autonyms_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  simple <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tbl_out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_tbl_out"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  strip_qualifiers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  exclude_placeholders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span></span>
+<span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span>,</span>
+<span>  collapse_infra <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -152,14 +154,15 @@ species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (<code>FALSE</code>).</p></dd>
 
 
-<dt id="arg-collapse-infra">collapse_infra<a class="anchor" aria-label="anchor" href="#arg-collapse-infra"></a></dt>
+<dt id="arg-match-autonyms">match_autonyms<a class="anchor" aria-label="anchor" href="#arg-match-autonyms"></a></dt>
 <dd><p>Logical; if the specific epithet and infraspecific
-epithet are the same, drop the infraspecific rank and epithet from the query.</p></dd>
+epithet are the same (an autonym), drop the infraspecific rank and epithet
+from the query. Default: <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-collapse-infra-exclude">collapse_infra_exclude<a class="anchor" aria-label="anchor" href="#arg-collapse-infra-exclude"></a></dt>
+<dt id="arg-match-autonyms-exclude">match_autonyms_exclude<a class="anchor" aria-label="anchor" href="#arg-match-autonyms-exclude"></a></dt>
 <dd><p>Character vector; taxonomic names to exclude
-from collapsing with <code>collapse_infra</code>. Any names used must match those in
+from collapsing with <code>match_autonyms</code>. Any names used must match those in
 <code>query</code> exactly, or they won't be excluded.</p></dd>
 
 
@@ -200,6 +203,11 @@ canonical name in the reference and is fuzzy-matched on its canonical name
 names when epithets are short. <code>"closest"</code> returns only the names at the
 smallest distance found (ties are all kept, so real ambiguity still shows).</p></dd>
 
+
+<dt id="arg-collapse-infra-collapse-infra-exclude">collapse_infra, collapse_infra_exclude<a class="anchor" aria-label="anchor" href="#arg-collapse-infra-collapse-infra-exclude"></a></dt>
+<dd><p>Aliases of <code>match_autonyms</code> and
+<code>match_autonyms_exclude</code>, kept so that existing code keeps working.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -233,17 +241,22 @@ variety, author, etc).</p></li>
 <li><p>Names are fuzzily matched following taxonomic rules using the component
 parts.</p></li>
 </ol><p>Parsing is fairly fast (much faster than matching) but can take some time if
-the number of names is very large. If multiple queries will be made (e.g., to
-the same large reference database), it is recommended to first parse the
-names using <code><a href="ts_parse_names.html">ts_parse_names()</a></code>, and use the results as input to
-<code>query</code> and/or <code>reference</code>.</p>
-<p><code>collapse_infra</code> is useful in situations where the reference database does
-not use names that have the same specific epithet and infraspecific epithet.
-For example, reference name "Blechnum lunare" and query "Blechnum lunare var.
-lunare". In this case, if <code>collapse_infra</code> is <code>TRUE</code>, "Blechnum lunare" will
-be queried instead of "Blechnum lunare var. lunare". Note that the
-<code>match_type</code> will be "exact" even though the literal query and the matched
-name are different (see example below).</p>
+the number of names is very large. If multiple queries will be made against
+the same large reference (e.g., a database such as World Flora Online), it
+is recommended to prepare the reference once with
+<code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code> and use the result as <code>reference</code>. That
+saves parsing the reference and building its match keys on every call, so it
+is the faster option. Alternatively, parse the names first using
+<code><a href="ts_parse_names.html">ts_parse_names()</a></code>, and use the results as input to <code>query</code>
+and/or <code>reference</code>.</p>
+<p><code>match_autonyms</code> is useful in situations where the reference database does
+not use names that have the same specific epithet and infraspecific epithet
+(an autonym). For example, reference name "Blechnum lunare" and query
+"Blechnum lunare var. lunare". In this case, if <code>match_autonyms</code> is <code>TRUE</code>,
+"Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
+If the collapsed name then matches exactly, the <code>match_type</code> is <code>autonym</code>
+(not <code>exact</code>), since the literal query and the matched name are different
+(see example below).</p>
     </div>
     <div id="match-types">
     <h2>Match types</h2>
@@ -252,8 +265,14 @@ name are different (see example below).</p>
 <p>The <code>match_type</code> column says how a query was matched. Types are tried in
 the order listed below, and the first one that finds a match is reported, so
 earlier types are more certain than later ones. Always check results that
-are not <code>exact</code>.</p>
+are not <code>exact</code>. If several reference records are equally good at the
+first type that matches (for example, two names that differ only in an <em>ex</em>
+author), every one of them is returned, so the ambiguity is visible.</p>
 <p><strong>Identical after normalization (safe to accept)</strong></p><ul><li><p><code>exact</code>: all parts of the name, including the author, are identical.</p></li>
+<li><p><code>autonym</code>: identical once an autonym in the query (a name whose
+infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
+var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
+<code>match_autonyms</code> is <code>TRUE</code>).</p></li>
 <li><p><code>auto_punct</code>: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.</p></li>
 </ul><p><strong>Differences in how the author is cited (usually safe)</strong></p><ul><li><p><code>auto_noauth</code>: query and reference both lack an author and the name is
@@ -353,7 +372,7 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   species_hybrid_sign_ref &lt;chr&gt;, specific_epithet_ref &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_rank_ref &lt;chr&gt;, infraspecific_epithet_ref &lt;chr&gt;, …</span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Example using collapse_infra argument</span></span></span>
+<span class="r-in"><span><span class="co"># Example using the match_autonyms argument</span></span></span>
 <span class="r-in"><span><span class="fu">ts_match_names</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="st">"Crepidomanes minutus"</span>, <span class="st">"Blechnum lunare var. lunare"</span>,</span></span>
@@ -363,15 +382,15 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-in"><span>    <span class="st">"Crepidomanes minutum"</span>, <span class="st">"Hymenophyllum polyanthos"</span>, <span class="st">"Blechnum lunare"</span>,</span></span>
 <span class="r-in"><span>    <span class="st">"Bar foo"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  collapse_infra <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  collapse_infra_exclude <span class="op">=</span> <span class="st">"Bar foo var. foo"</span>,</span></span>
+<span class="r-in"><span>  match_autonyms <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  match_autonyms_exclude <span class="op">=</span> <span class="st">"Bar foo var. foo"</span>,</span></span>
 <span class="r-in"><span>  simple <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   query                       reference            match_type      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomanes minutus        Crepidomanes minutum auto_fuzzy_canon</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechnum lunare var. lunare Blechnum lunare      exact           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechnum lunare var. lunare Blechnum lunare      autonym         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blechnum lunare             Blechnum lunare      exact           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar foo var. foo            Bar foo              auto_fuzzy_canon</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar foo                     Bar foo              exact           </span>
