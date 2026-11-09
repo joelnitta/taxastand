@@ -38,7 +38,7 @@ speed_labels <- replace(
   c("taxastand (prepared)", "taxastand (unprepared)")
 )
 # the kinds of error, in the order of the tables, and what each changes
-what <- c(
+what_main <- c(
   exact = "Nothing: the full name with its author",
   epithet_substitution = "One letter of the epithet is replaced",
   epithet_deletion = "One letter of the epithet is deleted",
@@ -50,15 +50,35 @@ what <- c(
   author_typo = "One letter deleted from the author",
   no_author_exact = "The name without its author",
   no_author_epithet_deletion = "The name without its author, with a letter of the epithet deleted",
-  homonym = "A name that several records share, queried with its own author",
-  homonym_typo = "The same, with a letter of the epithet deleted",
   basionym_missing = "The basionym author (in parentheses) is missing",
   ex_dropped = "The *ex* element of the author is dropped",
   rank_changed = "The infraspecific rank is changed (var. or subsp.)",
   spelling_variant = "A standard Latin spelling variant of the epithet (y/i, ph/f, th/t, rh/r, ae/e)"
 )
+# the same kinds of difference for names that several records share
+what_shared <- c(
+  homonym = "A name that several records share, queried with its own author",
+  homonym_typo = "The same, with a letter of the epithet deleted",
+  homonym_basionym_missing = "A shared name, with the basionym author missing",
+  homonym_ex_dropped = "A shared name, with the *ex* element of the author dropped",
+  homonym_rank_changed = "A shared name, with the infraspecific rank changed",
+  homonym_spelling_variant = "A shared name, with a Latin spelling variant of the epithet"
+)
+what <- c(what_main, what_shared)
 # the nomenclatural kinds (differences that taxastand checks explicitly)
 nomen <- c("basionym_missing", "ex_dropped", "rank_changed", "spelling_variant")
+nomen_shared <- paste0("homonym_", nomen)
+# a table of kinds of error with an example of each
+kind_table <- function(kinds) {
+  ex <- res$examples[match(kinds, res$examples$kind), ]
+  knitr::kable(
+    data.frame(
+      kind = paste0("`", kinds, "`"), `what changes` = unname(what[kinds]),
+      example = sprintf("%s → %s", ex$original, ex$query),
+      check.names = FALSE
+    )
+  )
+}
 # a metric for one tool and kind of error
 val <- function(tool, kind, metric = "recall") {
   a <- res$accuracy[[tool]]
@@ -71,8 +91,7 @@ secs <- function(tool, n) {
   sprintf(if (x < 1) "%.2f s" else "%.1f s", x)
 }
 # one column per tool, one row per kind of error
-wide <- function(metric) {
-  kinds <- intersect(names(what), res$accuracy[[1]]$kind)
+wide <- function(metric, kinds = names(what_main)) {
   out <- data.frame(kind = kinds, stringsAsFactors = FALSE)
   for (tool in shown) {
     a <- res$accuracy[[tool]]
@@ -125,9 +144,8 @@ that produced them is [shown below](#code). Please read the
 - On most kinds of error, every package returned the right record for nearly
   every query. The exceptions, in the share of queries for which the right
   record was returned: taxify on a misspelt genus
-  (`r pct(val("taxify", "genus_deletion"))`), WorldFlora on short epithets
-  (`r pct(val("worldflora", "short_epithet"))`) and U.Taxonstand on homonyms
-  (`r pct(val("utaxonstand", "homonym"))`).
+  (`r pct(val("taxify", "genus_deletion"))`) and WorldFlora on short epithets
+  (`r pct(val("worldflora", "short_epithet"))`).
 - Results differed for homonyms (the same name published by different authors),
   depending on whether packages used the authors. For example, WFO has four
   records named *Linum perenne*, with the authors L., Lam., Vill. and Guss.
@@ -185,27 +203,22 @@ names). taxify can only use its own backbones, WorldFlora reads WFO, and
 taxastand and U.Taxonstand accept any table, so using WFO lets all four run on
 identical data and makes the numbers directly comparable.
 
-**Queries with known answers.** Each query is made by damaging a name taken
+**Queries with known answers.** Each query is made by changing a name taken
 from the reference, so the correct record is known. There are
 `r res$n_per_kind` queries for each kind of damage (fewer where the damage did
 not change the name), drawn at random. The query code is in [The code](#code).
 
 ```{r, echo = FALSE}
-ex <- res$examples[match(names(what), res$examples$kind), ]
-knitr::kable(
-  data.frame(
-    kind = paste0("`", names(what), "`"), `what changes` = unname(what),
-    example = sprintf("%s → %s", ex$original, ex$query),
-    check.names = FALSE
-  )
-)
+kind_table(names(what_main))
 ```
 
 The last four kinds change how the name is written, not how it is spelled.
 They are differences that taxastand checks for explicitly (see the "Match
 types" section of `?ts_match_names`). A fifth, dropping an *in* element
 (`Tagawa in Morton` queried as `Tagawa`), could not be made, because WFO has
-almost no names with an *in* element.
+almost no names with an *in* element. The queries above are drawn at random
+from the reference, so most of them are for names that only one record has.
+[A separate section](#shared) looks at names that several records share.
 
 **What is measured.** Every query is scored by record ID:
 
@@ -227,8 +240,7 @@ knitr::kable(wide("recall"), caption = "Share of queries for which the right rec
 ## Accuracy: Single answers
 
 ```{r}
-single <- function() {
-  kinds <- intersect(names(what), res$accuracy[[1]]$kind)
+single <- function(kinds = names(what_main)) {
   out <- data.frame(kind = kinds, stringsAsFactors = FALSE)
   for (tool in shown) {
     a <- res$accuracy[[tool]]
@@ -249,6 +261,56 @@ queries need a decision. On the author-less typo kind
 `r sprintf("%.1f", val("taxastand", "no_author_epithet_deletion", "mean_hits"))`
 records per answered query on average: without an author, many names have
 several records that fit equally well, and taxastand reports all of them.
+
+## <a name="shared"></a>Accuracy: Names shared by several records
+
+**This section is different from the ones above, so read it separately.** Each
+query here is made from a record whose genus and epithet are also used by at
+least one other record with a different author (a homonym, or a name that
+differs only in its rank). Such records were chosen **on purpose**, because it
+is where the author, and so the nomenclatural rules, has to decide which record
+is meant. The results say how each package behaves **when a name is shared**.
+They do not say how often that happens: roughly one record in ten in WFO shares
+its genus and epithet with another. For the other nine in ten, the genus and
+epithet already point to one record, and the tables above apply.
+
+```{r, echo = FALSE}
+kind_table(names(what_shared))
+```
+
+```{r}
+knitr::kable(wide("recall", names(what_shared)), caption = "Names shared by several records: share of queries for which the right record was returned")
+```
+
+```{r}
+knitr::kable(wide("unambiguous", names(what_shared)), caption = "Names shared by several records: share of queries for which only the right record was returned")
+```
+
+```{r}
+knitr::kable(single(names(what_shared)), caption = "Names shared by several records: share of queries that got a single answer / share of those answers that were right")
+```
+
+When a name is shared, the packages differ much more than above:
+
+- **taxastand** returned the right record for 96 to 100% of the queries. When
+  two records fit equally well (for example "Willd." against both "Willd. ex
+  Less." and "Willd. ex DC."), it returns both instead of choosing, so it
+  answers with a single record less often (as low as 87% for a dropped *ex*
+  author); when it did answer with one record, that record was right 96 to
+  100% of the time.
+- **WorldFlora** returned the right record (99 to 100%), together with the other
+  records that share the name, and marks one as its best match. That best match
+  was right for 28% of the queries with a dropped *ex* author and 59% with a
+  missing basionym author.
+- **taxify** returns one record, and it was the right one for 88 to 100% of the
+  queries, except for a changed rank (34%).
+- **U.Taxonstand** returned the right record for 36 to 99% of the queries,
+  with the lowest results for a dropped *ex* author (36%) and a missing
+  basionym author (52%).
+
+The comparison is again about the records returned, not about which package is
+"best": a package that returns every record that fits gives the user the
+decision, and one that returns a single record decides for them.
 
 ## <a name="speed"></a>Speed
 
@@ -290,10 +352,14 @@ a genus is used costs more than later calls.
   names as separate genus, species and infraspecific epithet columns, the way
   to ask for a match that ignores the rank. Given as one string, a variety that
   is queried as a subspecies is not found.
-- The four nomenclatural kinds were run separately from the others, on
-  `r res$extra_date` (the others on `r res$date`), on the same machine, with the
-  same reference and package versions. Their queries do not depend on the other
-  kinds, so a single run would have given the same queries.
+- The nomenclatural kinds and the kinds for shared names were run separately
+  from the others, the last of them on `r res$extra_date` (the others on
+  `r res$date`), on the same machine, with the same reference and package
+  versions. Their queries do not depend on the other kinds, so a single run
+  would have given the same queries.
+- The queries for shared names were chosen because the name is shared (see
+  [that section](#shared)); they show how a package behaves in that case, not
+  how often it happens.
 - Only matching was scored. Resolving synonyms to accepted names, which all of
   these packages also do, was not.
 - Only plants (WFO) were tested. Results on other groups or on messier
@@ -308,7 +374,7 @@ a genus is used costs more than later calls.
 This is the code that produced the results above, shown unchanged. It is also
 installed with taxastand (`system.file("benchmark", package = "taxastand")`).
 The scripts that run it, `data-raw/benchmark-vignette.R` (including the
-`kinds` and `speed` arguments used to run the nomenclatural kinds separately)
+`kinds` and `speed` arguments used to run some kinds separately)
 and `data-raw/benchmark-combine.R` (which merges the runs), are in the source
 repository.
 
