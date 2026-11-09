@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How taxastand compares with similar packages • taxastand</title>
+<title>Benchmarks • taxastand</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/lumen/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="How taxastand compares with similar packages">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Benchmarks">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -51,7 +51,7 @@
       <a href="../articles/basics.html">The basics</a>
     </li>
     <li>
-      <a href="../articles/benchmark.html">How taxastand compares with similar packages</a>
+      <a href="../articles/benchmark.html">Benchmarks</a>
     </li>
   </ul>
 </li>
@@ -79,8 +79,7 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>How taxastand compares with similar
-packages</h1>
+      <h1 data-toc-skip>Benchmarks</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/joelnitta/taxastand/blob/main/vignettes/benchmark.Rmd" class="external-link"><code>vignettes/benchmark.Rmd</code></a></small>
@@ -150,9 +149,8 @@ conclusions.</p>
 <ul>
 <li>On most kinds of error, every package returned the right record for
 nearly every query. The exceptions, in the share of queries for which
-the right record was returned: taxify on a misspelt genus (82%),
-WorldFlora on short epithets (88%) and U.Taxonstand on homonyms
-(81%).</li>
+the right record was returned: taxify on a misspelt genus (82%) and
+WorldFlora on short epithets (88%).</li>
 <li>Results differed for homonyms (the same name published by different
 authors), depending on whether packages used the authors. For example,
 WFO has four records named <em>Linum perenne</em>, with the authors L.,
@@ -167,6 +165,16 @@ author, was the right record 100% of the time.</li>
 taxify (genus typo: 95% against 82%; author typo: 100% against 93%).
 U.Taxonstand and WorldFlora were slightly better than taxastand on
 misspelt genera (99% and 99%).</li>
+<li>For the nomenclatural differences that taxastand checks explicitly
+(a missing basionym author, a dropped <em>ex</em> element, a changed
+infraspecific rank and a Latin spelling variant), taxastand found the
+right record for at least 100% of the queries. The others did nearly as
+well on most of these, with some exceptions: taxify on a changed rank
+(71%) and U.Taxonstand on a dropped <em>ex</em> element (80%) and a
+changed rank (85%). WorldFlora found the right record for at least 98%
+of them, but returned other records as well for many (it returned only
+the right record for 70% to 88%), and its single answer was right for
+79% of the dropped <em>ex</em> queries.</li>
 <li>taxastand does not guess. When several records fit equally well it
 returns all of them, so on names without an author it gives a single
 answer less often than packages that always choose one. Its single
@@ -188,15 +196,15 @@ names). taxify can only use its own backbones, WorldFlora reads WFO, and
 taxastand and U.Taxonstand accept any table, so using WFO lets all four
 run on identical data and makes the numbers directly comparable.</p>
 <p><strong>Queries with known answers.</strong> Each query is made by
-damaging a name taken from the reference, so the correct record is
+changing a name taken from the reference, so the correct record is
 known. There are 100 queries for each kind of damage (fewer where the
 damage did not change the name), drawn at random. The query code is in
 <a href="#code">The code</a>.</p>
 <table class="table">
 <colgroup>
-<col width="20%">
-<col width="47%">
-<col width="31%">
+<col width="16%">
+<col width="43%">
+<col width="40%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">kind</th>
@@ -263,18 +271,38 @@ epithet deleted</td>
 <td align="left">Elvira martyni Cass. → Elvira martyi</td>
 </tr>
 <tr class="even">
-<td align="left"><code>homonym</code></td>
-<td align="left">A name that several records share, queried with its own
-author</td>
-<td align="left">Linum perenne Lam. → Linum perenne Lam.</td>
+<td align="left"><code>basionym_missing</code></td>
+<td align="left">The basionym author (in parentheses) is missing</td>
+<td align="left">Carex tremula (Ohwi) Ohwi → Carex tremula Ohwi</td>
 </tr>
 <tr class="odd">
-<td align="left"><code>homonym_typo</code></td>
-<td align="left">The same, with a letter of the epithet deleted</td>
-<td align="left">Oenothera alata Raf. → Oenothera lata Raf.</td>
+<td align="left"><code>ex_dropped</code></td>
+<td align="left">The <em>ex</em> element of the author is dropped</td>
+<td align="left">Rosa remensis Desf. ex Bosc → Rosa remensis Desf.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>rank_changed</code></td>
+<td align="left">The infraspecific rank is changed (var. or subsp.)</td>
+<td align="left">Phalaris minor var. integra Trab. → Phalaris minor
+subsp. integra Trab.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>spelling_variant</code></td>
+<td align="left">A standard Latin spelling variant of the epithet (y/i,
+ph/f, th/t, rh/r, ae/e)</td>
+<td align="left">Poa nephelophila Bor → Poa nefelophila Bor</td>
 </tr>
 </tbody>
 </table>
+<p>The last four kinds change how the name is written, not how it is
+spelled. They are differences that taxastand checks for explicitly (see
+the “Match types” section of <code><a href="../reference/ts_match_names.html">?ts_match_names</a></code>). A fifth,
+dropping an <em>in</em> element (<code>Tagawa in Morton</code> queried
+as <code>Tagawa</code>), could not be made, because WFO has almost no
+names with an <em>in</em> element. The queries above are drawn at random
+from the reference, so most of them are for names that only one record
+has. <a href="#shared">A separate section</a> looks at names that
+several records share.</p>
 <p><strong>What is measured.</strong> Every query is scored by record
 ID:</p>
 <ul>
@@ -317,17 +345,17 @@ returned</caption>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">author_punctuation</td>
+<td align="left">exact</td>
 <td align="left">100%</td>
 <td align="left">100%</td>
-<td align="left">97%</td>
+<td align="left">94%</td>
 <td align="left">100%</td>
 </tr>
 <tr class="even">
-<td align="left">author_typo</td>
+<td align="left">epithet_substitution</td>
 <td align="left">100%</td>
-<td align="left">93%</td>
-<td align="left">95%</td>
+<td align="left">99%</td>
+<td align="left">100%</td>
 <td align="left">100%</td>
 </tr>
 <tr class="odd">
@@ -338,58 +366,16 @@ returned</caption>
 <td align="left">99%</td>
 </tr>
 <tr class="even">
-<td align="left">epithet_substitution</td>
-<td align="left">100%</td>
-<td align="left">99%</td>
-<td align="left">100%</td>
-<td align="left">100%</td>
-</tr>
-<tr class="odd">
 <td align="left">epithet_swap</td>
 <td align="left">100%</td>
 <td align="left">100%</td>
 <td align="left">100%</td>
 <td align="left">100%</td>
 </tr>
-<tr class="even">
-<td align="left">exact</td>
-<td align="left">100%</td>
-<td align="left">100%</td>
-<td align="left">94%</td>
-<td align="left">100%</td>
-</tr>
 <tr class="odd">
-<td align="left">genus_deletion</td>
-<td align="left">95%</td>
-<td align="left">82%</td>
-<td align="left">99%</td>
-<td align="left">99%</td>
-</tr>
-<tr class="even">
-<td align="left">homonym</td>
-<td align="left">100%</td>
-<td align="left">100%</td>
-<td align="left">81%</td>
-<td align="left">100%</td>
-</tr>
-<tr class="odd">
-<td align="left">homonym_typo</td>
+<td align="left">two_edits</td>
 <td align="left">100%</td>
 <td align="left">99%</td>
-<td align="left">99%</td>
-<td align="left">99%</td>
-</tr>
-<tr class="even">
-<td align="left">no_author_epithet_deletion</td>
-<td align="left">100%</td>
-<td align="left">98%</td>
-<td align="left">100%</td>
-<td align="left">100%</td>
-</tr>
-<tr class="odd">
-<td align="left">no_author_exact</td>
-<td align="left">100%</td>
-<td align="left">100%</td>
 <td align="left">100%</td>
 <td align="left">100%</td>
 </tr>
@@ -401,11 +387,67 @@ returned</caption>
 <td align="left">88%</td>
 </tr>
 <tr class="odd">
-<td align="left">two_edits</td>
+<td align="left">genus_deletion</td>
+<td align="left">95%</td>
+<td align="left">82%</td>
+<td align="left">99%</td>
+<td align="left">99%</td>
+</tr>
+<tr class="even">
+<td align="left">author_punctuation</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">97%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="odd">
+<td align="left">author_typo</td>
+<td align="left">100%</td>
+<td align="left">93%</td>
+<td align="left">95%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="even">
+<td align="left">no_author_exact</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="odd">
+<td align="left">no_author_epithet_deletion</td>
+<td align="left">100%</td>
+<td align="left">98%</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="even">
+<td align="left">basionym_missing</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">95%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="odd">
+<td align="left">ex_dropped</td>
+<td align="left">100%</td>
+<td align="left">97%</td>
+<td align="left">80%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="even">
+<td align="left">rank_changed</td>
+<td align="left">100%</td>
+<td align="left">71%</td>
+<td align="left">85%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="odd">
+<td align="left">spelling_variant</td>
 <td align="left">100%</td>
 <td align="left">99%</td>
-<td align="left">100%</td>
-<td align="left">100%</td>
+<td align="left">99%</td>
+<td align="left">98%</td>
 </tr>
 </tbody>
 </table>
@@ -414,8 +456,7 @@ returned</caption>
 <h2 id="accuracy-single-answers">Accuracy: Single answers<a class="anchor" aria-label="anchor" href="#accuracy-single-answers"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">single</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">kinds</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">accuracy</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">kind</span></span>
+<code class="sourceCode R"><span><span class="va">single</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">kinds</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">what_main</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kind <span class="op">=</span> <span class="va">kinds</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>  <span class="kw">for</span> <span class="op">(</span><span class="va">tool</span> <span class="kw">in</span> <span class="va">shown</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">a</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">accuracy</span><span class="op">[[</span><span class="va">tool</span><span class="op">]</span><span class="op">]</span></span>
@@ -447,25 +488,11 @@ answers that were right</caption>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">author_punctuation</td>
+<td align="left">exact</td>
 <td align="left">100% / 100%</td>
 <td align="left">100% / 100%</td>
-<td align="left">100% / 97%</td>
+<td align="left">100% / 94%</td>
 <td align="left">100% / 100%</td>
-</tr>
-<tr class="even">
-<td align="left">author_typo</td>
-<td align="left">99% / 100%</td>
-<td align="left">100% / 93%</td>
-<td align="left">100% / 95%</td>
-<td align="left">100% / 100%</td>
-</tr>
-<tr class="odd">
-<td align="left">epithet_deletion</td>
-<td align="left">94% / 100%</td>
-<td align="left">100% / 99%</td>
-<td align="left">100% / 100%</td>
-<td align="left">99% / 100%</td>
 </tr>
 <tr class="even">
 <td align="left">epithet_substitution</td>
@@ -475,53 +502,25 @@ answers that were right</caption>
 <td align="left">100% / 99%</td>
 </tr>
 <tr class="odd">
+<td align="left">epithet_deletion</td>
+<td align="left">94% / 100%</td>
+<td align="left">100% / 99%</td>
+<td align="left">100% / 100%</td>
+<td align="left">99% / 100%</td>
+</tr>
+<tr class="even">
 <td align="left">epithet_swap</td>
 <td align="left">100% / 100%</td>
 <td align="left">100% / 100%</td>
 <td align="left">100% / 100%</td>
 <td align="left">100% / 100%</td>
 </tr>
-<tr class="even">
-<td align="left">exact</td>
-<td align="left">100% / 100%</td>
-<td align="left">100% / 100%</td>
-<td align="left">100% / 94%</td>
-<td align="left">100% / 100%</td>
-</tr>
 <tr class="odd">
-<td align="left">genus_deletion</td>
-<td align="left">89% / 100%</td>
-<td align="left">86% / 95%</td>
-<td align="left">100% / 99%</td>
-<td align="left">99% / 100%</td>
-</tr>
-<tr class="even">
-<td align="left">homonym</td>
-<td align="left">100% / 100%</td>
-<td align="left">100% / 100%</td>
-<td align="left">100% / 81%</td>
-<td align="left">100% / 100%</td>
-</tr>
-<tr class="odd">
-<td align="left">homonym_typo</td>
-<td align="left">88% / 100%</td>
+<td align="left">two_edits</td>
+<td align="left">93% / 100%</td>
 <td align="left">100% / 99%</td>
 <td align="left">100% / 99%</td>
 <td align="left">100% / 99%</td>
-</tr>
-<tr class="even">
-<td align="left">no_author_epithet_deletion</td>
-<td align="left">63% / 100%</td>
-<td align="left">99% / 99%</td>
-<td align="left">100% / 99%</td>
-<td align="left">100% / 98%</td>
-</tr>
-<tr class="odd">
-<td align="left">no_author_exact</td>
-<td align="left">94% / 100%</td>
-<td align="left">100% / 100%</td>
-<td align="left">100% / 100%</td>
-<td align="left">100% / 100%</td>
 </tr>
 <tr class="even">
 <td align="left">short_epithet</td>
@@ -531,11 +530,67 @@ answers that were right</caption>
 <td align="left">88% / 100%</td>
 </tr>
 <tr class="odd">
-<td align="left">two_edits</td>
-<td align="left">93% / 100%</td>
+<td align="left">genus_deletion</td>
+<td align="left">89% / 100%</td>
+<td align="left">86% / 95%</td>
+<td align="left">100% / 99%</td>
+<td align="left">99% / 100%</td>
+</tr>
+<tr class="even">
+<td align="left">author_punctuation</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 97%</td>
+<td align="left">100% / 100%</td>
+</tr>
+<tr class="odd">
+<td align="left">author_typo</td>
+<td align="left">99% / 100%</td>
+<td align="left">100% / 93%</td>
+<td align="left">100% / 95%</td>
+<td align="left">100% / 100%</td>
+</tr>
+<tr class="even">
+<td align="left">no_author_exact</td>
+<td align="left">94% / 100%</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 100%</td>
+</tr>
+<tr class="odd">
+<td align="left">no_author_epithet_deletion</td>
+<td align="left">63% / 100%</td>
+<td align="left">99% / 99%</td>
+<td align="left">100% / 99%</td>
+<td align="left">100% / 98%</td>
+</tr>
+<tr class="even">
+<td align="left">basionym_missing</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 94%</td>
+<td align="left">100% / 96%</td>
+</tr>
+<tr class="odd">
+<td align="left">ex_dropped</td>
+<td align="left">97% / 100%</td>
+<td align="left">100% / 97%</td>
+<td align="left">100% / 80%</td>
+<td align="left">100% / 79%</td>
+</tr>
+<tr class="even">
+<td align="left">rank_changed</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 71%</td>
+<td align="left">100% / 84%</td>
+<td align="left">100% / 100%</td>
+</tr>
+<tr class="odd">
+<td align="left">spelling_variant</td>
+<td align="left">100% / 100%</td>
 <td align="left">100% / 99%</td>
 <td align="left">100% / 99%</td>
-<td align="left">100% / 99%</td>
+<td align="left">99% / 99%</td>
 </tr>
 </tbody>
 </table>
@@ -547,10 +602,278 @@ several records that fit equally well, and taxastand reports all of
 them.</p>
 </div>
 <div class="section level2">
+<h2 id="accuracy-names-shared-by-several-records">
+<a name="shared"></a>Accuracy: Names shared by several records<a class="anchor" aria-label="anchor" href="#accuracy-names-shared-by-several-records"></a>
+</h2>
+<p><strong>This section is different from the ones above, so read it
+separately.</strong> Each query here is made from a record whose genus
+and epithet are also used by at least one other record with a different
+author (a homonym, or a name that differs only in its rank). Such
+records were chosen <strong>on purpose</strong>, because it is where the
+author, and so the nomenclatural rules, has to decide which record is
+meant. The results say how each package behaves <strong>when a name is
+shared</strong>. They do not say how often that happens: roughly one
+record in ten in WFO shares its genus and epithet with another. For the
+other nine in ten, the genus and epithet already point to one record,
+and the tables above apply.</p>
+<table class="table">
+<colgroup>
+<col width="18%">
+<col width="42%">
+<col width="40%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">kind</th>
+<th align="left">what changes</th>
+<th align="left">example</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>homonym</code></td>
+<td align="left">A name that several records share, queried with its own
+author</td>
+<td align="left">Linum perenne Lam. → Linum perenne Lam.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>homonym_typo</code></td>
+<td align="left">The same, with a letter of the epithet deleted</td>
+<td align="left">Oenothera alata Raf. → Oenothera lata Raf.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>homonym_basionym_missing</code></td>
+<td align="left">A shared name, with the basionym author missing</td>
+<td align="left">Urtica hirta (Sw.) Sw. → Urtica hirta Sw.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>homonym_ex_dropped</code></td>
+<td align="left">A shared name, with the <em>ex</em> element of the
+author dropped</td>
+<td align="left">Lantana dubia Wall. ex Walp. → Lantana dubia Wall.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>homonym_rank_changed</code></td>
+<td align="left">A shared name, with the infraspecific rank changed</td>
+<td align="left">Cornus mas var. alba Weston → Cornus mas subsp. alba
+Weston</td>
+</tr>
+<tr class="even">
+<td align="left"><code>homonym_spelling_variant</code></td>
+<td align="left">A shared name, with a Latin spelling variant of the
+epithet</td>
+<td align="left">Thymus zygis Pall. → Thymus zigis Pall.</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu">wide</span><span class="op">(</span><span class="st">"recall"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">what_shared</span><span class="op">)</span><span class="op">)</span>, caption <span class="op">=</span> <span class="st">"Names shared by several records: share of queries for which the right record was returned"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Names shared by several records: share of queries for which the
+right record was returned</caption>
+<thead><tr class="header">
+<th align="left">kind</th>
+<th align="left">taxastand</th>
+<th align="left">taxify</th>
+<th align="left">U.Taxonstand</th>
+<th align="left">WorldFlora</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">homonym</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">81%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_typo</td>
+<td align="left">100%</td>
+<td align="left">99%</td>
+<td align="left">99%</td>
+<td align="left">99%</td>
+</tr>
+<tr class="odd">
+<td align="left">homonym_basionym_missing</td>
+<td align="left">100%</td>
+<td align="left">95%</td>
+<td align="left">52%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_ex_dropped</td>
+<td align="left">99%</td>
+<td align="left">88%</td>
+<td align="left">36%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="odd">
+<td align="left">homonym_rank_changed</td>
+<td align="left">96%</td>
+<td align="left">34%</td>
+<td align="left">47%</td>
+<td align="left">100%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_spelling_variant</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">99%</td>
+<td align="left">99%</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu">wide</span><span class="op">(</span><span class="st">"unambiguous"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">what_shared</span><span class="op">)</span><span class="op">)</span>, caption <span class="op">=</span> <span class="st">"Names shared by several records: share of queries for which only the right record was returned"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Names shared by several records: share of queries for which
+only the right record was returned</caption>
+<thead><tr class="header">
+<th align="left">kind</th>
+<th align="left">taxastand</th>
+<th align="left">taxify</th>
+<th align="left">U.Taxonstand</th>
+<th align="left">WorldFlora</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">homonym</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">81%</td>
+<td align="left">0%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_typo</td>
+<td align="left">88%</td>
+<td align="left">99%</td>
+<td align="left">0%</td>
+<td align="left">0%</td>
+</tr>
+<tr class="odd">
+<td align="left">homonym_basionym_missing</td>
+<td align="left">97%</td>
+<td align="left">95%</td>
+<td align="left">46%</td>
+<td align="left">0%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_ex_dropped</td>
+<td align="left">87%</td>
+<td align="left">88%</td>
+<td align="left">33%</td>
+<td align="left">0%</td>
+</tr>
+<tr class="odd">
+<td align="left">homonym_rank_changed</td>
+<td align="left">92%</td>
+<td align="left">34%</td>
+<td align="left">0%</td>
+<td align="left">0%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_spelling_variant</td>
+<td align="left">100%</td>
+<td align="left">100%</td>
+<td align="left">0%</td>
+<td align="left">0%</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/double.html" class="external-link">single</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">what_shared</span><span class="op">)</span><span class="op">)</span>, caption <span class="op">=</span> <span class="st">"Names shared by several records: share of queries that got a single answer / share of those answers that were right"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Names shared by several records: share of queries that got a
+single answer / share of those answers that were right</caption>
+<colgroup>
+<col width="33%">
+<col width="16%">
+<col width="16%">
+<col width="17%">
+<col width="16%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">kind</th>
+<th align="left">taxastand</th>
+<th align="left">taxify</th>
+<th align="left">U.Taxonstand</th>
+<th align="left">WorldFlora</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">homonym</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 81%</td>
+<td align="left">100% / 100%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_typo</td>
+<td align="left">88% / 100%</td>
+<td align="left">100% / 99%</td>
+<td align="left">100% / 99%</td>
+<td align="left">100% / 99%</td>
+</tr>
+<tr class="odd">
+<td align="left">homonym_basionym_missing</td>
+<td align="left">97% / 100%</td>
+<td align="left">100% / 95%</td>
+<td align="left">100% / 48%</td>
+<td align="left">100% / 59%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_ex_dropped</td>
+<td align="left">88% / 98%</td>
+<td align="left">100% / 88%</td>
+<td align="left">100% / 34%</td>
+<td align="left">100% / 28%</td>
+</tr>
+<tr class="odd">
+<td align="left">homonym_rank_changed</td>
+<td align="left">96% / 96%</td>
+<td align="left">100% / 34%</td>
+<td align="left">100% / 45%</td>
+<td align="left">100% / 98%</td>
+</tr>
+<tr class="even">
+<td align="left">homonym_spelling_variant</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 100%</td>
+<td align="left">100% / 99%</td>
+<td align="left">100% / 99%</td>
+</tr>
+</tbody>
+</table>
+<p>When a name is shared, the packages differ much more than above:</p>
+<ul>
+<li>
+<strong>taxastand</strong> returned the right record for 96 to 100%
+of the queries. When two records fit equally well (for example “Willd.”
+against both “Willd. ex Less.” and “Willd. ex DC.”), it returns both
+instead of choosing, so it answers with a single record less often (as
+low as 87% for a dropped <em>ex</em> author); when it did answer with
+one record, that record was right 96 to 100% of the time.</li>
+<li>
+<strong>WorldFlora</strong> returned the right record (99 to 100%),
+together with the other records that share the name, and marks one as
+its best match. That best match was right for 28% of the queries with a
+dropped <em>ex</em> author and 59% with a missing basionym author.</li>
+<li>
+<strong>taxify</strong> returns one record, and it was the right one
+for 88 to 100% of the queries, except for a changed rank (34%).</li>
+<li>
+<strong>U.Taxonstand</strong> returned the right record for 36 to
+99% of the queries, with the lowest results for a dropped <em>ex</em>
+author (36%) and a missing basionym author (52%).</li>
+</ul>
+<p>The comparison is again about the records returned, not about which
+package is “best”: a package that returns every record that fits gives
+the user the decision, and one that returns a single record decides for
+them.</p>
+</div>
+<div class="section level2">
 <h2 id="speed">
 <a name="speed"></a>Speed<a class="anchor" aria-label="anchor" href="#speed"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">speed_table</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">res</span><span class="op">$</span><span class="va">speed</span><span class="op">)</span></span>
 <span>  <span class="va">s</span><span class="op">$</span><span class="va">tool</span> <span class="op">&lt;-</span> <span class="va">speed_labels</span><span class="op">[</span><span class="va">s</span><span class="op">$</span><span class="va">tool</span><span class="op">]</span></span>
@@ -635,7 +958,19 @@ are within what a different sample could change.</li>
 <code>acceptedNameUsageID.match = FALSE</code> and
 <code>WFO.one(Auth.dist = ...)</code> aside; see the code below).
 Settings such as the thresholds for fuzzy matching can be changed, and a
-package tuned to your own data could give different results.</li>
+package tuned to your own data could give different results. How a name
+is passed in also matters: WorldFlora was given infraspecific names as
+separate genus, species and infraspecific epithet columns, the way to
+ask for a match that ignores the rank. Given as one string, a variety
+that is queried as a subspecies is not found.</li>
+<li>The nomenclatural kinds and the kinds for shared names were run
+separately from the others, the last of them on 2026-11-09 (the others
+on 2026-11-09), on the same machine, with the same reference and package
+versions. Their queries do not depend on the other kinds, so a single
+run would have given the same queries.</li>
+<li>The queries for shared names were chosen because the name is shared
+(see <a href="#shared">that section</a>); they show how a package
+behaves in that case, not how often it happens.</li>
 <li>Only matching was scored. Resolving synonyms to accepted names,
 which all of these packages also do, was not.</li>
 <li>Only plants (WFO) were tested. Results on other groups or on messier
@@ -653,15 +988,18 @@ U.Taxonstand 1.4.0. Benchmark run on 2026-11-09.</li>
 <p>This is the code that produced the results above, shown unchanged. It
 is also installed with taxastand
 (<code>system.file("benchmark", package = "taxastand")</code>). The
-script that runs it, <code>data-raw/benchmark-vignette.R</code>, is in
-the source repository.</p>
+scripts that run it, <code>data-raw/benchmark-vignette.R</code>
+(including the <code>kinds</code> and <code>speed</code> arguments used
+to run some kinds separately) and
+<code>data-raw/benchmark-combine.R</code> (which merges the runs), are
+in the source repository.</p>
 <div class="section level3">
 <h3 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
 </h3>
 <p>The reference is read from taxify’s installed backbone, reduced to
 species and infraspecific names, and given one row per distinct authored
 name.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># One row per distinct authored name, with columns:</span></span>
 <span><span class="co">#   taxonID, canonical, authorship (NA if none), full (canonical + authorship),</span></span>
 <span><span class="co">#   taxonRank (lower case), taxonomicStatus, acceptedNameUsageID (NA if accepted)</span></span>
@@ -721,7 +1059,7 @@ name.</p>
 </h3>
 <p><code>damage()</code> changes one letter; <code>make_queries()</code>
 builds each kind of query and records the correct answer.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Damage one letter of `x`: substitution, deletion, or swap of two neighbours.</span></span>
 <span><span class="co"># `from` is the first position that may be changed.</span></span>
 <span><span class="va">damage</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">kind</span>, <span class="va">from</span> <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">{</span></span>
@@ -741,7 +1079,7 @@ builds each kind of query and records the correct answer.</p>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Queries made from random species-rank records that have an author, `n` per</span></span>
 <span><span class="co"># kind of error. Returns a data frame: query, kind, source (row of `ref`) and</span></span>
 <span><span class="co"># `truth` (a list of the record IDs that count as the right answer: the record</span></span>
@@ -756,17 +1094,46 @@ builds each kind of query and records the correct answer.</p>
 <span><span class="co">#   homonym, homonym_typo      a name shared by records with different authors,</span></span>
 <span><span class="co">#                              queried with its own author (as is, or with a</span></span>
 <span><span class="co">#                              typo in the epithet): needs the author to decide</span></span>
+<span><span class="co"># Nomenclatural differences (the form of the name changes, not its spelling).</span></span>
+<span><span class="co"># They come last, so that the other kinds are the same with or without them,</span></span>
+<span><span class="co"># and a query that is the same as another reference name is left out, so the</span></span>
+<span><span class="co"># right record stays unambiguous:</span></span>
+<span><span class="co">#   basionym_missing           "(Turcz.) Czerep." queried as "Czerep."</span></span>
+<span><span class="co">#   ex_dropped, in_dropped     "Willd. ex Schkuhr" as "Willd.", "A in B" as "A"</span></span>
+<span><span class="co">#   rank_changed               "var." queried as "subsp." or the reverse</span></span>
+<span><span class="co">#   spelling_variant           y/i, ph/f, th/t, rh/r or ae/e in the epithet</span></span>
+<span><span class="co"># The same four, with a homonym_ prefix, for records that share their genus and</span></span>
+<span><span class="co"># epithet with another record: here the nomenclatural rules decide which record</span></span>
+<span><span class="co"># is meant. They are picked because they have competitors, so they show how a</span></span>
+<span><span class="co"># package behaves when a name is shared, not how often that happens.</span></span>
 <span><span class="va">make_queries</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ref</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">100</span>, <span class="va">seed</span> <span class="op">=</span> <span class="fl">20261109</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span></span>
 <span>  <span class="va">species</span> <span class="op">&lt;-</span> <span class="va">ref</span><span class="op">$</span><span class="va">taxonRank</span> <span class="op">==</span> <span class="st">"species"</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">ref</span><span class="op">$</span><span class="va">authorship</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"^[A-Z][a-z]+ [a-z-]+$"</span>, <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span></span>
 <span>  <span class="va">epithet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"^\\S+ "</span>, <span class="st">""</span>, <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span></span>
 <span>  <span class="va">dup_canon</span> <span class="op">&lt;-</span> <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="va">auth</span> <span class="op">&lt;-</span> <span class="va">ref</span><span class="op">$</span><span class="va">authorship</span></span>
+<span>  <span class="va">not_basio</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">auth</span><span class="op">)</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"^[(]"</span>, <span class="va">auth</span><span class="op">)</span></span>
+<span>  <span class="va">infra</span> <span class="op">&lt;-</span> <span class="va">ref</span><span class="op">$</span><span class="va">taxonRank</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"subspecies"</span>, <span class="st">"variety"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">auth</span><span class="op">)</span> <span class="op">&amp;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"^[A-Z][a-z]+ [a-z-]+ (var[.]|subsp[.]) [a-z-]+$"</span>, <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span></span>
 <span>  <span class="va">pools</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    default <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">12</span><span class="op">)</span>,</span>
 <span>    short <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">epithet</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="fl">5</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">epithet</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">3</span><span class="op">)</span>,</span>
-<span>    homonym <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="va">dup_canon</span><span class="op">)</span></span>
+<span>    homonym <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="va">dup_canon</span><span class="op">)</span>,</span>
+<span>    basionym <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"^[(][^)]*[)]\\s*\\S"</span>, <span class="va">auth</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    ex <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="va">not_basio</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">" ex "</span>, <span class="va">auth</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    `in` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="va">not_basio</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">" in [A-Z]"</span>, <span class="va">auth</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    infra <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">infra</span><span class="op">)</span>,</span>
+<span>    foldable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">species</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"y|ph|th|rh|ae"</span>, <span class="va">epithet</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
+<span>  <span class="co"># The same records, but only those that share their genus and epithet</span></span>
+<span>  <span class="co"># (ignoring the rank) with another record, so that the author, and with it the</span></span>
+<span>  <span class="co"># nomenclatural rules, has to decide which record is meant</span></span>
+<span>  <span class="va">key</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" (var[.]|subsp[.]|f[.]) "</span>, <span class="st">" "</span>, <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span></span>
+<span>  <span class="va">shared</span> <span class="op">&lt;-</span> <span class="va">key</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">key</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="va">key</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"basionym"</span>, <span class="st">"ex"</span>, <span class="st">"infra"</span>, <span class="st">"foldable"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">pools</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">k</span>, <span class="st">"_shared"</span><span class="op">)</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">pools</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="va">shared</span><span class="op">[</span><span class="va">pools</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="op">}</span></span>
 <span>  <span class="va">by_canon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">ref</span><span class="op">$</span><span class="va">taxonID</span>, <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span></span>
 <span>  <span class="co"># name parts of record i</span></span>
 <span>  <span class="va">parts</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">src</span><span class="op">)</span> <span class="op">{</span></span>
@@ -784,6 +1151,31 @@ builds each kind of query and records the correct answer.</p>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">w</span>, collapse <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
 <span>    <span class="op">}</span>, <span class="st">""</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
+<span>  <span class="co"># swap var. and subsp.</span></span>
+<span>  <span class="va">swap_rank</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">" var[.] "</span>, <span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" var[.] "</span>, <span class="st">" subsp. "</span>, <span class="va">x</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" subsp[.] "</span>, <span class="st">" var. "</span>, <span class="va">x</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="co"># fold one Latin spelling variant (the first that applies) in an epithet</span></span>
+<span>  <span class="va">spelling_variant</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">x</span>, <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="kw">for</span> <span class="op">(</span><span class="va">pat</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"y"</span>, <span class="st">"i"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ph"</span>, <span class="st">"f"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"th"</span>, <span class="st">"t"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rh"</span>, <span class="st">"r"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ae"</span>, <span class="st">"e"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="va">pat</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">e</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="va">pat</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">pat</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">e</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>      <span class="op">}</span></span>
+<span>      <span class="va">e</span></span>
+<span>    <span class="op">}</span>, <span class="st">""</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">f_basionym</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="va">p</span><span class="op">$</span><span class="va">epi</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"^[(][^)]*[)]\\s*"</span>, <span class="st">""</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">f_ex</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="va">p</span><span class="op">$</span><span class="va">epi</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" ex .*$"</span>, <span class="st">""</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">f_in</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="va">p</span><span class="op">$</span><span class="va">epi</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" in .*$"</span>, <span class="st">""</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">f_rank</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="fu">swap_rank</span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">epi</span><span class="op">)</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span></span>
+<span>  <span class="va">f_spelling</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="fu">spelling_variant</span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">epi</span><span class="op">)</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span></span>
 <span>  <span class="va">kinds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    exact <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"default"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="va">p</span><span class="op">$</span><span class="va">epi</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    epithet_substitution <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"default"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">{</span></span>
@@ -817,13 +1209,30 @@ builds each kind of query and records the correct answer.</p>
 <span>    homonym <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"homonym"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="va">p</span><span class="op">$</span><span class="va">epi</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    homonym_typo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"homonym"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">genus</span>, <span class="fu">dmg</span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">epi</span>, <span class="st">"deletion"</span><span class="op">)</span>, <span class="va">p</span><span class="op">$</span><span class="va">auth</span><span class="op">)</span></span>
-<span>    <span class="op">}</span><span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span>,</span>
+<span>    <span class="co"># a third element, TRUE, leaves out queries equal to another reference name</span></span>
+<span>    basionym_missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"basionym"</span>, <span class="va">f_basionym</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    ex_dropped <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"ex"</span>, <span class="va">f_ex</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    in_dropped <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"in"</span>, <span class="va">f_in</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    rank_changed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"infra"</span>, <span class="va">f_rank</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    spelling_variant <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"foldable"</span>, <span class="va">f_spelling</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    <span class="co"># the same, for names that several records share</span></span>
+<span>    homonym_basionym_missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"basionym_shared"</span>, <span class="va">f_basionym</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    homonym_ex_dropped <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"ex_shared"</span>, <span class="va">f_ex</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    homonym_rank_changed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"infra_shared"</span>, <span class="va">f_rank</span>, <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    homonym_spelling_variant <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"foldable_shared"</span>, <span class="va">f_spelling</span>, <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">kinds</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">pool</span> <span class="op">&lt;-</span> <span class="va">pools</span><span class="op">[[</span><span class="va">kinds</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">]</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span> <span class="co"># the reference has no names for this kind of query</span></span>
+<span>    <span class="op">}</span></span>
 <span>    <span class="va">src</span> <span class="op">&lt;-</span> <span class="va">pool</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/trimws.html" class="external-link">trimws</a></span><span class="op">(</span><span class="va">kinds</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="fu">parts</span><span class="op">(</span><span class="va">src</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>query <span class="op">=</span> <span class="va">q</span>, kind <span class="op">=</span> <span class="va">k</span>, source <span class="op">=</span> <span class="va">src</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    <span class="va">keep</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">kinds</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">2</span><span class="op">)</span> <span class="op">!</span><span class="va">q</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">ref</span><span class="op">$</span><span class="va">full</span> <span class="kw">else</span> <span class="cn">TRUE</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      query <span class="op">=</span> <span class="va">q</span>, kind <span class="op">=</span> <span class="va">k</span>, source <span class="op">=</span> <span class="va">src</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span><span class="op">[</span><span class="va">keep</span>, <span class="op">]</span></span>
 <span>  <span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">out</span><span class="op">$</span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"^no_author"</span>, <span class="va">out</span><span class="op">$</span><span class="va">kind</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -840,7 +1249,7 @@ builds each kind of query and records the correct answer.</p>
 <div class="section level3">
 <h3 id="scoring">Scoring<a class="anchor" aria-label="anchor" href="#scoring"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># `hits` has one row per record returned: query, id, and `pick` (TRUE for the</span></span>
 <span><span class="co"># record the tool itself chooses as its answer; at most one per query).</span></span>
 <span><span class="co"># One row per query: n_hits (records returned), correct (the right record is</span></span>
@@ -898,7 +1307,23 @@ builds each kind of query and records the correct answer.</p>
 <p>Each adapter builds its package’s reference from the shared table and
 returns the records matched for a set of queries, plus the package’s own
 single answer.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p>U.Taxonstand and WorldFlora take the name and the author separately,
+so this helper splits a query first.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># U.Taxonstand and WorldFlora take the name and the author separately. Split a</span></span>
+<span><span class="co"># query into the name (genus and epithet, plus the rank and infraspecific</span></span>
+<span><span class="co"># epithet of an infraspecific name) and the author.</span></span>
+<span><span class="va">split_query</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">q</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">pattern</span> <span class="op">&lt;-</span> <span class="st">"^(\\S+ \\S+ (?:var[.]|subsp[.]|f[.]) \\S+|\\S+ \\S+)\\s*(.*)$"</span></span>
+<span>  <span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/regmatches.html" class="external-link">regmatches</a></span><span class="op">(</span><span class="va">q</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">regexec</a></span><span class="op">(</span><span class="va">pattern</span>, <span class="va">q</span>, perl <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">name</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    name <span class="op">=</span> <span class="va">name</span>, author <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>    infraspecific <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">" (var[.]|subsp[.]|f[.]) "</span>, <span class="va">name</span><span class="op">)</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Each make_*() takes the reference table and returns a list with `setup_s` (the</span></span>
 <span><span class="co"># time spent preparing the reference, once) and `run(queries)`.</span></span>
 <span></span>
@@ -929,7 +1354,7 @@ single answer.</p>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">make_taxify</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ref</span>, <span class="va">backbone</span> <span class="op">=</span> <span class="st">"wfo"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">setup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
 <span>    <span class="fu">taxify</span><span class="fu">::</span><span class="fu">taxify</span><span class="op">(</span><span class="st">"Quercus robur"</span>, backbone <span class="op">=</span> <span class="va">backbone</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -949,7 +1374,7 @@ single answer.</p>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">make_utaxonstand</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ref</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">genus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" .*"</span>, <span class="st">""</span>, <span class="va">ref</span><span class="op">$</span><span class="va">canonical</span><span class="op">)</span></span>
 <span>  <span class="va">setup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
@@ -966,11 +1391,10 @@ single answer.</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    setup_s <span class="op">=</span> <span class="va">setup</span>,</span>
 <span>    run <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">q</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="co"># split the query into name (genus + epithet) and author</span></span>
-<span>      <span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/regmatches.html" class="external-link">regmatches</a></span><span class="op">(</span><span class="va">q</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">regexec</a></span><span class="op">(</span><span class="st">"^(\\S+ \\S+)\\s*(.*)$"</span>, <span class="va">q</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu">split_query</span><span class="op">(</span><span class="va">q</span><span class="op">)</span></span>
 <span>      <span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>        Name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">2</span><span class="op">)</span>, Author <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span>        Rank <span class="op">=</span> <span class="fl">2</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>        Name <span class="op">=</span> <span class="va">parts</span><span class="op">$</span><span class="va">name</span>, Author <span class="op">=</span> <span class="va">parts</span><span class="op">$</span><span class="va">author</span>,</span>
+<span>        Rank <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">parts</span><span class="op">$</span><span class="va">infraspecific</span>, <span class="fl">3</span>, <span class="fl">2</span><span class="op">)</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>      <span class="op">)</span></span>
 <span>      <span class="co"># nameMatch() prints progress bars; discard them</span></span>
 <span>      <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output</a></span><span class="op">(</span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span></span>
@@ -994,7 +1418,7 @@ single answer.</p>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">make_worldflora</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ref</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">ref</span><span class="op">$</span><span class="va">canonical</span>, <span class="st">" "</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>  <span class="va">setup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
@@ -1019,36 +1443,59 @@ single answer.</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    setup_s <span class="op">=</span> <span class="va">setup</span>,</span>
 <span>    run <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">q</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/regmatches.html" class="external-link">regmatches</a></span><span class="op">(</span><span class="va">q</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">regexec</a></span><span class="op">(</span><span class="st">"^(\\S+ \\S+)\\s*(.*)$"</span>, <span class="va">q</span><span class="op">)</span><span class="op">)</span></span>
-<span>      <span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>        spec.name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">2</span><span class="op">)</span>, Authorship <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span>        key <span class="op">=</span> <span class="va">q</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>      <span class="op">)</span></span>
-<span>      <span class="co"># acceptedNameUsageID.match = FALSE: return the record that matched, not</span></span>
-<span>      <span class="co"># the accepted record it points to, so that matching is scored alone</span></span>
-<span>      <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output</a></span><span class="op">(</span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span></span>
-<span>        <span class="fu">WorldFlora</span><span class="fu">::</span><span class="fu">WFO.match</span><span class="op">(</span></span>
-<span>          spec.data <span class="op">=</span> <span class="va">spec</span>, WFO.data <span class="op">=</span> <span class="va">wfo</span>, Authorship <span class="op">=</span> <span class="st">"Authorship"</span>,</span>
-<span>          acceptedNameUsageID.match <span class="op">=</span> <span class="cn">FALSE</span>, no.dates <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>          counter <span class="op">=</span> <span class="fl">1e9</span></span>
+<span>      <span class="va">parts</span> <span class="op">&lt;-</span> <span class="fu">split_query</span><span class="op">(</span><span class="va">q</span><span class="op">)</span></span>
+<span>      <span class="co"># Match one set of queries and pick one record for each. WFO.match() with</span></span>
+<span>      <span class="co"># acceptedNameUsageID.match = FALSE returns the record that matched, not</span></span>
+<span>      <span class="co"># the accepted record it points to, so that matching is scored alone.</span></span>
+<span>      <span class="va">match_wfo</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">spec</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>        <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output</a></span><span class="op">(</span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span></span>
+<span>          <span class="fu">WorldFlora</span><span class="fu">::</span><span class="fu">WFO.match</span><span class="op">(</span></span>
+<span>            spec.data <span class="op">=</span> <span class="va">spec</span>, WFO.data <span class="op">=</span> <span class="va">wfo</span>, Authorship <span class="op">=</span> <span class="st">"Authorship"</span>,</span>
+<span>            acceptedNameUsageID.match <span class="op">=</span> <span class="cn">FALSE</span>, no.dates <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>            verbose <span class="op">=</span> <span class="cn">FALSE</span>, counter <span class="op">=</span> <span class="fl">1e9</span>, <span class="va">...</span></span>
+<span>          <span class="op">)</span></span>
+<span>        <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="va">r</span> <span class="op">&lt;-</span> <span class="va">r</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">taxonID</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">r</span><span class="op">$</span><span class="va">taxonID</span> <span class="op">!=</span> <span class="st">""</span>, <span class="op">]</span></span>
+<span>        <span class="co"># WFO.one() chooses one record per query, preferring the best author</span></span>
+<span>        <span class="co"># match (Auth.dist); it expects the columns that WFO.match() adds only</span></span>
+<span>        <span class="co"># when it replaces synonyms by accepted names</span></span>
+<span>        <span class="va">r</span><span class="op">$</span><span class="va">New.accepted</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<span>        <span class="va">r</span><span class="op">$</span><span class="va">Old.status</span> <span class="op">&lt;-</span> <span class="st">""</span></span>
+<span>        <span class="va">r</span><span class="op">$</span><span class="va">Old.ID</span> <span class="op">&lt;-</span> <span class="st">""</span></span>
+<span>        <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output</a></span><span class="op">(</span><span class="va">one</span> <span class="op">&lt;-</span> <span class="fu">WorldFlora</span><span class="fu">::</span><span class="fu">WFO.one</span><span class="op">(</span></span>
+<span>          <span class="va">r</span>,</span>
+<span>          Auth.dist <span class="op">=</span> <span class="st">"Auth.dist"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>, counter <span class="op">=</span> <span class="fl">1e9</span></span>
+<span>        <span class="op">)</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>          query <span class="op">=</span> <span class="va">r</span><span class="op">$</span><span class="va">key</span>, id <span class="op">=</span> <span class="va">r</span><span class="op">$</span><span class="va">taxonID</span>,</span>
+<span>          pick <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">key</span>, <span class="va">r</span><span class="op">$</span><span class="va">taxonID</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">one</span><span class="op">$</span><span class="va">key</span>, <span class="va">one</span><span class="op">$</span><span class="va">taxonID</span><span class="op">)</span>,</span>
+<span>          stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>        <span class="op">)</span></span>
-<span>      <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>      <span class="va">ok</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">taxonID</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">r</span><span class="op">$</span><span class="va">taxonID</span> <span class="op">!=</span> <span class="st">""</span></span>
-<span>      <span class="va">r</span> <span class="op">&lt;-</span> <span class="va">r</span><span class="op">[</span><span class="va">ok</span>, <span class="op">]</span></span>
-<span>      <span class="co"># WFO.one() chooses one record per query, preferring the best author match</span></span>
-<span>      <span class="co"># (Auth.dist); it expects the columns that WFO.match() adds only when it</span></span>
-<span>      <span class="co"># replaces synonyms by accepted names</span></span>
-<span>      <span class="va">r</span><span class="op">$</span><span class="va">New.accepted</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
-<span>      <span class="va">r</span><span class="op">$</span><span class="va">Old.status</span> <span class="op">&lt;-</span> <span class="st">""</span></span>
-<span>      <span class="va">r</span><span class="op">$</span><span class="va">Old.ID</span> <span class="op">&lt;-</span> <span class="st">""</span></span>
-<span>      <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output</a></span><span class="op">(</span><span class="va">one</span> <span class="op">&lt;-</span> <span class="fu">WorldFlora</span><span class="fu">::</span><span class="fu">WFO.one</span><span class="op">(</span></span>
-<span>        <span class="va">r</span>,</span>
-<span>        Auth.dist <span class="op">=</span> <span class="st">"Auth.dist"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>, counter <span class="op">=</span> <span class="fl">1e9</span></span>
-<span>      <span class="op">)</span><span class="op">)</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>        query <span class="op">=</span> <span class="va">r</span><span class="op">$</span><span class="va">key</span>, id <span class="op">=</span> <span class="va">r</span><span class="op">$</span><span class="va">taxonID</span>,</span>
-<span>        pick <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">key</span>, <span class="va">r</span><span class="op">$</span><span class="va">taxonID</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">one</span><span class="op">$</span><span class="va">key</span>, <span class="va">one</span><span class="op">$</span><span class="va">taxonID</span><span class="op">)</span>,</span>
-<span>        stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>      <span class="op">}</span></span>
+<span>      <span class="va">sp</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="va">parts</span><span class="op">$</span><span class="va">infraspecific</span></span>
+<span>      <span class="co"># Species: one name string. Infraspecific names: genus, species and</span></span>
+<span>      <span class="co"># infraspecific epithet in separate columns and no rank, the way to ask</span></span>
+<span>      <span class="co"># WorldFlora for a match that ignores the rank (given as one string, or</span></span>
+<span>      <span class="co"># with the rank, a var. is not found when it is queried as subsp.).</span></span>
+<span>      <span class="va">words</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">parts</span><span class="op">$</span><span class="va">name</span><span class="op">[</span><span class="op">!</span><span class="va">sp</span><span class="op">]</span>, <span class="st">" "</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>        <span class="fu">match_wfo</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>          spec.name <span class="op">=</span> <span class="va">parts</span><span class="op">$</span><span class="va">name</span><span class="op">[</span><span class="va">sp</span><span class="op">]</span>, Authorship <span class="op">=</span> <span class="va">parts</span><span class="op">$</span><span class="va">author</span><span class="op">[</span><span class="va">sp</span><span class="op">]</span>,</span>
+<span>          key <span class="op">=</span> <span class="va">q</span><span class="op">[</span><span class="va">sp</span><span class="op">]</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>        <span class="op">)</span><span class="op">)</span>,</span>
+<span>        <span class="fu">match_wfo</span><span class="op">(</span></span>
+<span>          <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>            Genus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">words</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>            Species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">words</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>            Infraspecific <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">words</span>, <span class="va">`[`</span>, <span class="st">""</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>            Authorship <span class="op">=</span> <span class="va">parts</span><span class="op">$</span><span class="va">author</span><span class="op">[</span><span class="op">!</span><span class="va">sp</span><span class="op">]</span>, key <span class="op">=</span> <span class="va">q</span><span class="op">[</span><span class="op">!</span><span class="va">sp</span><span class="op">]</span>,</span>
+<span>            stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>          <span class="op">)</span>,</span>
+<span>          Genus <span class="op">=</span> <span class="st">"Genus"</span>, Species <span class="op">=</span> <span class="st">"Species"</span>, Infraspecific <span class="op">=</span> <span class="st">"Infraspecific"</span></span>
+<span>        <span class="op">)</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
@@ -1057,7 +1504,7 @@ single answer.</p>
 <div class="section level3">
 <h3 id="timing">Timing<a class="anchor" aria-label="anchor" href="#timing"></a>
 </h3>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Elapsed seconds (best of `reps`) to match `n` queries, after a warm-up call.</span></span>
 <span><span class="co"># The queries are shuffled (fixed seed) so that every size is a mix of the</span></span>
 <span><span class="co"># kinds of error: the query set is ordered by kind, and exact names are much</span></span>
@@ -1080,7 +1527,7 @@ single answer.</p>
 <div class="section level3">
 <h3 id="running-it">Running it<a class="anchor" aria-label="anchor" href="#running-it"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu">load_reference</span><span class="op">(</span><span class="st">"wfo"</span><span class="op">)</span></span>
 <span><span class="va">queries</span> <span class="op">&lt;-</span> <span class="fu">make_queries</span><span class="op">(</span><span class="va">ref</span>, n <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">adapters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
