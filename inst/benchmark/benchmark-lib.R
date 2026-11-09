@@ -101,16 +101,33 @@ damage <- function(x, kind, from = 1L) {
 #   homonym, homonym_typo      a name shared by records with different authors,
 #                              queried with its own author (as is, or with a
 #                              typo in the epithet): needs the author to decide
+# Nomenclatural differences (the form of the name changes, not its spelling).
+# They come last, so that the other kinds are the same with or without them,
+# and a query that is the same as another reference name is left out, so the
+# right record stays unambiguous:
+#   basionym_missing           "(Turcz.) Czerep." queried as "Czerep."
+#   ex_dropped, in_dropped     "Willd. ex Schkuhr" as "Willd.", "A in B" as "A"
+#   rank_changed               "var." queried as "subsp." or the reverse
+#   spelling_variant           y/i, ph/f, th/t, rh/r or ae/e in the epithet
 make_queries <- function(ref, n = 100, seed = 20261109) {
   set.seed(seed)
   species <- ref$taxonRank == "species" & !is.na(ref$authorship) &
     grepl("^[A-Z][a-z]+ [a-z-]+$", ref$canonical)
   epithet <- sub("^\\S+ ", "", ref$canonical)
   dup_canon <- ref$canonical %in% ref$canonical[duplicated(ref$canonical)]
+  auth <- ref$authorship
+  not_basio <- !is.na(auth) & !grepl("^[(]", auth)
+  infra <- ref$taxonRank %in% c("subspecies", "variety") & !is.na(auth) &
+    grepl("^[A-Z][a-z]+ [a-z-]+ (var[.]|subsp[.]) [a-z-]+$", ref$canonical)
   pools <- list(
     default = which(species & nchar(ref$canonical) > 12),
     short = which(species & nchar(epithet) <= 5 & nchar(epithet) >= 3),
-    homonym = which(species & dup_canon)
+    homonym = which(species & dup_canon),
+    basionym = which(species & grepl("^[(][^)]*[)]\\s*\\S", auth)),
+    ex = which(species & not_basio & grepl(" ex ", auth, fixed = TRUE)),
+    `in` = which(species & not_basio & grepl(" in [A-Z]", auth)),
+    infra = which(infra),
+    foldable = which(species & grepl("y|ph|th|rh|ae", epithet))
   )
   by_canon <- split(ref$taxonID, ref$canonical)
   # name parts of record i
@@ -127,6 +144,24 @@ make_queries <- function(ref, n = 100, seed = 20261109) {
       k <- which.max(nchar(w))
       w[k] <- damage(w[k], "deletion", from = 2L)
       paste(w, collapse = "")
+    }, "")
+  }
+  # swap var. and subsp.
+  swap_rank <- function(x) {
+    ifelse(
+      grepl(" var[.] ", x), sub(" var[.] ", " subsp. ", x),
+      sub(" subsp[.] ", " var. ", x)
+    )
+  }
+  # fold one Latin spelling variant (the first that applies) in an epithet
+  spelling_variant <- function(x) {
+    vapply(x, function(e) {
+      for (pat in list(c("y", "i"), c("ph", "f"), c("th", "t"), c("rh", "r"), c("ae", "e"))) {
+        if (grepl(pat[1], e, fixed = TRUE)) {
+          return(sub(pat[1], pat[2], e, fixed = TRUE))
+        }
+      }
+      e
     }, "")
   }
   kinds <- list(
@@ -162,13 +197,35 @@ make_queries <- function(ref, n = 100, seed = 20261109) {
     homonym = list("homonym", function(p) paste(p$genus, p$epi, p$auth)),
     homonym_typo = list("homonym", function(p) {
       paste(p$genus, dmg(p$epi, "deletion"), p$auth)
-    })
+    }),
+    # a third element, TRUE, leaves out queries equal to another reference name
+    basionym_missing = list("basionym", function(p) {
+      paste(p$genus, p$epi, sub("^[(][^)]*[)]\\s*", "", p$auth))
+    }, TRUE),
+    ex_dropped = list("ex", function(p) {
+      paste(p$genus, p$epi, sub(" ex .*$", "", p$auth))
+    }, TRUE),
+    in_dropped = list("in", function(p) {
+      paste(p$genus, p$epi, sub(" in .*$", "", p$auth))
+    }, TRUE),
+    rank_changed = list("infra", function(p) {
+      paste(p$genus, swap_rank(p$epi), p$auth)
+    }, TRUE),
+    spelling_variant = list("foldable", function(p) {
+      paste(p$genus, spelling_variant(p$epi), p$auth)
+    }, TRUE)
   )
   out <- do.call(rbind, lapply(names(kinds), function(k) {
     pool <- pools[[kinds[[k]][[1]]]]
+    if (!length(pool)) {
+      return(NULL) # the reference has no names for this kind of query
+    }
     src <- pool[sample.int(length(pool), min(n, length(pool)))]
     q <- trimws(kinds[[k]][[2]](parts(src)))
-    data.frame(query = q, kind = k, source = src, stringsAsFactors = FALSE)
+    keep <- if (length(kinds[[k]]) > 2) !q %in% ref$full else TRUE
+    data.frame(
+      query = q, kind = k, source = src, stringsAsFactors = FALSE
+    )[keep, ]
   }))
   out$truth <- lapply(seq_len(nrow(out)), function(i) {
     if (grepl("^no_author", out$kind[i])) {
@@ -232,6 +289,21 @@ summarise_scores <- function(scores) {
   out$kind <- rownames(out)
   rownames(out) <- NULL
   out[, c("kind", setdiff(colnames(out), "kind"))]
+}
+
+# ---- split-query ----
+# U.Taxonstand and WorldFlora take the name and the author separately. Split a
+# query into the name (genus and epithet, plus the rank and infraspecific
+# epithet of an infraspecific name) and the author.
+split_query <- function(q) {
+  pattern <- "^(\\S+ \\S+ (?:var[.]|subsp[.]|f[.]) \\S+|\\S+ \\S+)\\s*(.*)$"
+  m <- regmatches(q, regexec(pattern, q, perl = TRUE))
+  name <- vapply(m, `[`, "", 2)
+  data.frame(
+    name = name, author = vapply(m, `[`, "", 3),
+    infraspecific = grepl(" (var[.]|subsp[.]|f[.]) ", name),
+    stringsAsFactors = FALSE
+  )
 }
 
 # ---- adapter-taxastand ----
@@ -304,11 +376,10 @@ make_utaxonstand <- function(ref) {
   list(
     setup_s = setup,
     run = function(q) {
-      # split the query into name (genus + epithet) and author
-      m <- regmatches(q, regexec("^(\\S+ \\S+)\\s*(.*)$", q))
+      parts <- split_query(q)
       sp <- data.frame(
-        Name = vapply(m, `[`, "", 2), Author = vapply(m, `[`, "", 3),
-        Rank = 2, stringsAsFactors = FALSE
+        Name = parts$name, Author = parts$author,
+        Rank = ifelse(parts$infraspecific, 3, 2), stringsAsFactors = FALSE
       )
       # nameMatch() prints progress bars; discard them
       utils::capture.output(r <- suppressWarnings(suppressMessages(
@@ -358,36 +429,59 @@ make_worldflora <- function(ref) {
   list(
     setup_s = setup,
     run = function(q) {
-      m <- regmatches(q, regexec("^(\\S+ \\S+)\\s*(.*)$", q))
-      spec <- data.frame(
-        spec.name = vapply(m, `[`, "", 2), Authorship = vapply(m, `[`, "", 3),
-        key = q, stringsAsFactors = FALSE
-      )
-      # acceptedNameUsageID.match = FALSE: return the record that matched, not
-      # the accepted record it points to, so that matching is scored alone
-      utils::capture.output(r <- suppressWarnings(suppressMessages(
-        WorldFlora::WFO.match(
-          spec.data = spec, WFO.data = wfo, Authorship = "Authorship",
-          acceptedNameUsageID.match = FALSE, no.dates = TRUE, verbose = FALSE,
-          counter = 1e9
+      parts <- split_query(q)
+      # Match one set of queries and pick one record for each. WFO.match() with
+      # acceptedNameUsageID.match = FALSE returns the record that matched, not
+      # the accepted record it points to, so that matching is scored alone.
+      match_wfo <- function(spec, ...) {
+        if (!nrow(spec)) {
+          return(NULL)
+        }
+        utils::capture.output(r <- suppressWarnings(suppressMessages(
+          WorldFlora::WFO.match(
+            spec.data = spec, WFO.data = wfo, Authorship = "Authorship",
+            acceptedNameUsageID.match = FALSE, no.dates = TRUE,
+            verbose = FALSE, counter = 1e9, ...
+          )
+        )))
+        r <- r[!is.na(r$taxonID) & r$taxonID != "", ]
+        # WFO.one() chooses one record per query, preferring the best author
+        # match (Auth.dist); it expects the columns that WFO.match() adds only
+        # when it replaces synonyms by accepted names
+        r$New.accepted <- FALSE
+        r$Old.status <- ""
+        r$Old.ID <- ""
+        utils::capture.output(one <- WorldFlora::WFO.one(
+          r,
+          Auth.dist = "Auth.dist", verbose = FALSE, counter = 1e9
+        ))
+        data.frame(
+          query = r$key, id = r$taxonID,
+          pick = paste(r$key, r$taxonID) %in% paste(one$key, one$taxonID),
+          stringsAsFactors = FALSE
         )
-      )))
-      ok <- !is.na(r$taxonID) & r$taxonID != ""
-      r <- r[ok, ]
-      # WFO.one() chooses one record per query, preferring the best author match
-      # (Auth.dist); it expects the columns that WFO.match() adds only when it
-      # replaces synonyms by accepted names
-      r$New.accepted <- FALSE
-      r$Old.status <- ""
-      r$Old.ID <- ""
-      utils::capture.output(one <- WorldFlora::WFO.one(
-        r,
-        Auth.dist = "Auth.dist", verbose = FALSE, counter = 1e9
-      ))
-      data.frame(
-        query = r$key, id = r$taxonID,
-        pick = paste(r$key, r$taxonID) %in% paste(one$key, one$taxonID),
-        stringsAsFactors = FALSE
+      }
+      sp <- !parts$infraspecific
+      # Species: one name string. Infraspecific names: genus, species and
+      # infraspecific epithet in separate columns and no rank, the way to ask
+      # WorldFlora for a match that ignores the rank (given as one string, or
+      # with the rank, a var. is not found when it is queried as subsp.).
+      words <- strsplit(parts$name[!sp], " ", fixed = TRUE)
+      rbind(
+        match_wfo(data.frame(
+          spec.name = parts$name[sp], Authorship = parts$author[sp],
+          key = q[sp], stringsAsFactors = FALSE
+        )),
+        match_wfo(
+          data.frame(
+            Genus = vapply(words, `[`, "", 1),
+            Species = vapply(words, `[`, "", 2),
+            Infraspecific = vapply(words, `[`, "", 4),
+            Authorship = parts$author[!sp], key = q[!sp],
+            stringsAsFactors = FALSE
+          ),
+          Genus = "Genus", Species = "Species", Infraspecific = "Infraspecific"
+        )
       )
     }
   )

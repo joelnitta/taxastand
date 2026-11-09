@@ -122,12 +122,15 @@
 * The documentation of `ts_match_names()` and `ts_resolve_names()` now
   recommends `ts_prepare_reference()` for repeated queries against a large
   reference, and `ts_match_names()` defines an autonym (#94).
-* New vignette "How taxastand compares with similar packages" (#96): taxastand,
-  taxify, WorldFlora and U.Taxonstand match the same World Flora Online
-  reference against queries made by damaging real names (typos in the genus,
-  epithet and author, missing authors, homonyms), so the right answer is known.
-  It compares accuracy, single answers and speed. The results are precomputed
-  and saved with the package, and the code that produced them is installed in
+* New "Benchmarks" vignette comparing taxastand with similar packages (#96,
+  #103): taxastand, taxify, WorldFlora and U.Taxonstand match the same World
+  Flora Online reference against queries made by damaging real names (typos in
+  the genus, epithet and author, missing authors, homonyms) and by changing the
+  form of names in the ways taxastand checks for (a missing basionym author, a
+  dropped *ex* element, a changed infraspecific rank, a Latin spelling
+  variant), so the right answer is known. It compares accuracy, single answers
+  and speed. The results are precomputed and saved with the package, and the
+  code that produced them is installed in
   `system.file("benchmark", package = "taxastand")`.
 * Faster fuzzy matching: candidates are looked up by reference row rather than
   by name (a 600-query PPG run took 2.4 s, now 2.1 s; results identical).
