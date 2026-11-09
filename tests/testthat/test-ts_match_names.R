@@ -131,17 +131,74 @@ test_that("Incorrectly specified manual match fails", {
     ),
     "manual_match must have `query` and `match` columns"
   )
+})
+
+test_that("manual_match works when the query is a parsed dataframe", {
+  q <- c("Crepidomanes minutus", "Hymeefee erae", "Hymenophyllum polyantha")
+  ref <- c("Crepidomanes minutum", "Hymenophyllum polyanthos")
+  manual <- data.frame(
+    query = c("Hymeefee erae", "Not in query"),
+    match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
+  )
+  cols <- c("query", "reference", "match_type", "dist")
+  from_chr <- ts_match_names(q, ref, manual_match = manual)
+  from_df <- ts_match_names(ts_parse_names(q), ref, manual_match = manual)
+  expect_equal(from_df[, cols], from_chr[, cols])
+  expect_equal(
+    from_df$match_type[from_df$query == "Hymeefee erae"], "manual"
+  )
+  expect_equal(
+    from_df$reference[from_df$query == "Hymeefee erae"],
+    "Hymenophyllum polyanthos"
+  )
+  # the other names are matched as usual
+  expect_false("manual" %in% from_df$match_type[from_df$query != "Hymeefee erae"])
+})
+
+test_that("manual_match with a parsed query works with collapsed infrasp names", {
+  q <- c(
+    "Crepidomanes minutus", "Crepidomanes minutawtaw",
+    "Blechnum lunare var. lunare", "Blechnum lunare",
+    "Bar foo var. foo", "Bar foo"
+  )
+  ref <- c(
+    "Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
+    "Bar foo"
+  )
+  manual <- data.frame(
+    query = c("Bar foo var. foo", "Crepidomanes minutawtaw"),
+    match = c("Bar foo", "Crepidomanes minutum")
+  )
+  args <- list(
+    reference = ref, manual_match = manual, max_dist = 10,
+    collapse_infra = TRUE, simple = TRUE
+  )
+  from_chr <- do.call(ts_match_names, c(list(query = q), args))
+  from_df <- do.call(ts_match_names, c(list(query = ts_parse_names(q)), args))
+  expect_equal(from_df, from_chr)
+})
+
+test_that("manual_match with a parsed query respects strip_qualifiers", {
+  q <- "Tectaria cf. zzzz"
+  ref <- c("Tectaria crenata", "Tectaria subvariolosa")
+  # the query name is compared as given (the qualifier is kept in `name`)
+  manual <- data.frame(query = "Tectaria cf. zzzz", match = "Tectaria crenata")
+  res <- ts_match_names(
+    ts_parse_names(q, strip_qualifiers = TRUE), ref,
+    manual_match = manual, strip_qualifiers = TRUE, simple = TRUE
+  )
+  expect_equal(res$match_type, "manual")
+  expect_equal(res$reference, "Tectaria crenata")
+})
+
+test_that("a manually matched name that cannot be parsed is an error", {
+  ref <- c("Crepidomanes minutum", "Foo !!! ???")
   expect_error(
     ts_match_names(
-      query = ts_parse_names("Hymenophyllum polyantha"),
-      reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
-      manual_match = data.frame(
-        query = "Hymenophyllum polyantha",
-        match = "Hymenophyllum polyanthos"
-      ),
-      simple = TRUE
+      ts_parse_names("Hymeefee erae"), ref,
+      manual_match = data.frame(query = "Hymeefee erae", match = "Foo !!! ???")
     ),
-    "manual_match can only be used if query is a character vector"
+    "could not be parsed"
   )
 })
 
