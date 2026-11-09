@@ -19,10 +19,10 @@
 #' \code{\link{ts_parse_names}()}, and use the results as input to `query`
 #' and/or `reference`.
 #'
-#' `collapse_infra` is useful in situations where the reference database does
+#' `match_autonyms` is useful in situations where the reference database does
 #' not use names that have the same specific epithet and infraspecific epithet
 #' (an autonym). For example, reference name "Blechnum lunare" and query
-#' "Blechnum lunare var. lunare". In this case, if `collapse_infra` is `TRUE`,
+#' "Blechnum lunare var. lunare". In this case, if `match_autonyms` is `TRUE`,
 #' "Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
 #' If the collapsed name then matches exactly, the `match_type` is `autonym`
 #' (not `exact`), since the literal query and the matched name are different
@@ -39,7 +39,7 @@
 #' - `autonym`: identical once an autonym in the query (a name whose
 #'   infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
 #'   var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
-#'   `collapse_infra` is `TRUE`).
+#'   `match_autonyms` is `TRUE`).
 #' - `auto_punct`: identical after ignoring differences in spaces, periods,
 #'   capitalization, and accented or other non-ASCII characters.
 #'
@@ -132,11 +132,14 @@
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus,
 #' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
-#' @param collapse_infra Logical; if the specific epithet and infraspecific
-#' epithet are the same, drop the infraspecific rank and epithet from the query.
-#' @param collapse_infra_exclude Character vector; taxonomic names to exclude
-#' from collapsing with `collapse_infra`. Any names used must match those in
+#' @param match_autonyms Logical; if the specific epithet and infraspecific
+#' epithet are the same (an autonym), drop the infraspecific rank and epithet
+#' from the query. Default: `FALSE`.
+#' @param match_autonyms_exclude Character vector; taxonomic names to exclude
+#' from collapsing with `match_autonyms`. Any names used must match those in
 #' `query` exactly, or they won't be excluded.
+#' @param collapse_infra,collapse_infra_exclude Aliases of `match_autonyms` and
+#' `match_autonyms_exclude`, kept so that existing code keeps working.
 #' @param simple Logical; return the output in a simplified format with only the
 #' query name, matched reference name, and match type. Default: `FALSE`.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
@@ -224,7 +227,7 @@
 #'   c("Crepidomanes minutum", "Hymenophyllum polyanthos")
 #' )
 #'
-#' # Example using collapse_infra argument
+#' # Example using the match_autonyms argument
 #' ts_match_names(
 #'   c(
 #'     "Crepidomanes minutus", "Blechnum lunare var. lunare",
@@ -234,8 +237,8 @@
 #'     "Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
 #'     "Bar foo"
 #'   ),
-#'   collapse_infra = TRUE,
-#'   collapse_infra_exclude = "Bar foo var. foo",
+#'   match_autonyms = TRUE,
+#'   match_autonyms_exclude = "Bar foo var. foo",
 #'   simple = TRUE
 #' )
 #'
@@ -248,18 +251,29 @@ ts_match_names <- function(
   transpositions = FALSE,
   match_no_auth = FALSE,
   match_canon = FALSE,
-  collapse_infra = FALSE,
-  collapse_infra_exclude = NULL,
+  match_autonyms = FALSE,
+  match_autonyms_exclude = NULL,
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest")
+  fuzzy_canon_hits = c("all", "closest"),
+  collapse_infra = NULL,
+  collapse_infra_exclude = NULL
 ) {
+  match_autonyms <- .ts_alias(
+    match_autonyms, collapse_infra, missing(match_autonyms),
+    "match_autonyms", "collapse_infra"
+  )
+  match_autonyms_exclude <- .ts_alias(
+    match_autonyms_exclude, collapse_infra_exclude,
+    missing(match_autonyms_exclude),
+    "match_autonyms_exclude", "collapse_infra_exclude"
+  )
   .ts_check_match_args(
     query, reference, manual_match, max_dist, max_dist_genus, transpositions,
-    match_no_auth, match_canon, simple, tbl_out, collapse_infra,
-    collapse_infra_exclude, strip_qualifiers
+    match_no_auth, match_canon, simple, tbl_out, match_autonyms,
+    match_autonyms_exclude, strip_qualifiers
   )
   fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
 
@@ -287,8 +301,8 @@ ts_match_names <- function(
 
   # Optionally collapse infraspecific name
   collapsed <- NULL
-  if (isTRUE(collapse_infra)) {
-    collapsed <- .ts_collapse_infra(query_parsed_df, collapse_infra_exclude)
+  if (isTRUE(match_autonyms)) {
+    collapsed <- .ts_collapse_infra(query_parsed_df, match_autonyms_exclude)
     query_parsed_df <- collapsed$parsed
   }
 
@@ -356,8 +370,8 @@ ts_match_names <- function(
 # Validate the arguments of ts_match_names()
 .ts_check_match_args <- function(
   query, reference, manual_match, max_dist, max_dist_genus, transpositions,
-  match_no_auth, match_canon, simple, tbl_out, collapse_infra,
-  collapse_infra_exclude, strip_qualifiers
+  match_no_auth, match_canon, simple, tbl_out, match_autonyms,
+  match_autonyms_exclude, strip_qualifiers
 ) {
   assertthat::assert_that(
     is.character(query) | inherits(query, "data.frame"),
@@ -378,10 +392,10 @@ ts_match_names <- function(
   assertthat::assert_that(is.logical(match_canon))
   assertthat::assert_that(is.logical(simple))
   assertthat::assert_that(assertthat::is.flag(tbl_out))
-  assertthat::assert_that(assertthat::is.flag(collapse_infra))
+  assertthat::assert_that(assertthat::is.flag(match_autonyms))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
-  if (!is.null(collapse_infra_exclude)) {
-    assertthat::assert_that(is.character(collapse_infra_exclude))
+  if (!is.null(match_autonyms_exclude)) {
+    assertthat::assert_that(is.character(match_autonyms_exclude))
   }
   if (!is.null(manual_match)) {
     assertthat::assert_that(
