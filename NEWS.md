@@ -97,6 +97,13 @@
 
 ## Minor improvements
 
+* New vignette "How taxastand compares with similar packages" (#96): taxastand,
+  taxify, WorldFlora and U.Taxonstand match the same World Flora Online
+  reference against queries made by damaging real names (typos in the genus,
+  epithet and author, missing authors, homonyms), so the right answer is known.
+  It compares accuracy, single answers and speed. The results are precomputed
+  and saved with the package, and the code that produced them is installed in
+  `system.file("benchmark", package = "taxastand")`.
 * Faster fuzzy matching: candidates are looked up by reference row rather than
   by name (a 600-query PPG run took 2.4 s, now 2.1 s; results identical).
 * Faster parsing and key building (#66): fewer and cheaper regex passes, and

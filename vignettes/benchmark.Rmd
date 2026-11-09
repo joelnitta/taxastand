@@ -1,0 +1,358 @@
+---
+title: "How taxastand compares with similar packages"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How taxastand compares with similar packages}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4.5)
+# The benchmark code ships with the package (inst/benchmark). show_code() prints
+# one of its labelled sections ("# ---- label ----") as a code block. The code
+# is not run here, and it is not in a chunk of this vignette on purpose: it uses
+# packages that taxastand does not depend on.
+bench_src <- readLines(system.file("benchmark", "benchmark-lib.R", package = "taxastand"))
+show_code <- function(label) {
+  marks <- grep("^# ---- .* ----$", bench_src)
+  start <- grep(sprintf("^# ---- %s ----$", label), bench_src)
+  end <- marks[marks > start][1] - 1
+  if (is.na(end)) end <- length(bench_src)
+  code <- bench_src[(start + 1):end]
+  while (length(code) && !nzchar(code[length(code)])) code <- code[-length(code)]
+  cat("```r\n", paste(code, collapse = "\n"), "\n```\n\n", sep = "")
+}
+res <- readRDS(system.file("extdata", "benchmark-results.rds", package = "taxastand"))
+pct <- function(x) sprintf("%.0f%%", 100 * x)
+tool_labels <- c(
+  taxastand = "taxastand", taxastand_oneoff = "taxastand (one-off)",
+  utaxonstand = "U.Taxonstand", worldflora = "WorldFlora", taxify = "taxify"
+)
+shown <- setdiff(res$tools, "taxastand_oneoff")
+# in the speed tables the two ways of using taxastand are told apart
+speed_labels <- replace(
+  tool_labels, c("taxastand", "taxastand_oneoff"),
+  c("taxastand (prepared)", "taxastand (unprepared)")
+)
+# a metric for one tool and kind of error
+val <- function(tool, kind, metric = "recall") {
+  a <- res$accuracy[[tool]]
+  a[[metric]][a$kind == kind]
+}
+# seconds to match n queries, formatted
+secs <- function(tool, n) {
+  s <- res$speed[[tool]]
+  x <- s$seconds[s$n_queries == n]
+  sprintf(if (x < 1) "%.2f s" else "%.1f s", x)
+}
+# one column per tool, one row per kind of error
+wide <- function(metric) {
+  kinds <- res$accuracy[[1]]$kind
+  out <- data.frame(kind = kinds, stringsAsFactors = FALSE)
+  for (tool in shown) {
+    a <- res$accuracy[[tool]]
+    out[[tool_labels[[tool]]]] <- pct(a[[metric]][match(kinds, a$kind)])
+  }
+  out
+}
+```
+
+taxastand is one of several R packages that match scientific names against a
+taxonomy. This vignette compares it with three others that do a similar job,
+on names with known errors, so that you can judge which suits your data:
+
+- [taxify](https://github.com/gcol33/taxify): matches against backbones that it
+  downloads.
+- [WorldFlora](https://cran.r-project.org/package=WorldFlora): matches against
+  the [World Flora Online (WFO)](https://www.worldfloraonline.org/) backbone.
+- [U.Taxonstand](https://github.com/ecoinfor/U.Taxonstand): matches against a
+  database that you supply.
+
+### Packages that are not compared
+
+Three other packages resolve names by calling a web service instead of
+matching against a local reference:
+
+- [TNRS](https://cran.r-project.org/package=TNRS): the Taxonomic Name
+  Resolution Service, which resolves plant names against an online backbone (as of writing, three were available: [WFO](https://www.worldfloraonline.org/), [WCVP](https://powo.science.kew.org/about-wcvp), and [Cactaceae at Caryophyllales.org](https://caryophyllales.org/cdm_dataportal/taxon/b6ec8d50-7f37-4a17-af01-b1fae138c749))
+- [rgbif](https://cran.r-project.org/package=rgbif): an interface to the [Global
+  Biodiversity Information Facility (GBIF)](https://www.gbif.org/), whose `name_backbone()` matches
+  names against the GBIF backbone.
+- [wfor](https://github.com/worldflora/wfor): resolves plant names against WFO by calling the WFO API.
+
+One of these may be a good choice when you want the current taxonomy of a particular
+service and can work online. However, because they are API-based, the same query can
+give a different answer once the service updates its taxonomy or its matching,
+and the time taken depends on the network and the server, not on the package.
+Results can therefore not be reproduced reliably or timed fairly, so they are
+left out of this benchmark.
+
+### How the numbers were made
+
+The numbers come from a benchmark that was run once, on the maintainer's
+machine, and saved with the package (the packages compared are not
+dependencies of taxastand, and taxify needs a large download). All the code
+that produced them is [shown below](#code). Please read the
+[limits](#limits) before drawing conclusions.
+
+## Benchmark Summary
+
+- On most kinds of error, every package returned the right record for nearly
+  every query. The exceptions, in the share of queries for which the right
+  record was returned: taxify on a misspelt genus
+  (`r pct(val("taxify", "genus_deletion"))`), WorldFlora on short epithets
+  (`r pct(val("worldflora", "short_epithet"))`) and U.Taxonstand on homonyms
+  (`r pct(val("utaxonstand", "homonym"))`).
+- Results differed for homonyms (the same name published by different authors),
+  depending on whether packages used the authors. For example, WFO has four
+  records named *Linum perenne*, with the authors L., Lam., Vill. and Guss.
+  Asked for *Linum perenne* Lam. (checked with only those four records as the
+  reference), taxastand returned only that record. WorldFlora returned all four
+  records and marked the Lam. one as its best match. Over all of the homonym
+  queries, taxastand returned exclusively the right record
+  `r pct(val("taxastand", "homonym", "unambiguous"))` of the time,
+  U.Taxonstand `r pct(val("utaxonstand", "homonym", "unambiguous"))` and
+  WorldFlora `r pct(val("worldflora", "homonym", "unambiguous"))`. WorldFlora's
+  best match, which it chooses using the author, was the right record
+  `r pct(val("worldflora", "homonym", "pick_precision"))` of the time.
+- taxastand found more misspelt genera and misspelt authors than taxify (genus
+  typo: `r pct(val("taxastand", "genus_deletion"))` against
+  `r pct(val("taxify", "genus_deletion"))`; author typo:
+  `r pct(val("taxastand", "author_typo"))` against
+  `r pct(val("taxify", "author_typo"))`). U.Taxonstand and WorldFlora were
+  slightly better than taxastand on misspelt genera
+  (`r pct(val("utaxonstand", "genus_deletion"))` and
+  `r pct(val("worldflora", "genus_deletion"))`).
+- taxastand does not guess. When several records fit equally well it returns
+  all of them, so on names without an author it gives a single answer less
+  often than packages that always choose one. Its single answers were right
+  every time or nearly so.
+- U.Taxonstand and WorldFlora are much slower than taxastand and taxify, which
+  are similar to each other. Matching 100 queries (after warm-up) took
+  `r secs("taxastand", 100)` with taxastand using a prepared reference,
+  `r secs("taxify", 100)` with taxify, `r secs("utaxonstand", 100)` with
+  U.Taxonstand and `r secs("worldflora", 100)` with WorldFlora. taxastand
+  without a prepared reference took `r secs("taxastand_oneoff", 100)`. See the
+  [speed tables](#speed).
+
+## How the comparison works
+
+**The same reference for every package.** Each package is given exactly the
+same reference table: the World Flora Online backbone as installed by taxify
+(`r format(res$reference_records, big.mark = ",")` species and infraspecific
+names). taxify can only use its own backbones, WorldFlora reads WFO, and
+taxastand and U.Taxonstand accept any table, so using WFO lets all four run on
+identical data and makes the numbers directly comparable.
+
+**Queries with known answers.** Each query is made by damaging a name taken
+from the reference, so the correct record is known. There are
+`r res$n_per_kind` queries for each kind of damage (fewer where the damage did
+not change the name), drawn at random. The query code is in [The code](#code).
+
+```{r, echo = FALSE}
+what <- c(
+  exact = "Nothing: the full name with its author",
+  epithet_substitution = "One letter of the epithet is replaced",
+  epithet_deletion = "One letter of the epithet is deleted",
+  epithet_swap = "Two neighbouring letters of the epithet are swapped",
+  two_edits = "Two letters of the epithet are changed",
+  short_epithet = "One letter deleted from an epithet of five letters or fewer",
+  genus_deletion = "One letter of the genus is deleted",
+  author_punctuation = "Periods removed from the author",
+  author_typo = "One letter deleted from the author",
+  no_author_exact = "The name without its author",
+  no_author_epithet_deletion = "The name without its author, with a letter of the epithet deleted",
+  homonym = "A name that several records share, queried with its own author",
+  homonym_typo = "The same, with a letter of the epithet deleted"
+)
+ex <- res$examples[match(names(what), res$examples$kind), ]
+knitr::kable(
+  data.frame(
+    kind = paste0("`", names(what), "`"), `what changes` = unname(what),
+    example = sprintf("%s → %s", ex$original, ex$query),
+    check.names = FALSE
+  )
+)
+```
+
+**What is measured.** Every query is scored by record ID:
+
+- *Found*: the right record is among those the package returned.
+- *Single answer*: some packages choose one answer for each query: taxify
+  always, WorldFlora through `WFO.one()`, U.Taxonstand through its best match.
+  taxastand does not guess: it returns every record that fits, and
+  its single answer is the record when only one fits. The tables give the share
+  of queries that received a single answer, then the share of those answers
+  that were right ("answered / right").
+- *Speed*: the time to match 1 to 1000 queries.
+
+## Accuracy: Finding the right record
+
+```{r}
+knitr::kable(wide("recall"), caption = "Share of queries for which the right record was returned")
+```
+
+## Accuracy: Single answers
+
+```{r}
+single <- function() {
+  kinds <- res$accuracy[[1]]$kind
+  out <- data.frame(kind = kinds, stringsAsFactors = FALSE)
+  for (tool in shown) {
+    a <- res$accuracy[[tool]]
+    i <- match(kinds, a$kind)
+    out[[tool_labels[[tool]]]] <- paste0(
+      pct(a$pick_answered[i]), " / ",
+      ifelse(is.na(a$pick_precision[i]), "-", pct(a$pick_precision[i]))
+    )
+  }
+  out
+}
+knitr::kable(single(), caption = "Share of queries that got a single answer / share of those answers that were right")
+```
+
+Where a package returns several records, taxastand's result tells you which
+queries need a decision. On the author-less typo kind
+(`no_author_epithet_deletion`) taxastand returned
+`r sprintf("%.1f", val("taxastand", "no_author_epithet_deletion", "mean_hits"))`
+records per answered query on average: without an author, many names have
+several records that fit equally well, and taxastand reports all of them.
+
+## <a name="speed"></a>Speed
+
+```{r}
+speed_table <- function() {
+  s <- do.call(rbind, res$speed)
+  s$tool <- speed_labels[s$tool]
+  w <- reshape(s, idvar = "tool", timevar = "n_queries", direction = "wide")
+  names(w) <- sub("seconds\\.", "", names(w))
+  rownames(w) <- NULL
+  w
+}
+knitr::kable(
+  speed_table(), na = "not run",
+  caption = "Seconds to match n queries (best of 3, after warm-up)"
+)
+```
+
+U.Taxonstand and WorldFlora were timed only up to 100 queries, because larger
+runs on a reference of this size take many minutes for those packages.
+
+The "taxastand (prepared)" row are results that used a reference prepared once with `ts_prepare_reference()` and reused for every call. The "taxastand (unprepared)" row are results that passed the reference names (a character vector) to `ts_match_names()`, so the reference is parsed again on every call.
+
+The timings are made after a warm-up: before timing, each package was run once
+on the whole set of queries, so one-time costs are not counted. A prepared
+reference, for example, is parsed lazily, one genus at a time, so the first time
+a genus is used costs more than later calls.
+
+## <a name="limits"></a>Limits of this comparison
+
+- The queries are synthetic and come from one random sample, with about
+  `r res$n_per_kind` queries per kind. Differences of a few percent between
+  tools are within what a different sample could change.
+- Each package was run with its default settings (WorldFlora's
+  `acceptedNameUsageID.match = FALSE` and `WFO.one(Auth.dist = ...)` aside; see
+  the code below). Settings such as the thresholds for fuzzy matching can be
+  changed, and a package tuned to your own data could give different results.
+- Only matching was scored. Resolving synonyms to accepted names, which all of
+  these packages also do, was not.
+- Only plants (WFO) were tested. Results on other groups or on messier
+  real-world lists may differ.
+- Times are from one computer (`r res$platform`, `r res$r_version`) and will
+  differ on yours.
+- Versions: `r paste(names(res$versions), res$versions, collapse = ", ")`.
+  Benchmark run on `r res$date`.
+
+## <a name="code"></a>The code
+
+This is the code that produced the results above, shown unchanged. It is also
+installed with taxastand (`system.file("benchmark", package = "taxastand")`).
+The script that runs it, `data-raw/benchmark-vignette.R`, is in the source
+repository.
+
+### Reference
+
+The reference is read from taxify's installed backbone, reduced to species and
+infraspecific names, and given one row per distinct authored name.
+
+```{r reference, echo = FALSE, results = "asis"}
+show_code("reference")
+```
+
+### Queries
+
+`damage()` changes one letter; `make_queries()` builds each kind of query and
+records the correct answer.
+
+```{r damage, echo = FALSE, results = "asis"}
+show_code("damage")
+```
+
+```{r make-queries, echo = FALSE, results = "asis"}
+show_code("make-queries")
+```
+
+### Scoring
+
+```{r scoring, echo = FALSE, results = "asis"}
+show_code("scoring")
+```
+
+### One adapter per package
+
+Each adapter builds its package's reference from the shared table and returns
+the records matched for a set of queries, plus the package's own single
+answer.
+
+```{r adapter-taxastand, echo = FALSE, results = "asis"}
+show_code("adapter-taxastand")
+```
+
+```{r adapter-taxify, echo = FALSE, results = "asis"}
+show_code("adapter-taxify")
+```
+
+```{r adapter-utaxonstand, echo = FALSE, results = "asis"}
+show_code("adapter-utaxonstand")
+```
+
+```{r adapter-worldflora, echo = FALSE, results = "asis"}
+show_code("adapter-worldflora")
+```
+
+### Timing
+
+```{r timing, echo = FALSE, results = "asis"}
+show_code("timing")
+```
+
+### Running it
+
+```{r, eval = FALSE}
+ref <- load_reference("wfo")
+queries <- make_queries(ref, n = 100)
+adapters <- list(
+  taxastand = make_taxastand(ref),
+  taxify = make_taxify(ref),
+  utaxonstand = make_utaxonstand(ref),
+  worldflora = make_worldflora(ref)
+)
+for (tool in names(adapters)) {
+  hits <- adapters[[tool]]$run(queries$query)
+  scores <- score_queries(queries, hits)
+  print(summarise_scores(scores)) # found, single answer
+  print(time_adapter(adapters[[tool]], queries$query)) # speed
+}
+```
+
+## Session information
+
+The R session and package versions on the machine that ran the benchmark (not
+the session that built this vignette), recorded for reproducibility.
+
+```{r, echo = FALSE}
+cat(res$session_info, sep = "\n")
+```
