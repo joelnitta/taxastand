@@ -10,6 +10,11 @@
 #' should be the same used as reference with \code{\link{ts_match_names}()}
 #' (this is not checked).
 #'
+#' If multiple queries will be made against the same large reference (e.g., a
+#' database such as World Flora Online), prepare it once with
+#' \code{\link{ts_prepare_reference}()} and use the result as `ref_taxonomy`,
+#' so that the reference is not parsed again on every call.
+#'
 #' `ref_taxonomy` must be taxonomic data adhering to the [Darwin Core standard](https://dwc.tdwg.org/terms/#taxon).
 #' Darwin Core includes many terms, but only four (`taxonID`,
 #' `acceptedNameUsageID`, `taxonomicStatus`, and `scientificName`) are required

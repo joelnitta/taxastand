@@ -127,6 +127,11 @@ resolve synonyms. If the latter, the scientific names in \code{ref_taxonomy}
 should be the same used as reference with \code{\link{ts_match_names}()}
 (this is not checked).
 
+If multiple queries will be made against the same large reference (e.g., a
+database such as World Flora Online), prepare it once with
+\code{\link{ts_prepare_reference}()} and use the result as \code{ref_taxonomy},
+so that the reference is not parsed again on every call.
+
 \code{ref_taxonomy} must be taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}.
 Darwin Core includes many terms, but only four (\code{taxonID},
 \code{acceptedNameUsageID}, \code{taxonomicStatus}, and \code{scientificName}) are required
