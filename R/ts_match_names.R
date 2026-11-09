@@ -10,18 +10,22 @@
 #' parts.
 #'
 #' Parsing is fairly fast (much faster than matching) but can take some time if
-#' the number of names is very large. If multiple queries will be made (e.g., to
-#' the same large reference database), it is recommended to first parse the
-#' names using \code{\link{ts_parse_names}()}, and use the results as input to
-#' `query` and/or `reference`.
+#' the number of names is very large. If multiple queries will be made against
+#' the same large reference (e.g., a database such as World Flora Online), it
+#' is recommended to prepare the reference once with
+#' \code{\link{ts_prepare_reference}()} and use the result as `reference`. That
+#' saves parsing the reference and building its match keys on every call, so it
+#' is the faster option. Alternatively, parse the names first using
+#' \code{\link{ts_parse_names}()}, and use the results as input to `query`
+#' and/or `reference`.
 #'
 #' `collapse_infra` is useful in situations where the reference database does
-#' not use names that have the same specific epithet and infraspecific epithet.
-#' For example, reference name "Blechnum lunare" and query "Blechnum lunare var.
-#' lunare". In this case, if `collapse_infra` is `TRUE`, "Blechnum lunare" will
-#' be queried instead of "Blechnum lunare var. lunare". Note that the
-#' `match_type` will be "exact" even though the literal query and the matched
-#' name are different (see example below).
+#' not use names that have the same specific epithet and infraspecific epithet
+#' (an autonym). For example, reference name "Blechnum lunare" and query
+#' "Blechnum lunare var. lunare". In this case, if `collapse_infra` is `TRUE`,
+#' "Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
+#' Note that the `match_type` will be "exact" even though the literal query and
+#' the matched name are different (see example below).
 #'
 #' @section Match types:
 #' The `match_type` column says how a query was matched. Types are tried in
