@@ -99,7 +99,8 @@
 #' the reference when matching several times against the same large reference.
 #' @param manual_match Optional. Dataframe of manually matched names that will
 #' override any results from the name-matching engine. Must include columns,
-#' `query` and `match`. Can only be used if `query` is a character vector.
+#' `query` and `match`. The values of `query` are compared with the query names
+#' (the `name` column, when `query` is a dataframe).
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
 #' (total insertions, deletions and substitutions). The distance is computed on
 #' the whole name, including the author string, after removing punctuation and
@@ -268,6 +269,11 @@ ts_match_names <- function(
     )
   } else {
     query_parsed_df <- query # already parsed
+    if (!is.null(manual_match)) {
+      query_parsed_df <- .ts_manual_parsed(
+        query_parsed_df, manual_match, strip_qualifiers, exclude_placeholders
+      )
+    }
   }
 
   # Optionally collapse infraspecific name
@@ -318,7 +324,11 @@ ts_match_names <- function(
   # For manual matches, restore back to original query input, and specify
   # that match was made manually
   if (!is.null(manual_match)) {
-    results <- .ts_restore_manual(results, manual_replacement_df, manual_match)
+    results <- if (is.null(manual_replacement_df)) {
+      .ts_mark_manual(results, manual_match)
+    } else {
+      .ts_restore_manual(results, manual_replacement_df, manual_match)
+    }
   }
 
   if (simple) {
@@ -380,10 +390,6 @@ ts_match_names <- function(
       !anyDuplicated(manual_match$query),
       msg = "All values of manual_match$query must be unique"
     )
-    assertthat::assert_that(
-      is.character(query),
-      msg = "manual_match can only be used if query is a character vector"
-    )
   }
   invisible(TRUE)
 }
@@ -395,6 +401,33 @@ ts_match_names <- function(
   hit <- match(query, manual_match$query)
   out$query_new <- ifelse(is.na(hit), query, manual_match$match[hit])
   out
+}
+
+# Parsed (dataframe) query: for the rows named in manual_match, swap the parsed
+# name parts for those of the manually matched name, keeping the row's name and
+# id, so that the engine finds an exact match (as for a character query)
+.ts_manual_parsed <- function(parsed, manual_match, strip_qualifiers,
+                              exclude_placeholders) {
+  hit <- match(parsed$name, manual_match$query)
+  rows <- which(!is.na(hit))
+  if (!length(rows)) {
+    return(parsed)
+  }
+  new_names <- manual_match$match[hit[rows]]
+  not_parsed <- "One or more manually matched names could not be parsed"
+  repl <- tryCatch(
+    suppressWarnings(ts_parse_names(
+      unique(new_names),
+      strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = exclude_placeholders
+    )),
+    error = function(e) stop(not_parsed, call. = FALSE)
+  )
+  repl <- repl[match(new_names, repl$name), , drop = FALSE]
+  assertthat::assert_that(!anyNA(repl$name), msg = not_parsed)
+  parts <- intersect(setdiff(colnames(parsed), c("name", "id")), colnames(repl))
+  parsed[rows, parts] <- repl[, parts]
+  parsed
 }
 
 # Collapse the infraspecific epithet of queries where it is the same as the
@@ -480,6 +513,12 @@ ts_match_names <- function(
   out <- .ts_join(out, results_unexpanded, "id_query", "id_query")
   out$id <- NULL
   .ts_front_cols(out)
+}
+
+# Mark the matches of manually matched queries as "manual" (dataframe query)
+.ts_mark_manual <- function(results, manual_match) {
+  results$match_type[results$query %in% manual_match$query] <- "manual"
+  results
 }
 
 # Restore the original query input for manual matches and mark those matches

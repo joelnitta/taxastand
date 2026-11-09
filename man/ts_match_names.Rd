@@ -38,7 +38,8 @@ the reference when matching several times against the same large reference.}
 
 \item{manual_match}{Optional. Dataframe of manually matched names that will
 override any results from the name-matching engine. Must include columns,
-\code{query} and \code{match}. Can only be used if \code{query} is a character vector.}
+\code{query} and \code{match}. The values of \code{query} are compared with the query names
+(the \code{name} column, when \code{query} is a dataframe).}
 
 \item{max_dist}{Max Levenshtein distance to allow during fuzzy matching
 (total insertions, deletions and substitutions). The distance is computed on

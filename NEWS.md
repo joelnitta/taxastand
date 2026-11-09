@@ -97,6 +97,9 @@
 
 ## Minor improvements
 
+* `manual_match` in `ts_match_names()` now also works when `query` is a
+  dataframe of names parsed with `ts_parse_names()` (#93), not only a character
+  vector. The `query` values are compared with the `name` column.
 * New vignette "How taxastand compares with similar packages" (#96): taxastand,
   taxify, WorldFlora and U.Taxonstand match the same World Flora Online
   reference against queries made by damaging real names (typos in the genus,
