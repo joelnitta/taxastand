@@ -24,8 +24,9 @@
 #' (an autonym). For example, reference name "Blechnum lunare" and query
 #' "Blechnum lunare var. lunare". In this case, if `collapse_infra` is `TRUE`,
 #' "Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
-#' Note that the `match_type` will be "exact" even though the literal query and
-#' the matched name are different (see example below).
+#' If the collapsed name then matches exactly, the `match_type` is `autonym`
+#' (not `exact`), since the literal query and the matched name are different
+#' (see example below).
 #'
 #' @section Match types:
 #' The `match_type` column says how a query was matched. Types are tried in
@@ -35,6 +36,10 @@
 #'
 #' **Identical after normalization (safe to accept)**
 #' - `exact`: all parts of the name, including the author, are identical.
+#' - `autonym`: identical once an autonym in the query (a name whose
+#'   infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
+#'   var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
+#'   `collapse_infra` is `TRUE`).
 #' - `auto_punct`: identical after ignoring differences in spaces, periods,
 #'   capitalization, and accented or other non-ASCII characters.
 #'
@@ -460,7 +465,8 @@ ts_match_names <- function(
   list(
     parsed = parsed[!duplicated(namestring), ],
     original = original,
-    id_map = data.frame(id_query = key_id, id = parsed$id)
+    id_map = data.frame(id_query = key_id, id = parsed$id),
+    autonym_ids = original$id[same]
   )
 }
 
@@ -515,6 +521,10 @@ ts_match_names <- function(
   )
   out <- .ts_join(out, collapsed$id_map, "id", "id")
   out <- .ts_join(out, results_unexpanded, "id_query", "id_query")
+  # An autonym that matched exactly only after being collapsed is not an exact
+  # match of the name that was queried
+  out$match_type[out$id %in% collapsed$autonym_ids &
+    out$match_type %in% "exact"] <- "autonym"
   out$id <- NULL
   .ts_front_cols(out)
 }

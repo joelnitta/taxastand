@@ -83,6 +83,38 @@ test_that("Manually matched names work with collapsed infrasp names", {
   expect_snapshot(match_res)
 })
 
+test_that("collapsed autonyms that match exactly get match_type 'autonym'", {
+  ref <- c("Blechnum lunare", "Foo bar")
+  res <- ts_match_names(
+    c(
+      "Blechnum lunare var. lunare", "Blechnum lunare", "Foo bar var. bar",
+      "Blechnum lunarr var. lunarr"
+    ),
+    ref,
+    collapse_infra = TRUE, simple = TRUE
+  )
+  expect_equal(
+    res$match_type,
+    c("autonym", "exact", "autonym", "auto_fuzzy_canon")
+  )
+  # the plain species name is still exact, and the queries keep their text
+  expect_equal(res$reference[1:2], c("Blechnum lunare", "Blechnum lunare"))
+  expect_equal(res$query[1], "Blechnum lunare var. lunare")
+  # an excluded name is not collapsed, so it matches exactly if it is present
+  res_ex <- ts_match_names(
+    "Blechnum lunare var. lunare", c(ref, "Blechnum lunare var. lunare"),
+    collapse_infra = TRUE,
+    collapse_infra_exclude = "Blechnum lunare var. lunare", simple = TRUE
+  )
+  expect_equal(res_ex$match_type, "exact")
+  # without collapse_infra the autonym only matches if the reference has it
+  res_no <- ts_match_names(
+    "Blechnum lunare var. lunare", c(ref, "Blechnum lunare var. lunare"),
+    simple = TRUE
+  )
+  expect_equal(res_no$match_type, "exact")
+})
+
 test_that("strip_qualifiers = TRUE resolves an open-nomenclature qualifier to the right match", {
   match_res <- ts_match_names(
     query = "Tectaria cf. crenata",

@@ -159,8 +159,9 @@ not use names that have the same specific epithet and infraspecific epithet
 (an autonym). For example, reference name "Blechnum lunare" and query
 "Blechnum lunare var. lunare". In this case, if \code{collapse_infra} is \code{TRUE},
 "Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
-Note that the \code{match_type} will be "exact" even though the literal query and
-the matched name are different (see example below).
+If the collapsed name then matches exactly, the \code{match_type} is \code{autonym}
+(not \code{exact}), since the literal query and the matched name are different
+(see example below).
 }
 \section{Match types}{
 
@@ -172,6 +173,10 @@ are not \code{exact}.
 \strong{Identical after normalization (safe to accept)}
 \itemize{
 \item \code{exact}: all parts of the name, including the author, are identical.
+\item \code{autonym}: identical once an autonym in the query (a name whose
+infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
+var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
+\code{collapse_infra} is \code{TRUE}).
 \item \code{auto_punct}: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.
 }

@@ -45,7 +45,7 @@
         <chr>                       <chr>                <chr>           
       1 Crepidomanes minutus        Crepidomanes minutum auto_fuzzy_canon
       2 Crepidomanes minutawtaw     Crepidomanes minutum manual          
-      3 Blechnum lunare var. lunare Blechnum lunare      exact           
+      3 Blechnum lunare var. lunare Blechnum lunare      autonym         
       4 Blechnum lunare             Blechnum lunare      exact           
       5 Bar foo var. foo            Bar foo              manual          
       6 Bar foo                     Bar foo              exact           
