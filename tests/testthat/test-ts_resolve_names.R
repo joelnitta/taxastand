@@ -38,12 +38,27 @@ test_that("strip_qualifiers = TRUE resolves a name with an open-nomenclature qua
   expect_equal(resolved$resolved_name, "Crepidomanes minutum (Bl.) K. Iwats.")
 })
 
-test_that("ts_resolve_names validates collapse_infra_exclude", {
+test_that("ts_resolve_names validates match_autonyms_exclude", {
   data(filmy_taxonomy)
   expect_error(
     ts_resolve_names(
-      "Gonocormus minutum", filmy_taxonomy, collapse_infra_exclude = 1
+      "Gonocormus minutum", filmy_taxonomy, match_autonyms_exclude = 1
     ),
     "character vector"
+  )
+})
+
+test_that("ts_resolve_names accepts collapse_infra as an alias of match_autonyms", {
+  data(filmy_taxonomy)
+  q <- c("Hymenophyllum polyanthos var. polyanthos", "Gonocormus minutum")
+  expect_equal(
+    suppressWarnings(ts_resolve_names(q, filmy_taxonomy, collapse_infra = TRUE)),
+    suppressWarnings(ts_resolve_names(q, filmy_taxonomy, match_autonyms = TRUE))
+  )
+  expect_error(
+    ts_resolve_names(
+      q, filmy_taxonomy, match_autonyms = TRUE, collapse_infra = FALSE
+    ),
+    "alias of `match_autonyms`"
   )
 })
