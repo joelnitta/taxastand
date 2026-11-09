@@ -34,6 +34,9 @@
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/basics.html">The basics</a>
     </li>
+    <li>
+      <a href="../articles/benchmark.html">How taxastand compares with similar packages</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -81,7 +84,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="minor-improvements-2-0-0-9000">Minor improvements<a class="anchor" aria-label="anchor" href="#minor-improvements-2-0-0-9000"></a></h3>
-<ul><li>Faster fuzzy matching: candidates are looked up by reference row rather than by name (a 600-query PPG run took 2.4 s, now 2.1 s; results identical).</li>
+<ul><li>New vignette “How taxastand compares with similar packages” (<a href="https://github.com/joelnitta/taxastand/issues/96" class="external-link">#96</a>): taxastand, taxify, WorldFlora and U.Taxonstand match the same World Flora Online reference against queries made by damaging real names (typos in the genus, epithet and author, missing authors, homonyms), so the right answer is known. It compares accuracy, single answers and speed. The results are precomputed and saved with the package, and the code that produced them is installed in <code>system.file("benchmark", package = "taxastand")</code>.</li>
+<li>Faster fuzzy matching: candidates are looked up by reference row rather than by name (a 600-query PPG run took 2.4 s, now 2.1 s; results identical).</li>
 <li>Faster parsing and key building (<a href="https://github.com/joelnitta/taxastand/issues/66" class="external-link">#66</a>): fewer and cheaper regex passes, and pipe-delimited records are split once instead of once per field. Output is identical; e.g. parsing 149,000 names takes about 1.2 s instead of 3.2 s.</li>
 <li>Lighter installation (<a href="https://github.com/joelnitta/taxastand/issues/48" class="external-link">#48</a>): dplyr, tidyr, fs and glue are no longer dependencies (the resolve and match steps now use base R, with identical output), and tibble moved to Suggests. <code>tbl_out = TRUE</code> (or the <code>ts_tbl_out</code> option) now requires the tibble package to be installed. magrittr is also no longer a dependency, so <strong>breaking:</strong> <code>%&gt;%</code> is no longer re-exported; load magrittr or dplyr, or use the native pipe <code>|&gt;</code>.</li>
 <li>Document the <code>match_type</code> values in a new “Match types” section of <code><a href="../reference/ts_match_names.html">?ts_match_names</a></code>, grouped by how far each can be trusted (<a href="https://github.com/joelnitta/taxastand/issues/52" class="external-link">#52</a>); the match type codes themselves are unchanged</li>
