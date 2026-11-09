@@ -1,30 +1,39 @@
 # Reduce the result of data-raw/benchmark-vignette.R to the small file read by
 # the vignette (benchmark.Rmd): inst/extdata/benchmark-results.rds
 #
-#   Rscript data-raw/benchmark-combine.R [results.rds [extra.rds]]
+#   Rscript data-raw/benchmark-combine.R [results.rds [extra.rds ...]]
 #
-# Run from the package root, after the benchmark run. `extra.rds` is the result
+# Run from the package root, after the benchmark run. Each `extra.rds` is the result
 # of a later run of some more kinds of error (data-raw/benchmark-vignette.R with
 # kinds= and speed=no) on the same reference and machine; its accuracy and
-# queries are added to those of `results.rds`.
+# queries are added to those of `results.rds` (any number of extra files). A tool
+# that is in both has its accuracy for the kinds in `extra.rds` replaced, so one
+# tool can be rerun alone.
 
 args <- commandArgs(trailingOnly = TRUE)
 f <- if (length(args)) args[[1]] else "data-raw/benchmark-results/benchmark-wfo-all.rds"
 r <- readRDS(f)
 extra_date <- NULL
-if (length(args) > 1) {
-  extra <- readRDS(args[[2]])
+for (extra_file in args[-1]) {
+  extra <- readRDS(extra_file)
   stopifnot(
     identical(extra$reference, r$reference),
     identical(extra$reference_records, r$reference_records),
     identical(extra$versions, r$versions)
   )
-  r$queries <- rbind(r$queries, extra$queries)
+  # kinds already in `r` are not added again; the accuracy of a tool in `extra`
+  # replaces its accuracy for the kinds that `extra` has (rerun of one tool)
+  r$queries <- rbind(
+    r$queries, extra$queries[!extra$queries$kind %in% r$queries$kind, ]
+  )
   for (tool in intersect(names(extra$accuracy), names(r$accuracy))) {
-    r$accuracy[[tool]] <- rbind(r$accuracy[[tool]], extra$accuracy[[tool]])
+    old <- r$accuracy[[tool]]
+    old <- old[!old$kind %in% extra$accuracy[[tool]]$kind, ]
+    r$accuracy[[tool]] <- rbind(old, extra$accuracy[[tool]])
   }
-  extra_date <- format(extra$date, "%Y-%m-%d")
+  extra_date <- c(extra_date, format(extra$date, "%Y-%m-%d"))
 }
+extra_date <- if (length(extra_date)) max(extra_date)
 # one example per kind of error for the vignette: the shortest name of at least
 # 18 characters, so that the change is easy to see
 q <- r$queries

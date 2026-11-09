@@ -109,6 +109,10 @@ damage <- function(x, kind, from = 1L) {
 #   ex_dropped, in_dropped     "Willd. ex Schkuhr" as "Willd.", "A in B" as "A"
 #   rank_changed               "var." queried as "subsp." or the reverse
 #   spelling_variant           y/i, ph/f, th/t, rh/r or ae/e in the epithet
+# The same four, with a homonym_ prefix, for records that share their genus and
+# epithet with another record: here the nomenclatural rules decide which record
+# is meant. They are picked because they have competitors, so they show how a
+# package behaves when a name is shared, not how often that happens.
 make_queries <- function(ref, n = 100, seed = 20261109) {
   set.seed(seed)
   species <- ref$taxonRank == "species" & !is.na(ref$authorship) &
@@ -129,6 +133,14 @@ make_queries <- function(ref, n = 100, seed = 20261109) {
     infra = which(infra),
     foldable = which(species & grepl("y|ph|th|rh|ae", epithet))
   )
+  # The same records, but only those that share their genus and epithet
+  # (ignoring the rank) with another record, so that the author, and with it the
+  # nomenclatural rules, has to decide which record is meant
+  key <- sub(" (var[.]|subsp[.]|f[.]) ", " ", ref$canonical)
+  shared <- key %in% key[duplicated(key)]
+  for (k in c("basionym", "ex", "infra", "foldable")) {
+    pools[[paste0(k, "_shared")]] <- pools[[k]][shared[pools[[k]]]]
+  }
   by_canon <- split(ref$taxonID, ref$canonical)
   # name parts of record i
   parts <- function(src) {
@@ -164,6 +176,13 @@ make_queries <- function(ref, n = 100, seed = 20261109) {
       e
     }, "")
   }
+  f_basionym <- function(p) {
+    paste(p$genus, p$epi, sub("^[(][^)]*[)]\\s*", "", p$auth))
+  }
+  f_ex <- function(p) paste(p$genus, p$epi, sub(" ex .*$", "", p$auth))
+  f_in <- function(p) paste(p$genus, p$epi, sub(" in .*$", "", p$auth))
+  f_rank <- function(p) paste(p$genus, swap_rank(p$epi), p$auth)
+  f_spelling <- function(p) paste(p$genus, spelling_variant(p$epi), p$auth)
   kinds <- list(
     exact = list("default", function(p) paste(p$genus, p$epi, p$auth)),
     epithet_substitution = list("default", function(p) {
@@ -199,21 +218,16 @@ make_queries <- function(ref, n = 100, seed = 20261109) {
       paste(p$genus, dmg(p$epi, "deletion"), p$auth)
     }),
     # a third element, TRUE, leaves out queries equal to another reference name
-    basionym_missing = list("basionym", function(p) {
-      paste(p$genus, p$epi, sub("^[(][^)]*[)]\\s*", "", p$auth))
-    }, TRUE),
-    ex_dropped = list("ex", function(p) {
-      paste(p$genus, p$epi, sub(" ex .*$", "", p$auth))
-    }, TRUE),
-    in_dropped = list("in", function(p) {
-      paste(p$genus, p$epi, sub(" in .*$", "", p$auth))
-    }, TRUE),
-    rank_changed = list("infra", function(p) {
-      paste(p$genus, swap_rank(p$epi), p$auth)
-    }, TRUE),
-    spelling_variant = list("foldable", function(p) {
-      paste(p$genus, spelling_variant(p$epi), p$auth)
-    }, TRUE)
+    basionym_missing = list("basionym", f_basionym, TRUE),
+    ex_dropped = list("ex", f_ex, TRUE),
+    in_dropped = list("in", f_in, TRUE),
+    rank_changed = list("infra", f_rank, TRUE),
+    spelling_variant = list("foldable", f_spelling, TRUE),
+    # the same, for names that several records share
+    homonym_basionym_missing = list("basionym_shared", f_basionym, TRUE),
+    homonym_ex_dropped = list("ex_shared", f_ex, TRUE),
+    homonym_rank_changed = list("infra_shared", f_rank, TRUE),
+    homonym_spelling_variant = list("foldable_shared", f_spelling, TRUE)
   )
   out <- do.call(rbind, lapply(names(kinds), function(k) {
     pool <- pools[[kinds[[k]][[1]]]]
