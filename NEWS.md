@@ -19,6 +19,12 @@
   can never be within `max_dist` edits, so they are no longer compared; the
   per-query bookkeeping of the matching stages was also made linear in the
   number of queries, and exact-key lookups no longer hash the whole reference.
+* **Breaking: with `collapse_infra = TRUE`, an autonym that matches exactly
+  after being collapsed now has `match_type` `autonym` instead of `exact`
+  (#95).** For example, the query "Blechnum lunare var. lunare" matching the
+  reference name "Blechnum lunare" was reported as `exact` although the two
+  names differ. Plain species names that match exactly are still `exact`, and a
+  collapsed name that matches by another route keeps that match type.
 * **Breaking: match type `auto_cfonly` is renamed `auto_canon` (#82).** The old
   name could be misread as a match on the taxonomic qualifier `cf.`; it means a
   match on the canonical name (genus + specific epithet + infraspecific
