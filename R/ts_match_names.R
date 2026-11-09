@@ -32,7 +32,9 @@
 #' The `match_type` column says how a query was matched. Types are tried in
 #' the order listed below, and the first one that finds a match is reported, so
 #' earlier types are more certain than later ones. Always check results that
-#' are not `exact`.
+#' are not `exact`. If several reference records are equally good at the
+#' first type that matches (for example, two names that differ only in an *ex*
+#' author), every one of them is returned, so the ambiguity is visible.
 #'
 #' **Identical after normalization (safe to accept)**
 #' - `exact`: all parts of the name, including the author, are identical.

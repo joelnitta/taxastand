@@ -292,26 +292,28 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   m
 }
 
-# Ref code whose `method` key equals each of `qkeys` (NA if none). If a key
-# occurs more than once in the reference, the last record wins.
+# Ref codes whose `method` key equals each of `qkeys`: a list with one
+# character vector per query key (empty if none). Every reference record that
+# shares the key is returned, in reference order, so ties are reported rather
+# than resolved by an arbitrary choice.
 .tt_lookup <- function(m, qkeys, method) {
   # Hash the (few) distinct query keys and probe them with the reference keys,
-  # rather than hashing the whole reference; later records overwrite earlier
-  # ones, so the last record wins.
+  # rather than hashing the whole reference
   bk <- m$B$key(method)
   u <- unique(qkeys)
   i <- match(bk, u)
   hit <- which(!is.na(i))
-  last <- rep(NA_integer_, length(u))
-  last[i[hit]] <- hit
-  m$B$code[last[match(qkeys, u)]]
+  groups <- split(m$B$code[hit], factor(i[hit], levels = seq_along(u)))
+  groups[match(qkeys, u)]
 }
 
-# Accept matches (not to the query itself) for queries `idx`
+# Accept matches (not to the query itself) for queries `idx`; `rc` is a list of
+# candidate ref codes per query (see .tt_lookup())
 .tt_accept <- function(m, idx, rc, type) {
-  ok <- !is.na(rc) & rc != m$A$code[idx]
+  rc <- Map(function(codes, self) unique(codes[codes != self]), rc, m$A$code[idx])
+  ok <- lengths(rc) > 0L
   if (any(ok)) {
-    m$res_code[idx[ok]] <- as.list(rc[ok])
+    m$res_code[idx[ok]] <- rc[ok]
     m$res_type[idx[ok]] <- type
     m$pending <- setdiff(m$pending, idx[ok])
   }
@@ -351,7 +353,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   counts <- tabulate(match(bk, u), length(u))
   qk <- m$A$key("noauth")[idx]
   rc <- .tt_lookup(m, qk, "noauth")
-  rc[is.na(counts[match(qk, u)]) | counts[match(qk, u)] != 1L] <- NA
+  rc[is.na(counts[match(qk, u)]) | counts[match(qk, u)] != 1L] <- list(character(0))
   .tt_accept(m, idx, rc, "auto_noauth")
 }
 
