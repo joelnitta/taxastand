@@ -12,12 +12,14 @@ ts_resolve_names(
   transpositions = FALSE,
   match_no_auth = FALSE,
   match_canon = FALSE,
-  collapse_infra = FALSE,
-  collapse_infra_exclude = NULL,
+  match_autonyms = FALSE,
+  match_autonyms_exclude = NULL,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest")
+  fuzzy_canon_hits = c("all", "closest"),
+  collapse_infra = NULL,
+  collapse_infra_exclude = NULL
 )
 }
 \arguments{
@@ -68,13 +70,14 @@ reference as a match. Default: to not allow such a match (\code{FALSE}).}
 species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (\code{FALSE}).}
 
-\item{collapse_infra}{Logical; if the specific epithet and infraspecific
-epithet are the same, drop the infraspecific rank and epithet from the query.
-For more information, see \code{\link{ts_match_names}()}.}
+\item{match_autonyms}{Logical; if the specific epithet and infraspecific
+epithet are the same (an autonym), drop the infraspecific rank and epithet
+from the query. For more information, see
+\code{\link{ts_match_names}()}. Default: \code{FALSE}.}
 
-\item{collapse_infra_exclude}{Character vector; taxonomic names to exclude
-collapsing with \code{collapse_infra}. Any names used must match those in \code{query}
-exactly, or they won't be excluded.}
+\item{match_autonyms_exclude}{Character vector; taxonomic names to exclude
+from collapsing with \code{match_autonyms}. Any names used must match those in
+\code{query} exactly, or they won't be excluded.}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
@@ -99,6 +102,9 @@ canonical name in the reference and is fuzzy-matched on its canonical name
 \code{max_dist}, which is the most informative but can include many unrelated
 names when epithets are short. \code{"closest"} returns only the names at the
 smallest distance found (ties are all kept, so real ambiguity still shows).}
+
+\item{collapse_infra, collapse_infra_exclude}{Aliases of \code{match_autonyms} and
+\code{match_autonyms_exclude}, kept so that existing code keeps working.}
 }
 \value{
 Dataframe; results of resolving synonyms in matched taxonomic names.

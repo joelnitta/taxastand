@@ -13,13 +13,15 @@ ts_match_names(
   transpositions = FALSE,
   match_no_auth = FALSE,
   match_canon = FALSE,
-  collapse_infra = FALSE,
-  collapse_infra_exclude = NULL,
+  match_autonyms = FALSE,
+  match_autonyms_exclude = NULL,
   simple = FALSE,
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest")
+  fuzzy_canon_hits = c("all", "closest"),
+  collapse_infra = NULL,
+  collapse_infra_exclude = NULL
 )
 }
 \arguments{
@@ -68,11 +70,12 @@ reference as a match. Default: to not allow such a match (\code{FALSE}).}
 species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (\code{FALSE}).}
 
-\item{collapse_infra}{Logical; if the specific epithet and infraspecific
-epithet are the same, drop the infraspecific rank and epithet from the query.}
+\item{match_autonyms}{Logical; if the specific epithet and infraspecific
+epithet are the same (an autonym), drop the infraspecific rank and epithet
+from the query. Default: \code{FALSE}.}
 
-\item{collapse_infra_exclude}{Character vector; taxonomic names to exclude
-from collapsing with \code{collapse_infra}. Any names used must match those in
+\item{match_autonyms_exclude}{Character vector; taxonomic names to exclude
+from collapsing with \code{match_autonyms}. Any names used must match those in
 \code{query} exactly, or they won't be excluded.}
 
 \item{simple}{Logical; return the output in a simplified format with only the
@@ -102,6 +105,9 @@ canonical name in the reference and is fuzzy-matched on its canonical name
 \code{max_dist}, which is the most informative but can include many unrelated
 names when epithets are short. \code{"closest"} returns only the names at the
 smallest distance found (ties are all kept, so real ambiguity still shows).}
+
+\item{collapse_infra, collapse_infra_exclude}{Aliases of \code{match_autonyms} and
+\code{match_autonyms_exclude}, kept so that existing code keeps working.}
 }
 \value{
 Dataframe with the following columns (if \code{simple} is \code{FALSE}):
@@ -154,10 +160,10 @@ is the faster option. Alternatively, parse the names first using
 \code{\link{ts_parse_names}()}, and use the results as input to \code{query}
 and/or \code{reference}.
 
-\code{collapse_infra} is useful in situations where the reference database does
+\code{match_autonyms} is useful in situations where the reference database does
 not use names that have the same specific epithet and infraspecific epithet
 (an autonym). For example, reference name "Blechnum lunare" and query
-"Blechnum lunare var. lunare". In this case, if \code{collapse_infra} is \code{TRUE},
+"Blechnum lunare var. lunare". In this case, if \code{match_autonyms} is \code{TRUE},
 "Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
 If the collapsed name then matches exactly, the \code{match_type} is \code{autonym}
 (not \code{exact}), since the literal query and the matched name are different
@@ -176,7 +182,7 @@ are not \code{exact}.
 \item \code{autonym}: identical once an autonym in the query (a name whose
 infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
 var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
-\code{collapse_infra} is \code{TRUE}).
+\code{match_autonyms} is \code{TRUE}).
 \item \code{auto_punct}: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.
 }
@@ -279,7 +285,7 @@ ts_match_names(
   c("Crepidomanes minutum", "Hymenophyllum polyanthos")
 )
 
-# Example using collapse_infra argument
+# Example using the match_autonyms argument
 ts_match_names(
   c(
     "Crepidomanes minutus", "Blechnum lunare var. lunare",
@@ -289,8 +295,8 @@ ts_match_names(
     "Crepidomanes minutum", "Hymenophyllum polyanthos", "Blechnum lunare",
     "Bar foo"
   ),
-  collapse_infra = TRUE,
-  collapse_infra_exclude = "Bar foo var. foo",
+  match_autonyms = TRUE,
+  match_autonyms_exclude = "Bar foo var. foo",
   simple = TRUE
 )
 
