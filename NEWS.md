@@ -152,6 +152,10 @@
 * Fix a dead link in the README ("The Plant List", no longer online; now
   links to a Wayback Machine snapshot)
 
+* New vignette "Using taxadb" shows how to get a reference from a standard
+  taxonomic database (ITIS, with a note on others) with the taxadb package and
+  match against it (#107).
+
 # taxastand 2.0.0
 
 ## Major changes
