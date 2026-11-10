@@ -13,13 +13,11 @@ editor_options:
 
 
 
-`taxastand` matches names against a reference table that you supply. It does not download one. The [taxadb](https://docs.ropensci.org/taxadb/) package fills that gap: it provides versioned snapshots of several standard taxonomic databases (ITIS, Catalog of Life, GBIF, NCBI and others) that you can query from R. This vignette shows how to take a table from taxadb and use it as a `taxastand` reference, using ITIS as the example.
+`taxastand` matches names against a reference taxonomy that you supply, but does not come with any reference databases itself. The [taxadb](https://docs.ropensci.org/taxadb/) package fills that gap: it provides versioned snapshots of several standard taxonomic databases ([ITIS](https://www.itis.gov/), [Catalog of Life](https://www.catalogueoflife.org/), [GBIF](https://www.gbif.org/), [NCBI](https://www.ncbi.nlm.nih.gov/taxonomy) and others) that you can query from R. This vignette shows how to take a table from taxadb and use it as a `taxastand` reference, using [ITIS](https://www.itis.gov/) as the example.
 
-This vignette is precomputed: the code was run once with taxadb installed and the output saved, so that `taxastand` does not need to depend on taxadb and building the vignette needs no network connection. The results below were made from the ITIS snapshot 2026 with taxadb 0.3.0.
+## Get the data
 
-## Get a table
-
-Install taxadb, then ask for a provider's table in the Darwin Core (`dwc`) schema. The first call downloads the snapshot (a Parquet file) to a local directory; later calls reuse it. The table is a lazy database table, so filter it before collecting it into memory.
+Install taxadb, then ask for a provider's taxonomic data in the Darwin Core (`dwc`) schema. The first call downloads the snapshot (a Parquet file) to a local directory; later calls reuse it.
 
 
 ``` r
@@ -27,7 +25,8 @@ library(taxadb)
 library(dplyr)
 library(taxastand)
 
-available_versions()   # snapshots you can ask for
+# Check which data versions are available to download
+available_versions()
 #> [1] "2026"  "22.12"
 
 itis <- taxa_tbl(provider = "itis", schema = "dwc")
@@ -42,17 +41,18 @@ colnames(itis)
 #> [15] "scientificNameAuthorship" "update_date"
 ```
 
-The columns `taxastand` uses are `taxonID`, `acceptedNameUsageID`, `taxonomicStatus` and `scientificName`. taxadb has all of them, with one catch: in taxadb the author is in a separate column, `scientificNameAuthorship`, but `taxastand` matches on the author and wants it as part of `scientificName`. So paste the two together.
+The columns `taxastand` uses are `taxonID`, `acceptedNameUsageID`, `taxonomicStatus` and `scientificName`. taxadb has all of them, with one catch: in taxadb the author is in a separate column, `scientificNameAuthorship`, but `taxastand` matches on the author and wants it as part of `scientificName`. So when we make the database in the next step, we will paste the two together.
 
 ## Make a reference
 
-Whole databases are large (ITIS has about one million names), so take the part you need. Here, the ferns of one family:
+Whole databases are large (ITIS has about one million names), so for this vignette we will only use a single fern family:
 
 
 ``` r
 ref <- itis |>
   filter(family == "Polypodiaceae") |>
   collect() |>
+  # Format scientificName to include author
   mutate(
     scientificName = ifelse(
       is.na(scientificNameAuthorship),
@@ -70,7 +70,7 @@ count(ref, taxonomicStatus)
 #> 2 synonym           145
 ```
 
-The filter keeps accepted names and their synonyms, which is what resolving a name needs. The result has 390 names. Synonyms look like this (`acceptedNameUsageID` points to the accepted name):
+The `select()` keeps accepted names and their synonyms, which is what resolving a name needs. The result has 390 names. Synonyms look like this (`acceptedNameUsageID` points to the accepted name):
 
 
 ``` r
@@ -89,7 +89,7 @@ ref |>
 
 ## Resolve names
 
-From here it is the usual `taxastand` workflow. For a large reference, prepare it once with `ts_prepare_reference()` (see the "Large references" section of the [basics](basics.html) vignette).
+From here it is the usual `taxastand` workflow. For a large reference, prepare it once with `ts_prepare_reference()` (not really necessary here, but demonstrated for completeness).
 
 
 ``` r
@@ -104,7 +104,13 @@ queries <- c(
 )
 
 res <- ts_resolve_names(queries, ref_prepared, match_no_auth = TRUE)
-res[match(queries, res$query), c("resolved_name", "matched_status", "match_type")]
+res[match(queries, res$query), c("query", "resolved_name", "matched_status", "match_type")]
+#>                                                      query
+#> 1                                    Polypodium vulgare L.
+#> 5                 Phymatodes scolopendria (Burm. f.) Ching
+#> 2                                  Microsorum scolopendria
+#> 3 Pleopeltis polylepis var. erythrolepis (Weath.) T. Wendt
+#> 4                              Polypodium pelucidum Kaulf.
 #>                                              resolved_name matched_status
 #> 1                                    Polypodium vulgare L.       accepted
 #> 5                Microsorum scolopendria (Burm. f.) Copel.        synonym
@@ -121,22 +127,44 @@ res[match(queries, res$query), c("resolved_name", "matched_status", "match_type"
 
 The rows are in the order of the queries. The first and fourth queries are accepted names that match exactly, and the fifth matches an accepted name after a spelling correction (`auto_fuzzy`). *Phymatodes scolopendria* (second) is an ITIS synonym, so it resolves to the accepted *Microsorum scolopendria*. The third query has no author, so it matched by ignoring the author (`auto_noauth`, which `match_no_auth = TRUE` allows).
 
-Names above species rank (a genus such as *Polypodium* L.) are not matched by `taxastand`, and `ts_resolve_names()` warns that they are left out of the results (the warning is hidden above). They are fine to leave in the reference.
+The reference we made also contains names above species rank, such as the genus *Polypodium* L. `taxastand` does not use these, and they do not belong in a reference for matching species names. Here the `taxastand` parser dropped them on its own, with a warning that they were excluded (hidden above), so there was no need to filter them out first. To avoid the warning, filter on `taxonRank` when making the reference.
 
 ## Other databases
 
-The same steps work for other taxadb providers: change `provider` and filter on the columns that provider has. Check `colnames()` first, since the columns differ between databases.
+The same steps work for other taxadb providers. Below, we list the providers that have the Darwin Core (`dwc`) schema, which is the one `taxastand` needs:
+
+
+``` r
+available_providers() |>
+  filter(schema == "dwc")
+#>   provider schema
+#> 1      col    dwc
+#> 2       fb    dwc
+#> 3     gbif    dwc
+#> 4     itis    dwc
+#> 5     ncbi    dwc
+#> 6      ott    dwc
+#> 7      slb    dwc
+```
+
+To use a different provider, change `provider` in `taxa_tbl()` to one of these. Check `colnames()` before using, since the columns may differ between databases and may require different treatment to get them into a format that `taxastand` can use.
+
+Some of the providers are described here:
 
 | Provider | `provider =` | Notes |
 |:--|:--|:--|
 | Catalog of Life | `"col"` | Broad coverage, all kingdoms |
-| GBIF backbone | `"gbif"` | Includes many names of uncertain status |
+| GBIF backbone | `"gbif"` | Used by the GBIF occurrence database |
 | ITIS | `"itis"` | Mostly North American taxa |
 | NCBI | `"ncbi"` | Names of organisms in sequence databases |
-| Open Tree of Life | `"ott"` | Names in the synthetic tree |
+| Open Tree of Life | `"ott"` | Names in the Open Tree of Life |
+| FishBase | `"fb"` | Fishes |
+| SeaLifeBase | `"slb"` | Marine organisms other than fishes |
 
-Check each provider's licence before reusing a table. The `"fb"` (FishBase) and `"slb"` (SeaLifeBase) tables, for example, are CC BY-NC.
+Check each provider's license before reusing a table.
 
 ## Reproducibility
 
 taxadb snapshots are versioned. Pass `version =` to `taxa_tbl()` (see `available_versions()`) and record it with your results, so that the reference is the same the next time you run the analysis. Cite both the provider and taxadb.
+
+The results in this vignette were made with ITIS snapshot 2026 and taxadb 0.3.0.
