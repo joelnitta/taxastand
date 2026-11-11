@@ -332,7 +332,7 @@ knitr::kable(
 U.Taxonstand and WorldFlora were timed only up to 100 queries, because larger
 runs on a reference of this size take many minutes for those packages.
 
-The "taxastand (prepared)" row are results that used a reference prepared once with `ts_prepare_reference()` and reused for every call. The "taxastand (unprepared)" row are results that passed the reference names (a character vector) to `ts_match_names()`, so the reference is parsed again on every call.
+The "taxastand (prepared)" row are results that used a reference prepared once with `ts_optimize_ref()` and reused for every call. The "taxastand (unprepared)" row are results that passed the reference names (a character vector) to `ts_match_names()`, so the reference is parsed again on every call.
 
 The timings are made after a warm-up: before timing, each package was run once
 on the whole set of queries, so one-time costs are not counted. A prepared

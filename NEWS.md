@@ -2,10 +2,10 @@
 
 ## Major changes
 
-* **New `ts_prepare_reference()` for repeated matching against a large
-  reference (#44).** Matching spends most of its time preparing the reference
+* **New `ts_optimize_ref()` for repeated matching against a large
+  reference (#44, #110).** (Named `ts_optimize_ref()` to match the other reference helpers planned in #109.) Matching spends most of its time preparing the reference
   (finding the genus of every name, parsing, building match keys). Pass the
-  result of `ts_prepare_reference(reference)` to `ts_match_names()` (as
+  result of `ts_optimize_ref(reference)` to `ts_match_names()` (as
   `reference`) or `ts_resolve_names()` (as `ref_taxonomy`) and that work is
   done once and reused: the genus of every name is found when the reference is
   prepared, and each genus is parsed and keyed the first time a query needs
@@ -120,7 +120,7 @@
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.
 * The documentation of `ts_match_names()` and `ts_resolve_names()` now
-  recommends `ts_prepare_reference()` for repeated queries against a large
+  recommends `ts_optimize_ref()` for repeated queries against a large
   reference, and `ts_match_names()` defines an autonym (#94).
 * New "Benchmarks" vignette comparing taxastand with similar packages (#96,
   #103): taxastand, taxify, WorldFlora and U.Taxonstand match the same World

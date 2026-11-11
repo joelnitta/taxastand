@@ -39,7 +39,7 @@ following columns:
 with authorship and date information if known.
 }
 
-Can also be the output of \code{\link{ts_prepare_reference}()} applied to
+Can also be the output of \code{\link{ts_optimize_ref}()} applied to
 such a dataframe, which saves the work of preparing the reference when
 resolving several times against the same large reference.}
 
@@ -135,7 +135,7 @@ should be the same used as reference with \code{\link{ts_match_names}()}
 
 If multiple queries will be made against the same large reference (e.g., a
 database such as World Flora Online), prepare it once with
-\code{\link{ts_prepare_reference}()} and use the result as \code{ref_taxonomy},
+\code{\link{ts_optimize_ref}()} and use the result as \code{ref_taxonomy},
 so that the reference is not parsed again on every call.
 
 \code{ref_taxonomy} must be taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}.

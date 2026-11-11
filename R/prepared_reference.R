@@ -2,7 +2,7 @@
 #'
 #' Matching names against a reference spends most of its time preparing the
 #' reference: finding the genus of every name, parsing the names and building
-#' the keys used for comparison. `ts_prepare_reference()` does the first of
+#' the keys used for comparison. `ts_optimize_ref()` does the first of
 #' these once, and the other two lazily, one genus at a time, the first time a
 #' query needs that genus. Pass the result to \code{\link{ts_match_names}()}
 #' or \code{\link{ts_resolve_names}()} in place of the reference; repeated
@@ -28,12 +28,12 @@
 #' @export
 #' @examples
 #' data(filmy_taxonomy)
-#' ref <- ts_prepare_reference(filmy_taxonomy)
+#' ref <- ts_optimize_ref(filmy_taxonomy)
 #' ref
 #' # Reuse for several calls
 #' ts_match_names("Gonocormus minutum", ref, simple = TRUE)
 #' ts_resolve_names("Gonocormus minutum", ref)
-ts_prepare_reference <- function(reference, strip_qualifiers = FALSE) {
+ts_optimize_ref <- function(reference, strip_qualifiers = FALSE) {
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
   taxonomy <- NULL
   if (inherits(reference, "data.frame")) {

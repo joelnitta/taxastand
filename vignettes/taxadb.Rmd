@@ -89,11 +89,11 @@ ref |>
 
 ## Resolve names
 
-From here it is the usual `taxastand` workflow. For a large reference, prepare it once with `ts_prepare_reference()` (not really necessary here, but demonstrated for completeness).
+From here it is the usual `taxastand` workflow. For a large reference, prepare it once with `ts_optimize_ref()` (not really necessary here, but demonstrated for completeness).
 
 
 ``` r
-ref_prepared <- ts_prepare_reference(ref)
+ref_prepared <- ts_optimize_ref(ref)
 
 queries <- c(
   "Polypodium vulgare L.",

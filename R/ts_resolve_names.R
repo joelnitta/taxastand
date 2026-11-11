@@ -12,7 +12,7 @@
 #'
 #' If multiple queries will be made against the same large reference (e.g., a
 #' database such as World Flora Online), prepare it once with
-#' \code{\link{ts_prepare_reference}()} and use the result as `ref_taxonomy`,
+#' \code{\link{ts_optimize_ref}()} and use the result as `ref_taxonomy`,
 #' so that the reference is not parsed again on every call.
 #'
 #' `ref_taxonomy` must be taxonomic data adhering to the [Darwin Core standard](https://dwc.tdwg.org/terms/#taxon).
@@ -33,7 +33,7 @@
 #' - `scientificName`: [The full scientific name of the taxon](https://dwc.tdwg.org/terms/#dwc:scientificName),
 #' with authorship and date information if known.
 #'
-#' Can also be the output of \code{\link{ts_prepare_reference}()} applied to
+#' Can also be the output of \code{\link{ts_optimize_ref}()} applied to
 #' such a dataframe, which saves the work of preparing the reference when
 #' resolving several times against the same large reference.
 #' @param max_dist Max Levenshtein distance to allow during fuzzy matching
@@ -150,7 +150,7 @@ ts_resolve_names <- function(
     inherits(ref_taxonomy, "data.frame") | inherits(ref_taxonomy, "ts_reference"),
     msg = paste(
       "ref_taxonomy must be of class 'data.frame'",
-      "or the output of ts_prepare_reference()"
+      "or the output of ts_optimize_ref()"
     )
   )
   reference <- NULL
@@ -162,7 +162,7 @@ ts_resolve_names <- function(
         colnames(ref_taxonomy)),
       msg = paste(
         "ref_taxonomy was prepared from names only; prepare a Darwin Core",
-        "data.frame with ts_prepare_reference() to resolve synonyms"
+        "data.frame with ts_optimize_ref() to resolve synonyms"
       )
     )
   } else {

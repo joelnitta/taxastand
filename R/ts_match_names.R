@@ -13,7 +13,7 @@
 #' the number of names is very large. If multiple queries will be made against
 #' the same large reference (e.g., a database such as World Flora Online), it
 #' is recommended to prepare the reference once with
-#' \code{\link{ts_prepare_reference}()} and use the result as `reference`. That
+#' \code{\link{ts_optimize_ref}()} and use the result as `reference`. That
 #' saves parsing the reference and building its match keys on every call, so it
 #' is the faster option. Alternatively, parse the names first using
 #' \code{\link{ts_parse_names}()}, and use the results as input to `query`
@@ -106,7 +106,7 @@
 #' reference. If a character vector, missing values not allowed and all values
 #' must be unique. If a dataframe, should be taxonomic names parsed with
 #' \code{\link{ts_parse_names}()}. Can also be the output of
-#' \code{\link{ts_prepare_reference}()}, which saves the work of preparing
+#' \code{\link{ts_optimize_ref}()}, which saves the work of preparing
 #' the reference when matching several times against the same large reference.
 #' @param manual_match Optional. Dataframe of manually matched names that will
 #' override any results from the name-matching engine. Must include columns,
@@ -384,7 +384,7 @@ ts_match_names <- function(
       inherits(reference, "ts_reference"),
     msg = paste(
       "reference must be of class 'data.frame', a character vector,",
-      "or the output of ts_prepare_reference()"
+      "or the output of ts_optimize_ref()"
     )
   )
   assertthat::assert_that(assertthat::is.number(max_dist))
