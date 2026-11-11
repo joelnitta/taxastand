@@ -28,7 +28,7 @@ Columns that already have Darwin Core names need not be listed. Default
 \item{drop_ranks}{Character vector; rows with a \code{taxonRank} in this list
 (ignoring case) are dropped. The default is the ranks above species rank
 (kingdom to genus, and the ranks between them such as subfamily, tribe,
-section and series). Use \code{character(0)} to keep all rows. Ignored if \code{x}
+section and series). Use \code{NULL} to keep all rows. Ignored if \code{x}
 has no \code{taxonRank} column.}
 
 \item{source}{Optional list describing where the data came from, for

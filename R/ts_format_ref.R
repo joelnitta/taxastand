@@ -43,7 +43,7 @@
 #' @param drop_ranks Character vector; rows with a `taxonRank` in this list
 #'   (ignoring case) are dropped. The default is the ranks above species rank
 #'   (kingdom to genus, and the ranks between them such as subfamily, tribe,
-#'   section and series). Use `character(0)` to keep all rows. Ignored if `x`
+#'   section and series). Use `NULL` to keep all rows. Ignored if `x`
 #'   has no `taxonRank` column.
 #' @param source Optional list describing where the data came from, for
 #'   example `list(provider = "ITIS", version = "2026", license = "CC0")`.
@@ -79,7 +79,7 @@ ts_format_ref <- function(x, col_map = NULL, drop_ranks = ts_ranks_above_species
     is.character(col_map) && !is.null(names(col_map)) &&
       all(nzchar(names(col_map))) && !anyNA(col_map)
   ), msg = "`col_map` must be a named character vector")
-  assertthat::assert_that(is.character(drop_ranks))
+  assertthat::assert_that(is.null(drop_ranks) || is.character(drop_ranks))
   assertthat::assert_that(is.null(source) || is.list(source))
 
   x <- as.data.frame(x, stringsAsFactors = FALSE)
