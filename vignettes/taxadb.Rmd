@@ -41,7 +41,7 @@ colnames(itis)
 #> [15] "scientificNameAuthorship" "update_date"
 ```
 
-The columns `taxastand` uses are `taxonID`, `acceptedNameUsageID`, `taxonomicStatus` and `scientificName`. taxadb has all of them, with one catch: in taxadb the author is in a separate column, `scientificNameAuthorship`, but `taxastand` matches on the author and wants it as part of `scientificName`. So when we make the database in the next step, we will paste the two together.
+The columns `taxastand` uses are `taxonID`, `acceptedNameUsageID`, `taxonomicStatus` and `scientificName`. taxadb has all of them, with one catch: in taxadb the author is in a separate column, `scientificNameAuthorship`, but `taxastand` matches on the author and wants it as part of `scientificName`. `ts_format_ref()` takes care of this, and of the other steps needed to turn a table like this into a reference.
 
 ## Make a reference
 
@@ -52,39 +52,35 @@ Whole databases are large (ITIS has about one million names), so for this vignet
 ref <- itis |>
   filter(family == "Polypodiaceae") |>
   collect() |>
-  # Format scientificName to include author
-  mutate(
-    scientificName = ifelse(
-      is.na(scientificNameAuthorship),
-      scientificName,
-      paste(scientificName, scientificNameAuthorship)
-    )
-  ) |>
-  select(taxonID, acceptedNameUsageID, taxonomicStatus, scientificName)
+  ts_format_ref()
 
 count(ref, taxonomicStatus)
-#> # A tibble: 2 × 2
-#>   taxonomicStatus     n
-#>   <chr>           <int>
-#> 1 accepted          245
-#> 2 synonym           145
+#>   taxonomicStatus   n
+#> 1        accepted 172
+#> 2         synonym 137
 ```
 
-The `select()` keeps accepted names and their synonyms, which is what resolving a name needs. The result has 390 names. Synonyms look like this (`acceptedNameUsageID` points to the accepted name):
+`ts_format_ref()` pastes the author onto the name, drops rows above species rank (such as the genus *Polypodium* itself), and keeps the columns `taxastand` needs (plus `taxonRank`). If your table uses other column names, map them with the `col_map` argument. You can also record where the data came from with `source`, which is stored with the result.
+
+The reference has accepted names and their synonyms, which is what resolving a name needs. It has 309 names. Synonyms look like this (`acceptedNameUsageID` points to the accepted name):
 
 
 ``` r
 ref |>
   filter(taxonomicStatus == "synonym", lengths(strsplit(scientificName, " ")) > 2) |>
   head(5)
-#> # A tibble: 5 × 4
-#>   taxonID      acceptedNameUsageID taxonomicStatus scientificName              
-#>   <chr>        <chr>               <chr>           <chr>                       
-#> 1 ITIS:1215188 ITIS:1215372        synonym         Aglaomorpha meyeniana Schott
-#> 2 ITIS:1215355 ITIS:1215353        synonym         Polypodium chrysolepis Hook.
-#> 3 ITIS:1215443 ITIS:1215226        synonym         Grammitis linearis Sw.      
-#> 4 ITIS:1215445 ITIS:1215204        synonym         Polypodium normale D. Don   
-#> 5 ITIS:1215450 ITIS:897672         synonym         Acrostichum polypodioides L.
+#>        taxonID acceptedNameUsageID taxonomicStatus               scientificName
+#> 1 ITIS:1215188        ITIS:1215372         synonym Aglaomorpha meyeniana Schott
+#> 2 ITIS:1215355        ITIS:1215353         synonym Polypodium chrysolepis Hook.
+#> 3 ITIS:1215443        ITIS:1215226         synonym       Grammitis linearis Sw.
+#> 4 ITIS:1215445        ITIS:1215204         synonym    Polypodium normale D. Don
+#> 5 ITIS:1215450         ITIS:897672         synonym Acrostichum polypodioides L.
+#>   taxonRank
+#> 1   species
+#> 2   species
+#> 3   species
+#> 4   species
+#> 5   species
 ```
 
 ## Resolve names
@@ -127,7 +123,7 @@ res[match(queries, res$query), c("query", "resolved_name", "matched_status", "ma
 
 The rows are in the order of the queries. The first and fourth queries are accepted names that match exactly, and the fifth matches an accepted name after a spelling correction (`auto_fuzzy`). *Phymatodes scolopendria* (second) is an ITIS synonym, so it resolves to the accepted *Microsorum scolopendria*. The third query has no author, so it matched by ignoring the author (`auto_noauth`, which `match_no_auth = TRUE` allows).
 
-The reference we made also contains names above species rank, such as the genus *Polypodium* L. `taxastand` does not use these, and they do not belong in a reference for matching species names. Here the `taxastand` parser dropped them on its own, with a warning that they were excluded (hidden above), so there was no need to filter them out first. To avoid the warning, filter on `taxonRank` when making the reference.
+Note that we did not need to remove the genus-level names ourselves: `ts_format_ref()` already did that. If you build a reference some other way and leave them in, the `taxastand` parser drops them and warns that they were excluded.
 
 ## Other databases
 

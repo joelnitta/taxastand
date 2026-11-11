@@ -116,6 +116,10 @@
 
 ## Minor improvements
 
+* New `ts_format_ref()` turns a table of taxonomic names (for example from a
+  downloaded taxonomic database) into a reference: it renames columns with
+  `col_map`, adds `scientificNameAuthorship` to `scientificName`, drops ranks
+  above species and tidies values (#112, part of #109).
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.
