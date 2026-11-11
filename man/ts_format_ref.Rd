@@ -65,6 +65,12 @@ There is no controlled vocabulary for taxonomic ranks, and databases differ
 in how many infraspecific ranks they use. Rows are therefore dropped using a
 list of ranks above species, not kept using a list of ranks to accept: a row
 with any other rank (including an unknown rank or none) is kept.
+
+\code{ts_format_ref()} does not check that the table is valid Darwin Core
+taxonomic data (for example, that every \code{acceptedNameUsageID} points to an
+existing \code{taxonID}). The
+\href{https://docs.ropensci.org/dwctaxon/}{dwctaxon} package can validate and
+edit such tables (see \code{dwctaxon::dct_validate()}).
 }
 \examples{
 # A table with its own column names, and the author in a separate column

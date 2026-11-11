@@ -23,6 +23,12 @@
 #' list of ranks above species, not kept using a list of ranks to accept: a row
 #' with any other rank (including an unknown rank or none) is kept.
 #'
+#' `ts_format_ref()` does not check that the table is valid Darwin Core
+#' taxonomic data (for example, that every `acceptedNameUsageID` points to an
+#' existing `taxonID`). The
+#' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate and
+#' edit such tables (see `dwctaxon::dct_validate()`).
+#'
 #' @param x Dataframe of taxonomic names. Needs columns for `taxonID`,
 #'   `acceptedNameUsageID`, `taxonomicStatus` and `scientificName` (see
 #'   \code{\link{ts_resolve_names}()} for what they mean), either with those

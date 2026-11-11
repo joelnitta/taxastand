@@ -60,7 +60,7 @@ count(ref, taxonomicStatus)
 #> 2         synonym 137
 ```
 
-`ts_format_ref()` pastes the author onto the name, drops rows above species rank (such as the genus *Polypodium* itself), and keeps the columns `taxastand` needs (plus `taxonRank`). If your table uses other column names, map them with the `col_map` argument. You can also record where the data came from with `source`, which is stored with the result.
+`ts_format_ref()` pastes the author onto the name, drops rows above species rank (such as the genus *Polypodium* itself), and keeps the columns `taxastand` needs (plus `taxonRank`). If your table uses other column names, map them with the `col_map` argument. You can also record where the data came from with `source`, which is stored with the result. `ts_format_ref()` does not check the table for errors (for example, synonyms that point to a missing accepted name); the [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate Darwin Core taxonomic data with `dwctaxon::dct_validate()`.
 
 The reference has accepted names and their synonyms, which is what resolving a name needs. It has 309 names. Synonyms look like this (`acceptedNameUsageID` points to the accepted name):
 
