@@ -9,8 +9,8 @@
 #'   `citation` and `url`.
 #' @export
 #' @examples
-#' ts_reference_sources()
-ts_reference_sources <- function() {
+#' ts_show_ref_sources()
+ts_show_ref_sources <- function() {
   srcs <- .ts_sources()
   pick <- function(field) {
     vapply(srcs, function(s) s[[field]], character(1), USE.NAMES = FALSE)

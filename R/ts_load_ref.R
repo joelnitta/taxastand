@@ -11,7 +11,7 @@
 #'
 #' - `source`: the name of a source that taxastand knows how to download, such
 #'   as `"wfo"` (World Flora Online) or `"ppg"` (Pteridophyte Phylogeny Group).
-#'   See \code{\link{ts_reference_sources}()} for the list, licenses and how to
+#'   See \code{\link{ts_show_ref_sources}()} for the list, licenses and how to
 #'   cite them. The latest version is used unless you give a `version`, and the
 #'   version that was used is recorded in the result.
 #' - `url`: a direct link (HTTPS) to a file, not to a web page about it.
@@ -47,7 +47,7 @@
 #' Core taxonomic data. Check the license of the data before reusing it.
 #'
 #' @param source Character; name of a source to download (see Details and
-#'   \code{\link{ts_reference_sources}()}).
+#'   \code{\link{ts_show_ref_sources}()}).
 #' @param url Character; HTTPS URL of a file. It must be a direct link to the
 #'   file itself, not to a web page about it. Links that redirect to the file
 #'   are fine.
@@ -127,7 +127,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
       msg = paste0(
         "Unknown `source` '", source, "'. Choose one of: ",
         paste(names(srcs), collapse = ", "),
-        " (see ts_reference_sources()), or use `url` or `file`."
+        " (see ts_show_ref_sources()), or use `url` or `file`."
       )
     )
     spec <- srcs[[source]]

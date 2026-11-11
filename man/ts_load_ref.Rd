@@ -20,7 +20,7 @@ ts_load_ref(
 }
 \arguments{
 \item{source}{Character; name of a source to download (see Details and
-\code{\link{ts_reference_sources}()}).}
+\code{\link{ts_show_ref_sources}()}).}
 
 \item{url}{Character; HTTPS URL of a file. It must be a direct link to the
 file itself, not to a web page about it. Links that redirect to the file
@@ -67,7 +67,7 @@ Give the data in one of three ways, and only one:
 \itemize{
 \item \code{source}: the name of a source that taxastand knows how to download, such
 as \code{"wfo"} (World Flora Online) or \code{"ppg"} (Pteridophyte Phylogeny Group).
-See \code{\link{ts_reference_sources}()} for the list, licenses and how to
+See \code{\link{ts_show_ref_sources}()} for the list, licenses and how to
 cite them. The latest version is used unless you give a \code{version}, and the
 version that was used is recorded in the result.
 \item \code{url}: a direct link (HTTPS) to a file, not to a web page about it.
