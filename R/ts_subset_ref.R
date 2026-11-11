@@ -1,8 +1,9 @@
 #' Keep one or more taxa (and their synonyms) from a taxonomic table
 #'
-#' Subsets a large table of taxonomic names, for example a whole database, to
-#' the members of one or more taxa such as a family, so that a reference
-#' small enough for the task at hand can be made. Run it on the table before
+#' Subsets a large table of taxonomic names to the members of one or more taxa
+#' such as a family, so that a reference small enough for the task at hand can
+#' be made. `x` should be in Darwin Core format, or close to it (use `col_map`
+#' for columns with other names). Run it on the table before
 #' \code{\link{ts_format_ref}()}, which removes the columns that
 #' `ts_subset_ref()` uses to find the members.
 #'
@@ -22,16 +23,19 @@
 #' are outside `taxon`, so that every synonym in the result has its accepted
 #' name.
 #'
-#' @param x Dataframe of taxonomic names in Darwin Core format, with at least
-#'   `taxonID` and `acceptedNameUsageID`, and either columns for higher ranks
-#'   or `parentNameUsageID` (and `scientificName`). Rename columns first if
-#'   they have other names.
+#' @param x Dataframe of taxonomic names in Darwin Core format, or close to it,
+#'   with at least `taxonID` and `acceptedNameUsageID`, and either columns for
+#'   higher ranks or `parentNameUsageID` (and `scientificName`).
 #' @param taxon Character vector of taxon names to keep, such as
 #'   `"Polypodiaceae"` or `c("Polypodiaceae", "Dryopteridaceae")`. Rows for
 #'   all of them are kept.
 #' @param rank Optional character; the rank of `taxon`, such as `"family"`.
 #'   Use it when the same name is used at more than one rank. By default any
 #'   rank matches.
+#'
+#' @param col_map Named character vector to map columns of `x` to Darwin Core
+#'   names, as in \code{\link{ts_format_ref}()}. The same `col_map` can be
+#'   given to both functions. Default `NULL`.
 #'
 #' @return The rows of `x` for the members of `taxon` and their synonyms, with
 #'   the same columns as `x`. A warning is given for any name in `taxon` that
@@ -50,7 +54,7 @@
 #' )
 #' ts_subset_ref(x, "Pteridaceae")
 #' ts_subset_ref(x, c("Polypodiaceae", "Equisetaceae"))
-ts_subset_ref <- function(x, taxon, rank = NULL) {
+ts_subset_ref <- function(x, taxon, rank = NULL, col_map = NULL) {
   assertthat::assert_that(inherits(x, "data.frame"))
   assertthat::assert_that(
     is.character(taxon), length(taxon) >= 1, !anyNA(taxon), all(nzchar(taxon))
@@ -58,6 +62,8 @@ ts_subset_ref <- function(x, taxon, rank = NULL) {
   assertthat::assert_that(
     is.null(rank) || (is.character(rank) && length(rank) == 1 && !is.na(rank))
   )
+  orig <- x
+  x <- apply_col_map(x, col_map)
   need <- c("taxonID", "acceptedNameUsageID")
   missing_cols <- setdiff(need, colnames(x))
   assertthat::assert_that(
@@ -134,7 +140,8 @@ ts_subset_ref <- function(x, taxon, rank = NULL) {
   keep <- keep | (!is.na(acc) & acc %in% id[keep])
   keep <- keep | (id %in% acc[keep])
 
-  x[keep, , drop = FALSE]
+  # rows of the original table, so the same `col_map` still works afterwards
+  orig[keep, , drop = FALSE]
 }
 
 # Columns that may hold the higher taxa of a name, used by ts_subset_ref()

@@ -75,3 +75,13 @@ test_that("result works with ts_format_ref()", {
   expect_equal(nrow(ref), 3)
   expect_true(all(c("taxonID", "scientificName") %in% colnames(ref)))
 })
+
+test_that("col_map maps columns and the original columns are returned", {
+  x <- x_ranks
+  colnames(x) <- c("id", "acc", "status", "name", "fam")
+  map <- c(taxonID = "id", acceptedNameUsageID = "acc", family = "fam")
+  res <- ts_subset_ref(x, "Pteridaceae", col_map = map)
+  expect_equal(res$id, c("2", "3", "6"))
+  expect_equal(colnames(res), colnames(x))
+  expect_error(ts_subset_ref(x, "Pteridaceae", col_map = c(family = "zzz")), "not in `x`")
+})

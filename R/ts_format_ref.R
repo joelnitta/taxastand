@@ -75,29 +75,12 @@
 ts_format_ref <- function(x, col_map = NULL, drop_ranks = ts_ranks_above_species(),
                           source = NULL) {
   assertthat::assert_that(inherits(x, "data.frame"))
-  assertthat::assert_that(is.null(col_map) || (
-    is.character(col_map) && !is.null(names(col_map)) &&
-      all(nzchar(names(col_map))) && !anyNA(col_map)
-  ), msg = "`col_map` must be a named character vector")
   assertthat::assert_that(is.null(drop_ranks) || is.character(drop_ranks))
   assertthat::assert_that(is.null(source) || is.list(source))
 
   x <- as.data.frame(x, stringsAsFactors = FALSE)
 
-  if (!is.null(col_map)) {
-    missing_cols <- setdiff(col_map, colnames(x))
-    assertthat::assert_that(
-      length(missing_cols) == 0,
-      msg = paste0(
-        "`col_map` refers to columns not in `x`: ",
-        paste(missing_cols, collapse = ", ")
-      )
-    )
-    # the mapped column replaces any column that already has the Darwin Core name
-    renamed <- x[, unname(col_map), drop = FALSE]
-    colnames(renamed) <- names(col_map)
-    x <- cbind(x[, setdiff(colnames(x), names(col_map)), drop = FALSE], renamed)
-  }
+  x <- apply_col_map(x, col_map)
 
   required <- c(
     "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName"
@@ -163,4 +146,28 @@ ts_ranks_above_species <- function() {
     "subgenus", "infragenus", "section", "subsection", "series", "subseries",
     "superspecies", "species group", "species subgroup"
   )
+}
+
+# Rename the columns of `x` to Darwin Core names using `col_map` (see
+# ts_format_ref()). Used by ts_format_ref() and ts_subset_ref().
+apply_col_map <- function(x, col_map) {
+  assertthat::assert_that(is.null(col_map) || (
+    is.character(col_map) && !is.null(names(col_map)) &&
+      all(nzchar(names(col_map))) && !anyNA(col_map)
+  ), msg = "`col_map` must be a named character vector")
+  if (is.null(col_map)) {
+    return(x)
+  }
+  missing_cols <- setdiff(col_map, colnames(x))
+  assertthat::assert_that(
+    length(missing_cols) == 0,
+    msg = paste0(
+      "`col_map` refers to columns not in `x`: ",
+      paste(missing_cols, collapse = ", ")
+    )
+  )
+  # the mapped column replaces any column that already has the Darwin Core name
+  renamed <- x[, unname(col_map), drop = FALSE]
+  colnames(renamed) <- names(col_map)
+  cbind(x[, setdiff(colnames(x), names(col_map)), drop = FALSE], renamed)
 }
