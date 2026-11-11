@@ -73,7 +73,7 @@ fuzzy matching on parsed taxonomic names.</p>
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ts_match_names</span><span class="op">(</span></span>
 <span>  <span class="va">query</span>,</span>
-<span>  <span class="va">reference</span>,</span>
+<span>  <span class="va">ref</span>,</span>
 <span>  manual_match <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_dist <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  max_dist_genus <span class="op">=</span> <span class="fl">2</span>,</span>
@@ -88,7 +88,8 @@ fuzzy matching on parsed taxonomic names.</p>
 <span>  exclude_placeholders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span>,</span>
 <span>  collapse_infra <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  reference <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -104,7 +105,7 @@ If a dataframe, should be taxonomic names parsed with
 <code><a href="ts_parse_names.html">ts_parse_names()</a></code>.</p></dd>
 
 
-<dt id="arg-reference">reference<a class="anchor" aria-label="anchor" href="#arg-reference"></a></dt>
+<dt id="arg-ref">ref<a class="anchor" aria-label="anchor" href="#arg-ref"></a></dt>
 <dd><p>Character vector or dataframe; taxonomic names to use as
 reference. If a character vector, missing values not allowed and all values
 must be unique. If a dataframe, should be taxonomic names parsed with
@@ -210,6 +211,11 @@ smallest distance found (ties are all kept, so real ambiguity still shows).</p><
 <dt id="arg-collapse-infra-collapse-infra-exclude">collapse_infra, collapse_infra_exclude<a class="anchor" aria-label="anchor" href="#arg-collapse-infra-collapse-infra-exclude"></a></dt>
 <dd><p>Aliases of <code>match_autonyms</code> and
 <code>match_autonyms_exclude</code>, kept so that existing code keeps working.</p></dd>
+
+
+<dt id="arg-reference">reference<a class="anchor" aria-label="anchor" href="#arg-reference"></a></dt>
+<dd><p>Alias of <code>ref</code>, the name used before taxastand 3.0.0; it
+will be deprecated in a future version.</p></dd>
 
 </dl></div>
     <div id="value">

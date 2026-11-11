@@ -76,7 +76,7 @@ used by <code><a href="ts_match_names.html">ts_match_names()</a></code>, <code><
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ts_format_ref</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">ref</span>,</span>
 <span>  col_map <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  drop_ranks <span class="op">=</span> <span class="fu"><a href="ts_ranks_above_species.html">ts_ranks_above_species</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  source <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -87,7 +87,7 @@ used by <code><a href="ts_match_names.html">ts_match_names()</a></code>, <code><
     <h2>Arguments</h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg-ref">ref<a class="anchor" aria-label="anchor" href="#arg-ref"></a></dt>
 <dd><p>Dataframe of taxonomic names. Needs columns for <code>taxonID</code>,
 <code>acceptedNameUsageID</code>, <code>taxonomicStatus</code> and <code>scientificName</code> (see
 <code><a href="ts_resolve_names.html">ts_resolve_names()</a></code> for what they mean), either with those
@@ -96,8 +96,8 @@ names or mapped to them with <code>col_map</code>. May also have
 
 
 <dt id="arg-col-map">col_map<a class="anchor" aria-label="anchor" href="#arg-col-map"></a></dt>
-<dd><p>Named character vector to rename columns of <code>x</code>. Each name
-is the Darwin Core name and each value is the column of <code>x</code> that holds it.
+<dd><p>Named character vector to rename columns of <code>ref</code>. Each name
+is the Darwin Core name and each value is the column of <code>ref</code> that holds it.
 For example,
 <code>c(taxonID = "taxon_id", scientificName = "canonical_name")</code>.
 Columns that already have Darwin Core names need not be listed. Default
@@ -108,7 +108,7 @@ Columns that already have Darwin Core names need not be listed. Default
 <dd><p>Character vector; rows with a <code>taxonRank</code> in this list
 (ignoring case) are dropped. The default is the ranks above species rank
 (kingdom to genus, and the ranks between them such as subfamily, tribe,
-section and series). Use <code>NULL</code> to keep all rows. Ignored if <code>x</code>
+section and series). Use <code>NULL</code> to keep all rows. Ignored if <code>ref</code>
 has no <code>taxonRank</code> column.</p></dd>
 
 
@@ -121,8 +121,8 @@ It is stored in the <code>ts_source</code> attribute of the result.</p></dd>
     <div id="value">
     <h2>Value</h2>
     <p>A dataframe with columns <code>taxonID</code>, <code>acceptedNameUsageID</code>,
-<code>taxonomicStatus</code> and <code>scientificName</code> (and <code>taxonRank</code>, if <code>x</code> had it),
-plus any columns for the hierarchy of the names that <code>x</code> had: higher ranks
+<code>taxonomicStatus</code> and <code>scientificName</code> (and <code>taxonRank</code>, if <code>ref</code> had it),
+plus any columns for the hierarchy of the names that <code>ref</code> had: higher ranks
 such as <code>family</code> and <code>parentNameUsageID</code>. Other columns are dropped. It
 has the <code>ts_source</code> attribute if <code>source</code> was given.</p>
     </div>
