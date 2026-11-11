@@ -120,6 +120,10 @@
   downloaded taxonomic database) into a reference: it renames columns with
   `col_map`, adds `scientificNameAuthorship` to `scientificName`, drops ranks
   above species and tidies values (#112, part of #109).
+* New `ts_subset_ref()` keeps one or more taxa (for example a family) and their
+  synonyms from a large table of names, using higher-rank columns or
+  `parentNameUsageID`, so a whole database need not be made into a reference
+  (#114, part of #109).
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.
