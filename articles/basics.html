@@ -318,7 +318,12 @@ standard</strong> in the form of a dataframe. <code>taxastand</code>
 requires that the taxonomic standard conform to <a href="https://dwc.tdwg.org/" class="external-link">Darwin Core standards</a>. There are many
 sources of taxonomic data online, including <a href="https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c" class="external-link">GBIF</a>,
 <a href="https://www.catalogueoflife.org/" class="external-link">Catalog of Life</a>, and <a href="https://www.itis.gov/" class="external-link">ITIS</a> among others. The <a href="taxadb.html">Using taxadb</a> vignette shows how to get a standard
-database such as ITIS with the taxadb package.</p>
+database such as ITIS with the taxadb package, and
+<code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> turns a table with other column names or a
+separate author column into the format <code>taxastand</code> needs.
+<code>taxastand</code> does not check that the table is valid Darwin
+Core; the <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a>
+package can validate it (<code>dwctaxon::dct_validate()</code>).</p>
 <p><code>taxastand</code> comes supplied with an example taxonomic
 standard for filmy ferns (family Hymenophyllaceae):</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -406,7 +411,9 @@ that remain unresolved.</p>
 resolution workflow we discover mistakes in the reference database, the
 reference database can be edited so that the query names resolve
 correctly (this is not possible with packages that rely on querying a
-remote taxonomic database that can’t be modified by the user).</p>
+remote taxonomic database that can’t be modified by the user). The <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a> package has
+functions for editing Darwin Core taxonomic data, such as adding and
+modifying rows while keeping synonyms mapped correctly.</p>
 </div>
 <div class="section level2">
 <h2 id="large-references">Large references<a class="anchor" aria-label="anchor" href="#large-references"></a>
@@ -414,7 +421,7 @@ remote taxonomic database that can’t be modified by the user).</p>
 <p>Before matching, <code>taxastand</code> parses the reference names
 and builds the keys it compares them with. With a reference the size of
 PPG or WFO this takes longer than the matching itself. If you will match
-several batches of queries against the same reference, prepare it once
+several batches of queries against the same reference, optimize it once
 with <code><a href="../reference/ts_optimize_ref.html">ts_optimize_ref()</a></code> and pass the result in place of the
 reference:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -422,11 +429,11 @@ reference:</p>
 <span></span>
 <span><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span></code></pre></div>
-<p>The results are the same as without preparing. The genus of every
+<p>The results are the same as without optimizing. The genus of every
 name is found up front, and each genus is parsed the first time a query
 needs it, so the first batch pays for the genera it uses and later
-batches reuse them. The prepared reference therefore grows as it is
-used. If you prepare a reference with
+batches reuse them. The optimized reference therefore grows as it is
+used. If you optimize a reference with
 <code>strip_qualifiers = TRUE</code>, the qualifiers are removed from
 the reference names when they are parsed.</p>
 </div>

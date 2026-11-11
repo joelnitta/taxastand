@@ -132,8 +132,9 @@ it.</p>
 taxadb the author is in a separate column,
 <code>scientificNameAuthorship</code>, but <code>taxastand</code>
 matches on the author and wants it as part of
-<code>scientificName</code>. So when we make the database in the next
-step, we will paste the two together.</p>
+<code>scientificName</code>. <code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> takes care of
+this, and of the other steps needed to turn a table like this into a
+reference.</p>
 </div>
 <div class="section level2">
 <h2 id="make-a-reference">Make a reference<a class="anchor" aria-label="anchor" href="#make-a-reference"></a>
@@ -144,38 +145,41 @@ this vignette we will only use a single fern family:</p>
 <code class="sourceCode R"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="va">itis</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">family</span> <span class="op">==</span> <span class="st">"Polypodiaceae"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># Format scientificName to include author</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    scientificName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">scientificNameAuthorship</span><span class="op">)</span>,</span>
-<span>      <span class="va">scientificName</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">scientificName</span>, <span class="va">scientificNameAuthorship</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">taxonID</span>, <span class="va">acceptedNameUsageID</span>, <span class="va">taxonomicStatus</span>, <span class="va">scientificName</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/ts_format_ref.html">ts_format_ref</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">ref</span>, <span class="va">taxonomicStatus</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span><span class="co">#&gt;   taxonomicStatus     n</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;           &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1 accepted          245</span></span>
-<span><span class="co">#&gt; 2 synonym           145</span></span></code></pre></div>
-<p>The <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select()</a></code> keeps accepted names and their synonyms,
-which is what resolving a name needs. The result has 390 names. Synonyms
-look like this (<code>acceptedNameUsageID</code> points to the accepted
-name):</p>
+<span><span class="co">#&gt;   taxonomicStatus   n</span></span>
+<span><span class="co">#&gt; 1        accepted 172</span></span>
+<span><span class="co">#&gt; 2         synonym 137</span></span></code></pre></div>
+<p><code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> pastes the author onto the name, drops
+rows above species rank (such as the genus <em>Polypodium</em> itself),
+and keeps the columns <code>taxastand</code> needs (plus
+<code>taxonRank</code>). If your table uses other column names, map them
+with the <code>col_map</code> argument. You can also record where the
+data came from with <code>source</code>, which is stored with the
+result. <code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> does not check the table for errors
+(for example, synonyms that point to a missing accepted name); the <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a> package can
+validate Darwin Core taxonomic data with
+<code>dwctaxon::dct_validate()</code>.</p>
+<p>The reference has accepted names and their synonyms, which is what
+resolving a name needs. It has 309 names. Synonyms look like this
+(<code>acceptedNameUsageID</code> points to the accepted name):</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ref</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxonomicStatus</span> <span class="op">==</span> <span class="st">"synonym"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">scientificName</span>, <span class="st">" "</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 5 × 4</span></span>
-<span><span class="co">#&gt;   taxonID      acceptedNameUsageID taxonomicStatus scientificName              </span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;        &lt;chr&gt;               &lt;chr&gt;           &lt;chr&gt;                       </span></span>
-<span><span class="co">#&gt; 1 ITIS:1215188 ITIS:1215372        synonym         Aglaomorpha meyeniana Schott</span></span>
-<span><span class="co">#&gt; 2 ITIS:1215355 ITIS:1215353        synonym         Polypodium chrysolepis Hook.</span></span>
-<span><span class="co">#&gt; 3 ITIS:1215443 ITIS:1215226        synonym         Grammitis linearis Sw.      </span></span>
-<span><span class="co">#&gt; 4 ITIS:1215445 ITIS:1215204        synonym         Polypodium normale D. Don   </span></span>
-<span><span class="co">#&gt; 5 ITIS:1215450 ITIS:897672         synonym         Acrostichum polypodioides L.</span></span></code></pre></div>
+<span><span class="co">#&gt;        taxonID acceptedNameUsageID taxonomicStatus               scientificName</span></span>
+<span><span class="co">#&gt; 1 ITIS:1215188        ITIS:1215372         synonym Aglaomorpha meyeniana Schott</span></span>
+<span><span class="co">#&gt; 2 ITIS:1215355        ITIS:1215353         synonym Polypodium chrysolepis Hook.</span></span>
+<span><span class="co">#&gt; 3 ITIS:1215443        ITIS:1215226         synonym       Grammitis linearis Sw.</span></span>
+<span><span class="co">#&gt; 4 ITIS:1215445        ITIS:1215204         synonym    Polypodium normale D. Don</span></span>
+<span><span class="co">#&gt; 5 ITIS:1215450         ITIS:897672         synonym Acrostichum polypodioides L.</span></span>
+<span><span class="co">#&gt;   taxonRank</span></span>
+<span><span class="co">#&gt; 1   species</span></span>
+<span><span class="co">#&gt; 2   species</span></span>
+<span><span class="co">#&gt; 3   species</span></span>
+<span><span class="co">#&gt; 4   species</span></span>
+<span><span class="co">#&gt; 5   species</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="resolve-names">Resolve names<a class="anchor" aria-label="anchor" href="#resolve-names"></a>
@@ -222,13 +226,10 @@ resolves to the accepted <em>Microsorum scolopendria</em>. The third
 query has no author, so it matched by ignoring the author
 (<code>auto_noauth</code>, which <code>match_no_auth = TRUE</code>
 allows).</p>
-<p>The reference we made also contains names above species rank, such as
-the genus <em>Polypodium</em> L. <code>taxastand</code> does not use
-these, and they do not belong in a reference for matching species names.
-Here the <code>taxastand</code> parser dropped them on its own, with a
-warning that they were excluded (hidden above), so there was no need to
-filter them out first. To avoid the warning, filter on
-<code>taxonRank</code> when making the reference.</p>
+<p>Note that we did not need to remove the genus-level names ourselves:
+<code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> already did that. If you build a reference
+some other way and leave them in, the <code>taxastand</code> parser
+drops them and warns that they were excluded.</p>
 </div>
 <div class="section level2">
 <h2 id="other-databases">Other databases<a class="anchor" aria-label="anchor" href="#other-databases"></a>

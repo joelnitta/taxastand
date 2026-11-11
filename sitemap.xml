@@ -14,10 +14,12 @@
 <url><loc>/reference/filmy_taxonomy.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
 <url><loc>/reference/ts_classify_result.html</loc></url>
+<url><loc>/reference/ts_format_ref.html</loc></url>
 <url><loc>/reference/ts_make_name_df.html</loc></url>
 <url><loc>/reference/ts_match_names.html</loc></url>
 <url><loc>/reference/ts_optimize_ref.html</loc></url>
 <url><loc>/reference/ts_parse_names.html</loc></url>
+<url><loc>/reference/ts_ranks_above_species.html</loc></url>
 <url><loc>/reference/ts_resolve_names.html</loc></url>
 </urlset>
 
