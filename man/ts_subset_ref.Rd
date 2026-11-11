@@ -4,13 +4,12 @@
 \alias{ts_subset_ref}
 \title{Keep one or more taxa (and their synonyms) from a taxonomic table}
 \usage{
-ts_subset_ref(x, taxon, rank = NULL)
+ts_subset_ref(x, taxon, rank = NULL, col_map = NULL)
 }
 \arguments{
-\item{x}{Dataframe of taxonomic names in Darwin Core format, with at least
-\code{taxonID} and \code{acceptedNameUsageID}, and either columns for higher ranks
-or \code{parentNameUsageID} (and \code{scientificName}). Rename columns first if
-they have other names.}
+\item{x}{Dataframe of taxonomic names in Darwin Core format, or close to it,
+with at least \code{taxonID} and \code{acceptedNameUsageID}, and either columns for
+higher ranks or \code{parentNameUsageID} (and \code{scientificName}).}
 
 \item{taxon}{Character vector of taxon names to keep, such as
 \code{"Polypodiaceae"} or \code{c("Polypodiaceae", "Dryopteridaceae")}. Rows for
@@ -19,6 +18,10 @@ all of them are kept.}
 \item{rank}{Optional character; the rank of \code{taxon}, such as \code{"family"}.
 Use it when the same name is used at more than one rank. By default any
 rank matches.}
+
+\item{col_map}{Named character vector to map columns of \code{x} to Darwin Core
+names, as in \code{\link{ts_format_ref}()}. The same \code{col_map} can be
+given to both functions. Default \code{NULL}.}
 }
 \value{
 The rows of \code{x} for the members of \code{taxon} and their synonyms, with
@@ -26,9 +29,10 @@ the same columns as \code{x}. A warning is given for any name in \code{taxon} th
 was not found; it is an error if none were found.
 }
 \description{
-Subsets a large table of taxonomic names, for example a whole database, to
-the members of one or more taxa such as a family, so that a reference
-small enough for the task at hand can be made. Run it on the table before
+Subsets a large table of taxonomic names to the members of one or more taxa
+such as a family, so that a reference small enough for the task at hand can
+be made. \code{x} should be in Darwin Core format, or close to it (use \code{col_map}
+for columns with other names). Run it on the table before
 \code{\link{ts_format_ref}()}, which removes the columns that
 \code{ts_subset_ref()} uses to find the members.
 }
