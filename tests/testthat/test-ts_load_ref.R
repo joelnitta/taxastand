@@ -218,8 +218,8 @@ test_that("failure to reach a source gives an informative error", {
   expect_error(ts_load_ref(source = "ppg", quiet = TRUE), "cannot open URL")
 })
 
-test_that("ts_reference_sources() lists the sources", {
-  x <- ts_reference_sources()
+test_that("ts_show_ref_sources() lists the sources", {
+  x <- ts_show_ref_sources()
   expect_equal(x$source, c("wfo", "ppg"))
   expect_true(all(nzchar(x$license)) && all(nzchar(x$citation)))
 })
