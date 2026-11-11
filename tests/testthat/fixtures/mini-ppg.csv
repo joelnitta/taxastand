@@ -1,0 +1,6 @@
+taxonID,scientificName,scientificNameAuthorship,taxonRank,parentNameUsageID,nomenclaturalStatus,taxonomicStatus,acceptedNameUsageID
+wfo-1,Polypodiaceae,J.Presl & C.Presl,family,NA,valid,accepted,NA
+wfo-2,Polypodium,L.,genus,wfo-1,valid,accepted,NA
+wfo-3,Polypodium vulgare,L.,species,wfo-2,valid,accepted,NA
+wfo-4,Polypodium rotundatum,Willd.,species,NA,NA,synonym,wfo-3
+wfo-5,Pteris vittata,L.,species,NA,valid,accepted,NA

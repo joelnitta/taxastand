@@ -135,11 +135,16 @@
   `ts_resolve_names()`, still work as aliases and will be deprecated in a
   future version. Only calls that name the argument are affected; its position
   is unchanged.
-* New `ts_load_ref()` reads a reference from an HTTPS URL or a file (a
-  CSV/TSV file or a zipped Darwin Core Archive), optionally keeps only some
-  taxa, and formats it with `ts_format_ref()`. Downloads are kept in a folder
-  only if you give a `cache_dir` (otherwise they are in `tempdir()`), and the
-  source is recorded in the result (#115, part of #109).
+* New `ts_load_ref()` loads a reference, formats it with `ts_format_ref()`, and
+  optionally keeps only some taxa (`taxon`). The data come from a named
+  `source` (`"wfo"`, the World Flora Online Plant List, or `"ppg"`, the
+  Pteridophyte Phylogeny Group classification; see the new
+  `ts_reference_sources()` for licenses and citations), an HTTPS `url`, or a
+  `file` (CSV/TSV or zipped Darwin Core Archive). The latest version of a
+  named source is used unless a `version` is given, and the version, license
+  and citation are recorded in the `ts_source` attribute. Downloads are kept
+  in a folder only if you give a `cache_dir` (otherwise they are in
+  `tempdir()`) (#115, #116, part of #109).
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.

@@ -2,10 +2,12 @@
 % Please edit documentation in R/ts_load_ref.R
 \name{ts_load_ref}
 \alias{ts_load_ref}
-\title{Load a reference from a URL or file and format it for taxastand}
+\title{Load a reference from a named source, a URL or a file}
 \usage{
 ts_load_ref(
-  source,
+  source = NULL,
+  url = NULL,
+  file = NULL,
   version = NULL,
   cache_dir = NULL,
   taxon = NULL,
@@ -17,14 +19,20 @@ ts_load_ref(
 )
 }
 \arguments{
-\item{source}{Character; a link to a table of taxonomic names (see Details),
-either an HTTPS URL or the path to a file on your computer. A URL must be
-a direct link to the file itself, not to a web page about it. Links that
-redirect to the file are fine.}
+\item{source}{Character; name of a source to download (see Details and
+\code{\link{ts_reference_sources}()}).}
 
-\item{version}{Optional character; a label for the version of the data, such
-as \code{"2026-06"}. It is not used to find the data; it is stored in the
-\code{ts_source} attribute of the result so the reference can be cited.}
+\item{url}{Character; HTTPS URL of a file. It must be a direct link to the
+file itself, not to a web page about it. Links that redirect to the file
+are fine.}
+
+\item{file}{Character; path to a file.}
+
+\item{version}{Optional character. For \code{source}, the version to download,
+such as \code{"2026-06"} for \code{"wfo"} (versions from \code{"2022-12"} on) or \code{"v2.1.0"}
+for \code{"ppg"}; the default is the latest version. For \code{url} and \code{file}, a label for the version of the
+data, which is only stored in the \code{ts_source} attribute of the result so
+the reference can be cited.}
 
 \item{cache_dir}{Character; folder in which to keep downloaded files. Default
 \code{NULL} (see Details).}
@@ -33,7 +41,7 @@ as \code{"2026-06"}. It is not used to find the data; it is stored in the
 \code{\link{ts_subset_ref}()}.}
 
 \item{col_map, drop_ranks}{Passed to \code{\link{ts_subset_ref}()} (\code{col_map})
-and \code{\link{ts_format_ref}()} (both).}
+and \code{\link{ts_format_ref}()} (both). Not needed for named sources.}
 
 \item{refresh}{Logical; download again even if the file is already in
 \code{cache_dir}? Default \code{FALSE}.}
@@ -42,29 +50,41 @@ and \code{\link{ts_format_ref}()} (both).}
 }
 \value{
 A dataframe as returned by \code{\link{ts_format_ref}()}, with the
-\code{ts_source} attribute describing where the data came from (the URL or
-file, \code{version}, and the date it was read).
+\code{ts_source} attribute describing where the data came from (the source,
+URL or file, version, license and citation if known, and the date it was
+read).
 }
 \description{
-Gets a table of taxonomic names in Darwin Core format, by downloading it from
-a URL or reading it from a local file, optionally keeps only some taxa, and
-formats it with
-\code{\link{ts_format_ref}()}. The result can be used directly as \code{ref} in
-\code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()}, or
-passed to \code{\link{ts_optimize_ref}()}.
+Gets a table of taxonomic names in Darwin Core format, by downloading it
+(from a named source or a URL) or reading it from a local file, optionally
+keeps only some taxa, and formats it with \code{\link{ts_format_ref}()}. The
+result can be used directly as \code{ref} in \code{\link{ts_match_names}()} and
+\code{\link{ts_resolve_names}()}, or passed to
+\code{\link{ts_optimize_ref}()}.
 }
 \details{
-\code{source} can be a comma- or tab-separated text file (such as \code{.csv}, \code{.tsv}
-or \code{.txt}, also compressed as \code{.gz}), or a zipped Darwin Core Archive
-(\code{.zip}). The type is found from the contents of the file, not its name. For a
-Darwin Core Archive, the file with the taxa (the "core") and its columns are
-found from the \code{meta.xml} file in the archive. All columns are read as text.
+Give the data in one of three ways, and only one:
+\itemize{
+\item \code{source}: the name of a source that taxastand knows how to download, such
+as \code{"wfo"} (World Flora Online) or \code{"ppg"} (Pteridophyte Phylogeny Group).
+See \code{\link{ts_reference_sources}()} for the list, licenses and how to
+cite them. The latest version is used unless you give a \code{version}, and the
+version that was used is recorded in the result.
+\item \code{url}: a direct link (HTTPS) to a file, not to a web page about it.
+\item \code{file}: the path to a file on your computer.
+}
+
+A file can be a comma- or tab-separated text file (such as \code{.csv}, \code{.tsv} or
+\code{.txt}, also compressed as \code{.gz}), or a zipped Darwin Core Archive (\code{.zip}).
+The type is found from the contents of the file, not its name. For a Darwin
+Core Archive, the file with the taxa (the "core") and its columns are found
+from the \code{meta.xml} file in the archive. All columns are read as text.
 
 Steps:
 \enumerate{
-\item The file is downloaded (if \code{source} is a URL). Only HTTPS URLs are
-accepted. It is saved to a temporary file first and moved into place
-only when complete, so an interrupted download leaves nothing behind.
+\item The file is downloaded (for \code{source} and \code{url}). It is saved to a
+temporary file first and moved into place only when complete, so an
+interrupted download leaves nothing behind.
 \item The file is read.
 \item If \code{taxon} is given, \code{\link{ts_subset_ref}()} keeps only those taxa
 and their synonyms.
@@ -77,6 +97,8 @@ in the option \code{taxastand.cache_dir} if set, otherwise a folder in
 \code{\link[=tempdir]{tempdir()}}, which is removed when R closes. To keep downloads between R
 sessions, give a \code{cache_dir} (or set the option). If the file is already
 there, it is used and not downloaded again, unless \code{refresh = TRUE}.
+Downloads from named sources can be large (World Flora Online is about
+120 MB), so loading can take a few minutes.
 
 Checking that the data are what you expect is up to you: the
 \href{https://docs.ropensci.org/dwctaxon/}{dwctaxon} package can validate Darwin
@@ -94,14 +116,18 @@ write.csv(
   f,
   row.names = FALSE
 )
-ts_load_ref(f, version = "example")
+ts_load_ref(file = f, version = "example")
 
 \dontrun{
-# Download from a URL, and keep only one family; keep the file for next time
+# Download a named source and keep only one family. The file is kept in
+# `cache_dir` so it is not downloaded again next time.
 ref <- ts_load_ref(
-  "https://example.org/taxonomy.zip",
+  source = "wfo",
   taxon = "Polypodiaceae",
   cache_dir = "~/taxastand-data"
 )
+
+# Download a file from a URL
+ref <- ts_load_ref(url = "https://example.org/taxonomy.zip")
 }
 }

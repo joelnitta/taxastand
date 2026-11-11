@@ -1,23 +1,33 @@
-#' Load a reference from a URL or file and format it for taxastand
+#' Load a reference from a named source, a URL or a file
 #'
-#' Gets a table of taxonomic names in Darwin Core format, by downloading it from
-#' a URL or reading it from a local file, optionally keeps only some taxa, and
-#' formats it with
-#' \code{\link{ts_format_ref}()}. The result can be used directly as `ref` in
-#' \code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()}, or
-#' passed to \code{\link{ts_optimize_ref}()}.
+#' Gets a table of taxonomic names in Darwin Core format, by downloading it
+#' (from a named source or a URL) or reading it from a local file, optionally
+#' keeps only some taxa, and formats it with \code{\link{ts_format_ref}()}. The
+#' result can be used directly as `ref` in \code{\link{ts_match_names}()} and
+#' \code{\link{ts_resolve_names}()}, or passed to
+#' \code{\link{ts_optimize_ref}()}.
 #'
-#' `source` can be a comma- or tab-separated text file (such as `.csv`, `.tsv`
-#' or `.txt`, also compressed as `.gz`), or a zipped Darwin Core Archive
-#' (`.zip`). The type is found from the contents of the file, not its name. For a
-#' Darwin Core Archive, the file with the taxa (the "core") and its columns are
-#' found from the `meta.xml` file in the archive. All columns are read as text.
+#' Give the data in one of three ways, and only one:
+#'
+#' - `source`: the name of a source that taxastand knows how to download, such
+#'   as `"wfo"` (World Flora Online) or `"ppg"` (Pteridophyte Phylogeny Group).
+#'   See \code{\link{ts_reference_sources}()} for the list, licenses and how to
+#'   cite them. The latest version is used unless you give a `version`, and the
+#'   version that was used is recorded in the result.
+#' - `url`: a direct link (HTTPS) to a file, not to a web page about it.
+#' - `file`: the path to a file on your computer.
+#'
+#' A file can be a comma- or tab-separated text file (such as `.csv`, `.tsv` or
+#' `.txt`, also compressed as `.gz`), or a zipped Darwin Core Archive (`.zip`).
+#' The type is found from the contents of the file, not its name. For a Darwin
+#' Core Archive, the file with the taxa (the "core") and its columns are found
+#' from the `meta.xml` file in the archive. All columns are read as text.
 #'
 #' Steps:
 #'
-#' 1. The file is downloaded (if `source` is a URL). Only HTTPS URLs are
-#'    accepted. It is saved to a temporary file first and moved into place
-#'    only when complete, so an interrupted download leaves nothing behind.
+#' 1. The file is downloaded (for `source` and `url`). It is saved to a
+#'    temporary file first and moved into place only when complete, so an
+#'    interrupted download leaves nothing behind.
 #' 2. The file is read.
 #' 3. If `taxon` is given, \code{\link{ts_subset_ref}()} keeps only those taxa
 #'    and their synonyms.
@@ -29,31 +39,38 @@
 #' [tempdir()], which is removed when R closes. To keep downloads between R
 #' sessions, give a `cache_dir` (or set the option). If the file is already
 #' there, it is used and not downloaded again, unless `refresh = TRUE`.
+#' Downloads from named sources can be large (World Flora Online is about
+#' 120 MB), so loading can take a few minutes.
 #'
 #' Checking that the data are what you expect is up to you: the
 #' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate Darwin
 #' Core taxonomic data. Check the license of the data before reusing it.
 #'
-#' @param source Character; a link to a table of taxonomic names (see Details),
-#'   either an HTTPS URL or the path to a file on your computer. A URL must be
-#'   a direct link to the file itself, not to a web page about it. Links that
-#'   redirect to the file are fine.
-#' @param version Optional character; a label for the version of the data, such
-#'   as `"2026-06"`. It is not used to find the data; it is stored in the
-#'   `ts_source` attribute of the result so the reference can be cited.
+#' @param source Character; name of a source to download (see Details and
+#'   \code{\link{ts_reference_sources}()}).
+#' @param url Character; HTTPS URL of a file. It must be a direct link to the
+#'   file itself, not to a web page about it. Links that redirect to the file
+#'   are fine.
+#' @param file Character; path to a file.
+#' @param version Optional character. For `source`, the version to download,
+#'   such as `"2026-06"` for `"wfo"` (versions from `"2022-12"` on) or `"v2.1.0"`
+#'   for `"ppg"`; the default is the latest version. For `url` and `file`, a label for the version of the
+#'   data, which is only stored in the `ts_source` attribute of the result so
+#'   the reference can be cited.
 #' @param cache_dir Character; folder in which to keep downloaded files. Default
 #'   `NULL` (see Details).
 #' @param taxon,rank Optional; keep only these taxa (and their synonyms), as in
 #'   \code{\link{ts_subset_ref}()}.
 #' @param col_map,drop_ranks Passed to \code{\link{ts_subset_ref}()} (`col_map`)
-#'   and \code{\link{ts_format_ref}()} (both).
+#'   and \code{\link{ts_format_ref}()} (both). Not needed for named sources.
 #' @param refresh Logical; download again even if the file is already in
 #'   `cache_dir`? Default `FALSE`.
 #' @param quiet Logical; suppress the messages? Default `FALSE`.
 #'
 #' @return A dataframe as returned by \code{\link{ts_format_ref}()}, with the
-#'   `ts_source` attribute describing where the data came from (the URL or
-#'   file, `version`, and the date it was read).
+#'   `ts_source` attribute describing where the data came from (the source,
+#'   URL or file, version, license and citation if known, and the date it was
+#'   read).
 #' @export
 #' @examples
 #' # Read a reference from a file (no download)
@@ -67,21 +84,33 @@
 #'   f,
 #'   row.names = FALSE
 #' )
-#' ts_load_ref(f, version = "example")
+#' ts_load_ref(file = f, version = "example")
 #'
 #' \dontrun{
-#' # Download from a URL, and keep only one family; keep the file for next time
+#' # Download a named source and keep only one family. The file is kept in
+#' # `cache_dir` so it is not downloaded again next time.
 #' ref <- ts_load_ref(
-#'   "https://example.org/taxonomy.zip",
+#'   source = "wfo",
 #'   taxon = "Polypodiaceae",
 #'   cache_dir = "~/taxastand-data"
 #' )
+#'
+#' # Download a file from a URL
+#' ref <- ts_load_ref(url = "https://example.org/taxonomy.zip")
 #' }
-ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
-                            taxon = NULL, rank = NULL, col_map = NULL,
-                            drop_ranks = ts_ranks_above_species(),
-                            refresh = FALSE, quiet = FALSE) {
-  assertthat::assert_that(assertthat::is.string(source), !is.na(source))
+ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
+                        cache_dir = NULL, taxon = NULL, rank = NULL,
+                        col_map = NULL,
+                        drop_ranks = ts_ranks_above_species(),
+                        refresh = FALSE, quiet = FALSE) {
+  given <- c(source = !is.null(source), url = !is.null(url), file = !is.null(file))
+  assertthat::assert_that(
+    sum(given) == 1,
+    msg = "Give exactly one of `source`, `url` and `file`"
+  )
+  assertthat::assert_that(is.null(source) || assertthat::is.string(source))
+  assertthat::assert_that(is.null(url) || assertthat::is.string(url))
+  assertthat::assert_that(is.null(file) || assertthat::is.string(file))
   assertthat::assert_that(is.null(version) || assertthat::is.string(version))
   assertthat::assert_that(is.null(cache_dir) || assertthat::is.string(cache_dir))
   assertthat::assert_that(
@@ -89,43 +118,67 @@ ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
     assertthat::is.flag(quiet), assertthat::noNA(quiet)
   )
 
-  is_url <- grepl("^[a-zA-Z][a-zA-Z0-9+.-]*://", source)
-  if (is_url) {
+  info <- list()
+  keep <- NULL
+  if (!is.null(source)) {
+    srcs <- .ts_sources()
     assertthat::assert_that(
-      grepl("^https://", source),
-      msg = "`source` must be an HTTPS URL (starting with 'https://') or a file path"
+      source %in% names(srcs),
+      msg = paste0(
+        "Unknown `source` '", source, "'. Choose one of: ",
+        paste(names(srcs), collapse = ", "),
+        " (see ts_reference_sources()), or use `url` or `file`."
+      )
     )
-    path <- .ts_cached_download(source, cache_dir, refresh, quiet)
+    spec <- srcs[[source]]
+    resolved <- spec$resolve(version)
+    version <- resolved$version
+    url <- resolved$url
+    keep <- spec$keep
+    info <- list(
+      source = source, name = spec$name, license = spec$license,
+      citation = spec$citation
+    )
+  }
+  if (!is.null(url)) {
+    assertthat::assert_that(
+      grepl("^https://", url),
+      msg = "`url` must be an HTTPS URL (starting with 'https://')"
+    )
+    path <- .ts_cached_download(url, cache_dir, refresh, quiet)
+    info$url <- url
   } else {
     assertthat::assert_that(
-      file.exists(source), !dir.exists(source),
-      msg = paste0("`source` is not an existing file: ", source)
+      file.exists(file), !dir.exists(file),
+      msg = paste0("`file` is not an existing file: ", file)
     )
-    path <- source
+    path <- file
+    info$file <- file
   }
+  info$version <- version
+  info$retrieved <- as.character(Sys.Date())
 
-  raw <- .ts_read_table(path)
+  raw <- .ts_read_table(path, keep = keep)
 
   if (!is.null(taxon)) {
     raw <- ts_subset_ref(raw, taxon, rank = rank, col_map = col_map)
   }
 
-  info <- list(
-    source = source,
-    version = version,
-    retrieved = as.character(Sys.Date())
-  )
-  info <- info[!vapply(info, is.null, logical(1))]
   out <- ts_format_ref(
     raw,
     col_map = col_map, drop_ranks = drop_ranks, source = info
   )
   if (!quiet) {
+    from <- if (!is.null(info$name)) info$name else if (!is.null(url)) url else file
     message(
-      "Read ", nrow(out), " names from ", source,
-      if (!is.null(version)) paste0(" (version ", version, ")"),
-      "."
+      "Loaded ", nrow(out), " names from ", from,
+      if (!is.null(version)) paste0(" (version ", version, ")"), "."
     )
+    if (!is.null(info$license)) {
+      message(
+        "License: ", info$license, ". Please cite: ", info$citation
+      )
+    }
   }
   out
 }
@@ -201,7 +254,7 @@ ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
 }
 
 # Read a table from a text file or a Darwin Core Archive (zip) as character
-.ts_read_table <- function(path) {
+.ts_read_table <- function(path, keep = NULL) {
   if (.ts_is_zip(path)) {
     dir <- tempfile("dwca")
     dir.create(dir)
@@ -211,37 +264,51 @@ ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
       error = function(e) stop("Could not unzip ", path, call. = FALSE),
       warning = function(w) stop("Could not unzip ", path, call. = FALSE)
     )
-    return(.ts_read_dwca(dir, list.files(dir, recursive = TRUE)))
+    return(.ts_read_dwca(dir, list.files(dir, recursive = TRUE), keep))
   }
-  .ts_read_delim(path)
+  .ts_read_delim(path, keep = keep)
 }
 
-# Read a delimited text file; the delimiter is found from the first line unless
-# given
-.ts_read_delim <- function(path, sep = NULL, header = TRUE, skip = 0) {
+# Read a delimited text file as character; the delimiter is found from the first
+# line unless given. If `keep` is given, only those columns are read (this saves
+# a lot of memory for large files). In tab-separated files quotes are not
+# interpreted, because some databases have stray quotes in free-text columns;
+# quotes wrapped around a whole value are removed instead.
+.ts_read_delim <- function(path, sep = NULL, header = TRUE, skip = 0,
+                           keep = NULL) {
+  first <- readLines(path, n = skip + 1, warn = FALSE, encoding = "UTF-8")
+  first <- first[length(first)]
   if (is.null(sep)) {
-    first <- readLines(path, n = 1, warn = FALSE, encoding = "UTF-8")
-    sep <- if (length(first) && lengths(regmatches(first, gregexpr("\t", first))) >
-      lengths(regmatches(first, gregexpr(",", first)))) {
-      "\t"
-    } else {
-      ","
-    }
+    n_tab <- lengths(regmatches(first, gregexpr("\t", first)))
+    n_comma <- lengths(regmatches(first, gregexpr(",", first)))
+    sep <- if (length(first) && n_tab > n_comma) "\t" else ","
   }
-  utils::read.table(
+  tab <- identical(sep, "\t")
+  col_classes <- "character"
+  if (!is.null(keep) && header && length(first)) {
+    nm <- strsplit(first, sep, fixed = TRUE)[[1]]
+    nm <- sub('^"(.*)"$', "\\1", nm)
+    col_classes <- ifelse(nm %in% keep, "character", "NULL")
+  }
+  x <- utils::read.table(
     path,
     sep = sep, header = header, skip = skip,
-    quote = if (identical(sep, "\t")) "" else "\"",
-    colClasses = "character", na.strings = c("", "NA"),
+    quote = if (tab) "" else "\"",
+    colClasses = col_classes, na.strings = c("", "NA"),
     comment.char = "", fill = TRUE, check.names = FALSE,
-    stringsAsFactors = FALSE, fileEncoding = "UTF-8", strip.white = FALSE
+    stringsAsFactors = FALSE, encoding = "UTF-8", strip.white = FALSE
   )
+  if (tab) {
+    # useBytes: some files have invalid UTF-8 in free-text columns
+    x[] <- lapply(x, function(v) sub('^"(.*)"$', "\\1", v, useBytes = TRUE))
+  }
+  x
 }
 
 # Read the core table of an unzipped Darwin Core Archive. The files and columns
 # come from meta.xml if there is one; otherwise the archive must hold a single
 # table with a header.
-.ts_read_dwca <- function(dir, files) {
+.ts_read_dwca <- function(dir, files, keep = NULL) {
   meta <- files[tolower(basename(files)) == "meta.xml"]
   if (length(meta) == 0) {
     tables <- files[grepl("\\.(csv|tsv|txt)$", files, ignore.case = TRUE)]
@@ -251,7 +318,7 @@ ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
         call. = FALSE
       )
     }
-    return(.ts_read_delim(file.path(dir, tables)))
+    return(.ts_read_delim(file.path(dir, tables), keep = keep))
   }
   xml <- paste(readLines(file.path(dir, meta[1]), warn = FALSE), collapse = " ")
   core <- regmatches(xml, regexpr("<core\\b.*?</core>", xml, perl = TRUE))
