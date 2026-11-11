@@ -54,9 +54,11 @@
 #' @param file Character; path to a file.
 #' @param version Optional character. For `source`, the version to download,
 #'   such as `"2026-06"` for `"wfo"` (versions from `"2022-12"` on) or `"v2.1.0"`
-#'   for `"ppg"`; the default is the latest version. For `url` and `file`, a label for the version of the
-#'   data, which is only stored in the `ts_source` attribute of the result so
-#'   the reference can be cited.
+#'   for `"ppg"`; the default is the latest version (see
+#'   `ts_show_ref_sources(versions = TRUE)` for the versions you can use). For
+#'   `url` and `file`, a label for the version of the data, which is only
+#'   stored in the `ts_source` attribute of the result so the reference can be
+#'   cited.
 #' @param cache_dir Character; folder in which to keep downloaded files. Default
 #'   `NULL` (see Details).
 #' @param taxon,rank Optional; keep only these taxa (and their synonyms), as in
@@ -145,7 +147,15 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
       grepl("^https://", url),
       msg = "`url` must be an HTTPS URL (starting with 'https://')"
     )
-    path <- .ts_cached_download(url, cache_dir, refresh, quiet)
+    path <- tryCatch(
+      .ts_cached_download(url, cache_dir, refresh, quiet),
+      error = function(e) {
+        hint <- if (!is.null(source)) {
+          "\nTo see the versions you can use, run ts_show_ref_sources(versions = TRUE)."
+        }
+        stop(conditionMessage(e), hint, call. = FALSE)
+      }
+    )
     info$url <- url
   } else {
     assertthat::assert_that(

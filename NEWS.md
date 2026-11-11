@@ -139,7 +139,8 @@
   optionally keeps only some taxa (`taxon`). The data come from a named
   `source` (`"wfo"`, the World Flora Online Plant List, or `"ppg"`, the
   Pteridophyte Phylogeny Group classification; see the new
-  `ts_show_ref_sources()` for licenses and citations), an HTTPS `url`, or a
+  `ts_show_ref_sources()` for licenses and citations; with `versions = TRUE`
+  it also lists the versions you can download), an HTTPS `url`, or a
   `file` (CSV/TSV or zipped Darwin Core Archive). The latest version of a
   named source is used unless a `version` is given, and the version, license
   and citation are recorded in the `ts_source` attribute. Downloads are kept

@@ -223,3 +223,57 @@ test_that("ts_show_ref_sources() lists the sources", {
   expect_equal(x$source, c("wfo", "ppg"))
   expect_true(all(nzchar(x$license)) && all(nzchar(x$citation)))
 })
+
+test_that("versions can be listed (no internet used)", {
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) {
+      if (grepl("zenodo.org/api/records/7460141", link)) {
+        zenodo_json(222, "2026-06")
+      } else if (grepl("zenodo.org/api/records/222/versions", link)) {
+        paste0(
+          '{"hits": {"hits": [', zenodo_json(222, "2026-06"), ", ",
+          zenodo_json(111, "2025-12"), ", ",
+          zenodo_json(110, "2023-06-deprecated"), ", ",
+          zenodo_json(100, "1.4.202207"), "]}}"
+        )
+      } else if (grepl("github.com", link)) {
+        paste0(
+          '[{"tag_name": "v2.1.0", "name": "a"}, {"tag_name": "v2.0.0"}, ',
+          '{"tag_name": "v0.0.0.9009"}]'
+        )
+      } else {
+        stop("unexpected link: ", link)
+      }
+    }
+  )
+  expect_equal(.ts_versions_wfo(), c("2026-06", "2025-12"))
+  expect_equal(.ts_versions_ppg(), c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
+  x <- ts_show_ref_sources(versions = TRUE)
+  expect_equal(x$source, c("wfo", "ppg"))
+  expect_equal(x$versions, c("2026-06, 2025-12", "v2.1.0, v2.0.0, v0.0.0.9009"))
+  expect_false("versions" %in% colnames(ts_show_ref_sources()))
+  # an unknown version lists the versions that can be used
+  expect_error(.ts_resolve_wfo("2020-01"), "Versions you can use: 2026-06, 2025-12")
+})
+
+test_that("a source that can't be reached gives NA versions and a message", {
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
+  )
+  expect_message(x <- ts_show_ref_sources(versions = TRUE), "no internet")
+  expect_true(all(is.na(x$versions)))
+})
+
+test_that("a failed download of a named source points to the versions", {
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) '{"tag_name": "v9.9.9"}',
+    .ts_fetch = function(url, dest) stop("HTTP status was '404 Not Found'")
+  )
+  expect_error(
+    ts_load_ref(
+      source = "ppg", version = "v9.9.9", cache_dir = withr::local_tempdir(),
+      quiet = TRUE
+    ),
+    "ts_show_ref_sources\\(versions = TRUE\\)"
+  )
+})

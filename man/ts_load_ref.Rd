@@ -30,9 +30,11 @@ are fine.}
 
 \item{version}{Optional character. For \code{source}, the version to download,
 such as \code{"2026-06"} for \code{"wfo"} (versions from \code{"2022-12"} on) or \code{"v2.1.0"}
-for \code{"ppg"}; the default is the latest version. For \code{url} and \code{file}, a label for the version of the
-data, which is only stored in the \code{ts_source} attribute of the result so
-the reference can be cited.}
+for \code{"ppg"}; the default is the latest version (see
+\code{ts_show_ref_sources(versions = TRUE)} for the versions you can use). For
+\code{url} and \code{file}, a label for the version of the data, which is only
+stored in the \code{ts_source} attribute of the result so the reference can be
+cited.}
 
 \item{cache_dir}{Character; folder in which to keep downloaded files. Default
 \code{NULL} (see Details).}
