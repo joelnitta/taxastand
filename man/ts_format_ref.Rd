@@ -50,10 +50,10 @@ used by \code{\link{ts_match_names}()}, \code{\link{ts_resolve_names}()} and
 \code{ts_format_ref()} does these steps:
 \enumerate{
 \item Renames columns according to \code{col_map}.
-\item Adds the author to the name. Matching uses the author, so it must be part
-of \code{scientificName}. Many databases keep the author in a separate column,
-\code{scientificNameAuthorship}; it is pasted onto \code{scientificName}
-(unless the name already ends with it).
+\item Adds the author to the species name, if not already included. Matching
+uses the author, so it must be part of \code{scientificName}. Many databases
+keep the author in a separate column, \code{scientificNameAuthorship}; if so,
+these are combined.
 \item Drops rows whose \code{taxonRank} is above species, such as genus or family
 (see \code{drop_ranks}).
 \item Tidies values: \code{taxonomicStatus} is lower-cased and trimmed, empty

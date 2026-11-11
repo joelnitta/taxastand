@@ -8,10 +8,10 @@
 #' `ts_format_ref()` does these steps:
 #'
 #' 1. Renames columns according to `col_map`.
-#' 2. Adds the author to the name. Matching uses the author, so it must be part
-#'    of `scientificName`. Many databases keep the author in a separate column,
-#'    `scientificNameAuthorship`; it is pasted onto `scientificName`
-#'    (unless the name already ends with it).
+#' 2. Adds the author to the species name, if not already included. Matching
+#'    uses the author, so it must be part of `scientificName`. Many databases
+#'    keep the author in a separate column, `scientificNameAuthorship`; if so,
+#'    these are combined.
 #' 3. Drops rows whose `taxonRank` is above species, such as genus or family
 #'    (see `drop_ranks`).
 #' 4. Tidies values: `taxonomicStatus` is lower-cased and trimmed, empty
