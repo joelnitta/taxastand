@@ -122,7 +122,9 @@ It is stored in the <code>ts_source</code> attribute of the result.</p></dd>
     <h2>Value</h2>
     <p>A dataframe with columns <code>taxonID</code>, <code>acceptedNameUsageID</code>,
 <code>taxonomicStatus</code> and <code>scientificName</code> (and <code>taxonRank</code>, if <code>x</code> had it),
-with the <code>ts_source</code> attribute if <code>source</code> was given.</p>
+plus any columns for the hierarchy of the names that <code>x</code> had: higher ranks
+such as <code>family</code> and <code>parentNameUsageID</code>. Other columns are dropped. It
+has the <code>ts_source</code> attribute if <code>source</code> was given.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -133,6 +135,11 @@ keep the author in a separate column, <code>scientificNameAuthorship</code>; if 
 these are combined.</p></li>
 <li><p>Drops rows whose <code>taxonRank</code> is above species, such as genus or family
 (see <code>drop_ranks</code>).</p></li>
+<li><p>Keeps the required columns, <code>taxonRank</code> and the columns that give the
+hierarchy (higher ranks such as <code>family</code>, and <code>parentNameUsageID</code>), and
+drops the rest. This lets <code><a href="ts_subset_ref.html">ts_subset_ref()</a></code> be used after
+<code>ts_format_ref()</code> for most tables (see its documentation for the
+exception).</p></li>
 <li><p>Tidies values: <code>taxonomicStatus</code> is lower-cased and trimmed, empty
 strings become <code>NA</code>, and rows with no name and exact duplicate rows are
 removed.</p></li>

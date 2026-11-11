@@ -154,11 +154,13 @@ this vignette we will only use a single fern family:</p>
 <p><code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> pastes the author onto the name, drops
 rows above species rank (such as the genus <em>Polypodium</em> itself),
 and keeps the columns <code>taxastand</code> needs (plus
-<code>taxonRank</code>). If your table uses other column names, map them
-with the <code>col_map</code> argument. You can also record where the
-data came from with <code>source</code>, which is stored with the
-result. <code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> does not check the table for errors
-(for example, synonyms that point to a missing accepted name); the <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a> package can
+<code>taxonRank</code> and the columns for higher ranks, such as
+<code>family</code>, which <code><a href="../reference/ts_subset_ref.html">ts_subset_ref()</a></code> can use). If
+your table uses other column names, map them with the
+<code>col_map</code> argument. You can also record where the data came
+from with <code>source</code>, which is stored with the result.
+<code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> does not check the table for errors (for
+example, synonyms that point to a missing accepted name); the <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a> package can
 validate Darwin Core taxonomic data with
 <code>dwctaxon::dct_validate()</code>.</p>
 <p>The reference has accepted names and their synonyms, which is what
@@ -167,19 +169,14 @@ resolving a name needs. It has 309 names. Synonyms look like this
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ref</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxonomicStatus</span> <span class="op">==</span> <span class="st">"synonym"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">scientificName</span>, <span class="st">" "</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">taxonID</span>, <span class="va">acceptedNameUsageID</span>, <span class="va">taxonomicStatus</span>, <span class="va">scientificName</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        taxonID acceptedNameUsageID taxonomicStatus               scientificName</span></span>
 <span><span class="co">#&gt; 1 ITIS:1215188        ITIS:1215372         synonym Aglaomorpha meyeniana Schott</span></span>
 <span><span class="co">#&gt; 2 ITIS:1215355        ITIS:1215353         synonym Polypodium chrysolepis Hook.</span></span>
 <span><span class="co">#&gt; 3 ITIS:1215443        ITIS:1215226         synonym       Grammitis linearis Sw.</span></span>
 <span><span class="co">#&gt; 4 ITIS:1215445        ITIS:1215204         synonym    Polypodium normale D. Don</span></span>
-<span><span class="co">#&gt; 5 ITIS:1215450         ITIS:897672         synonym Acrostichum polypodioides L.</span></span>
-<span><span class="co">#&gt;   taxonRank</span></span>
-<span><span class="co">#&gt; 1   species</span></span>
-<span><span class="co">#&gt; 2   species</span></span>
-<span><span class="co">#&gt; 3   species</span></span>
-<span><span class="co">#&gt; 4   species</span></span>
-<span><span class="co">#&gt; 5   species</span></span></code></pre></div>
+<span><span class="co">#&gt; 5 ITIS:1215450         ITIS:897672         synonym Acrostichum polypodioides L.</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="resolve-names">Resolve names<a class="anchor" aria-label="anchor" href="#resolve-names"></a>
