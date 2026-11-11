@@ -7,8 +7,9 @@
 #' \code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()}, or
 #' passed to \code{\link{ts_optimize_ref}()}.
 #'
-#' `source` can be a comma- or tab-separated text file (`.csv`, `.tsv`, `.txt`,
-#' also compressed as `.gz`), or a zipped Darwin Core Archive (`.zip`). For a
+#' `source` can be a comma- or tab-separated text file (such as `.csv`, `.tsv`
+#' or `.txt`, also compressed as `.gz`), or a zipped Darwin Core Archive
+#' (`.zip`). The type is found from the contents of the file, not its name. For a
 #' Darwin Core Archive, the file with the taxa (the "core") and its columns are
 #' found from the `meta.xml` file in the archive. All columns are read as text.
 #'
@@ -33,8 +34,10 @@
 #' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate Darwin
 #' Core taxonomic data. Check the license of the data before reusing it.
 #'
-#' @param source Character; an HTTPS URL, or the path to a file on your
-#'   computer, of a table of taxonomic names (see Details).
+#' @param source Character; a link to a table of taxonomic names (see Details),
+#'   either an HTTPS URL or the path to a file on your computer. A URL must be
+#'   a direct link to the file itself, not to a web page about it. Links that
+#'   redirect to the file are fine.
 #' @param version Optional character; a label for the version of the data, such
 #'   as `"2026-06"`. It is not used to find the data; it is stored in the
 #'   `ts_source` attribute of the result so the reference can be cited.
@@ -189,9 +192,17 @@ ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
   invisible(dest)
 }
 
+# Is the file a zip file? (zip files start with "PK\\003\\004", or "PK\\005\\006"
+# if empty)
+.ts_is_zip <- function(path) {
+  sig <- readBin(path, what = "raw", n = 4)
+  length(sig) == 4 && sig[1] == as.raw(0x50) && sig[2] == as.raw(0x4b) &&
+    sig[3] %in% as.raw(c(0x03, 0x05))
+}
+
 # Read a table from a text file or a Darwin Core Archive (zip) as character
 .ts_read_table <- function(path) {
-  if (grepl("\\.zip$", path, ignore.case = TRUE)) {
+  if (.ts_is_zip(path)) {
     dir <- tempfile("dwca")
     dir.create(dir)
     on.exit(unlink(dir, recursive = TRUE), add = TRUE)
