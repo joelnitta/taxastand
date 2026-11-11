@@ -38,7 +38,9 @@ It is stored in the \code{ts_source} attribute of the result.}
 \value{
 A dataframe with columns \code{taxonID}, \code{acceptedNameUsageID},
 \code{taxonomicStatus} and \code{scientificName} (and \code{taxonRank}, if \code{x} had it),
-with the \code{ts_source} attribute if \code{source} was given.
+plus any columns for the hierarchy of the names that \code{x} had: higher ranks
+such as \code{family} and \code{parentNameUsageID}. Other columns are dropped. It
+has the \code{ts_source} attribute if \code{source} was given.
 }
 \description{
 Turns a table of taxonomic names in (or close to) Darwin Core format, for
@@ -56,6 +58,11 @@ keep the author in a separate column, \code{scientificNameAuthorship}; if so,
 these are combined.
 \item Drops rows whose \code{taxonRank} is above species, such as genus or family
 (see \code{drop_ranks}).
+\item Keeps the required columns, \code{taxonRank} and the columns that give the
+hierarchy (higher ranks such as \code{family}, and \code{parentNameUsageID}), and
+drops the rest. This lets \code{\link{ts_subset_ref}()} be used after
+\code{ts_format_ref()} for most tables (see its documentation for the
+exception).
 \item Tidies values: \code{taxonomicStatus} is lower-cased and trimmed, empty
 strings become \code{NA}, and rows with no name and exact duplicate rows are
 removed.

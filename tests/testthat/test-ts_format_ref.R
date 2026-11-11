@@ -98,3 +98,32 @@ test_that("ts_format_ref() checks its input", {
   expect_error(ts_format_ref(raw, c("id", "acc")), "named character vector")
   expect_error(ts_format_ref(raw, map, source = "x"))
 })
+
+test_that("hierarchy columns are kept, other columns are dropped", {
+  x <- data.frame(
+    taxonID = c("1", "2"), acceptedNameUsageID = c("1", "1"),
+    taxonomicStatus = c("accepted", "synonym"),
+    scientificName = c("Pteris vittata L.", "Ceratopteris vittata Foo"),
+    family = c("Pteridaceae", NA), parentNameUsageID = c("9", NA),
+    extra = c("a", "b")
+  )
+  res <- ts_format_ref(x)
+  expect_equal(
+    colnames(res),
+    c(
+      "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName",
+      "family", "parentNameUsageID"
+    )
+  )
+})
+
+test_that("ts_subset_ref() works after ts_format_ref() for rank columns", {
+  x <- data.frame(
+    taxonID = c("1", "2", "3"), acceptedNameUsageID = c("1", "2", "1"),
+    taxonomicStatus = c("accepted", "accepted", "synonym"),
+    scientificName = c("Pteris vittata L.", "Equisetum arvense L.", "Foo bar"),
+    family = c("Pteridaceae", "Equisetaceae", NA)
+  )
+  res <- ts_subset_ref(ts_format_ref(x), "Pteridaceae")
+  expect_equal(res$taxonID, c("1", "3"))
+})
