@@ -56,7 +56,7 @@ test_that("only ranks above species are dropped, other ranks are kept", {
   )
   out <- ts_format_ref(x)
   expect_equal(out$taxonID, c("1", "2", "3"))
-  expect_equal(nrow(ts_format_ref(x, drop_ranks = character(0))), 4)
+  expect_equal(nrow(ts_format_ref(x, drop_ranks = NULL)), 4)
   expect_equal(
     ts_format_ref(x, drop_ranks = "nothosubspecies")$taxonID,
     c("1", "3", "4")
