@@ -4,18 +4,34 @@
 \alias{ts_show_ref_sources}
 \title{List the named sources of references}
 \usage{
-ts_show_ref_sources()
+ts_show_ref_sources(versions = FALSE)
+}
+\arguments{
+\item{versions}{Logical; also list the versions available to download?
+Needs internet. If a source cannot be reached, its versions are \code{NA} and a
+message says why. Default \code{FALSE}.}
 }
 \value{
 A dataframe with one row per source and columns \code{source} (the name
 to give to \code{ts_load_ref(source = )}), \code{name}, \code{description}, \code{license},
-\code{citation} and \code{url}.
+\code{citation} and \code{url}. With \code{versions = TRUE}, also \code{versions}: the
+versions available to download, newest first, separated by commas.
 }
 \description{
 The sources that \code{\link{ts_load_ref}()} can download by name, with their
 licenses and how to cite them. Check the license of a source before reusing
 its data.
 }
+\details{
+By default no internet is used. With \code{versions = TRUE}, the versions that can
+be downloaded are looked up (one request per source), which is useful to
+choose the \code{version} of \code{\link{ts_load_ref}()} to use.
+}
 \examples{
 ts_show_ref_sources()
+
+\dontrun{
+# Needs internet
+ts_show_ref_sources(versions = TRUE)
+}
 }
