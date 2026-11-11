@@ -17,8 +17,10 @@ ts_load_ref(
 )
 }
 \arguments{
-\item{source}{Character; an HTTPS URL, or the path to a file on your
-computer, of a table of taxonomic names (see Details).}
+\item{source}{Character; a link to a table of taxonomic names (see Details),
+either an HTTPS URL or the path to a file on your computer. A URL must be
+a direct link to the file itself, not to a web page about it. Links that
+redirect to the file are fine.}
 
 \item{version}{Optional character; a label for the version of the data, such
 as \code{"2026-06"}. It is not used to find the data; it is stored in the
@@ -52,8 +54,9 @@ formats it with
 passed to \code{\link{ts_optimize_ref}()}.
 }
 \details{
-\code{source} can be a comma- or tab-separated text file (\code{.csv}, \code{.tsv}, \code{.txt},
-also compressed as \code{.gz}), or a zipped Darwin Core Archive (\code{.zip}). For a
+\code{source} can be a comma- or tab-separated text file (such as \code{.csv}, \code{.tsv}
+or \code{.txt}, also compressed as \code{.gz}), or a zipped Darwin Core Archive
+(\code{.zip}). The type is found from the contents of the file, not its name. For a
 Darwin Core Archive, the file with the taxa (the "core") and its columns are
 found from the \code{meta.xml} file in the archive. All columns are read as text.
 
