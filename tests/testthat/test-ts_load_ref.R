@@ -1,7 +1,7 @@
 zip_fixture <- test_path("fixtures", "mini-dwca.zip")
 
 test_that("a Darwin Core Archive is read and formatted", {
-  res <- ts_download_ref(zip_fixture, version = "test", quiet = TRUE)
+  res <- ts_load_ref(zip_fixture, version = "test", quiet = TRUE)
   expect_equal(res$taxonID, c("3", "4", "7"))
   expect_equal(res$scientificName[1:2], c(
     "Polypodium vulgare L.", "Polypodium rotundatum Willd."
@@ -14,7 +14,7 @@ test_that("a Darwin Core Archive is read and formatted", {
 })
 
 test_that("taxon subsets before formatting", {
-  res <- ts_download_ref(
+  res <- ts_load_ref(
     zip_fixture, taxon = "Polypodiaceae", quiet = TRUE
   )
   expect_equal(res$taxonID, c("3", "4"))
@@ -31,10 +31,10 @@ test_that("csv and tsv files are read", {
   f_tsv <- withr::local_tempfile(fileext = ".tsv")
   write.table(x, f_tsv, sep = "\t", row.names = FALSE, quote = FALSE)
   expect_equal(
-    ts_download_ref(f_csv, quiet = TRUE)$scientificName, x$scientificName
+    ts_load_ref(f_csv, quiet = TRUE)$scientificName, x$scientificName
   )
   expect_equal(
-    ts_download_ref(f_tsv, quiet = TRUE)$scientificName, x$scientificName
+    ts_load_ref(f_tsv, quiet = TRUE)$scientificName, x$scientificName
   )
 })
 
@@ -47,14 +47,14 @@ test_that("downloads are cached and can be refreshed (no internet used)", {
   })
   cache <- withr::local_tempdir()
   url <- "https://example.org/data/ref.zip"
-  res <- ts_download_ref(url, cache_dir = cache, quiet = TRUE)
+  res <- ts_load_ref(url, cache_dir = cache, quiet = TRUE)
   expect_equal(nrow(res), 3)
   expect_equal(attr(res, "ts_source")$source, url)
   expect_equal(length(list.files(cache)), 1)
   expect_equal(calls, 1)
-  ts_download_ref(url, cache_dir = cache, quiet = TRUE)
+  ts_load_ref(url, cache_dir = cache, quiet = TRUE)
   expect_equal(calls, 1)
-  ts_download_ref(url, cache_dir = cache, refresh = TRUE, quiet = TRUE)
+  ts_load_ref(url, cache_dir = cache, refresh = TRUE, quiet = TRUE)
   expect_equal(calls, 2)
   # no partial files left
   expect_false(any(grepl("\\.part$", list.files(cache))))
@@ -78,21 +78,21 @@ test_that("failed downloads give an informative error and leave nothing", {
   })
   cache <- withr::local_tempdir()
   expect_error(
-    ts_download_ref("https://example.org/x.csv", cache_dir = cache, quiet = TRUE),
+    ts_load_ref("https://example.org/x.csv", cache_dir = cache, quiet = TRUE),
     "Could not download https://example.org/x.csv: cannot open URL"
   )
   expect_length(list.files(cache), 0)
 })
 
 test_that("input checks work", {
-  expect_error(ts_download_ref("http://example.org/x.csv"), "HTTPS")
-  expect_error(ts_download_ref("no/such/file.csv"), "not an existing file")
-  expect_error(ts_download_ref(1))
-  expect_error(ts_download_ref(zip_fixture, refresh = NA, quiet = TRUE))
+  expect_error(ts_load_ref("http://example.org/x.csv"), "HTTPS")
+  expect_error(ts_load_ref("no/such/file.csv"), "not an existing file")
+  expect_error(ts_load_ref(1))
+  expect_error(ts_load_ref(zip_fixture, refresh = NA, quiet = TRUE))
 })
 
 test_that("the result works with ts_resolve_names()", {
-  ref <- ts_download_ref(zip_fixture, quiet = TRUE)
+  ref <- ts_load_ref(zip_fixture, quiet = TRUE)
   res <- ts_resolve_names("Polypodium rotundatum Willd.", ref)
   expect_equal(res$resolved_name, "Polypodium vulgare L.")
 })
