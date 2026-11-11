@@ -32,8 +32,8 @@ was not found; it is an error if none were found.
 Subsets a large table of taxonomic names to the members of one or more taxa
 such as a family, so that a reference small enough for the task at hand can
 be made. \code{x} should be in Darwin Core format, or close to it (use \code{col_map}
-for columns with other names). Run it on the table before
-\code{\link{ts_format_ref}()}, which removes the columns that
+for columns with other names). Run \code{ts_subset_ref()} on the
+table before \code{\link{ts_format_ref}()}, which removes the columns that
 \code{ts_subset_ref()} uses to find the members.
 }
 \details{
