@@ -35,7 +35,7 @@ shown <- setdiff(res$tools, "taxastand_oneoff")
 # in the speed tables the two ways of using taxastand are told apart
 speed_labels <- replace(
   tool_labels, c("taxastand", "taxastand_oneoff"),
-  c("taxastand (optimized)", "taxastand (unoptimized)")
+  c("taxastand (optimized)", "taxastand (not optimized)")
 )
 # the kinds of error, in the order of the tables, and what each changes
 what_main <- c(
@@ -332,7 +332,7 @@ knitr::kable(
 U.Taxonstand and WorldFlora were timed only up to 100 queries, because larger
 runs on a reference of this size take many minutes for those packages.
 
-The "taxastand (optimized)" row are results that used a reference optimized once with `ts_optimize_ref()` and reused for every call. The "taxastand (unoptimized)" row are results that passed the reference names (a character vector) to `ts_match_names()`, so the reference is parsed again on every call.
+The "taxastand (optimized)" row are results that used a reference optimized once with `ts_optimize_ref()` and reused for every call. The "taxastand (not optimized)" row are results that passed the reference names (a character vector) to `ts_match_names()`, so the reference is parsed again on every call.
 
 The timings are made after a warm-up: before timing, each package was run once
 on the whole set of queries, so one-time costs are not counted. An optimized
