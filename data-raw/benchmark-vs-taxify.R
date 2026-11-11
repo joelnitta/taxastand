@@ -117,7 +117,7 @@ ppg$accepted <- accepted_canonical(seq_len(nrow(ppg)))
 # ---- Tool wrappers -----------------------------------------------------------
 # Each returns a data frame with one row per hit: query, hit (canonical name),
 # accepted (accepted canonical name, NA if not resolved)
-# `reference` is the names, or the output of ts_prepare_reference()
+# `reference` is the names, or the output of ts_optimize_ref()
 make_taxastand <- function(reference, closest = FALSE) {
   hits <- if (closest) "closest" else "all"
   function(q) {
@@ -136,7 +136,7 @@ run_taxastand <- make_taxastand(ref_tax$scientificName)
 run_taxastand_closest <- make_taxastand(ref_tax$scientificName, closest = TRUE)
 # A prepared reference gives the same results; accuracy is evaluated with it
 # (faster), and speed is timed both ways
-ref_prepared <- ts_prepare_reference(ref_tax)
+ref_prepared <- ts_optimize_ref(ref_tax)
 run_taxastand_prepared <- make_taxastand(ref_prepared)
 run_taxastand_prepared_closest <- make_taxastand(ref_prepared, closest = TRUE)
 resolve_taxastand <- function(q) {

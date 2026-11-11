@@ -23,7 +23,7 @@ queries <- c(
 without_ref_id <- function(x) x[, setdiff(colnames(x), "id_ref")]
 
 test_that("a prepared reference gives the same results as the names", {
-  prepared <- ts_prepare_reference(ref_names)
+  prepared <- ts_optimize_ref(ref_names)
   expect_s3_class(prepared, "ts_reference")
   expect_equal(
     without_ref_id(suppressWarnings(ts_match_names(queries, prepared))),
@@ -47,7 +47,7 @@ test_that("a prepared reference gives the same results as the names", {
 })
 
 test_that("a prepared reference can be reused and fills in per genus", {
-  prepared <- ts_prepare_reference(ref_names)
+  prepared <- ts_optimize_ref(ref_names)
   expect_output(print(prepared), "9 names in 7 genera")
   expect_output(print(prepared), "genera parsed so far: 0")
   first <- suppressWarnings(
@@ -76,7 +76,7 @@ test_that("records keep their reference order when genera are combined", {
     "Asplenium nidus L.", "Quercus robur L.", "Asplenium nidus L",
     "Quercus petraea Matt."
   )
-  prepared <- ts_prepare_reference(ref2)
+  prepared <- ts_optimize_ref(ref2)
   q <- c("Quercus robur L.", "Asplenium nidus L.")
   expect_equal(
     without_ref_id(ts_match_names(q, prepared)),
@@ -95,7 +95,7 @@ test_that("ts_resolve_names() accepts a prepared Darwin Core reference", {
     acceptedNameUsageID = c(NA, "1", NA, NA),
     other = "ignored"
   )
-  prepared <- ts_prepare_reference(taxonomy)
+  prepared <- ts_optimize_ref(taxonomy)
   q <- c("Pteris aquilina L.", "Asplenium nidis L.", "Zzyzx foo")
   expect_equal(
     suppressWarnings(ts_resolve_names(q, prepared)),
@@ -116,14 +116,14 @@ test_that("ts_resolve_names() accepts a prepared Darwin Core reference", {
 
 test_that("names that cannot be parsed are reported once, then skipped", {
   ref3 <- c("Asplenium nidus L.", "Asplenium !!! ???", "Polypodium vulgare L.")
-  prepared <- ts_prepare_reference(ref3)
+  prepared <- ts_optimize_ref(ref3)
   expect_warning(
     ts_match_names("Asplenium nidus L.", prepared),
     "could not be parsed"
   )
   expect_no_warning(ts_match_names("Asplenium nidus L.", prepared))
   # a genus whose names all fail does not error
-  prepared2 <- ts_prepare_reference(c("Foo !!! ???", "Polypodium vulgare L."))
+  prepared2 <- ts_optimize_ref(c("Foo !!! ???", "Polypodium vulgare L."))
   res <- suppressWarnings(ts_match_names("Foo bar", prepared2, simple = TRUE))
   expect_equal(res$match_type, "no_match")
 })
@@ -131,7 +131,7 @@ test_that("names that cannot be parsed are reported once, then skipped", {
 test_that("duplicated reference names are an error, as without preparing", {
   dup <- c("Asplenium nidus L.", "Asplenium nidus L.")
   expect_error(
-    ts_match_names("Asplenium nidus L.", ts_prepare_reference(dup)),
+    ts_match_names("Asplenium nidus L.", ts_optimize_ref(dup)),
     "must be unique"
   )
   expect_error(
@@ -141,7 +141,7 @@ test_that("duplicated reference names are an error, as without preparing", {
 })
 
 test_that("strip_qualifiers applies to the reference at preparation", {
-  prepared <- ts_prepare_reference(
+  prepared <- ts_optimize_ref(
     c("Tectaria cf. crenata Cav.", "Tectaria zeylanica (Houtt.) Sledge"),
     strip_qualifiers = TRUE
   )
@@ -152,33 +152,33 @@ test_that("strip_qualifiers applies to the reference at preparation", {
   expect_equal(res$reference, "Tectaria cf. crenata Cav.")
 })
 
-test_that("ts_prepare_reference() checks its input", {
-  expect_error(ts_prepare_reference(1:3), "character vector or data.frame")
-  expect_error(ts_prepare_reference(c("a b", NA)), "missing values")
+test_that("ts_optimize_ref() checks its input", {
+  expect_error(ts_optimize_ref(1:3), "character vector or data.frame")
+  expect_error(ts_optimize_ref(c("a b", NA)), "missing values")
   expect_error(
-    ts_prepare_reference(data.frame(name = "a b")),
+    ts_optimize_ref(data.frame(name = "a b")),
     "scientificName"
   )
   expect_error(
-    ts_prepare_reference(ref_names, strip_qualifiers = "yes")
+    ts_optimize_ref(ref_names, strip_qualifiers = "yes")
   )
   # names only: cannot resolve synonyms
   expect_error(
-    ts_resolve_names("Asplenium nidus L.", ts_prepare_reference(ref_names)),
+    ts_resolve_names("Asplenium nidus L.", ts_optimize_ref(ref_names)),
     "Darwin Core"
   )
   expect_error(
     ts_resolve_names("Asplenium nidus L.", 1),
-    "ts_prepare_reference"
+    "ts_optimize_ref"
   )
   expect_error(
     ts_match_names("Asplenium nidus L.", 1),
-    "ts_prepare_reference"
+    "ts_optimize_ref"
   )
 })
 
 test_that("keys build up correctly as genera are added in batches", {
-  prepared <- ts_prepare_reference(ref_names)
+  prepared <- ts_optimize_ref(ref_names)
   batches <- list(
     "Asplenium nidis L.",
     c("Pteridium aquilinum (L.) Kuhn", "Quercus pirenaica Willd."),

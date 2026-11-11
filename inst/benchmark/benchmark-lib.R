@@ -331,7 +331,7 @@ make_taxastand <- function(ref, prepared = TRUE) {
     stringsAsFactors = FALSE
   )
   setup <- system.time(
-    reference <- if (prepared) taxastand::ts_prepare_reference(tax) else tax$scientificName
+    reference <- if (prepared) taxastand::ts_optimize_ref(tax) else tax$scientificName
   )[["elapsed"]]
   list(
     setup_s = setup,

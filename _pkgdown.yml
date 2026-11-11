@@ -17,7 +17,7 @@ reference:
   - ts_resolve_names
 - title: "Large references"
 - contents:
-  - ts_prepare_reference
+  - ts_optimize_ref
 - title: "Datasets"
 - contents:
   - filmy_taxonomy
