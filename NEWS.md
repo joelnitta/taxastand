@@ -135,7 +135,7 @@
   `ts_resolve_names()`, still work as aliases and will be deprecated in a
   future version. Only calls that name the argument are affected; its position
   is unchanged.
-* New `ts_download_ref()` reads a reference from an HTTPS URL or a file (a
+* New `ts_load_ref()` reads a reference from an HTTPS URL or a file (a
   CSV/TSV file or a zipped Darwin Core Archive), optionally keeps only some
   taxa, and formats it with `ts_format_ref()`. Downloads are kept in a folder
   only if you give a `cache_dir` (otherwise they are in `tempdir()`), and the

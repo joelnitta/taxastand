@@ -1,7 +1,8 @@
-#' Download a reference and format it for taxastand
+#' Load a reference from a URL or file and format it for taxastand
 #'
-#' Gets a table of taxonomic names in Darwin Core format from a URL or a local
-#' file, optionally keeps only some taxa, and formats it with
+#' Gets a table of taxonomic names in Darwin Core format, by downloading it from
+#' a URL or reading it from a local file, optionally keeps only some taxa, and
+#' formats it with
 #' \code{\link{ts_format_ref}()}. The result can be used directly as `ref` in
 #' \code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()}, or
 #' passed to \code{\link{ts_optimize_ref}()}.
@@ -28,7 +29,7 @@
 #' sessions, give a `cache_dir` (or set the option). If the file is already
 #' there, it is used and not downloaded again, unless `refresh = TRUE`.
 #'
-#' The check that the data are what you expect is up to you: the
+#' Checking that the data are what you expect is up to you: the
 #' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate Darwin
 #' Core taxonomic data. Check the license of the data before reusing it.
 #'
@@ -63,17 +64,17 @@
 #'   f,
 #'   row.names = FALSE
 #' )
-#' ts_download_ref(f, version = "example")
+#' ts_load_ref(f, version = "example")
 #'
 #' \dontrun{
 #' # Download from a URL, and keep only one family; keep the file for next time
-#' ref <- ts_download_ref(
+#' ref <- ts_load_ref(
 #'   "https://example.org/taxonomy.zip",
 #'   taxon = "Polypodiaceae",
 #'   cache_dir = "~/taxastand-data"
 #' )
 #' }
-ts_download_ref <- function(source, version = NULL, cache_dir = NULL,
+ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
                             taxon = NULL, rank = NULL, col_map = NULL,
                             drop_ranks = ts_ranks_above_species(),
                             refresh = FALSE, quiet = FALSE) {
