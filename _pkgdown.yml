@@ -17,6 +17,7 @@ reference:
   - ts_resolve_names
 - title: "Make a reference"
 - contents:
+  - ts_download_ref
   - ts_subset_ref
   - ts_format_ref
 - title: "Large references"
