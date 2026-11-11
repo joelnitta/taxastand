@@ -129,7 +129,7 @@ The matching algorithm will prefer match codes higher in the list; so if a name 
 
 Name resolution refers to the process of mapping a query name to its standard version. This could just be accounting for orthographic variations, or it could involve resolving synonyms: different names that actually refer to the same species.
 
-In order to conduct name resolution, we require a **taxonomic standard** in the form of a dataframe. `taxastand` requires that the taxonomic standard conform to [Darwin Core standards](https://dwc.tdwg.org/). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](https://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) among others. The [Using taxadb](taxadb.html) vignette shows how to get a standard database such as ITIS with the taxadb package.
+In order to conduct name resolution, we require a **taxonomic standard** in the form of a dataframe. `taxastand` requires that the taxonomic standard conform to [Darwin Core standards](https://dwc.tdwg.org/). There are many sources of taxonomic data online, including [GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c), [Catalog of Life](https://www.catalogueoflife.org/), and [ITIS](https://www.itis.gov/) among others. The [Using taxadb](taxadb.html) vignette shows how to get a standard database such as ITIS with the taxadb package, and `ts_format_ref()` turns a table with other column names or a separate author column into the format `taxastand` needs. `taxastand` does not check that the table is valid Darwin Core; the [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate it (`dwctaxon::dct_validate()`).
 
 `taxastand` comes supplied with an example taxonomic standard for filmy ferns (family Hymenophyllaceae):
 
@@ -170,17 +170,17 @@ With the author, the query matches a single name exactly (`exact`), which resolv
 
 Name resolution workflows typically involve tweaking the matching arguments (such as `match_no_auth`, `match_canon`, and `max_dist`) to resolve as many names as possible automatically, followed by some amount of manual editing of the names that remain unresolved.
 
-A benefit of `taxastand` is that, if during the name resolution workflow we discover mistakes in the reference database, the reference database can be edited so that the query names resolve correctly (this is not possible with packages that rely on querying a remote taxonomic database that can't be modified by the user).
+A benefit of `taxastand` is that, if during the name resolution workflow we discover mistakes in the reference database, the reference database can be edited so that the query names resolve correctly (this is not possible with packages that rely on querying a remote taxonomic database that can't be modified by the user). The [dwctaxon](https://docs.ropensci.org/dwctaxon/) package has functions for editing Darwin Core taxonomic data, such as adding and modifying rows while keeping synonyms mapped correctly.
 
 ## Large references
 
-Before matching, `taxastand` parses the reference names and builds the keys it compares them with. With a reference the size of PPG or WFO this takes longer than the matching itself. If you will match several batches of queries against the same reference, prepare it once with `ts_optimize_ref()` and pass the result in place of the reference:
+Before matching, `taxastand` parses the reference names and builds the keys it compares them with. With a reference the size of PPG or WFO this takes longer than the matching itself. If you will match several batches of queries against the same reference, optimize it once with `ts_optimize_ref()` and pass the result in place of the reference:
 
-```{r prepare-reference, eval = FALSE}
+```{r optimize-ref, eval = FALSE}
 ref <- ts_optimize_ref(filmy_taxonomy)
 
 ts_match_names("Gonocormus minutum", ref)
 ts_resolve_names("Gonocormus minutum", ref)
 ```
 
-The results are the same as without preparing. The genus of every name is found up front, and each genus is parsed the first time a query needs it, so the first batch pays for the genera it uses and later batches reuse them. The prepared reference therefore grows as it is used. If you prepare a reference with `strip_qualifiers = TRUE`, the qualifiers are removed from the reference names when they are parsed.
+The results are the same as without optimizing. The genus of every name is found up front, and each genus is parsed the first time a query needs it, so the first batch pays for the genera it uses and later batches reuse them. The optimized reference therefore grows as it is used. If you optimize a reference with `strip_qualifiers = TRUE`, the qualifiers are removed from the reference names when they are parsed.
