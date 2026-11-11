@@ -109,7 +109,7 @@ following columns:</p><ul><li><p><code>taxonID</code>: <a href="https://dwc.tdwg
 <li><p><code>taxonomicStatus</code>: <a href="https://dwc.tdwg.org/terms/#dwc:taxonomicStatus" class="external-link">The status of the use of the <code>scientificName</code> as a label for the taxon</a>.</p></li>
 <li><p><code>scientificName</code>: <a href="https://dwc.tdwg.org/terms/#dwc:scientificName" class="external-link">The full scientific name of the taxon</a>,
 with authorship and date information if known.</p></li>
-</ul><p>Can also be the output of <code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code> applied to
+</ul><p>Can also be the output of <code><a href="ts_optimize_ref.html">ts_optimize_ref()</a></code> applied to
 such a dataframe, which saves the work of preparing the reference when
 resolving several times against the same large reference.</p></dd>
 
@@ -223,7 +223,7 @@ should be the same used as reference with <code><a href="ts_match_names.html">ts
 (this is not checked).</p>
 <p>If multiple queries will be made against the same large reference (e.g., a
 database such as World Flora Online), prepare it once with
-<code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code> and use the result as <code>ref_taxonomy</code>,
+<code><a href="ts_optimize_ref.html">ts_optimize_ref()</a></code> and use the result as <code>ref_taxonomy</code>,
 so that the reference is not parsed again on every call.</p>
 <p><code>ref_taxonomy</code> must be taxonomic data adhering to the <a href="https://dwc.tdwg.org/terms/#taxon" class="external-link">Darwin Core standard</a>.
 Darwin Core includes many terms, but only four (<code>taxonID</code>,

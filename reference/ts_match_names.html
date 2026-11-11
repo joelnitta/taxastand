@@ -109,7 +109,7 @@ If a dataframe, should be taxonomic names parsed with
 reference. If a character vector, missing values not allowed and all values
 must be unique. If a dataframe, should be taxonomic names parsed with
 <code><a href="ts_parse_names.html">ts_parse_names()</a></code>. Can also be the output of
-<code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code>, which saves the work of preparing
+<code><a href="ts_optimize_ref.html">ts_optimize_ref()</a></code>, which saves the work of preparing
 the reference when matching several times against the same large reference.</p></dd>
 
 
@@ -247,7 +247,7 @@ parts.</p></li>
 the number of names is very large. If multiple queries will be made against
 the same large reference (e.g., a database such as World Flora Online), it
 is recommended to prepare the reference once with
-<code><a href="ts_prepare_reference.html">ts_prepare_reference()</a></code> and use the result as <code>reference</code>. That
+<code><a href="ts_optimize_ref.html">ts_optimize_ref()</a></code> and use the result as <code>reference</code>. That
 saves parsing the reference and building its match keys on every call, so it
 is the faster option. Alternatively, parse the names first using
 <code><a href="ts_parse_names.html">ts_parse_names()</a></code>, and use the results as input to <code>query</code>

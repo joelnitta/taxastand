@@ -415,10 +415,10 @@ remote taxonomic database that can’t be modified by the user).</p>
 and builds the keys it compares them with. With a reference the size of
 PPG or WFO this takes longer than the matching itself. If you will match
 several batches of queries against the same reference, prepare it once
-with <code><a href="../reference/ts_prepare_reference.html">ts_prepare_reference()</a></code> and pass the result in place of
-the reference:</p>
+with <code><a href="../reference/ts_optimize_ref.html">ts_optimize_ref()</a></code> and pass the result in place of the
+reference:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_prepare_reference.html">ts_prepare_reference</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_optimize_ref.html">ts_optimize_ref</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span></code></pre></div>
