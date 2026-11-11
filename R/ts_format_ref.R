@@ -14,7 +14,12 @@
 #'    these are combined.
 #' 3. Drops rows whose `taxonRank` is above species, such as genus or family
 #'    (see `drop_ranks`).
-#' 4. Tidies values: `taxonomicStatus` is lower-cased and trimmed, empty
+#' 4. Keeps the required columns, `taxonRank` and the columns that give the
+#'    hierarchy (higher ranks such as `family`, and `parentNameUsageID`), and
+#'    drops the rest. This lets \code{\link{ts_subset_ref}()} be used after
+#'    `ts_format_ref()` for most tables (see its documentation for the
+#'    exception).
+#' 5. Tidies values: `taxonomicStatus` is lower-cased and trimmed, empty
 #'    strings become `NA`, and rows with no name and exact duplicate rows are
 #'    removed.
 #'
@@ -51,7 +56,9 @@
 #'
 #' @return A dataframe with columns `taxonID`, `acceptedNameUsageID`,
 #'   `taxonomicStatus` and `scientificName` (and `taxonRank`, if `x` had it),
-#'   with the `ts_source` attribute if `source` was given.
+#'   plus any columns for the hierarchy of the names that `x` had: higher ranks
+#'   such as `family` and `parentNameUsageID`. Other columns are dropped. It
+#'   has the `ts_source` attribute if `source` was given.
 #' @export
 #' @examples
 #' # A table with its own column names, and the author in a separate column
@@ -97,7 +104,11 @@ ts_format_ref <- function(x, col_map = NULL, drop_ranks = ts_ranks_above_species
 
   # empty strings are missing values
   chr_cols <- intersect(
-    c(required, "scientificNameAuthorship", "taxonRank"), colnames(x)
+    c(
+      required, "scientificNameAuthorship", "taxonRank",
+      hierarchy_columns()
+    ),
+    colnames(x)
   )
   for (col in chr_cols) {
     v <- trimws(as.character(x[[col]]))
@@ -122,7 +133,8 @@ ts_format_ref <- function(x, col_map = NULL, drop_ranks = ts_ranks_above_species
       drop = FALSE]
   }
 
-  out <- x[, intersect(c(required, "taxonRank"), colnames(x)), drop = FALSE]
+  keep_cols <- c(required, "taxonRank", hierarchy_columns())
+  out <- x[, intersect(keep_cols, colnames(x)), drop = FALSE]
   out <- out[!duplicated(out), , drop = FALSE]
   rownames(out) <- NULL
   if (!is.null(source)) attr(out, "ts_source") <- source
@@ -170,4 +182,10 @@ apply_col_map <- function(x, col_map) {
   renamed <- x[, unname(col_map), drop = FALSE]
   colnames(renamed) <- names(col_map)
   cbind(x[, setdiff(colnames(x), names(col_map)), drop = FALSE], renamed)
+}
+
+# Columns that give the hierarchy of a name; kept by the formatting function
+# and used by the subsetting function
+hierarchy_columns <- function() {
+  c(subset_rank_columns(), "parentNameUsageID")
 }

@@ -3,9 +3,11 @@
 #' Subsets a large table of taxonomic names to the members of one or more taxa
 #' such as a family, so that a reference small enough for the task at hand can
 #' be made. `x` should be in Darwin Core format, or close to it (use `col_map`
-#' for columns with other names). Run `ts_subset_ref()` on the
-#' table before \code{\link{ts_format_ref}()}, which removes the columns that
-#' `ts_subset_ref()` uses to find the members.
+#' for columns with other names). It can be used on the table before or after
+#' \code{\link{ts_format_ref}()} (which keeps the hierarchy columns), with one
+#' exception: if the table has only `parentNameUsageID` and no columns for
+#' higher ranks, use `ts_subset_ref()` first. `ts_format_ref()` removes the rows
+#' above species, which are needed to walk down from `taxon`.
 #'
 #' How members are found depends on the columns in `x`:
 #'

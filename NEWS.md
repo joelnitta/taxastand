@@ -124,6 +124,10 @@
   synonyms from a large table of names, using higher-rank columns or
   `parentNameUsageID`, so a whole database need not be made into a reference
   (#114, part of #109).
+* `ts_format_ref()` now also keeps the columns that give the hierarchy of the
+  names (higher ranks such as `family`, and `parentNameUsageID`), so
+  `ts_subset_ref()` can be used before or after it for most tables (#121, part
+  of #109).
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.
