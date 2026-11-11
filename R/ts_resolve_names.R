@@ -5,17 +5,17 @@
 #'
 #' `query` can take as input either a character vector of taxonomic names, or
 #' the output of \code{\link{ts_match_names}()}. If the former, it will run
-#' \code{\link{ts_match_names}()} to match the query to `ref_taxonomy`, then
-#' resolve synonyms. If the latter, the scientific names in `ref_taxonomy`
+#' \code{\link{ts_match_names}()} to match the query to `ref`, then
+#' resolve synonyms. If the latter, the scientific names in `ref`
 #' should be the same used as reference with \code{\link{ts_match_names}()}
 #' (this is not checked).
 #'
 #' If multiple queries will be made against the same large reference (e.g., a
 #' database such as World Flora Online), prepare it once with
-#' \code{\link{ts_optimize_ref}()} and use the result as `ref_taxonomy`,
+#' \code{\link{ts_optimize_ref}()} and use the result as `ref`,
 #' so that the reference is not parsed again on every call.
 #'
-#' `ref_taxonomy` must be taxonomic data adhering to the [Darwin Core standard](https://dwc.tdwg.org/terms/#taxon).
+#' `ref` must be taxonomic data adhering to the [Darwin Core standard](https://dwc.tdwg.org/terms/#taxon).
 #' Darwin Core includes many terms, but only four (`taxonID`,
 #' `acceptedNameUsageID`, `taxonomicStatus`, and `scientificName`) are required
 #' for this function.
@@ -24,7 +24,7 @@
 #'   If a character vector, missing values not allowed and all values must be
 #'   unique. If a dataframe, should be taxonomic names matched with
 #'   \code{\link{ts_match_names}()}.
-#' @param ref_taxonomy Dataframe; reference taxonomic data adhering to the
+#' @param ref Dataframe; reference taxonomic data adhering to the
 #'   [Darwin Core standard](https://dwc.tdwg.org/terms/#taxon) with the
 #'   following columns:
 #' - `taxonID`: [Unique identifier for each taxon](https://dwc.tdwg.org/terms/#dwc:taxonID).
@@ -65,6 +65,8 @@
 #' @param match_autonyms_exclude Character vector; taxonomic names to exclude
 #' from collapsing with `match_autonyms`. Any names used must match those in
 #' `query` exactly, or they won't be excluded.
+#' @param ref_taxonomy Alias of `ref`, the name used before taxastand 3.0.0; it
+#'   will be deprecated in a future version.
 #' @param collapse_infra,collapse_infra_exclude Aliases of `match_autonyms` and
 #' `match_autonyms_exclude`, kept so that existing code keeps working.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
@@ -93,8 +95,8 @@
 #' - `query`: Query name
 #' - `resolved_name`: Accepted name after resolving synonyms
 #' - `matched_name`: Name matched to query
-#' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref_taxonomy`)
-#' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref_taxonomy`)
+#' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref`)
+#' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref`)
 #' - `match_type`: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
 #'
 #' Names that could not be matched or resolve to multiple, different synonyms
@@ -117,7 +119,7 @@
 #'
 ts_resolve_names <- function(
   query,
-  ref_taxonomy,
+  ref,
   max_dist = 3,
   max_dist_genus = 2,
   transpositions = FALSE,
@@ -130,8 +132,10 @@ ts_resolve_names <- function(
   exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
-  collapse_infra_exclude = NULL
+  collapse_infra_exclude = NULL,
+  ref_taxonomy = NULL
 ) {
+  ref <- .ts_alias(ref, ref_taxonomy, missing(ref), "ref", "ref_taxonomy")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),
     "match_autonyms", "collapse_infra"
@@ -147,26 +151,27 @@ ts_resolve_names <- function(
     msg = "query must be of class 'data.frame' or a character vector"
   )
   assertthat::assert_that(
-    inherits(ref_taxonomy, "data.frame") | inherits(ref_taxonomy, "ts_reference"),
+    inherits(ref, "data.frame") | inherits(ref, "ts_reference"),
     msg = paste(
-      "ref_taxonomy must be of class 'data.frame'",
+      "ref must be of class 'data.frame'",
       "or the output of ts_optimize_ref()"
     )
   )
-  reference <- NULL
-  if (inherits(ref_taxonomy, "ts_reference")) {
-    reference <- ref_taxonomy
-    ref_taxonomy <- reference$taxonomy
+  ref_names <- NULL
+  if (inherits(ref, "ts_reference")) {
+    ref_names <- ref
+    ref_df <- ref$taxonomy
     assertthat::assert_that(
       all(c("taxonID", "acceptedNameUsageID", "taxonomicStatus") %in%
-        colnames(ref_taxonomy)),
+        colnames(ref_df)),
       msg = paste(
-        "ref_taxonomy was prepared from names only; prepare a Darwin Core",
+        "ref was prepared from names only; prepare a Darwin Core",
         "data.frame with ts_optimize_ref() to resolve synonyms"
       )
     )
   } else {
-    reference <- unique(ref_taxonomy$scientificName)
+    ref_df <- ref
+    ref_names <- unique(ref_df$scientificName)
   }
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
@@ -179,7 +184,7 @@ ts_resolve_names <- function(
   if (is.character(query)) {
     match_results <- ts_match_names(
       query = query,
-      reference = reference,
+      ref = ref_names,
       max_dist = max_dist,
       max_dist_genus = max_dist_genus,
       transpositions = transpositions,
@@ -202,10 +207,10 @@ ts_resolve_names <- function(
     , c("query", "reference", "match_type", "result_type")
   ]
   ref_info <- data.frame(
-    scientificName = ref_taxonomy$scientificName,
-    taxonID = ref_taxonomy$taxonID,
-    acceptedNameUsageID = ref_taxonomy$acceptedNameUsageID,
-    taxonomicStatus = ref_taxonomy$taxonomicStatus
+    scientificName = ref_df$scientificName,
+    taxonID = ref_df$taxonID,
+    acceptedNameUsageID = ref_df$acceptedNameUsageID,
+    taxonomicStatus = ref_df$taxonomicStatus
   )
   match_results_classified <- .ts_join(
     match_results_classified, ref_info, "reference", "scientificName"
@@ -236,8 +241,8 @@ ts_resolve_names <- function(
     syn,
     data.frame(
       acceptedNameUsageID = ref_info$taxonID,
-      resolved_name = ref_taxonomy$scientificName,
-      resolved_status = ref_taxonomy$taxonomicStatus
+      resolved_name = ref_df$scientificName,
+      resolved_status = ref_df$taxonomicStatus
     ),
     "acceptedNameUsageID", "acceptedNameUsageID"
   )

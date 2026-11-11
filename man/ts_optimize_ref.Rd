@@ -4,14 +4,14 @@
 \alias{ts_optimize_ref}
 \title{Prepare a reference for repeated matching}
 \usage{
-ts_optimize_ref(reference, strip_qualifiers = FALSE)
+ts_optimize_ref(ref, strip_qualifiers = FALSE)
 }
 \arguments{
-\item{reference}{Character vector of reference names (with authors), or a
+\item{ref}{Character vector of reference names (with authors), or a
 dataframe of taxonomic data in Darwin Core format (see
 \code{\link{ts_resolve_names}()}). A dataframe can be used for both
 \code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()} (as
-\code{ref_taxonomy}); a character vector only for the former.}
+\code{ref}); a character vector only for the former.}
 
 \item{strip_qualifiers}{Logical; remove standalone open-nomenclature
 qualifiers (\code{cf.}, \code{aff.}, ...) from the reference names before parsing.

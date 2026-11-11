@@ -128,6 +128,13 @@
   names (higher ranks such as `family`, and `parentNameUsageID`), so
   `ts_subset_ref()` can be used before or after it for most tables (#121, part
   of #109).
+* The argument that holds the reference is now called `ref` in
+  `ts_match_names()`, `ts_resolve_names()`, `ts_optimize_ref()`, `ts_format_ref()`
+  and `ts_subset_ref()`, so that it is the same everywhere (#120, part of
+  #109). The old names, `reference` in `ts_match_names()` and `ref_taxonomy` in
+  `ts_resolve_names()`, still work as aliases and will be deprecated in a
+  future version. Only calls that name the argument are affected; its position
+  is unchanged.
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.

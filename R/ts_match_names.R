@@ -102,7 +102,7 @@
 #' unique.
 #' If a dataframe, should be taxonomic names parsed with
 #' \code{\link{ts_parse_names}()}.
-#' @param reference  Character vector or dataframe; taxonomic names to use as
+#' @param ref  Character vector or dataframe; taxonomic names to use as
 #' reference. If a character vector, missing values not allowed and all values
 #' must be unique. If a dataframe, should be taxonomic names parsed with
 #' \code{\link{ts_parse_names}()}. Can also be the output of
@@ -140,6 +140,8 @@
 #' @param match_autonyms_exclude Character vector; taxonomic names to exclude
 #' from collapsing with `match_autonyms`. Any names used must match those in
 #' `query` exactly, or they won't be excluded.
+#' @param reference Alias of `ref`, the name used before taxastand 3.0.0; it
+#' will be deprecated in a future version.
 #' @param collapse_infra,collapse_infra_exclude Aliases of `match_autonyms` and
 #' `match_autonyms_exclude`, kept so that existing code keeps working.
 #' @param simple Logical; return the output in a simplified format with only the
@@ -246,7 +248,7 @@
 #'
 ts_match_names <- function(
   query,
-  reference,
+  ref,
   manual_match = NULL,
   max_dist = 3,
   max_dist_genus = 2,
@@ -261,8 +263,10 @@ ts_match_names <- function(
   exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
-  collapse_infra_exclude = NULL
+  collapse_infra_exclude = NULL,
+  reference = NULL
 ) {
+  ref <- .ts_alias(ref, reference, missing(ref), "ref", "reference")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),
     "match_autonyms", "collapse_infra"
@@ -273,7 +277,7 @@ ts_match_names <- function(
     "match_autonyms_exclude", "collapse_infra_exclude"
   )
   .ts_check_match_args(
-    query, reference, manual_match, max_dist, max_dist_genus, transpositions,
+    query, ref, manual_match, max_dist, max_dist_genus, transpositions,
     match_no_auth, match_canon, simple, tbl_out, match_autonyms,
     match_autonyms_exclude, strip_qualifiers
   )
@@ -308,14 +312,14 @@ ts_match_names <- function(
     query_parsed_df <- collapsed$parsed
   }
 
-  ref <- .ts_prepare_reference(
-    reference, query_parsed_df, max_dist_genus, strip_qualifiers
+  ref_prep <- .ts_prepare_reference(
+    ref, query_parsed_df, max_dist_genus, strip_qualifiers
   )
 
   # Check that manually matched ref names are in data
   if (!is.null(manual_match)) {
     assertthat::assert_that(
-      isTRUE(all(manual_match$match %in% ref$names)),
+      isTRUE(all(manual_match$match %in% ref_prep$names)),
       msg = "One or more manually matched reference names not in reference data"
     )
   }
@@ -323,10 +327,10 @@ ts_match_names <- function(
   # Run matching (one row per match; see .tt_assemble() for the columns)
   results <- tt_matchnames(
     query_lines = .ts_parsed_lines(query_parsed_df, query),
-    ref_lines = if (is.null(ref$keys)) {
-      .ts_parsed_lines(ref$parsed, reference)
+    ref_lines = if (is.null(ref_prep$keys)) {
+      .ts_parsed_lines(ref_prep$parsed, ref)
     },
-    ref_keys = ref$keys,
+    ref_keys = ref_prep$keys,
     max_dist = max_dist,
     match_no_auth = match_no_auth,
     match_canon = match_canon,
@@ -338,7 +342,7 @@ ts_match_names <- function(
   # Add back in the original search terms (query and reference)
   results$query <-
     query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
-  results$reference <- ref$names[match(results$id_ref, ref$ids)]
+  results$reference <- ref_prep$names[match(results$id_ref, ref_prep$ids)]
   results <- .ts_front_cols(results)
 
   # Add back in names that were duplicated due to collapsed infrasp names
@@ -383,7 +387,7 @@ ts_match_names <- function(
     is.character(reference) | inherits(reference, "data.frame") |
       inherits(reference, "ts_reference"),
     msg = paste(
-      "reference must be of class 'data.frame', a character vector,",
+      "ref must be of class 'data.frame', a character vector,",
       "or the output of ts_optimize_ref()"
     )
   )

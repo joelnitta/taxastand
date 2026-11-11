@@ -5,7 +5,7 @@ test_that("Input checks work", {
   )
   expect_error(
     ts_match_names("Foogenus", 10),
-    "reference must be of class"
+    "ref must be of class"
   )
   expect_error(
     ts_match_names(10, data.frame(genus = "Foogenus")),
@@ -13,7 +13,7 @@ test_that("Input checks work", {
   )
   expect_error(
     ts_match_names(data.frame(genus = "Foogenus"), 10),
-    "reference must be of class"
+    "ref must be of class"
   )
 })
 
@@ -29,7 +29,7 @@ test_that("Produces expected output", {
 test_that("Manually matched names work", {
   match_res <- ts_match_names(
     query = c("Crepidomanes minutus", "Hymeefee erae"),
-    reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+    ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
     manual_match = data.frame(
       query = "Hymeefee erae",
       match = "Hymenophyllum polyanthos"
@@ -45,7 +45,7 @@ test_that("Names that can't be parsed don't show up in results", {
       "Vanden kalamocarpa x Vanden nipponica x Vanden striata",
       "Crepidomanes minutus"
     ),
-    reference = "Crepidomanes minutum",
+    ref = "Crepidomanes minutum",
     simple = TRUE,
     tbl_out = TRUE
   )
@@ -62,7 +62,7 @@ test_that("Manually matched names work with collapsed infrasp names", {
       "Bar foo var. foo",
       "Bar foo"
     ),
-    reference = c(
+    ref = c(
       "Crepidomanes minutum",
       "Hymenophyllum polyanthos",
       "Blechnum lunare",
@@ -155,7 +155,7 @@ test_that("collapse_infra and collapse_infra_exclude still work as aliases", {
 test_that("strip_qualifiers = TRUE resolves an open-nomenclature qualifier to the right match", {
   match_res <- ts_match_names(
     query = "Tectaria cf. crenata",
-    reference = c("Tectaria crenata", "Tectaria subvariolosa"),
+    ref = c("Tectaria crenata", "Tectaria subvariolosa"),
     strip_qualifiers = TRUE,
     simple = TRUE
   )
@@ -167,7 +167,7 @@ test_that("Incorrectly specified manual match fails", {
   expect_error(
     ts_match_names(
       query = c("Crepidomanes minutus", "Hymeefee erae"),
-      reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+      ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         query = "Hymeefee erae",
         match = "Hymenophyllum poWHAT"
@@ -179,7 +179,7 @@ test_that("Incorrectly specified manual match fails", {
   expect_error(
     ts_match_names(
       query = c("Crepidomanes minutus", "Hymeefee erae"),
-      reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+      ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         query = c("Crepidomanes minutus", "Crepidomanes minutus"),
         match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
@@ -191,7 +191,7 @@ test_that("Incorrectly specified manual match fails", {
   expect_error(
     ts_match_names(
       query = c("Crepidomanes minutus", "Hymeefee erae"),
-      reference = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
+      ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         name = c("Hymenophyllum polyantha", "Crepidomanes minutu"),
         match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
@@ -239,7 +239,7 @@ test_that("manual_match with a parsed query works with collapsed infrasp names",
     match = c("Bar foo", "Crepidomanes minutum")
   )
   args <- list(
-    reference = ref, manual_match = manual, max_dist = 10,
+    ref = ref, manual_match = manual, max_dist = 10,
     collapse_infra = TRUE, simple = TRUE
   )
   from_chr <- do.call(ts_match_names, c(list(query = q), args))
@@ -309,5 +309,18 @@ test_that("tbl_out = TRUE without tibble installed gives a clear error", {
   expect_error(
     ts_parse_names("Crepidomanes minutum", tbl_out = TRUE),
     "tibble"
+  )
+})
+
+test_that("`reference` still works as an alias of `ref`", {
+  q <- "Gonocormus minutum"
+  r <- unique(filmy_taxonomy$scientificName)
+  expect_equal(
+    ts_match_names(q, reference = r, simple = TRUE),
+    ts_match_names(q, ref = r, simple = TRUE)
+  )
+  expect_error(
+    ts_match_names(q, ref = r, reference = "Other name", simple = TRUE),
+    "alias of `ref`"
   )
 })

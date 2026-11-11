@@ -93,7 +93,7 @@ test_that("ts_format_ref() checks its input", {
   expect_error(ts_format_ref(1:3), "data.frame")
   expect_error(ts_format_ref(raw), "missing required columns")
   expect_error(
-    ts_format_ref(raw, c(taxonID = "nope")), "not in `x`"
+    ts_format_ref(raw, c(taxonID = "nope")), "not in `ref`"
   )
   expect_error(ts_format_ref(raw, c("id", "acc")), "named character vector")
   expect_error(ts_format_ref(raw, map, source = "x"))
