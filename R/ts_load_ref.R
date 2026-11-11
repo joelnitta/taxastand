@@ -192,8 +192,8 @@ ts_load_ref <- function(source, version = NULL, cache_dir = NULL,
   invisible(dest)
 }
 
-# Is the file a zip file? (zip files start with "PK\\003\\004", or "PK\\005\\006"
-# if empty)
+# Is the file a zip file? Zip files start with the bytes "PK" followed by 3, 4
+# (or 5, 6 if the archive is empty).
 .ts_is_zip <- function(path) {
   sig <- readBin(path, what = "raw", n = 4)
   length(sig) == 4 && sig[1] == as.raw(0x50) && sig[2] == as.raw(0x4b) &&
