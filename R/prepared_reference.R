@@ -14,11 +14,11 @@
 #' The object holds the parsed names of every genus used so far, so it grows
 #' with use, up to the size of the whole parsed reference.
 #'
-#' @param reference Character vector of reference names (with authors), or a
+#' @param ref Character vector of reference names (with authors), or a
 #'   dataframe of taxonomic data in Darwin Core format (see
 #'   \code{\link{ts_resolve_names}()}). A dataframe can be used for both
 #'   \code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()} (as
-#'   `ref_taxonomy`); a character vector only for the former.
+#'   `ref`); a character vector only for the former.
 #' @param strip_qualifiers Logical; remove standalone open-nomenclature
 #'   qualifiers (`cf.`, `aff.`, ...) from the reference names before parsing.
 #'   See \code{\link{ts_parse_names}()}. Default: `FALSE`. The setting used
@@ -33,30 +33,30 @@
 #' # Reuse for several calls
 #' ts_match_names("Gonocormus minutum", ref, simple = TRUE)
 #' ts_resolve_names("Gonocormus minutum", ref)
-ts_optimize_ref <- function(reference, strip_qualifiers = FALSE) {
+ts_optimize_ref <- function(ref, strip_qualifiers = FALSE) {
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
   taxonomy <- NULL
-  if (inherits(reference, "data.frame")) {
+  if (inherits(ref, "data.frame")) {
     assertthat::assert_that(
-      "scientificName" %in% colnames(reference),
-      msg = "reference must have a `scientificName` column"
+      "scientificName" %in% colnames(ref),
+      msg = "ref must have a `scientificName` column"
     )
     cols <- intersect(
       c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName"),
-      colnames(reference)
+      colnames(ref)
     )
-    taxonomy <- as.data.frame(reference)[, cols, drop = FALSE]
-    reference <- unique(as.character(reference$scientificName))
+    taxonomy <- as.data.frame(ref)[, cols, drop = FALSE]
+    ref <- unique(as.character(ref$scientificName))
   }
   assertthat::assert_that(
-    is.character(reference),
-    msg = "reference must be a character vector or data.frame"
+    is.character(ref),
+    msg = "ref must be a character vector or data.frame"
   )
   assertthat::assert_that(
-    !anyNA(reference),
-    msg = "reference must not contain missing values"
+    !anyNA(ref),
+    msg = "ref must not contain missing values"
   )
-  .ts_new_reference(reference, strip_qualifiers, taxonomy)
+  .ts_new_reference(ref, strip_qualifiers, taxonomy)
 }
 
 #' @export

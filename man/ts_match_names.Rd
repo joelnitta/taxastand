@@ -6,7 +6,7 @@
 \usage{
 ts_match_names(
   query,
-  reference,
+  ref,
   manual_match = NULL,
   max_dist = 3,
   max_dist_genus = 2,
@@ -21,7 +21,8 @@ ts_match_names(
   exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
-  collapse_infra_exclude = NULL
+  collapse_infra_exclude = NULL,
+  reference = NULL
 )
 }
 \arguments{
@@ -31,7 +32,7 @@ unique.
 If a dataframe, should be taxonomic names parsed with
 \code{\link{ts_parse_names}()}.}
 
-\item{reference}{Character vector or dataframe; taxonomic names to use as
+\item{ref}{Character vector or dataframe; taxonomic names to use as
 reference. If a character vector, missing values not allowed and all values
 must be unique. If a dataframe, should be taxonomic names parsed with
 \code{\link{ts_parse_names}()}. Can also be the output of
@@ -108,6 +109,9 @@ smallest distance found (ties are all kept, so real ambiguity still shows).}
 
 \item{collapse_infra, collapse_infra_exclude}{Aliases of \code{match_autonyms} and
 \code{match_autonyms_exclude}, kept so that existing code keeps working.}
+
+\item{reference}{Alias of \code{ref}, the name used before taxastand 3.0.0; it
+will be deprecated in a future version.}
 }
 \value{
 Dataframe with the following columns (if \code{simple} is \code{FALSE}):

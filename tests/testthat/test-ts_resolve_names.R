@@ -7,7 +7,7 @@ test_that("Input checks work", {
   )
   expect_error(
     ts_resolve_names(data.frame(genus = "Foogenus"), 10),
-    "ref_taxonomy must be of class"
+    "ref must be of class"
   )
 })
 
@@ -15,7 +15,7 @@ test_that("Produces expected output", {
   # Query a misspelled name
   match_results <- ts_match_names(
     query = "Gonocormus minutum",
-    reference = unique(filmy_taxonomy$scientificName),
+    ref = unique(filmy_taxonomy$scientificName),
     simple = TRUE
   )
   expect_s3_class(
@@ -60,5 +60,17 @@ test_that("ts_resolve_names accepts collapse_infra as an alias of match_autonyms
       q, filmy_taxonomy, match_autonyms = TRUE, collapse_infra = FALSE
     ),
     "alias of `match_autonyms`"
+  )
+})
+
+test_that("`ref_taxonomy` still works as an alias of `ref`", {
+  q <- "Gonocormus minutum"
+  expect_equal(
+    ts_resolve_names(q, ref_taxonomy = filmy_taxonomy),
+    ts_resolve_names(q, ref = filmy_taxonomy)
+  )
+  expect_error(
+    ts_resolve_names(q, ref = filmy_taxonomy, ref_taxonomy = filmy_taxonomy[1:3, ]),
+    "alias of `ref`"
   )
 })

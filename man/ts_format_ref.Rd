@@ -5,21 +5,21 @@
 \title{Format a taxonomic table as a reference for taxastand}
 \usage{
 ts_format_ref(
-  x,
+  ref,
   col_map = NULL,
   drop_ranks = ts_ranks_above_species(),
   source = NULL
 )
 }
 \arguments{
-\item{x}{Dataframe of taxonomic names. Needs columns for \code{taxonID},
+\item{ref}{Dataframe of taxonomic names. Needs columns for \code{taxonID},
 \code{acceptedNameUsageID}, \code{taxonomicStatus} and \code{scientificName} (see
 \code{\link{ts_resolve_names}()} for what they mean), either with those
 names or mapped to them with \code{col_map}. May also have
 \code{scientificNameAuthorship} and \code{taxonRank}.}
 
-\item{col_map}{Named character vector to rename columns of \code{x}. Each name
-is the Darwin Core name and each value is the column of \code{x} that holds it.
+\item{col_map}{Named character vector to rename columns of \code{ref}. Each name
+is the Darwin Core name and each value is the column of \code{ref} that holds it.
 For example,
 \code{c(taxonID = "taxon_id", scientificName = "canonical_name")}.
 Columns that already have Darwin Core names need not be listed. Default
@@ -28,7 +28,7 @@ Columns that already have Darwin Core names need not be listed. Default
 \item{drop_ranks}{Character vector; rows with a \code{taxonRank} in this list
 (ignoring case) are dropped. The default is the ranks above species rank
 (kingdom to genus, and the ranks between them such as subfamily, tribe,
-section and series). Use \code{NULL} to keep all rows. Ignored if \code{x}
+section and series). Use \code{NULL} to keep all rows. Ignored if \code{ref}
 has no \code{taxonRank} column.}
 
 \item{source}{Optional list describing where the data came from, for
@@ -37,8 +37,8 @@ It is stored in the \code{ts_source} attribute of the result.}
 }
 \value{
 A dataframe with columns \code{taxonID}, \code{acceptedNameUsageID},
-\code{taxonomicStatus} and \code{scientificName} (and \code{taxonRank}, if \code{x} had it),
-plus any columns for the hierarchy of the names that \code{x} had: higher ranks
+\code{taxonomicStatus} and \code{scientificName} (and \code{taxonRank}, if \code{ref} had it),
+plus any columns for the hierarchy of the names that \code{ref} had: higher ranks
 such as \code{family} and \code{parentNameUsageID}. Other columns are dropped. It
 has the \code{ts_source} attribute if \code{source} was given.
 }

@@ -34,13 +34,13 @@
 #' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate and
 #' edit such tables (see `dwctaxon::dct_validate()`).
 #'
-#' @param x Dataframe of taxonomic names. Needs columns for `taxonID`,
+#' @param ref Dataframe of taxonomic names. Needs columns for `taxonID`,
 #'   `acceptedNameUsageID`, `taxonomicStatus` and `scientificName` (see
 #'   \code{\link{ts_resolve_names}()} for what they mean), either with those
 #'   names or mapped to them with `col_map`. May also have
 #'   `scientificNameAuthorship` and `taxonRank`.
-#' @param col_map Named character vector to rename columns of `x`. Each name
-#'   is the Darwin Core name and each value is the column of `x` that holds it.
+#' @param col_map Named character vector to rename columns of `ref`. Each name
+#'   is the Darwin Core name and each value is the column of `ref` that holds it.
 #'   For example,
 #'   `c(taxonID = "taxon_id", scientificName = "canonical_name")`.
 #'   Columns that already have Darwin Core names need not be listed. Default
@@ -48,15 +48,15 @@
 #' @param drop_ranks Character vector; rows with a `taxonRank` in this list
 #'   (ignoring case) are dropped. The default is the ranks above species rank
 #'   (kingdom to genus, and the ranks between them such as subfamily, tribe,
-#'   section and series). Use `NULL` to keep all rows. Ignored if `x`
+#'   section and series). Use `NULL` to keep all rows. Ignored if `ref`
 #'   has no `taxonRank` column.
 #' @param source Optional list describing where the data came from, for
 #'   example `list(provider = "ITIS", version = "2026", license = "CC0")`.
 #'   It is stored in the `ts_source` attribute of the result.
 #'
 #' @return A dataframe with columns `taxonID`, `acceptedNameUsageID`,
-#'   `taxonomicStatus` and `scientificName` (and `taxonRank`, if `x` had it),
-#'   plus any columns for the hierarchy of the names that `x` had: higher ranks
+#'   `taxonomicStatus` and `scientificName` (and `taxonRank`, if `ref` had it),
+#'   plus any columns for the hierarchy of the names that `ref` had: higher ranks
 #'   such as `family` and `parentNameUsageID`. Other columns are dropped. It
 #'   has the `ts_source` attribute if `source` was given.
 #' @export
@@ -79,24 +79,24 @@
 #'   ),
 #'   source = list(provider = "Example", version = "1")
 #' )
-ts_format_ref <- function(x, col_map = NULL, drop_ranks = ts_ranks_above_species(),
+ts_format_ref <- function(ref, col_map = NULL, drop_ranks = ts_ranks_above_species(),
                           source = NULL) {
-  assertthat::assert_that(inherits(x, "data.frame"))
+  assertthat::assert_that(inherits(ref, "data.frame"))
   assertthat::assert_that(is.null(drop_ranks) || is.character(drop_ranks))
   assertthat::assert_that(is.null(source) || is.list(source))
 
-  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  ref <- as.data.frame(ref, stringsAsFactors = FALSE)
 
-  x <- apply_col_map(x, col_map)
+  ref <- apply_col_map(ref, col_map)
 
   required <- c(
     "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName"
   )
-  missing_req <- setdiff(required, colnames(x))
+  missing_req <- setdiff(required, colnames(ref))
   assertthat::assert_that(
     length(missing_req) == 0,
     msg = paste0(
-      "`x` is missing required columns: ",
+      "`ref` is missing required columns: ",
       paste(missing_req, collapse = ", "),
       ". Use `col_map` to name the columns that hold them."
     )
@@ -108,33 +108,33 @@ ts_format_ref <- function(x, col_map = NULL, drop_ranks = ts_ranks_above_species
       required, "scientificNameAuthorship", "taxonRank",
       hierarchy_columns()
     ),
-    colnames(x)
+    colnames(ref)
   )
   for (col in chr_cols) {
-    v <- trimws(as.character(x[[col]]))
+    v <- trimws(as.character(ref[[col]]))
     v[!is.na(v) & !nzchar(v)] <- NA_character_
-    x[[col]] <- v
+    ref[[col]] <- v
   }
 
-  x <- x[!is.na(x$scientificName), , drop = FALSE]
+  ref <- ref[!is.na(ref$scientificName), , drop = FALSE]
 
-  if ("scientificNameAuthorship" %in% colnames(x)) {
-    auth <- x$scientificNameAuthorship
-    add <- !is.na(auth) & !endsWith(x$scientificName, auth)
+  if ("scientificNameAuthorship" %in% colnames(ref)) {
+    auth <- ref$scientificNameAuthorship
+    add <- !is.na(auth) & !endsWith(ref$scientificName, auth)
     add[is.na(add)] <- FALSE
-    x$scientificName[add] <- paste(x$scientificName[add], auth[add])
+    ref$scientificName[add] <- paste(ref$scientificName[add], auth[add])
   }
 
-  x$taxonomicStatus <- tolower(x$taxonomicStatus)
+  ref$taxonomicStatus <- tolower(ref$taxonomicStatus)
 
-  if ("taxonRank" %in% colnames(x)) {
-    x$taxonRank <- tolower(x$taxonRank)
-    x <- x[is.na(x$taxonRank) | !x$taxonRank %in% tolower(drop_ranks), ,
+  if ("taxonRank" %in% colnames(ref)) {
+    ref$taxonRank <- tolower(ref$taxonRank)
+    ref <- ref[is.na(ref$taxonRank) | !ref$taxonRank %in% tolower(drop_ranks), ,
       drop = FALSE]
   }
 
   keep_cols <- c(required, "taxonRank", hierarchy_columns())
-  out <- x[, intersect(keep_cols, colnames(x)), drop = FALSE]
+  out <- ref[, intersect(keep_cols, colnames(ref)), drop = FALSE]
   out <- out[!duplicated(out), , drop = FALSE]
   rownames(out) <- NULL
   if (!is.null(source)) attr(out, "ts_source") <- source
@@ -160,7 +160,7 @@ ts_ranks_above_species <- function() {
   )
 }
 
-# Rename the columns of `x` to Darwin Core names using `col_map` (see
+# Rename the columns of `ref` to Darwin Core names using `col_map` (see
 # ts_format_ref()). Used by ts_format_ref() and ts_subset_ref().
 apply_col_map <- function(x, col_map) {
   assertthat::assert_that(is.null(col_map) || (
@@ -174,7 +174,7 @@ apply_col_map <- function(x, col_map) {
   assertthat::assert_that(
     length(missing_cols) == 0,
     msg = paste0(
-      "`col_map` refers to columns not in `x`: ",
+      "`col_map` refers to columns not in `ref`: ",
       paste(missing_cols, collapse = ", ")
     )
   )

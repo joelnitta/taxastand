@@ -6,7 +6,7 @@
 \usage{
 ts_resolve_names(
   query,
-  ref_taxonomy,
+  ref,
   max_dist = 3,
   max_dist_genus = 2,
   transpositions = FALSE,
@@ -19,7 +19,8 @@ ts_resolve_names(
   exclude_placeholders = TRUE,
   fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
-  collapse_infra_exclude = NULL
+  collapse_infra_exclude = NULL,
+  ref_taxonomy = NULL
 )
 }
 \arguments{
@@ -28,7 +29,7 @@ If a character vector, missing values not allowed and all values must be
 unique. If a dataframe, should be taxonomic names matched with
 \code{\link{ts_match_names}()}.}
 
-\item{ref_taxonomy}{Dataframe; reference taxonomic data adhering to the
+\item{ref}{Dataframe; reference taxonomic data adhering to the
 \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard} with the
 following columns:
 \itemize{
@@ -105,6 +106,9 @@ smallest distance found (ties are all kept, so real ambiguity still shows).}
 
 \item{collapse_infra, collapse_infra_exclude}{Aliases of \code{match_autonyms} and
 \code{match_autonyms_exclude}, kept so that existing code keeps working.}
+
+\item{ref_taxonomy}{Alias of \code{ref}, the name used before taxastand 3.0.0; it
+will be deprecated in a future version.}
 }
 \value{
 Dataframe; results of resolving synonyms in matched taxonomic names.
@@ -113,8 +117,8 @@ Includes the following columns:
 \item \code{query}: Query name
 \item \code{resolved_name}: Accepted name after resolving synonyms
 \item \code{matched_name}: Name matched to query
-\item \code{resolved_status}: Taxonomic status of the resolved name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
-\item \code{matched_status}: Taxonomic status of the matched name (same as \code{taxonomicStatus} in \code{ref_taxonomy})
+\item \code{resolved_status}: Taxonomic status of the resolved name (same as \code{taxonomicStatus} in \code{ref})
+\item \code{matched_status}: Taxonomic status of the matched name (same as \code{taxonomicStatus} in \code{ref})
 \item \code{match_type}: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
 }
 
@@ -128,17 +132,17 @@ function resolves synonyms to their accepted names.
 \details{
 \code{query} can take as input either a character vector of taxonomic names, or
 the output of \code{\link{ts_match_names}()}. If the former, it will run
-\code{\link{ts_match_names}()} to match the query to \code{ref_taxonomy}, then
-resolve synonyms. If the latter, the scientific names in \code{ref_taxonomy}
+\code{\link{ts_match_names}()} to match the query to \code{ref}, then
+resolve synonyms. If the latter, the scientific names in \code{ref}
 should be the same used as reference with \code{\link{ts_match_names}()}
 (this is not checked).
 
 If multiple queries will be made against the same large reference (e.g., a
 database such as World Flora Online), prepare it once with
-\code{\link{ts_optimize_ref}()} and use the result as \code{ref_taxonomy},
+\code{\link{ts_optimize_ref}()} and use the result as \code{ref},
 so that the reference is not parsed again on every call.
 
-\code{ref_taxonomy} must be taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}.
+\code{ref} must be taxonomic data adhering to the \href{https://dwc.tdwg.org/terms/#taxon}{Darwin Core standard}.
 Darwin Core includes many terms, but only four (\code{taxonID},
 \code{acceptedNameUsageID}, \code{taxonomicStatus}, and \code{scientificName}) are required
 for this function.

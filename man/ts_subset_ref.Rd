@@ -4,10 +4,10 @@
 \alias{ts_subset_ref}
 \title{Keep one or more taxa (and their synonyms) from a taxonomic table}
 \usage{
-ts_subset_ref(x, taxon, rank = NULL, col_map = NULL)
+ts_subset_ref(ref, taxon, rank = NULL, col_map = NULL)
 }
 \arguments{
-\item{x}{Dataframe of taxonomic names in Darwin Core format, or close to it,
+\item{ref}{Dataframe of taxonomic names in Darwin Core format, or close to it,
 with at least \code{taxonID} and \code{acceptedNameUsageID}, and either columns for
 higher ranks or \code{parentNameUsageID} (and \code{scientificName}).}
 
@@ -19,19 +19,19 @@ all of them are kept.}
 Use it when the same name is used at more than one rank. By default any
 rank matches.}
 
-\item{col_map}{Named character vector to map columns of \code{x} to Darwin Core
+\item{col_map}{Named character vector to map columns of \code{ref} to Darwin Core
 names, as in \code{\link{ts_format_ref}()}. The same \code{col_map} can be
 given to both functions. Default \code{NULL}.}
 }
 \value{
-The rows of \code{x} for the members of \code{taxon} and their synonyms, with
-the same columns as \code{x}. A warning is given for any name in \code{taxon} that
+The rows of \code{ref} for the members of \code{taxon} and their synonyms, with
+the same columns as \code{ref}. A warning is given for any name in \code{taxon} that
 was not found; it is an error if none were found.
 }
 \description{
 Subsets a large table of taxonomic names to the members of one or more taxa
 such as a family, so that a reference small enough for the task at hand can
-be made. \code{x} should be in Darwin Core format, or close to it (use \code{col_map}
+be made. \code{ref} should be in Darwin Core format, or close to it (use \code{col_map}
 for columns with other names). It can be used on the table before or after
 \code{\link{ts_format_ref}()} (which keeps the hierarchy columns), with one
 exception: if the table has only \code{parentNameUsageID} and no columns for
@@ -39,15 +39,15 @@ higher ranks, use \code{ts_subset_ref()} first. \code{ts_format_ref()} removes t
 above species, which are needed to walk down from \code{taxon}.
 }
 \details{
-How members are found depends on the columns in \code{x}:
+How members are found depends on the columns in \code{ref}:
 \enumerate{
-\item If \code{x} has columns for higher ranks (\code{kingdom}, \code{phylum}, \code{class},
+\item If \code{ref} has columns for higher ranks (\code{kingdom}, \code{phylum}, \code{class},
 \code{order}, \code{family}, \code{genus} and a few others), rows are kept when one of
 these columns is equal to \code{taxon}.
-\item Otherwise, if \code{x} has a \code{parentNameUsageID} column, the accepted name
+\item Otherwise, if \code{ref} has a \code{parentNameUsageID} column, the accepted name
 \code{taxon} is looked up in \code{scientificName} (the author may follow it) and
 all of its descendants are kept.
-\item If \code{x} has neither, there is no hierarchy to use and an error is raised.
+\item If \code{ref} has neither, there is no hierarchy to use and an error is raised.
 }
 
 Next, synonyms of the kept names are added (through

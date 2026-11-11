@@ -62,7 +62,7 @@ test_that("parentNameUsageID is used when there are no rank columns", {
 test_that("errors and warnings", {
   expect_error(ts_subset_ref(x_ranks, "Nope"), "None of")
   expect_warning(
-    ts_subset_ref(x_ranks, c("Pteridaceae", "Nope")), "Not found in `x`: Nope"
+    ts_subset_ref(x_ranks, c("Pteridaceae", "Nope")), "Not found in `ref`: Nope"
   )
   expect_error(ts_subset_ref(x_ranks[, 1:4], "Pteridaceae"), "no columns for higher ranks")
   expect_error(ts_subset_ref(x_ranks[, -1], "Pteridaceae"), "missing required")
@@ -83,5 +83,5 @@ test_that("col_map maps columns and the original columns are returned", {
   res <- ts_subset_ref(x, "Pteridaceae", col_map = map)
   expect_equal(res$id, c("2", "3", "6"))
   expect_equal(colnames(res), colnames(x))
-  expect_error(ts_subset_ref(x, "Pteridaceae", col_map = c(family = "zzz")), "not in `x`")
+  expect_error(ts_subset_ref(x, "Pteridaceae", col_map = c(family = "zzz")), "not in `ref`")
 })
