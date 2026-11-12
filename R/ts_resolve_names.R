@@ -66,6 +66,10 @@
 #'   will be deprecated in a future version.
 #' @param collapse_infra,collapse_infra_exclude Aliases of `match_autonyms` and
 #' `match_autonyms_exclude`, kept so that existing code keeps working.
+#' @param match_no_auth Alias of `match_canon`, kept so that existing code keeps
+#' working. It was an option of earlier versions that `match_canon` now covers;
+#' note that `match_canon` also allows canonical-name matches for queries that
+#' have an author.
 #' @param tbl_out Logical vector of length 1; should a tibble be returned?
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
@@ -129,8 +133,13 @@ ts_resolve_names <- function(
   fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
   collapse_infra_exclude = NULL,
-  ref_taxonomy = NULL
+  ref_taxonomy = NULL,
+  match_no_auth = NULL
 ) {
+  match_canon <- .ts_alias(
+    match_canon, match_no_auth, missing(match_canon),
+    "match_canon", "match_no_auth"
+  )
   ref <- .ts_alias(ref, ref_taxonomy, missing(ref), "ref", "ref_taxonomy")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),

@@ -21,7 +21,8 @@ ts_match_names(
   fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
   collapse_infra_exclude = NULL,
-  reference = NULL
+  reference = NULL,
+  match_no_auth = NULL
 )
 }
 \arguments{
@@ -107,6 +108,11 @@ smallest distance found (ties are all kept, so real ambiguity still shows).}
 
 \item{reference}{Alias of \code{ref}, the name used before taxastand 3.0.0; it
 will be deprecated in a future version.}
+
+\item{match_no_auth}{Alias of \code{match_canon}, kept so that existing code keeps
+working. It was an option of earlier versions that \code{match_canon} now covers;
+note that \code{match_canon} also allows canonical-name matches for queries that
+have an author.}
 }
 \value{
 Dataframe with the following columns (if \code{simple} is \code{FALSE}):
