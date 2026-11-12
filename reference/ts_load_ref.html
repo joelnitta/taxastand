@@ -89,8 +89,7 @@ result can be used directly as <code>ref</code> in <code><a href="ts_match_names
 <span>  rank <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  col_map <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  drop_ranks <span class="op">=</span> <span class="fu"><a href="ts_ranks_above_species.html">ts_ranks_above_species</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  refresh <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  refresh <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -142,10 +141,6 @@ and <code><a href="ts_format_ref.html">ts_format_ref()</a></code> (both). Not ne
 <dd><p>Logical; download again even if the file is already in
 <code>cache_dir</code>? Default <code>FALSE</code>.</p></dd>
 
-
-<dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical; suppress the messages? Default <code>FALSE</code>.</p></dd>
-
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -185,7 +180,8 @@ in the option <code>taxastand.cache_dir</code> if set, otherwise a folder in
 sessions, give a <code>cache_dir</code> (or set the option). If the file is already
 there, it is used and not downloaded again, unless <code>refresh = TRUE</code>. See
 <code><a href="ts_show_ref_cache.html">ts_show_ref_cache()</a></code> and <code><a href="ts_show_ref_cache.html">ts_clear_ref_cache()</a></code> to
-check and free the space.
+check and free the space. To silence the messages, set
+<code>options(taxastand.verbosity = "quiet")</code> (see <code><a href="taxastand-package.html">taxastand-package</a></code>).
 Downloads from named sources can be large (World Flora Online is about
 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
@@ -211,7 +207,7 @@ Core taxonomic data. Check the license of the data before reusing it.</p>
 <span class="r-in"><span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ts_load_ref</span><span class="op">(</span>file <span class="op">=</span> <span class="va">f</span>, version <span class="op">=</span> <span class="st">"example"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded 2 names from /tmp/RtmppQ5iSM/file18f67daed1d7.csv (version example).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded 2 names from /tmp/RtmpmnlcBU/file18413fbe2e0b.csv (version example).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   taxonID acceptedNameUsageID taxonomicStatus               scientificName</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1                   1        accepted        Polypodium vulgare L.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2                   1         synonym Polypodium rotundatum Willd.</span>
