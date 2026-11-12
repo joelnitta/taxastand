@@ -197,20 +197,6 @@ test_that("tt_matchnames: orthvar also applies to infraspecific epithets", {
   expect_equal(res$match_type, "auto_orthvar")
 })
 
-test_that("tt_matchnames: match_no_auth matches a unique author-less name", {
-  ref <- c("r1||Foo||bar|||L.", "r2||Foo||baz|||L.")
-  q <- "q1||Foo||bar|||"
-  expect_equal(tt_matchnames(q, ref)$match_type, "auto_canon")
-  res <- tt_matchnames(q, ref, match_no_auth = TRUE)
-  expect_equal(res$match_type, "auto_noauth")
-  expect_equal(res$id_ref, "r1")
-  # not unique in the reference: no auto_noauth, both are canonical hits
-  ref2 <- c(ref, "r3||Foo||bar|||Sm.")
-  res2 <- tt_matchnames(q, ref2, match_no_auth = TRUE)
-  expect_equal(res2$match_type, c("auto_canon", "auto_canon"))
-  expect_setequal(res2$id_ref, c("r1", "r3"))
-})
-
 test_that("tt_matchnames: match_canon matches on canonical name only", {
   ref <- "r1||Foo||bar|||L."
   far <- "q1||Foo||bar|||Zzzzzzzzzzz."
@@ -248,13 +234,6 @@ test_that("tt_matchnames handles no queries; .tt_osa handles empty strings", {
   expect_equal(ncol(res), 18)
   expect_equal(.tt_osa(character(0), "ab"), 2L)
   expect_equal(.tt_osa(c("a", "b"), ""), 2L)
-})
-
-test_that("tt_matchnames: match_no_auth is a no-op for queries with an author", {
-  res <- tt_matchnames(
-    "q1||Foo||bar|||L.", "r1||Foo||bar|||Sm.", match_no_auth = TRUE
-  )
-  expect_equal(res$match_type, "auto_fuzzy")
 })
 
 test_that("tt_parsenames returns nothing for no records", {

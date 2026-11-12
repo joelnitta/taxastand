@@ -96,7 +96,6 @@
     val <- switch(method,
       exact = exact,
       punct = tt_depunct(punct_in),
-      noauth = tt_depunct(namex),
       canon = tt_depunct(paste0(g, s, ssp)),
       irank = derive(paste0(xg, g, xs, s, ssp, a)),
       basio = derive(paste0(namex, sub("^\\([^)]+\\)", "", a))),
@@ -194,7 +193,6 @@
 #' @param ref_keys Optional output of `.tt_record_keys()` for the reference
 #'   (e.g. memoized by a prepared reference); used instead of `ref_lines`.
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
-#' @param match_no_auth Logical; the `-1` option (NOAUTHONE).
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).
 #' @param canon_closest Logical; for fuzzy canonical-name matches of queries
 #'   without an author, return only the hits at the smallest distance (ties
@@ -214,7 +212,7 @@
 #' @importFrom utils adist
 #' @noRd
 tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
-                          match_no_auth = FALSE, match_canon = FALSE,
+                          match_canon = FALSE,
                           canon_closest = FALSE, max_dist_genus = 0,
                           transpositions = FALSE, ref_keys = NULL) {
   m <- .tt_new_match(
@@ -231,7 +229,6 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # Exact and rule-based stages, most certain first
   .tt_stage_eq(m, "exact", "exact")
   .tt_stage_eq(m, "punct", "auto_punct")
-  if (isTRUE(match_no_auth)) .tt_stage_noauth(m)
   .tt_stage_pm(m, "basio")
   .tt_stage_pm(m, "in")
   .tt_stage_pm(m, "exin")
@@ -340,21 +337,6 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   if (length(idx)) {
     .tt_accept(m, idx, .tt_lookup(m, m$A$key(method)[idx], method), outtype)
   }
-}
-
-# Stage: author-less query whose noauth key is unique in the reference
-.tt_stage_noauth <- function(m) {
-  idx <- m$pending[m$A$no_auth[m$pending]]
-  if (!length(idx)) {
-    return(invisible())
-  }
-  bk <- m$B$key("noauth")
-  u <- unique(bk)
-  counts <- tabulate(match(bk, u), length(u))
-  qk <- m$A$key("noauth")[idx]
-  rc <- .tt_lookup(m, qk, "noauth")
-  rc[is.na(counts[match(qk, u)]) | counts[match(qk, u)] != 1L] <- list(character(0))
-  .tt_accept(m, idx, rc, "auto_noauth")
 }
 
 # Stage: plus/minus variants using the punct key on the opposite side

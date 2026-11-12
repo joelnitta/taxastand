@@ -77,7 +77,7 @@ queries <- c(
   "Microsorum scolopendria",
   "Polypodium pelucidum Kaulf."
 )
-res <- ts_resolve_names(queries, itis, match_no_auth = TRUE)
+res <- ts_resolve_names(queries, itis)
 res[match(queries, res$query), c("query", "resolved_name", "matched_status", "match_type")]
 ```
 
@@ -157,7 +157,7 @@ Before matching, `taxastand` parses the reference names and builds the keys it c
 
 ```{r optimize}
 itis_prepared <- ts_optimize_ref(itis)
-res <- ts_resolve_names(queries, itis_prepared, match_no_auth = TRUE)
+res <- ts_resolve_names(queries, itis_prepared)
 ```
 
 The results are the same as without optimizing. The genus of every name is found up front, and each genus is parsed the first time a query needs it, so the first batch pays for the genera it uses and later batches reuse them. The optimized reference therefore grows as it is used. If you optimize a reference with `strip_qualifiers = TRUE`, the qualifiers are removed from the reference names when they are parsed.
