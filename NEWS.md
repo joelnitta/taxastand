@@ -122,12 +122,14 @@
   penalty taxon-tools applied when the reference merely has extra trailing text
   was removed, which can add matches at exactly `max_dist`.
 
-* **Breaking: the `match_no_auth` argument and the `auto_noauth` match type are
-  removed from `ts_match_names()` and `ts_resolve_names()` (#143).** A query
-  without an author is matched on its canonical name whatever the setting (see
-  above), so the option gave the same reference names under a different
-  `match_type`. Remove the argument from your calls; such queries now return
-  `auto_canon`.
+* **`match_no_auth` and the `auto_noauth` match type are removed (#143).**
+  A query without an author is matched on its canonical name whatever the
+  setting (see above), so the option gave the same reference names under a
+  different `match_type`. Such queries now return `auto_canon`. `match_canon`
+  is the closest replacement, and `match_no_auth` is kept as an alias of it so
+  that existing code runs. The behavior is slightly different: `match_canon =
+  TRUE` also allows canonical-name matches for queries that have an author.
+  Use `match_canon` instead of `match_no_auth`.
 
 * Design philosophy change: taxastand is no longer a strict port of
   taxon-tools. Goals are now to standardize names accurately (including

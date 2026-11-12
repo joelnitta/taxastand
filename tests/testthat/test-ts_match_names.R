@@ -323,3 +323,25 @@ test_that("`reference` still works as an alias of `ref`", {
     "alias of `ref`"
   )
 })
+
+test_that("`match_no_auth` still works as an alias of `match_canon`", {
+  q <- "Foo bar Zed."
+  ref <- "Foo bar L."
+  expect_equal(
+    ts_match_names(q, ref, max_dist = 0)$match_type, "no_match"
+  )
+  old <- ts_match_names(q, ref, max_dist = 0, match_no_auth = TRUE)
+  expect_equal(old$match_type, "auto_canon")
+  expect_equal(old, ts_match_names(q, ref, max_dist = 0, match_canon = TRUE))
+  expect_equal(
+    ts_resolve_names(q, data.frame(
+      taxonID = "1", acceptedNameUsageID = NA_character_,
+      taxonomicStatus = "accepted", scientificName = ref
+    ), max_dist = 0, match_no_auth = TRUE)$resolved_name,
+    ref
+  )
+  expect_error(
+    ts_match_names(q, ref, match_canon = FALSE, match_no_auth = TRUE),
+    "alias of `match_canon`"
+  )
+})
