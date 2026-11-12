@@ -10,15 +10,18 @@
 #' Give the data in one of three ways, and only one:
 #'
 #' - `source`: the name of a source that taxastand knows how to download, such
-#'   as `"wfo"` (World Flora Online) or `"ppg"` (Pteridophyte Phylogeny Group).
-#'   See \code{\link{ts_show_ref_sources}()} for the list, licenses and how to
-#'   cite them. The latest version is used unless you give a `version`, and the
+#'   as `"wfo"` (World Flora Online) or `"itis"` (the Integrated Taxonomic
+#'   Information System). See \code{\link{ts_show_ref_sources}()} for the
+#'   list, licenses and how to cite them. The latest version is used unless you give a `version`, and the
 #'   version that was used is recorded in the result.
 #' - `url`: a direct link (HTTPS) to a file, not to a web page about it.
 #' - `file`: the path to a file on your computer.
 #'
 #' A file can be a comma- or tab-separated text file (such as `.csv`, `.tsv` or
-#' `.txt`, also compressed as `.gz`), or a zipped Darwin Core Archive (`.zip`).
+#' `.txt`, also compressed as `.gz`), a zipped Darwin Core Archive (`.zip`), or
+#' a Parquet file (which needs the nanoparquet package; `"itis"`, `"col"`,
+#' `"gbif"`, `"ncbi"`, `"ott"`, `"fb"` and `"slb"` are Parquet files of the
+#' [taxadb](https://docs.ropensci.org/taxadb/) snapshots).
 #' The type is found from the contents of the file, not its name. For a Darwin
 #' Core Archive, the file with the taxa (the "core") and its columns are found
 #' from the `meta.xml` file in the archive. All columns are read as text.
@@ -40,7 +43,9 @@
 #' sessions, give a `cache_dir` (or set the option). If the file is already
 #' there, it is used and not downloaded again, unless `refresh = TRUE`.
 #' Downloads from named sources can be large (World Flora Online is about
-#' 120 MB), so loading can take a few minutes.
+#' 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
+#' tables also need a lot of memory (a few GB for GBIF), even when `taxon` is
+#' given.
 #'
 #' Checking that the data are what you expect is up to you: the
 #' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate Darwin
@@ -133,13 +138,17 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
       )
     )
     spec <- srcs[[source]]
+    .ts_state$taxadb_manifests <- NULL # look again for new versions
     resolved <- spec$resolve(version)
     version <- resolved$version
     url <- resolved$url
     keep <- spec$keep
-    info <- list(
-      source = source, name = spec$name, license = spec$license,
-      citation = spec$citation
+    info <- c(
+      list(
+        source = source, name = spec$name, license = spec$license,
+        citation = spec$citation
+      ),
+      resolved$extra
     )
   }
   if (!is.null(url)) {
@@ -263,8 +272,46 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     sig[3] %in% as.raw(c(0x03, 0x05))
 }
 
+# Is the file a Parquet file? (they start with "PAR1")
+.ts_is_parquet <- function(path) {
+  identical(readBin(path, what = "raw", n = 4), charToRaw("PAR1"))
+}
+
+# Read a Parquet file as character columns (only the columns in `keep`, if
+# given). Needs the nanoparquet package.
+.ts_read_parquet <- function(path, keep = NULL) {
+  if (!.ts_have_package("nanoparquet")) {
+    stop(
+      "Reading a Parquet file needs the nanoparquet package. ",
+      "Install it with install.packages(\"nanoparquet\").",
+      call. = FALSE
+    )
+  }
+  schema <- nanoparquet::read_parquet_schema(path)
+  cols <- schema$name[!is.na(schema$type)] # the first row is the file itself
+  if (!is.null(keep)) cols <- intersect(cols, keep)
+  x <- as.data.frame(
+    nanoparquet::read_parquet(path, col_select = cols),
+    stringsAsFactors = FALSE
+  )
+  x[] <- lapply(x, function(v) {
+    if (is.character(v)) {
+      v[!is.na(v) & !nzchar(v)] <- NA_character_
+      v
+    } else {
+      as.character(v)
+    }
+  })
+  x
+}
+
+.ts_have_package <- function(pkg) requireNamespace(pkg, quietly = TRUE)
+
 # Read a table from a text file or a Darwin Core Archive (zip) as character
 .ts_read_table <- function(path, keep = NULL) {
+  if (.ts_is_parquet(path)) {
+    return(.ts_read_parquet(path, keep))
+  }
   if (.ts_is_zip(path)) {
     dir <- tempfile("dwca")
     dir.create(dir)

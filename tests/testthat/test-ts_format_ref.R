@@ -127,3 +127,21 @@ test_that("ts_subset_ref() works after ts_format_ref() for rank columns", {
   res <- ts_subset_ref(ts_format_ref(x), "Pteridaceae")
   expect_equal(res$taxonID, c("1", "3"))
 })
+
+test_that("missing taxonIDs get made-up unique ones and resolve", {
+  x <- data.frame(
+    taxonID = c("A:1", NA, NA),
+    acceptedNameUsageID = c("A:1", "A:1", "A:1"),
+    taxonomicStatus = c("accepted", "synonym", "synonym"),
+    scientificName = c("Foo bar L.", "Foo baz Willd.", "Foo baz Willd.")
+  )
+  res <- ts_format_ref(x)
+  # the duplicate synonym row was removed first
+  expect_equal(nrow(res), 2)
+  expect_false(anyNA(res$taxonID))
+  expect_equal(res$taxonID[1], "A:1")
+  expect_match(res$taxonID[2], "^taxastand:")
+  expect_equal(
+    ts_resolve_names("Foo baz Willd.", res)$resolved_name, "Foo bar L."
+  )
+})

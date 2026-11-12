@@ -123,6 +123,49 @@ zenodo_json <- function(id, version) {
   )
 }
 
+all_sources <- c("wfo", "ppg", "itis", "col", "gbif", "ncbi", "ott", "fb", "slb")
+
+taxadb_manifest <- function() {
+  providers <- c("itis", "col", "gbif", "ncbi", "ott", "fb", "slb")
+  paste(
+    c(
+      "provider,schema,version,title,rows,upstream_version,license",
+      paste0(providers, ',dwc,2026,"', providers, '",10,2026-07-28,CC0 1.0')
+    ),
+    collapse = "\n"
+  )
+}
+
+# Pretend answers of the websites that tell us about versions
+fake_text <- function(link) {
+  if (grepl("zenodo.org/api/records/7460141", link)) {
+    zenodo_json(222, "2026-06")
+  } else if (grepl("zenodo.org/api/records/222/versions", link)) {
+    paste0(
+      '{"hits": {"hits": [', zenodo_json(222, "2026-06"), ", ",
+      zenodo_json(111, "2025-12"), ", ",
+      zenodo_json(110, "2023-06-deprecated"), ", ",
+      zenodo_json(100, "1.4.202207"), "]}}"
+    )
+  } else if (grepl("releases/latest", link)) {
+    '{"tag_name": "v2.1.0", "name": "a"}'
+  } else if (grepl("api.github.com", link)) {
+    '[{"tag_name": "v2.1.0"}, {"tag_name": "v2.0.0"}, {"tag_name": "v0.0.0.9009"}]'
+  } else if (grepl("list-type=2", link)) {
+    paste0(
+      "<ListBucketResult><CommonPrefixes><Prefix>taxadb/2026/</Prefix>",
+      "</CommonPrefixes><CommonPrefixes><Prefix>taxadb/22.12/</Prefix>",
+      "</CommonPrefixes></ListBucketResult>"
+    )
+  } else if (grepl("taxadb/2026/manifest.csv", link)) {
+    taxadb_manifest()
+  } else if (grepl("taxadb/22.12/manifest.csv", link)) {
+    stop("HTTP status was '404 Not Found'")
+  } else {
+    stop("unexpected link: ", link)
+  }
+}
+
 test_that("wfo: latest and specific versions are resolved and recorded", {
   local_mocked_bindings(
     .ts_fetch_text = function(link) {
@@ -220,44 +263,30 @@ test_that("failure to reach a source gives an informative error", {
 
 test_that("ts_show_ref_sources() lists the sources", {
   x <- ts_show_ref_sources()
-  expect_equal(x$source, c("wfo", "ppg"))
+  expect_equal(x$source, all_sources)
   expect_true(all(nzchar(x$license)) && all(nzchar(x$citation)))
 })
 
 test_that("versions can be listed (no internet used)", {
-  local_mocked_bindings(
-    .ts_fetch_text = function(link) {
-      if (grepl("zenodo.org/api/records/7460141", link)) {
-        zenodo_json(222, "2026-06")
-      } else if (grepl("zenodo.org/api/records/222/versions", link)) {
-        paste0(
-          '{"hits": {"hits": [', zenodo_json(222, "2026-06"), ", ",
-          zenodo_json(111, "2025-12"), ", ",
-          zenodo_json(110, "2023-06-deprecated"), ", ",
-          zenodo_json(100, "1.4.202207"), "]}}"
-        )
-      } else if (grepl("github.com", link)) {
-        paste0(
-          '[{"tag_name": "v2.1.0", "name": "a"}, {"tag_name": "v2.0.0"}, ',
-          '{"tag_name": "v0.0.0.9009"}]'
-        )
-      } else {
-        stop("unexpected link: ", link)
-      }
-    }
-  )
+  local_mocked_bindings(.ts_fetch_text = fake_text)
   expect_equal(.ts_versions_wfo(), c("2026-06", "2025-12"))
   expect_equal(.ts_versions_ppg(), c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
+  # taxadb snapshots without a manifest (22.12) are not offered
+  expect_equal(.ts_versions_taxadb("itis"), "2026")
   x <- ts_show_ref_sources(versions = TRUE)
-  expect_equal(x$source, c("wfo", "ppg"))
+  expect_equal(x$source, all_sources)
   expect_equal(x$versions$wfo, c("2026-06", "2025-12"))
   expect_equal(x$versions$ppg, c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
+  expect_equal(x$versions$gbif, "2026")
   out <- capture.output(print(x))
   expect_true(any(grepl("^wfo: World Flora Online", out)))
   expect_true(any(grepl("Versions: 2026-06, 2025-12$", out)))
   expect_false("versions" %in% colnames(ts_show_ref_sources()))
   # an unknown version lists the versions that can be used
   expect_error(.ts_resolve_wfo("2020-01"), "Versions you can use: 2026-06, 2025-12")
+  expect_error(
+    .ts_resolve_taxadb("itis", "22.12"), "Versions you can use: 2026"
+  )
 })
 
 test_that("a source that can't be reached gives NA versions and a message", {
@@ -285,7 +314,8 @@ test_that("a failed download of a named source points to the versions", {
 
 test_that("long version lists are shortened when printed", {
   x <- ts_show_ref_sources()
-  x$versions <- list(wfo = paste0("2020-0", 1:9), ppg = "v1")
+  x$versions <- stats::setNames(rep(list("v1"), nrow(x)), x$source)
+  x$versions$wfo <- paste0("2020-0", 1:9)
   out <- capture.output(print(x))
   expect_true(any(grepl(
     "Versions: 2020-01, 2020-02, 2020-03, 2020-04, 2020-05, \\.\\.\\. \\(9 in total\\)", out
@@ -295,23 +325,15 @@ test_that("long version lists are shortened when printed", {
 })
 
 test_that("tidy output has one row per version", {
-  local_mocked_bindings(
-    .ts_fetch_text = function(link) {
-      if (grepl("zenodo.org/api/records/7460141", link)) {
-        zenodo_json(222, "2026-06")
-      } else if (grepl("zenodo.org/api/records/222/versions", link)) {
-        paste0(
-          '{"hits": {"hits": [', zenodo_json(222, "2026-06"), ", ",
-          zenodo_json(111, "2025-12"), "]}}"
-        )
-      } else {
-        '[{"tag_name": "v2.1.0"}, {"tag_name": "v2.0.0"}, {"tag_name": "v1.0.0"}]'
-      }
-    }
-  )
+  local_mocked_bindings(.ts_fetch_text = fake_text)
   x <- ts_show_ref_sources(versions = TRUE, tidy = TRUE)
-  expect_equal(x$source, c("wfo", "wfo", "ppg", "ppg", "ppg"))
-  expect_equal(x$version, c("2026-06", "2025-12", "v2.1.0", "v2.0.0", "v1.0.0"))
+  expect_equal(
+    x$source, c("wfo", "wfo", "ppg", "ppg", "ppg", all_sources[3:9])
+  )
+  expect_equal(
+    x$version,
+    c("2026-06", "2025-12", "v2.1.0", "v2.0.0", "v0.0.0.9009", rep("2026", 7))
+  )
   expect_false("versions" %in% colnames(x))
   expect_true(all(c("name", "license", "citation", "url") %in% colnames(x)))
   expect_false(inherits(x, "ts_ref_sources"))
@@ -325,7 +347,7 @@ test_that("tidy output keeps a source that could not be reached", {
   expect_message(
     x <- ts_show_ref_sources(versions = TRUE, tidy = TRUE), "no internet"
   )
-  expect_equal(x$source, c("wfo", "ppg"))
+  expect_equal(x$source, all_sources)
   expect_true(all(is.na(x$version)))
 })
 
@@ -337,8 +359,74 @@ test_that("tidy = TRUE does not look up versions unless versions = TRUE", {
     ts_show_ref_sources(tidy = TRUE),
     ts_show_ref_sources(versions = FALSE, tidy = TRUE)
   )) {
-    expect_equal(x$source, c("wfo", "ppg"))
+    expect_equal(x$source, all_sources)
     expect_false(any(c("version", "versions") %in% colnames(x)))
     expect_false(inherits(x, "ts_ref_sources"))
   }
+})
+
+test_that("taxadb providers: a Parquet file is downloaded and formatted", {
+  skip_if_not_installed("nanoparquet")
+  fetched <- character()
+  local_mocked_bindings(
+    .ts_fetch_text = fake_text,
+    .ts_fetch = function(url, dest) {
+      fetched <<- c(fetched, url)
+      file.copy(test_path("fixtures", "mini-taxadb.parquet"), dest, overwrite = TRUE)
+      invisible(dest)
+    }
+  )
+  cache <- withr::local_tempdir()
+  expect_message(
+    res <- ts_load_ref(source = "itis", cache_dir = cache), "License: CC0"
+  )
+  expect_equal(
+    fetched, "https://data.source.coop/cboettig/taxadb/2026/dwc_itis_part_0.parquet"
+  )
+  # the genus is dropped, the author is added, and the synonym with no ID gets
+  # one so that it can be resolved
+  expect_equal(nrow(res), 4)
+  expect_equal(res$scientificName[1:3], c(
+    "Polypodium vulgare L.", "Polypodium rotundatum Willd.",
+    "Polypodium vulgare var. alpinum Foo"
+  ))
+  expect_false(anyNA(res$taxonID))
+  expect_false("vernacularName" %in% colnames(res))
+  src <- attr(res, "ts_source")
+  expect_equal(src$source, "itis")
+  expect_equal(src$version, "2026")
+  expect_equal(src$upstream_version, "2026-07-28")
+  expect_match(src$citation, "10.1111/2041-210X.13440")
+  expect_equal(
+    ts_resolve_names("Polypodium vulgare var. alpinum Foo", res)$resolved_name,
+    "Polypodium vulgare L."
+  )
+  sub <- ts_load_ref(
+    source = "itis", cache_dir = cache, taxon = "Pteridaceae", quiet = TRUE
+  )
+  expect_equal(sub$scientificName, "Pteris vittata L.")
+})
+
+test_that("a Parquet file can be read from a path", {
+  skip_if_not_installed("nanoparquet")
+  res <- ts_load_ref(
+    file = test_path("fixtures", "mini-taxadb.parquet"), quiet = TRUE
+  )
+  expect_equal(nrow(res), 4)
+})
+
+test_that("reading Parquet without nanoparquet gives an install hint", {
+  local_mocked_bindings(.ts_have_package = function(pkg) FALSE)
+  expect_error(
+    ts_load_ref(file = test_path("fixtures", "mini-taxadb.parquet"), quiet = TRUE),
+    "install.packages\\(\"nanoparquet\"\\)"
+  )
+})
+
+test_that("unknown taxadb version gives the versions available", {
+  local_mocked_bindings(.ts_fetch_text = fake_text)
+  expect_error(
+    ts_load_ref(source = "gbif", version = "1999", quiet = TRUE),
+    "Versions you can use: 2026"
+  )
 })

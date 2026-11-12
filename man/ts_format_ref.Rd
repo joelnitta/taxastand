@@ -65,7 +65,9 @@ drops the rest. This lets \code{\link{ts_subset_ref}()} be used after
 exception).
 \item Tidies values: \code{taxonomicStatus} is lower-cased and trimmed, empty
 strings become \code{NA}, and rows with no name and exact duplicate rows are
-removed.
+removed. A missing \code{taxonID} (some databases give none to synonyms) is
+replaced by a made-up unique one, such as \code{"taxastand:17"}, because
+\code{\link{ts_resolve_names}()} needs every name to have an ID.
 }
 
 There is no controlled vocabulary for taxonomic ranks, and databases differ
