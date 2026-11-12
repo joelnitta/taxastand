@@ -7,9 +7,9 @@ By participating in this project you agree to abide by its
 
 ## Scope
 
-taxastand matches and standardizes taxonomic names against a
-user-supplied reference taxonomy (see the README for details). Feature
-requests that are really about a specific taxonomic database or web
+taxastand matches and standardizes taxonomic names against a reference
+taxonomy, either loaded from a named source or supplied by the user (see the
+README for details). Feature requests that are really about a specific taxonomic database or web
 service are likely a better fit for packages like
 [taxize](https://github.com/ropensci/taxize) or
 [taxadb](https://github.com/ropensci/taxadb); if you're not sure, open

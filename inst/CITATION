@@ -9,5 +9,10 @@ bibentry(
   year = "2026",
   note = sprintf("R package version %s", meta$Version),
   url = "https://joelnitta.github.io/taxastand/",
-  doi = "10.5281/zenodo.5726390"
+  doi = "10.5281/zenodo.5726390",
+  footer = paste(
+    "If you used a reference taxonomy, please also cite it:",
+    "see ts_show_ref_sources() for the sources of ts_load_ref(), or",
+    "attr(x, \"ts_source\") for a reference that was loaded with it."
+  )
 )

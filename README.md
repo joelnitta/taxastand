@@ -93,7 +93,7 @@ remotes::install_github("joelnitta/taxastand")
   searches taxonomic databases. It can interface with them either
   through SQL or in-memory in R.
 
-- [taxonstand](https://cran.r-project.org/web/packages/Taxonstand/index.html)
+- [taxonstand](https://CRAN.R-project.org/package=Taxonstand)
   has a very similar goal to `taxastand`, but only uses [The Plant List
   (TPL)](https://web.archive.org/web/20260619054601/http://www.theplantlist.org/)
   as its taxonomic standard and does not allow the user to provide their
