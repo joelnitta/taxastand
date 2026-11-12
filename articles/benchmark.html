@@ -232,8 +232,7 @@ damage did not change the name), drawn at random. The query code is in
 </tr>
 <tr class="even">
 <td align="left"><code>epithet_swap</code></td>
-<td align="left">Two neighbouring letters of the epithet are
-swapped</td>
+<td align="left">Two neighboring letters of the epithet are swapped</td>
 <td align="left">Erica triceps Link → Erica tricesp Link</td>
 </tr>
 <tr class="odd">
@@ -961,11 +960,15 @@ are within what a different sample could change.</li>
 <code>acceptedNameUsageID.match = FALSE</code> and
 <code>WFO.one(Auth.dist = ...)</code> aside; see the code below).
 Settings such as the thresholds for fuzzy matching can be changed, and a
-package tuned to your own data could give different results. How a name
-is passed in also matters: WorldFlora was given infraspecific names as
-separate genus, species and infraspecific epithet columns, the way to
-ask for a match that ignores the rank. Given as one string, a variety
-that is queried as a subspecies is not found.</li>
+package tuned to your own data could give different results. The
+defaults differ in kind: taxify allows a fraction of the name to differ
+and counts a swap of two neighboring letters as one edit, while
+taxastand allows a fixed number of edits (<code>max_dist</code>) and, by
+default, counts a swap as two (<code>transpositions = FALSE</code>). How
+a name is passed in also matters: WorldFlora was given infraspecific
+names as separate genus, species and infraspecific epithet columns, the
+way to ask for a match that ignores the rank. Given as one string, a
+variety that is queried as a subspecies is not found.</li>
 <li>The nomenclatural kinds and the kinds for shared names were run
 separately from the others, the last of them on 2026-11-09 (the others
 on 2026-11-09), on the same machine, with the same reference and package
@@ -1063,7 +1066,7 @@ name.</p>
 <p><code>damage()</code> changes one letter; <code>make_queries()</code>
 builds each kind of query and records the correct answer.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Damage one letter of `x`: substitution, deletion, or swap of two neighbours.</span></span>
+<code class="sourceCode R"><span><span class="co"># Damage one letter of `x`: substitution, deletion, or swap of two neighbors.</span></span>
 <span><span class="co"># `from` is the first position that may be changed.</span></span>
 <span><span class="va">damage</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">kind</span>, <span class="va">from</span> <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -1286,7 +1289,7 @@ builds each kind of query and records the correct answer.</p>
 <span><span class="co">#   mean_hits: average records returned per answered query</span></span>
 <span><span class="co"># - pick_answered: share of queries for which the tool chose one record;</span></span>
 <span><span class="co">#   pick_precision: share of those choices that are right</span></span>
-<span><span class="va">summarise_scores</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">scores</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">summarize_scores</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">scores</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">f</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">answered</span> <span class="op">&lt;-</span> <span class="va">s</span><span class="op">$</span><span class="va">n_hits</span> <span class="op">&gt;</span> <span class="fl">0</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -1542,7 +1545,7 @@ so this helper splits a query first.</p>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">tool</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">adapters</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">hits</span> <span class="op">&lt;-</span> <span class="va">adapters</span><span class="op">[[</span><span class="va">tool</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">queries</span><span class="op">$</span><span class="va">query</span><span class="op">)</span></span>
 <span>  <span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu">score_queries</span><span class="op">(</span><span class="va">queries</span>, <span class="va">hits</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">summarise_scores</span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span> <span class="co"># found, single answer</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">summarize_scores</span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span> <span class="co"># found, single answer</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">time_adapter</span><span class="op">(</span><span class="va">adapters</span><span class="op">[[</span><span class="va">tool</span><span class="op">]</span><span class="op">]</span>, <span class="va">queries</span><span class="op">$</span><span class="va">query</span><span class="op">)</span><span class="op">)</span> <span class="co"># speed</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
