@@ -73,34 +73,65 @@ its data.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ts_show_ref_sources</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ts_show_ref_sources</span><span class="op">(</span>versions <span class="op">=</span> <span class="cn">FALSE</span>, tidy <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
+    <div id="arguments">
+    <h2>Arguments</h2>
+
+
+<dl><dt id="arg-versions">versions<a class="anchor" aria-label="anchor" href="#arg-versions"></a></dt>
+<dd><p>Logical; also list the versions available to download?
+Needs internet. If a source cannot be reached, its versions are <code>NA</code> and a
+message says why. Default <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-tidy">tidy<a class="anchor" aria-label="anchor" href="#arg-tidy"></a></dt>
+<dd><p>Logical; return a "tidy" dataframe. If <code>versions</code> is <code>TRUE</code>,
+returns one row per version. Default <code>FALSE</code>.</p></dd>
+
+</dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A dataframe with one row per source and columns <code>source</code> (the name
-to give to <code>ts_load_ref(source = )</code>), <code>name</code>, <code>description</code>, <code>license</code>,
-<code>citation</code> and <code>url</code>.</p>
+    <p>A dataframe with one row per source and these columns: <code>source</code> (the
+name to give to the <code>source</code> argument of <code><a href="ts_load_ref.html">ts_load_ref()</a></code>),
+<code>name</code>, <code>description</code>, <code>license</code>, <code>citation</code> and <code>url</code>.</p>
+<p>With <code>versions = TRUE</code>, the versions available to download for each source
+are shown, newest first. Printing the result shows only the latest
+versions of each source. To see all of them, also use <code>tidy = TRUE</code>.</p>
+<p>With <code>tidy = TRUE</code>, the dataframe has one row per version, unless
+<code>versions = FALSE</code>.</p>
+    </div>
+    <div id="details">
+    <h2>Details</h2>
+    <p>By default no internet is used. With <code>versions = TRUE</code>, the versions that can
+be downloaded are looked up (one or two requests per source), which is useful
+to choose the <code>version</code> of <code><a href="ts_load_ref.html">ts_load_ref()</a></code> to use. This can
+take some time (a few seconds, and longer with a slow connection).</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">ts_show_ref_sources</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   source                                                 name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    wfo                        World Flora Online Plant List</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    ppg Pteridophyte Phylogeny Group classification (PPG II)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                      description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Plants (vascular plants and bryophytes); a new version every June and December</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                          Ferns and lycophytes; a new version about every month</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     license</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   CC0 1.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 CC BY 4.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                 citation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                               The World Flora Online Consortium. World Flora Online Plant List. https://doi.org/10.5281/zenodo.7460141</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Pteridophyte Phylogeny Group. PPG taxonomic database. https://doi.org/10.5281/zenodo.22760360. See also PPG I (2016) https://doi.org/10.1111/jse.12229</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                   url</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           https://wfoplantlist.org/</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 https://github.com/pteridogroup/ppg</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> wfo: World Flora Online Plant List</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Plants (vascular plants and bryophytes); a new version every June and December</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   License: CC0 1.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cite: The World Flora Online Consortium. World Flora Online Plant List. https://doi.org/10.5281/zenodo.7460141</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   More: https://wfoplantlist.org/</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ppg: Pteridophyte Phylogeny Group classification (PPG II)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ferns and lycophytes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   License: CC BY 4.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cite: Pteridophyte Phylogeny Group. PPG taxonomic database. https://doi.org/10.5281/zenodo.22760360</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   More: https://github.com/pteridogroup/ppg</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Needs internet</span></span></span>
+<span class="r-in"><span><span class="fu">ts_show_ref_sources</span><span class="op">(</span>versions <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># One row per version</span></span></span>
+<span class="r-in"><span><span class="fu">ts_show_ref_sources</span><span class="op">(</span>versions <span class="op">=</span> <span class="cn">TRUE</span>, tidy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
