@@ -223,11 +223,6 @@ name (<code>Blechnum lunare</code>).</li>
 removing mis-matching spaces, periods, non-ASCII author name characters,
 etc.</li>
 <li>
-<code>auto_noauth</code> (only applies if <code>match_no_auth</code>
-is <code>TRUE</code>): Match between a query lacking an author and a
-reference name lacking an author that occurs only once in the
-reference.</li>
-<li>
 <code>auto_basio-</code>: Match after excluding the basionym author
 from the reference. For example,
 <code>Cardaminopsis umbrosa Czerep.</code>
@@ -402,10 +397,9 @@ include the author in the query:</p>
 <p>With the author, the query matches a single name exactly
 (<code>exact</code>), which resolves to its accepted name.</p>
 <p>Name resolution workflows typically involve tweaking the matching
-arguments (such as <code>match_no_auth</code>, <code>match_canon</code>,
-and <code>max_dist</code>) to resolve as many names as possible
-automatically, followed by some amount of manual editing of the names
-that remain unresolved.</p>
+arguments (such as <code>match_canon</code> and <code>max_dist</code>)
+to resolve as many names as possible automatically, followed by some
+amount of manual editing of the names that remain unresolved.</p>
 <p>A benefit of <code>taxastand</code> is that, if during the name
 resolution workflow we discover mistakes in the reference database, the
 reference database can be edited so that the query names resolve

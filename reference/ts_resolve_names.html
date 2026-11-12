@@ -77,7 +77,6 @@ function resolves synonyms to their accepted names.</p>
 <span>  max_dist <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  max_dist_genus <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  transpositions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  match_no_auth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_canon <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_autonyms <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  match_autonyms_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -87,7 +86,8 @@ function resolves synonyms to their accepted names.</p>
 <span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span>,</span>
 <span>  collapse_infra <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ref_taxonomy <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  ref_taxonomy <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  match_no_auth <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -138,12 +138,6 @@ genus-level fuzzy matching off. See <code><a href="ts_match_names.html">ts_match
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to <code>FALSE</code> for plain
 Levenshtein distance, which is somewhat faster. See <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-match-no-auth">match_no_auth<a class="anchor" aria-label="anchor" href="#arg-match-no-auth"></a></dt>
-<dd><p>Logical; If no author is given in the query and the name
-(without author) occurs only once in the reference, accept the name in the
-reference as a match. Default: to not allow such a match (<code>FALSE</code>).</p></dd>
 
 
 <dt id="arg-match-canon">match_canon<a class="anchor" aria-label="anchor" href="#arg-match-canon"></a></dt>
@@ -205,6 +199,13 @@ smallest distance found (ties are all kept, so real ambiguity still shows).</p><
 <dt id="arg-ref-taxonomy">ref_taxonomy<a class="anchor" aria-label="anchor" href="#arg-ref-taxonomy"></a></dt>
 <dd><p>Alias of <code>ref</code>, the name used before taxastand 3.0.0; it
 will be deprecated in a future version.</p></dd>
+
+
+<dt id="arg-match-no-auth">match_no_auth<a class="anchor" aria-label="anchor" href="#arg-match-no-auth"></a></dt>
+<dd><p>Alias of <code>match_canon</code>, kept so that existing code keeps
+working. It was an option of earlier versions that <code>match_canon</code> now covers;
+note that <code>match_canon</code> also allows canonical-name matches for queries that
+have an author.</p></dd>
 
 </dl></div>
     <div id="value">
