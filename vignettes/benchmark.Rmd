@@ -143,7 +143,7 @@ that produced them is [shown below](#code). Please read the
 
 - On most kinds of error, every package returned the right record for nearly
   every query. The exceptions, in the share of queries for which the right
-  record was returned: taxify on a misspelt genus
+  record was returned: taxify on a misspelled genus
   (`r pct(val("taxify", "genus_deletion"))`) and WorldFlora on short epithets
   (`r pct(val("worldflora", "short_epithet"))`).
 - Results differed for homonyms (the same name published by different authors),
@@ -158,12 +158,12 @@ that produced them is [shown below](#code). Please read the
   WorldFlora `r pct(val("worldflora", "homonym", "unambiguous"))`. WorldFlora's
   best match, which it chooses using the author, was the right record
   `r pct(val("worldflora", "homonym", "pick_precision"))` of the time.
-- taxastand found more misspelt genera and misspelt authors than taxify (genus
+- taxastand found more misspelled genera and misspelled authors than taxify (genus
   typo: `r pct(val("taxastand", "genus_deletion"))` against
   `r pct(val("taxify", "genus_deletion"))`; author typo:
   `r pct(val("taxastand", "author_typo"))` against
   `r pct(val("taxify", "author_typo"))`). U.Taxonstand and WorldFlora were
-  slightly better than taxastand on misspelt genera
+  slightly better than taxastand on misspelled genera
   (`r pct(val("utaxonstand", "genus_deletion"))` and
   `r pct(val("worldflora", "genus_deletion"))`).
 - For the nomenclatural differences that taxastand checks explicitly (a

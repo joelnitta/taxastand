@@ -100,7 +100,7 @@ remotes::install_github("joelnitta/taxastand")
   own. Note that TPL is no longer being updated as of 2013, and its
   website is no longer online (linked above via the Wayback Machine).
 
-- [ROpenSci](https://ropensci.org/) has a [task
+- [rOpenSci](https://ropensci.org/) has a [task
   view](https://github.com/ropensci/taxonomy) summarizing many tools
   available for taxonomy.
 
