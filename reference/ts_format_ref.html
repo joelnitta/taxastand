@@ -142,7 +142,9 @@ drops the rest. This lets <code><a href="ts_subset_ref.html">ts_subset_ref()</a>
 exception).</p></li>
 <li><p>Tidies values: <code>taxonomicStatus</code> is lower-cased and trimmed, empty
 strings become <code>NA</code>, and rows with no name and exact duplicate rows are
-removed.</p></li>
+removed. A missing <code>taxonID</code> (some databases give none to synonyms) is
+replaced by a made-up unique one, such as <code>"taxastand:17"</code>, because
+<code><a href="ts_resolve_names.html">ts_resolve_names()</a></code> needs every name to have an ID.</p></li>
 </ol><p>There is no controlled vocabulary for taxonomic ranks, and databases differ
 in how many infraspecific ranks they use. Rows are therefore dropped using a
 list of ranks above species, not kept using a list of ranks to accept: a row
