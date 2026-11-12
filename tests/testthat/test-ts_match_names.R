@@ -325,6 +325,7 @@ test_that("`reference` still works as an alias of `ref`", {
 })
 
 test_that("`match_no_auth` still works as an alias of `match_canon`", {
+  .ts_session$no_auth_told <- TRUE
   q <- "Foo bar Zed."
   ref <- "Foo bar L."
   expect_equal(
@@ -344,4 +345,16 @@ test_that("`match_no_auth` still works as an alias of `match_canon`", {
     ts_match_names(q, ref, match_canon = FALSE, match_no_auth = TRUE),
     "alias of `match_canon`"
   )
+})
+
+test_that("using `match_no_auth` says once that it is an alias", {
+  withr::local_options(taxastand.verbosity = "inform")
+  .ts_session$no_auth_told <- NULL
+  expect_message(
+    ts_match_names("Foo bar", "Foo bar", match_no_auth = TRUE),
+    "alias of `match_canon`"
+  )
+  expect_no_message(ts_match_names("Foo bar", "Foo bar", match_no_auth = TRUE))
+  .ts_session$no_auth_told <- NULL
+  expect_no_message(ts_match_names("Foo bar", "Foo bar"))
 })

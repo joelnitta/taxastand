@@ -265,10 +265,7 @@ ts_match_names <- function(
   reference = NULL,
   match_no_auth = NULL
 ) {
-  match_canon <- .ts_alias(
-    match_canon, match_no_auth, missing(match_canon),
-    "match_canon", "match_no_auth"
-  )
+  match_canon <- .ts_alias_match_no_auth(match_canon, match_no_auth, missing(match_canon))
   ref <- .ts_alias(ref, reference, missing(ref), "ref", "reference")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),
