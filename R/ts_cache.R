@@ -16,7 +16,7 @@
 #'   session. There is never a prompt when not interactive.
 #'
 #' @return `ts_show_ref_cache()` returns a dataframe with one row per file: the
-#'   original `file` name, `size` (MB), `modified` and `path`. It is empty if
+#'   original `file` name, `size` (such as "121.7 MB"), `modified` and `path`. It is empty if
 #'   there is nothing in the folder. `ts_clear_ref_cache()` invisibly returns
 #'   the paths of the deleted files.
 #' @export
@@ -30,7 +30,7 @@ ts_show_ref_cache <- function(cache_dir = NULL) {
   info <- file.info(paths)
   out <- data.frame(
     file = sub("^[0-9a-f]{8}-", "", basename(paths)),
-    size = round(info$size / 1e6, 2),
+    size = .ts_size(info$size),
     modified = info$mtime,
     path = paths,
     stringsAsFactors = FALSE
@@ -65,10 +65,10 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
     message("Nothing to delete in ", dir)
     return(invisible(character(0)))
   }
-  mb <- round(sum(file.size(paths)) / 1e6, 1)
+  size <- .ts_size(sum(file.size(paths)))
   if (ask) {
     ok <- utils::askYesNo(
-      paste0("Delete ", length(paths), " file(s) (", mb, " MB) in ", dir, "?"),
+      paste0("Delete ", length(paths), " file(s) (", size, ") in ", dir, "?"),
       default = FALSE
     )
     if (!isTRUE(ok)) {
@@ -77,7 +77,7 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
     }
   }
   done <- paths[file.remove(paths)]
-  message("Deleted ", length(done), " file(s), freeing ", mb, " MB.")
+  message("Deleted ", length(done), " file(s), freeing ", size, ".")
   invisible(done)
 }
 
@@ -87,4 +87,15 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
   f <- list.files(dir, full.names = TRUE)
   f <- f[!dir.exists(f)]
   f[grepl("^[0-9a-f]{8}-.", basename(f)) | grepl("\\.part$", basename(f))]
+}
+
+# Human-readable file sizes, such as "121.7 MB"
+.ts_size <- function(bytes) {
+  vapply(
+    bytes,
+    function(b) {
+      format(structure(b, class = "object_size"), units = "auto", standard = "SI")
+    },
+    character(1)
+  )
 }
