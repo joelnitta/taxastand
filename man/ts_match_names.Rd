@@ -61,7 +61,7 @@ genus-level fuzzy matching off. Default: 2.}
 \code{Qurecus} for \code{Quercus}, a common typing error) as one edit instead of two
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to \code{FALSE} for plain
-Levenshtein distance, which is somewhat faster. Default: \code{TRUE}.}
+Levenshtein distance, which is somewhat faster. Default: \code{FALSE}.}
 
 \item{match_no_auth}{Logical; If no author is given in the query and the name
 (without author) occurs only once in the reference, accept the name in the

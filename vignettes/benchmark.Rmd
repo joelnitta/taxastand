@@ -348,6 +348,10 @@ a genus is used costs more than later calls.
   `acceptedNameUsageID.match = FALSE` and `WFO.one(Auth.dist = ...)` aside; see
   the code below). Settings such as the thresholds for fuzzy matching can be
   changed, and a package tuned to your own data could give different results.
+  The defaults differ in kind: taxify allows a fraction of the name to differ
+  and counts a swap of two neighbouring letters as one edit, while taxastand
+  allows a fixed number of edits (`max_dist`) and, by default, counts a swap as
+  two (`transpositions = FALSE`).
   How a name is passed in also matters: WorldFlora was given infraspecific
   names as separate genus, species and infraspecific epithet columns, the way
   to ask for a match that ignores the rank. Given as one string, a variety that
