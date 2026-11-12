@@ -250,7 +250,11 @@ test_that("versions can be listed (no internet used)", {
   expect_equal(.ts_versions_ppg(), c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
   x <- ts_show_ref_sources(versions = TRUE)
   expect_equal(x$source, c("wfo", "ppg"))
-  expect_equal(x$versions, c("2026-06, 2025-12", "v2.1.0, v2.0.0, v0.0.0.9009"))
+  expect_equal(x$versions$wfo, c("2026-06", "2025-12"))
+  expect_equal(x$versions$ppg, c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
+  out <- capture.output(print(x))
+  expect_true(any(grepl("^wfo: World Flora Online", out)))
+  expect_true(any(grepl("Versions: 2026-06, 2025-12$", out)))
   expect_false("versions" %in% colnames(ts_show_ref_sources()))
   # an unknown version lists the versions that can be used
   expect_error(.ts_resolve_wfo("2020-01"), "Versions you can use: 2026-06, 2025-12")
@@ -261,7 +265,8 @@ test_that("a source that can't be reached gives NA versions and a message", {
     .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
   )
   expect_message(x <- ts_show_ref_sources(versions = TRUE), "no internet")
-  expect_true(all(is.na(x$versions)))
+  expect_true(all(is.na(unlist(x$versions))))
+  expect_true(any(grepl("Versions: not available", capture.output(print(x)))))
 })
 
 test_that("a failed download of a named source points to the versions", {
@@ -276,4 +281,64 @@ test_that("a failed download of a named source points to the versions", {
     ),
     "ts_show_ref_sources\\(versions = TRUE\\)"
   )
+})
+
+test_that("long version lists are shortened when printed", {
+  x <- ts_show_ref_sources()
+  x$versions <- list(wfo = paste0("2020-0", 1:9), ppg = "v1")
+  out <- capture.output(print(x))
+  expect_true(any(grepl(
+    "Versions: 2020-01, 2020-02, 2020-03, 2020-04, 2020-05, \\.\\.\\. \\(9 in total\\)", out
+  )))
+  # subsets without all the columns still print
+  expect_no_error(capture.output(print(x[, c("source", "versions")])))
+})
+
+test_that("tidy output has one row per version", {
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) {
+      if (grepl("zenodo.org/api/records/7460141", link)) {
+        zenodo_json(222, "2026-06")
+      } else if (grepl("zenodo.org/api/records/222/versions", link)) {
+        paste0(
+          '{"hits": {"hits": [', zenodo_json(222, "2026-06"), ", ",
+          zenodo_json(111, "2025-12"), "]}}"
+        )
+      } else {
+        '[{"tag_name": "v2.1.0"}, {"tag_name": "v2.0.0"}, {"tag_name": "v1.0.0"}]'
+      }
+    }
+  )
+  x <- ts_show_ref_sources(versions = TRUE, tidy = TRUE)
+  expect_equal(x$source, c("wfo", "wfo", "ppg", "ppg", "ppg"))
+  expect_equal(x$version, c("2026-06", "2025-12", "v2.1.0", "v2.0.0", "v1.0.0"))
+  expect_false("versions" %in% colnames(x))
+  expect_true(all(c("name", "license", "citation", "url") %in% colnames(x)))
+  expect_false(inherits(x, "ts_ref_sources"))
+  expect_error(ts_show_ref_sources(tidy = NA))
+})
+
+test_that("tidy output keeps a source that could not be reached", {
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
+  )
+  expect_message(
+    x <- ts_show_ref_sources(versions = TRUE, tidy = TRUE), "no internet"
+  )
+  expect_equal(x$source, c("wfo", "ppg"))
+  expect_true(all(is.na(x$version)))
+})
+
+test_that("tidy = TRUE does not look up versions unless versions = TRUE", {
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) stop("should not be called")
+  )
+  for (x in list(
+    ts_show_ref_sources(tidy = TRUE),
+    ts_show_ref_sources(versions = FALSE, tidy = TRUE)
+  )) {
+    expect_equal(x$source, c("wfo", "ppg"))
+    expect_false(any(c("version", "versions") %in% colnames(x)))
+    expect_false(inherits(x, "ts_ref_sources"))
+  }
 })

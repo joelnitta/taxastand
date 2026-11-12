@@ -4,18 +4,27 @@
 \alias{ts_show_ref_sources}
 \title{List the named sources of references}
 \usage{
-ts_show_ref_sources(versions = FALSE)
+ts_show_ref_sources(versions = FALSE, tidy = FALSE)
 }
 \arguments{
 \item{versions}{Logical; also list the versions available to download?
 Needs internet. If a source cannot be reached, its versions are \code{NA} and a
 message says why. Default \code{FALSE}.}
+
+\item{tidy}{Logical; return a "tidy" dataframe. If \code{versions} is \code{TRUE},
+returns one row per version. Default \code{FALSE}.}
 }
 \value{
-A dataframe with one row per source and columns \code{source} (the name
-to give to \code{ts_load_ref(source = )}), \code{name}, \code{description}, \code{license},
-\code{citation} and \code{url}. With \code{versions = TRUE}, also \code{versions}: the
-versions available to download, newest first, separated by commas.
+A dataframe with one row per source and these columns: \code{source} (the
+name to give to the \code{source} argument of \code{\link{ts_load_ref}()}),
+\code{name}, \code{description}, \code{license}, \code{citation} and \code{url}.
+
+With \code{versions = TRUE}, the versions available to download for each source
+are shown, newest first. Printing the result shows only the latest
+versions of each source. To see all of them, also use \code{tidy = TRUE}.
+
+With \code{tidy = TRUE}, the dataframe has one row per version, unless
+\code{versions = FALSE}.
 }
 \description{
 The sources that \code{\link{ts_load_ref}()} can download by name, with their
@@ -24,8 +33,9 @@ its data.
 }
 \details{
 By default no internet is used. With \code{versions = TRUE}, the versions that can
-be downloaded are looked up (one request per source), which is useful to
-choose the \code{version} of \code{\link{ts_load_ref}()} to use.
+be downloaded are looked up (one or two requests per source), which is useful
+to choose the \code{version} of \code{\link{ts_load_ref}()} to use. This can
+take some time (a few seconds, and longer with a slow connection).
 }
 \examples{
 ts_show_ref_sources()
@@ -33,5 +43,8 @@ ts_show_ref_sources()
 \dontrun{
 # Needs internet
 ts_show_ref_sources(versions = TRUE)
+
+# One row per version
+ts_show_ref_sources(versions = TRUE, tidy = TRUE)
 }
 }

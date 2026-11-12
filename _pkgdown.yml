@@ -15,14 +15,12 @@ reference:
 - title: "Resolve names"
 - contents:
   - ts_resolve_names
-- title: "Make a reference"
+- title: "Set up a reference"
 - contents:
   - ts_load_ref
   - ts_show_ref_sources
   - ts_subset_ref
   - ts_format_ref
-- title: "Large references"
-- contents:
   - ts_optimize_ref
 - title: "Datasets"
 - contents:
