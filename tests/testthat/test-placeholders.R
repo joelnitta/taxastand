@@ -11,6 +11,7 @@ test_that("placeholder names are detected", {
 })
 
 test_that("ts_parse_names excludes placeholders with a warning", {
+  withr::local_options(taxastand.verbosity = "inform")
   expect_warning(
     res <- ts_parse_names(c("Pteris sp.", "Pteris vittata L.")),
     "placeholders"
@@ -24,6 +25,7 @@ test_that("ts_parse_names excludes placeholders with a warning", {
 })
 
 test_that("placeholder queries are not fuzzy-matched", {
+  withr::local_options(taxastand.verbosity = "inform")
   ref <- c("Pteris vittata L.", "Pteris sp. L.")
   expect_warning(
     res <- ts_match_names(

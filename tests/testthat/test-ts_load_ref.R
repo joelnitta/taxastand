@@ -1,7 +1,7 @@
 zip_fixture <- test_path("fixtures", "mini-dwca.zip")
 
 test_that("a Darwin Core Archive is read and formatted", {
-  res <- ts_load_ref(file = zip_fixture, version = "test", quiet = TRUE)
+  res <- ts_load_ref(file = zip_fixture, version = "test")
   expect_equal(res$taxonID, c("3", "4", "7"))
   expect_equal(res$scientificName[1:2], c(
     "Polypodium vulgare L.", "Polypodium rotundatum Willd."
@@ -15,7 +15,7 @@ test_that("a Darwin Core Archive is read and formatted", {
 
 test_that("taxon subsets before formatting", {
   res <- ts_load_ref(
-    file = zip_fixture, taxon = "Polypodiaceae", quiet = TRUE
+    file = zip_fixture, taxon = "Polypodiaceae"
   )
   expect_equal(res$taxonID, c("3", "4"))
 })
@@ -31,10 +31,10 @@ test_that("csv and tsv files are read", {
   f_tsv <- withr::local_tempfile(fileext = ".tsv")
   write.table(x, f_tsv, sep = "\t", row.names = FALSE, quote = FALSE)
   expect_equal(
-    ts_load_ref(file = f_csv, quiet = TRUE)$scientificName, x$scientificName
+    ts_load_ref(file = f_csv)$scientificName, x$scientificName
   )
   expect_equal(
-    ts_load_ref(file = f_tsv, quiet = TRUE)$scientificName, x$scientificName
+    ts_load_ref(file = f_tsv)$scientificName, x$scientificName
   )
 })
 
@@ -47,14 +47,14 @@ test_that("downloads are cached and can be refreshed (no internet used)", {
   })
   cache <- withr::local_tempdir()
   url <- "https://example.org/data/ref.zip"
-  res <- ts_load_ref(url = url, cache_dir = cache, quiet = TRUE)
+  res <- ts_load_ref(url = url, cache_dir = cache)
   expect_equal(nrow(res), 3)
   expect_equal(attr(res, "ts_source")$url, url)
   expect_equal(length(list.files(cache)), 1)
   expect_equal(calls, 1)
-  ts_load_ref(url = url, cache_dir = cache, quiet = TRUE)
+  ts_load_ref(url = url, cache_dir = cache)
   expect_equal(calls, 1)
-  ts_load_ref(url = url, cache_dir = cache, refresh = TRUE, quiet = TRUE)
+  ts_load_ref(url = url, cache_dir = cache, refresh = TRUE)
   expect_equal(calls, 2)
   # no partial files left
   expect_false(any(grepl("\\.part$", list.files(cache))))
@@ -78,7 +78,7 @@ test_that("failed downloads give an informative error and leave nothing", {
   })
   cache <- withr::local_tempdir()
   expect_error(
-    ts_load_ref(url = "https://example.org/x.csv", cache_dir = cache, quiet = TRUE),
+    ts_load_ref(url = "https://example.org/x.csv", cache_dir = cache),
     "Could not download https://example.org/x.csv: cannot open URL"
   )
   expect_length(list.files(cache), 0)
@@ -88,11 +88,11 @@ test_that("input checks work", {
   expect_error(ts_load_ref(url = "http://example.org/x.csv"), "HTTPS")
   expect_error(ts_load_ref(file = "no/such/file.csv"), "not an existing file")
   expect_error(ts_load_ref(file = 1))
-  expect_error(ts_load_ref(file = zip_fixture, refresh = NA, quiet = TRUE))
+  expect_error(ts_load_ref(file = zip_fixture, refresh = NA))
 })
 
 test_that("the result works with ts_resolve_names()", {
-  ref <- ts_load_ref(file = zip_fixture, quiet = TRUE)
+  ref <- ts_load_ref(file = zip_fixture)
   res <- ts_resolve_names("Polypodium rotundatum Willd.", ref)
   expect_equal(res$resolved_name, "Polypodium vulgare L.")
 })
@@ -101,7 +101,7 @@ test_that("zip files are recognised by content, not by name", {
   f <- withr::local_tempfile(fileext = ".dat")
   file.copy(zip_fixture, f)
   expect_true(.ts_is_zip(f))
-  expect_equal(nrow(ts_load_ref(file = f, quiet = TRUE)), 3)
+  expect_equal(nrow(ts_load_ref(file = f)), 3)
   txt <- withr::local_tempfile(fileext = ".zip")
   writeLines("a,b\n1,2", txt)
   expect_false(.ts_is_zip(txt))
@@ -110,7 +110,7 @@ test_that("zip files are recognised by content, not by name", {
 test_that("exactly one of source, url or file is needed", {
   expect_error(ts_load_ref(), "exactly one")
   expect_error(ts_load_ref(source = "wfo", file = zip_fixture), "exactly one")
-  expect_error(ts_load_ref(source = "nope", quiet = TRUE), "Unknown `source`")
+  expect_error(ts_load_ref(source = "nope"), "Unknown `source`")
 })
 
 zenodo_json <- function(id, version) {
@@ -192,6 +192,7 @@ test_that("wfo: latest and specific versions are resolved and recorded", {
 })
 
 test_that("wfo: tab-separated file with quotes is read and formatted", {
+  withr::local_options(taxastand.verbosity = "inform")
   urls <- character()
   local_mocked_bindings(
     .ts_fetch_text = function(link) zenodo_json(222, "2026-06"),
@@ -204,7 +205,7 @@ test_that("wfo: tab-separated file with quotes is read and formatted", {
   cache <- withr::local_tempdir()
   expect_message(
     res <- ts_load_ref(source = "wfo", cache_dir = cache),
-    "License: CC0"
+    "license CC0"
   )
   expect_match(urls, "records/222/")
   # genus and family rows are dropped; the stray quote in the remarks did not
@@ -225,7 +226,7 @@ test_that("wfo: tab-separated file with quotes is read and formatted", {
   expect_match(src$citation, "zenodo.7460141")
 
   sub <- ts_load_ref(
-    source = "wfo", cache_dir = cache, taxon = "Polypodiaceae", quiet = TRUE
+    source = "wfo", cache_dir = cache, taxon = "Polypodiaceae"
   )
   expect_equal(sub$taxonID, c("wfo-3", "wfo-4"))
 })
@@ -241,7 +242,7 @@ test_that("ppg: the latest release is found and the csv is read", {
     }
   )
   res <- ts_load_ref(
-    source = "ppg", cache_dir = withr::local_tempdir(), quiet = TRUE
+    source = "ppg", cache_dir = withr::local_tempdir()
   )
   expect_equal(
     fetched,
@@ -252,7 +253,7 @@ test_that("ppg: the latest release is found and the csv is read", {
   # a table with only parentNameUsageID is subset by walking down the parents
   sub <- ts_load_ref(
     source = "ppg", version = "v2.0.0", cache_dir = withr::local_tempdir(),
-    taxon = "Polypodiaceae", quiet = TRUE
+    taxon = "Polypodiaceae"
   )
   expect_equal(sub$taxonID, c("wfo-3", "wfo-4"))
   expect_equal(attr(sub, "ts_source")$version, "v2.0.0")
@@ -262,7 +263,7 @@ test_that("failure to reach a source gives an informative error", {
   local_mocked_bindings(
     .ts_fetch_text = function(link) stop("cannot open URL", call. = FALSE)
   )
-  expect_error(ts_load_ref(source = "ppg", quiet = TRUE), "cannot open URL")
+  expect_error(ts_load_ref(source = "ppg"), "cannot open URL")
 })
 
 test_that("ts_show_ref_sources() lists the sources", {
@@ -294,6 +295,7 @@ test_that("versions can be listed (no internet used)", {
 })
 
 test_that("a source that can't be reached gives NA versions and a message", {
+  withr::local_options(taxastand.verbosity = "inform")
   local_mocked_bindings(
     .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
   )
@@ -309,8 +311,7 @@ test_that("a failed download of a named source points to the versions", {
   )
   expect_error(
     ts_load_ref(
-      source = "ppg", version = "v9.9.9", cache_dir = withr::local_tempdir(),
-      quiet = TRUE
+      source = "ppg", version = "v9.9.9", cache_dir = withr::local_tempdir()
     ),
     "ts_show_ref_sources\\(versions = TRUE\\)"
   )
@@ -345,6 +346,7 @@ test_that("tidy output has one row per version", {
 })
 
 test_that("tidy output keeps a source that could not be reached", {
+  withr::local_options(taxastand.verbosity = "inform")
   local_mocked_bindings(
     .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
   )
@@ -370,6 +372,7 @@ test_that("tidy = TRUE does not look up versions unless versions = TRUE", {
 })
 
 test_that("taxadb providers: a Parquet file is downloaded and formatted", {
+  withr::local_options(taxastand.verbosity = "inform")
   skip_if_not_installed("nanoparquet")
   fetched <- character()
   local_mocked_bindings(
@@ -382,7 +385,7 @@ test_that("taxadb providers: a Parquet file is downloaded and formatted", {
   )
   cache <- withr::local_tempdir()
   expect_message(
-    res <- ts_load_ref(source = "itis", cache_dir = cache), "License: CC0"
+    res <- ts_load_ref(source = "itis", cache_dir = cache), "license CC0"
   )
   expect_equal(
     fetched, "https://data.source.coop/cboettig/taxadb/2026/dwc_itis_part_0.parquet"
@@ -406,7 +409,7 @@ test_that("taxadb providers: a Parquet file is downloaded and formatted", {
     "Polypodium vulgare L."
   )
   sub <- ts_load_ref(
-    source = "itis", cache_dir = cache, taxon = "Pteridaceae", quiet = TRUE
+    source = "itis", cache_dir = cache, taxon = "Pteridaceae"
   )
   expect_equal(sub$scientificName, "Pteris vittata L.")
 })
@@ -414,7 +417,7 @@ test_that("taxadb providers: a Parquet file is downloaded and formatted", {
 test_that("a Parquet file can be read from a path", {
   skip_if_not_installed("nanoparquet")
   res <- ts_load_ref(
-    file = test_path("fixtures", "mini-taxadb.parquet"), quiet = TRUE
+    file = test_path("fixtures", "mini-taxadb.parquet")
   )
   expect_equal(nrow(res), 4)
 })
@@ -422,7 +425,7 @@ test_that("a Parquet file can be read from a path", {
 test_that("reading Parquet without a reader gives an install hint", {
   local_mocked_bindings(.ts_have_package = function(pkg) FALSE)
   expect_error(
-    ts_load_ref(file = test_path("fixtures", "mini-taxadb.parquet"), quiet = TRUE),
+    ts_load_ref(file = test_path("fixtures", "mini-taxadb.parquet")),
     "install.packages\\(\"nanoparquet\"\\)"
   )
 })
@@ -479,13 +482,13 @@ test_that("duckdb alone can read a Parquet file", {
   skip_if_not_installed("DBI")
   local_mocked_bindings(.ts_have_package = function(pkg) pkg != "nanoparquet")
   f <- test_path("fixtures", "mini-taxadb.parquet")
-  expect_equal(nrow(ts_load_ref(file = f, quiet = TRUE)), 4)
+  expect_equal(nrow(ts_load_ref(file = f)), 4)
   expect_equal(
-    nrow(ts_load_ref(file = f, taxon = "Pteridaceae", quiet = TRUE)), 1
+    nrow(ts_load_ref(file = f, taxon = "Pteridaceae")), 1
   )
   # a rank that is not a column: read everything, subset in R
   expect_equal(
-    nrow(ts_load_ref(file = f, taxon = "Pteris", rank = "genus", quiet = TRUE)), 1
+    nrow(ts_load_ref(file = f, taxon = "Pteris", rank = "genus")), 1
   )
 })
 
@@ -497,8 +500,7 @@ test_that("duckdb does not create a folder in the home directory", {
   withr::local_envvar(HOME = home, USERPROFILE = home)
   local_mocked_bindings(.ts_have_package = function(pkg) pkg != "nanoparquet")
   ts_load_ref(
-    file = test_path("fixtures", "mini-taxadb.parquet"), taxon = "Pteridaceae",
-    quiet = TRUE
+    file = test_path("fixtures", "mini-taxadb.parquet"), taxon = "Pteridaceae"
   )
   expect_false(dir.exists(file.path(home, ".duckdb")))
 })
@@ -506,7 +508,49 @@ test_that("duckdb does not create a folder in the home directory", {
 test_that("unknown taxadb version gives the versions available", {
   local_mocked_bindings(.ts_fetch_text = fake_text)
   expect_error(
-    ts_load_ref(source = "gbif", version = "1999", quiet = TRUE),
+    ts_load_ref(source = "gbif", version = "1999"),
     "Versions you can use: 2026"
+  )
+})
+
+test_that("messages are short, the citation is given once, and the option silences them", {
+  withr::local_options(taxastand.verbosity = "inform")
+  .ts_state <- taxastand:::.ts_state
+  old <- .ts_state$cited
+  on.exit(.ts_state$cited <- old, add = TRUE)
+  .ts_state$cited <- NULL
+  local_mocked_bindings(
+    .ts_fetch = function(url, dest) {
+      file.copy(test_path("fixtures", "mini-ppg.csv"), dest, overwrite = TRUE)
+    },
+    .ts_resolve_ppg = function(version) {
+      list(version = "v1", url = "https://example.org/ppg.csv", extra = list())
+    },
+    .package = "taxastand"
+  )
+  cache <- withr::local_tempdir()
+  msgs <- testthat::capture_messages(ts_load_ref(source = "ppg", cache_dir = cache))
+  expect_true(any(grepl("^Loaded .* names from", msgs)))
+  expect_true(any(grepl("Please cite", msgs)))
+  expect_false(any(grepl("already downloaded", msgs)))
+  msgs <- testthat::capture_messages(ts_load_ref(source = "ppg", cache_dir = cache))
+  expect_false(any(grepl("Please cite", msgs)))
+  withr::with_options(
+    list(taxastand.verbosity = "quiet"),
+    expect_no_message(ts_load_ref(source = "ppg", cache_dir = cache))
+  )
+})
+
+test_that("the option silences parser warnings in ts_match_names()", {
+  withr::local_options(taxastand.verbosity = "inform")
+  expect_warning(
+    ts_match_names(c("Pteris vittata L.", "!!! ???"), "Pteris vittata L."),
+    "could not be parsed"
+  )
+  withr::with_options(
+    list(taxastand.verbosity = "quiet"),
+    expect_no_warning(
+      ts_match_names(c("Pteris vittata L.", "!!! ???"), "Pteris vittata L.")
+    )
   )
 })

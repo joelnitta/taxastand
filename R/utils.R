@@ -101,3 +101,22 @@ ts_classify_result <- function(match_results) {
   }
   old
 }
+
+# Messages -------------------------------------------------------------------
+
+# Is the option `taxastand.verbosity` set to "quiet"? ("inform" by default.)
+.ts_quiet <- function() {
+  identical(getOption("taxastand.verbosity", "inform"), "quiet")
+}
+
+# Informational message, silenced by `options(taxastand.verbosity = "quiet")`
+.ts_inform <- function(...) {
+  if (!.ts_quiet()) message(...)
+  invisible()
+}
+
+# Warning about names that were excluded; silenced by the option (or `quiet`)
+.ts_warn <- function(...) {
+  if (!.ts_quiet()) warning(..., call. = FALSE)
+  invisible()
+}

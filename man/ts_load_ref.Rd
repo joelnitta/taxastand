@@ -14,8 +14,7 @@ ts_load_ref(
   rank = NULL,
   col_map = NULL,
   drop_ranks = ts_ranks_above_species(),
-  refresh = FALSE,
-  quiet = FALSE
+  refresh = FALSE
 )
 }
 \arguments{
@@ -47,8 +46,6 @@ and \code{\link{ts_format_ref}()} (both). Not needed for named sources.}
 
 \item{refresh}{Logical; download again even if the file is already in
 \code{cache_dir}? Default \code{FALSE}.}
-
-\item{quiet}{Logical; suppress the messages? Default \code{FALSE}.}
 }
 \value{
 A dataframe as returned by \code{\link{ts_format_ref}()}, with the
@@ -103,7 +100,8 @@ in the option \code{taxastand.cache_dir} if set, otherwise a folder in
 sessions, give a \code{cache_dir} (or set the option). If the file is already
 there, it is used and not downloaded again, unless \code{refresh = TRUE}. See
 \code{\link{ts_show_ref_cache}()} and \code{\link{ts_clear_ref_cache}()} to
-check and free the space.
+check and free the space. To silence the messages, set
+\code{options(taxastand.verbosity = "quiet")} (see \code{\link{taxastand-package}}).
 Downloads from named sources can be large (World Flora Online is about
 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 tables also need a lot of memory (a few GB for GBIF). For Parquet files, if

@@ -9,7 +9,9 @@
 #' If `FALSE` (default), output will be a data.frame. This argument can
 #' be controlled via the option `ts_tbl_out`; see Examples.
 #' @param quiet Logical; if TRUE, suppress warning messages that would normally
-#' be issued
+#' be issued. Superseded by the option `taxastand.verbosity` (see
+#' \code{\link{taxastand-package}}), which also works for
+#' \code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()}.
 #' @param strip_qualifiers Logical; if `TRUE`, remove standalone
 #' open-nomenclature qualifiers (`cf.` and `aff.`, as reviewed by Sigovini,
 #' Keppel, and Tagliapietra (2016); see References) from names before
@@ -122,11 +124,10 @@ ts_parse_names <- function(
     orig_name <- taxa_tbl$name[match(parsed_names$id, taxa_tbl$id)]
     placeholder <- .ts_is_placeholder(orig_name) & !parsed_names$fail
     if (any(placeholder) && !quiet) {
-      warning(
+      .ts_warn(
         "The following names are placeholders for an identification above ",
         "species rank and are excluded from results: ",
-        paste(orig_name[placeholder], collapse = ", "),
-        call. = FALSE
+        paste(orig_name[placeholder], collapse = ", ")
       )
     }
     parsed_names$fail <- parsed_names$fail | placeholder
@@ -146,10 +147,9 @@ ts_parse_names <- function(
       taxa_tbl$name[taxa_tbl$id %in% failed_ids],
       collapse = ", "
     )
-    warning(
+    .ts_warn(
       "The following names could not be parsed and are excluded from results: ",
-      failed_names,
-      call. = FALSE
+      failed_names
     )
   }
 

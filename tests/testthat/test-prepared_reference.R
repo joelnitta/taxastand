@@ -115,6 +115,7 @@ test_that("ts_resolve_names() accepts a prepared Darwin Core reference", {
 })
 
 test_that("names that cannot be parsed are reported once, then skipped", {
+  withr::local_options(taxastand.verbosity = "inform")
   ref3 <- c("Asplenium nidus L.", "Asplenium !!! ???", "Polypodium vulgare L.")
   prepared <- ts_optimize_ref(ref3)
   expect_warning(

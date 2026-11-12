@@ -38,9 +38,9 @@ ts_show_ref_cache <- function(cache_dir = NULL) {
   out <- out[order(out$file), , drop = FALSE]
   rownames(out) <- NULL
   if (nrow(out) == 0) {
-    message("No downloaded files in ", dir)
+    .ts_inform("No downloaded files in ", dir)
   } else {
-    message("Downloaded files in ", dir)
+    .ts_inform("Downloaded files in ", dir)
   }
   out
 }
@@ -62,7 +62,7 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
     paths <- paths[age > older_than]
   }
   if (length(paths) == 0) {
-    message("Nothing to delete in ", dir)
+    .ts_inform("Nothing to delete in ", dir)
     return(invisible(character(0)))
   }
   size <- .ts_size(sum(file.size(paths)))
@@ -72,12 +72,12 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
       default = FALSE
     )
     if (!isTRUE(ok)) {
-      message("Nothing deleted.")
+      .ts_inform("Nothing deleted.")
       return(invisible(character(0)))
     }
   }
   done <- paths[file.remove(paths)]
-  message("Deleted ", length(done), " file(s), freeing ", size, ".")
+  .ts_inform("Deleted ", length(done), " file(s), freeing ", size, ".")
   invisible(done)
 }
 
