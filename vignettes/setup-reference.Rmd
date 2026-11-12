@@ -70,7 +70,7 @@ count(ppg, taxonomicStatus)
 #> 3       unchecked  4501
 ```
 
-The file is downloaded once and kept in `cache_dir`; later calls reuse it. Where the data came from is stored with the result, for citing:
+The file is downloaded once and kept in `cache_dir`; later calls reuse it. The source of the data is stored with the result, for citing:
 
 
 ``` r
@@ -88,11 +88,11 @@ attr(ppg, "ts_source")[c("name", "version", "license", "url")]
 #> [1] "https://raw.githubusercontent.com/pteridogroup/ppg/v2.1.0/data/ppg.csv"
 ```
 
-To get an older version, use `ts_show_ref_sources(versions = TRUE)` to see what is available, and give `version`.
+To get an older version, use `ts_show_ref_sources(versions = TRUE)` to see what is available, and provide your selection to the `version` argument of `ts_load_ref()`.
 
 ### Keep only part of a large source
 
-Large sources have millions of names. Give `taxon` (and optionally `rank`) to keep only a family or other group, with its synonyms:
+Large sources have millions of names. Specify `taxon` (and optionally `rank`) to keep only a family or other group, with its synonyms:
 
 
 ``` r
@@ -126,7 +126,7 @@ res[match(queries, res$query), c("query", "resolved_name", "matched_status", "ma
 #> 3              Polypodium pellucidum Kaulf.       accepted  auto_fuzzy
 ```
 
-Some sources are Parquet files. These need the nanoparquet or duckdb package; with duckdb, `taxon` is applied while reading, which is faster for very large files. `ts_load_ref()` says which package to install if neither is available.
+Some sources are Parquet files. These need the [nanoparquet](https://nanoparquet.r-lib.org/) or [duckdb](https://r.duckdb.org/) package; with duckdb, `taxon` is applied while reading, which is faster for very large files. `ts_load_ref()` says which package to install if neither is available.
 
 Downloaded files can be listed with `ts_show_ref_cache()` and deleted with `ts_clear_ref_cache()`.
 
@@ -174,7 +174,7 @@ own
 `ts_load_ref()` combines two steps that you can also use on any data frame, for example one you made yourself or got from another package:
 
 - `ts_subset_ref(ref, taxon)` keeps the members of a taxon and their synonyms. It uses columns for higher ranks (such as `family`) if there are any, otherwise walks down from the taxon using `parentNameUsageID`.
-- `ts_format_ref(ref)` makes the table a reference: it applies `col_map`, adds the author to the name, drops rows above species rank, keeps the needed columns and tidies values.
+- `ts_format_ref(ref)` formats the data so that `taxastand` can use it for name matching and resolution: it applies `col_map`, adds the author to the name, drops rows above species rank, keeps the needed columns and tidies values.
 
 If your table has only `parentNameUsageID` and no columns for higher ranks, subset first, because formatting drops the rows above species that are needed to find the members of a taxon.
 
@@ -212,13 +212,15 @@ This gives the same names as `ts_load_ref(source = "itis")`. Use taxadb for prov
 
 ## Large references
 
-Matching against a large reference is faster if it is prepared once with `ts_optimize_ref()`, which indexes the names. Use the prepared reference in place of the data frame:
+Before matching, `taxastand` parses the reference names and builds the keys it compares them with. With a reference the size of PPG or WFO this takes longer than the matching itself. If you will match several batches of queries against the same reference, optimize it once with `ts_optimize_ref()` and pass the result in place of the reference:
 
 
 ``` r
 itis_prepared <- ts_optimize_ref(itis)
 res <- ts_resolve_names(queries, itis_prepared, match_no_auth = TRUE)
 ```
+
+The results are the same as without optimizing. The genus of every name is found up front, and each genus is parsed the first time a query needs it, so the first batch pays for the genera it uses and later batches reuse them. The optimized reference therefore grows as it is used. If you optimize a reference with `strip_qualifiers = TRUE`, the qualifiers are removed from the reference names when they are parsed.
 
 ## Reproducibility
 

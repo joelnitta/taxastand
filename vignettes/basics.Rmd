@@ -174,13 +174,4 @@ A benefit of `taxastand` is that, if during the name resolution workflow we disc
 
 ## Large references
 
-Before matching, `taxastand` parses the reference names and builds the keys it compares them with. With a reference the size of PPG or WFO this takes longer than the matching itself. If you will match several batches of queries against the same reference, optimize it once with `ts_optimize_ref()` and pass the result in place of the reference:
-
-```{r optimize-ref, eval = FALSE}
-ref <- ts_optimize_ref(filmy_taxonomy)
-
-ts_match_names("Gonocormus minutum", ref)
-ts_resolve_names("Gonocormus minutum", ref)
-```
-
-The results are the same as without optimizing. The genus of every name is found up front, and each genus is parsed the first time a query needs it, so the first batch pays for the genera it uses and later batches reuse them. The optimized reference therefore grows as it is used. If you optimize a reference with `strip_qualifiers = TRUE`, the qualifiers are removed from the reference names when they are parsed.
+If you will match several batches of queries against a large reference, optimize it once with `ts_optimize_ref()`; see [Large references](setup-reference.html#large-references) in the "Setting up a reference" vignette.

@@ -1,3 +1,4 @@
+url: https://joelnitta.github.io/taxastand/
 home:
   title: Standardize Taxonomic Names
   description: >
@@ -7,17 +8,20 @@ redirects:
 template:
   params:
     bootswatch: lumen
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - basics
+  - setup-reference
+  - benchmark
 reference:
-- title: "Parse names"
+- title: "Name resolution"
 - contents:
   - ts_parse_names
-- title: "Match names"
-- contents:
   - ts_match_names
-- title: "Resolve names"
-- contents:
   - ts_resolve_names
-- title: "Set up a reference"
+- title: "Reference management"
 - contents:
   - ts_load_ref
   - ts_show_ref_sources
