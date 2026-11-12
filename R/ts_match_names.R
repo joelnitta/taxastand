@@ -127,7 +127,7 @@
 #' `Qurecus` for `Quercus`, a common typing error) as one edit instead of two
 #' when computing fuzzy-match distances (optimal string alignment distance
 #' rather than plain Levenshtein distance). Set to `FALSE` for plain
-#' Levenshtein distance, which is somewhat faster. Default: `TRUE`.
+#' Levenshtein distance, which is somewhat faster. Default: `FALSE`.
 #' @param match_no_auth Logical; If no author is given in the query and the name
 #' (without author) occurs only once in the reference, accept the name in the
 #' reference as a match. Default: to not allow such a match (`FALSE`).
