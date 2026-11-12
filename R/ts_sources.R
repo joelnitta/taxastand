@@ -5,17 +5,26 @@
 #' its data.
 #'
 #' By default no internet is used. With `versions = TRUE`, the versions that can
-#' be downloaded are looked up (one request per source), which is useful to
-#' choose the `version` of \code{\link{ts_load_ref}()} to use.
+#' be downloaded are looked up (one or two requests per source), which is useful
+#' to choose the `version` of \code{\link{ts_load_ref}()} to use. This can
+#' take some time (a few seconds, and longer with a slow connection).
 #'
 #' @param versions Logical; also list the versions available to download?
 #'   Needs internet. If a source cannot be reached, its versions are `NA` and a
 #'   message says why. Default `FALSE`.
+#' @param tidy Logical; return a "tidy" dataframe. If `versions` is `TRUE`,
+#'   returns one row per version. Default `FALSE`.
 #'
-#' @return A dataframe with one row per source and columns `source` (the name
-#'   to give to `ts_load_ref(source = )`), `name`, `description`, `license`,
-#'   `citation` and `url`. With `versions = TRUE`, also `versions`: the
-#'   versions available to download, newest first, separated by commas.
+#' @return A dataframe with one row per source and these columns: `source` (the
+#'   name to give to the `source` argument of \code{\link{ts_load_ref}()}),
+#'   `name`, `description`, `license`, `citation` and `url`.
+#'
+#'   With `versions = TRUE`, the versions available to download for each source
+#'   are shown, newest first. Printing the result shows only the latest
+#'   versions of each source. To see all of them, also use `tidy = TRUE`.
+#'
+#'   With `tidy = TRUE`, the dataframe has one row per version, unless
+#'   `versions = FALSE`.
 #' @export
 #' @examples
 #' ts_show_ref_sources()
@@ -23,9 +32,13 @@
 #' \dontrun{
 #' # Needs internet
 #' ts_show_ref_sources(versions = TRUE)
+#'
+#' # One row per version
+#' ts_show_ref_sources(versions = TRUE, tidy = TRUE)
 #' }
-ts_show_ref_sources <- function(versions = FALSE) {
+ts_show_ref_sources <- function(versions = FALSE, tidy = FALSE) {
   assertthat::assert_that(assertthat::is.flag(versions), assertthat::noNA(versions))
+  assertthat::assert_that(assertthat::is.flag(tidy), assertthat::noNA(tidy))
   srcs <- .ts_sources()
   pick <- function(field) {
     vapply(srcs, function(s) s[[field]], character(1), USE.NAMES = FALSE)
@@ -40,17 +53,62 @@ ts_show_ref_sources <- function(versions = FALSE) {
     stringsAsFactors = FALSE
   )
   if (versions) {
-    out$versions <- vapply(srcs, function(s) {
+    out$versions <- lapply(srcs, function(s) {
+      if (interactive()) message("Looking up the versions of ", s$name, " ...")
       tryCatch(
-        paste(s$list_versions(), collapse = ", "),
+        s$list_versions(),
         error = function(e) {
           message("Could not list the versions of ", s$name, ": ", conditionMessage(e))
           NA_character_
         }
       )
-    }, character(1), USE.NAMES = FALSE)
+    })
+    names(out$versions) <- names(srcs)
   }
+  if (tidy && !versions) {
+    return(out) # one row per source, and no versions to spread over rows
+  }
+  if (tidy) {
+    n <- lengths(out$versions)
+    long <- out[rep(seq_len(nrow(out)), n), colnames(out) != "versions", drop = FALSE]
+    long$version <- unlist(out$versions, use.names = FALSE)
+    rownames(long) <- NULL
+    return(long)
+  }
+  class(out) <- c("ts_ref_sources", class(out))
   out
+}
+
+#' @export
+print.ts_ref_sources <- function(x, ...) {
+  cols <- c("source", "name", "description", "license", "citation", "url")
+  if (!all(cols %in% colnames(x))) {
+    return(NextMethod())
+  }
+  n_show <- 5
+  for (i in seq_len(nrow(x))) {
+    cat(x$source[i], ": ", x$name[i], "\n", sep = "")
+    cat("  ", x$description[i], "\n", sep = "")
+    cat("  License: ", x$license[i], "\n", sep = "")
+    if ("versions" %in% colnames(x)) {
+      v <- x$versions[[i]]
+      line <- if (anyNA(v)) {
+        "not available"
+      } else if (length(v) > n_show) {
+        paste0(
+          paste(v[seq_len(n_show)], collapse = ", "), ", ... (", length(v),
+          " in total)"
+        )
+      } else {
+        paste(v, collapse = ", ")
+      }
+      cat("  Versions: ", line, "\n", sep = "")
+    }
+    cat("  Cite: ", x$citation[i], "\n", sep = "")
+    cat("  More: ", x$url[i], "\n", sep = "")
+    if (i < nrow(x)) cat("\n")
+  }
+  invisible(x)
 }
 
 # Registry of named sources. For each: descriptive fields, `resolve(version)`
@@ -78,12 +136,11 @@ ts_show_ref_sources <- function(versions = FALSE) {
     ),
     ppg = list(
       name = "Pteridophyte Phylogeny Group classification (PPG II)",
-      description = "Ferns and lycophytes; a new version about every month",
+      description = "Ferns and lycophytes",
       license = "CC BY 4.0",
       citation = paste0(
         "Pteridophyte Phylogeny Group. PPG taxonomic database. ",
-        "https://doi.org/10.5281/zenodo.22760360. See also PPG I (2016) ",
-        "https://doi.org/10.1111/jse.12229"
+        "https://doi.org/10.5281/zenodo.22760360"
       ),
       url = "https://github.com/pteridogroup/ppg",
       resolve = .ts_resolve_ppg,
