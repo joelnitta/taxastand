@@ -30,15 +30,28 @@ as a single taxonomic standard is used, we can confidently resolve names
 from disparate sources.
 
 The taxonomic standard must conform to [Darwin Core
-standards](https://dwc.tdwg.org/). The user must provide this database
-(as a dataframe). There are many sources of taxonomic data online,
-including
-[GBIF](https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c),
-[Catalog of Life](https://www.catalogueoflife.org/), and
-[ITIS](https://www.itis.gov/) to name a few. The
-[taxadb](https://github.com/ropensci/taxadb) package provides convenient
-functions for downloading various taxonomic databases that use Darwin
-Core.
+standards](https://dwc.tdwg.org/) and is supplied by the user as a
+dataframe. `ts_load_ref()` downloads and formats several widely used
+standards, including [World Flora
+Online](https://www.worldfloraonline.org/), the [Pteridophyte Phylogeny
+Group](https://github.com/pteridogroup/ppg) classification,
+[ITIS](https://www.itis.gov/), [Catalogue of
+Life](https://www.catalogueoflife.org/) and the
+[GBIF](https://www.gbif.org/) backbone. It can also read your own file
+or URL, and `ts_subset_ref()` keeps just one family or other group of a
+large source. See `vignette("setup-reference")` for details, including
+how to use tables from other packages such as
+[taxadb](https://github.com/ropensci/taxadb).
+
+``` r
+library(taxastand)
+
+ts_show_ref_sources()
+ref <- ts_load_ref(source = "ppg")
+```
+
+Downloads happen only when `ts_load_ref()` is called, and go to a
+temporary folder unless you set `cache_dir`.
 
 ## Installation
 
@@ -147,8 +160,10 @@ head(filmy_taxonomy[c(
 ts_resolve_names("Gonocormus minutum", filmy_taxonomy)
 #>                query                        resolved_name
 #> 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
-#>                     matched_name resolved_status matched_status match_type
-#> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym auto_fuzzy
+#>                     matched_name resolved_status matched_status
+#> 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym
+#>         match_type
+#> 1 auto_fuzzy_canon
 
 # We can now use the `resolved_name` column of this result for downstream
 # analyses joining on other datasets that have been resolved to the same
