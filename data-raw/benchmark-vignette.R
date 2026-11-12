@@ -87,7 +87,7 @@ for (tool in tools) {
   cat("matched", nrow(queries), "queries in", round(t_run, 1), "s (first run)\n")
   first_run[[tool]] <- t_run
   scores <- score_queries(queries, hits)
-  accuracy[[tool]] <- summarise_scores(scores)
+  accuracy[[tool]] <- summarize_scores(scores)
   print(accuracy[[tool]])
   if (do_speed) {
     tool_sizes <- if (tool %in% c("utaxonstand", "worldflora")) slow_sizes else sizes

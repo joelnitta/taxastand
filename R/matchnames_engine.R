@@ -38,7 +38,7 @@
 
 # Parse a vector of parsed `id|...` lines into the fields matchnames needs.
 # Returns a list of equal-length vectors plus `key(method)`, which computes
-# (and memoises) the comparison key for a match method only when first asked
+# (and memoizes) the comparison key for a match method only when first asked
 # for, so a method no query ever reaches costs nothing.
 .tt_record_keys <- function(lines) {
   lines <- enc2utf8(lines)
@@ -192,7 +192,7 @@
 #'
 #' @param query_lines,ref_lines Character vectors of parsed `id|...` lines.
 #' @param ref_keys Optional output of `.tt_record_keys()` for the reference
-#'   (e.g. memoised by a prepared reference); used instead of `ref_lines`.
+#'   (e.g. memoized by a prepared reference); used instead of `ref_lines`.
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
 #' @param match_no_auth Logical; the `-1` option (NOAUTHONE).
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).

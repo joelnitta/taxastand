@@ -13,7 +13,7 @@
 # (intentionally ambiguous) pattern, whereas R's TRE engine assigns the groups
 # differently. The "(*UCP)" verb keeps POSIX classes such as [:alnum:]
 # Unicode-aware (so accented author names are captured, as under gawk's locale).
-# Input is normalised to UTF-8 first.
+# Input is normalized to UTF-8 first.
 
 # Character classes reused below, written to avoid backslash-in-bracket
 # ambiguity between gawk and TRE (hyphen placed last = literal hyphen):

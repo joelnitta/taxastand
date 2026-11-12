@@ -70,7 +70,7 @@ test_that("a prepared reference can be reused and fills in per genus", {
 })
 
 test_that("records keep their reference order when genera are combined", {
-  # Two reference names identical after normalisation: the later one wins, as
+  # Two reference names identical after normalization: the later one wins, as
   # when the reference is given as names
   ref2 <- c(
     "Asplenium nidus L.", "Quercus robur L.", "Asplenium nidus L",

@@ -66,7 +66,7 @@ load_reference <- function(source = c("ppg", "wfo"), ppg_path = NULL,
 }
 
 # ---- damage ----
-# Damage one letter of `x`: substitution, deletion, or swap of two neighbours.
+# Damage one letter of `x`: substitution, deletion, or swap of two neighbors.
 # `from` is the first position that may be changed.
 damage <- function(x, kind, from = 1L) {
   n <- nchar(x)
@@ -287,7 +287,7 @@ score_queries <- function(queries, hits) {
 #   mean_hits: average records returned per answered query
 # - pick_answered: share of queries for which the tool chose one record;
 #   pick_precision: share of those choices that are right
-summarise_scores <- function(scores) {
+summarize_scores <- function(scores) {
   f <- function(s) {
     answered <- s$n_hits > 0
     data.frame(

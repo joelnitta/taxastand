@@ -12,7 +12,7 @@ editor_options:
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4.5)
 # The benchmark code ships with the package (inst/benchmark). show_code() prints
-# one of its labelled sections ("# ---- label ----") as a code block. The code
+# one of its labeled sections ("# ---- label ----") as a code block. The code
 # is not run here, and it is not in a chunk of this vignette on purpose: it uses
 # packages that taxastand does not depend on.
 bench_src <- readLines(system.file("benchmark", "benchmark-lib.R", package = "taxastand"))
@@ -459,7 +459,7 @@ adapters <- list(
 for (tool in names(adapters)) {
   hits <- adapters[[tool]]$run(queries$query)
   scores <- score_queries(queries, hits)
-  print(summarise_scores(scores)) # found, single answer
+  print(summarize_scores(scores)) # found, single answer
   print(time_adapter(adapters[[tool]], queries$query)) # speed
 }
 ```

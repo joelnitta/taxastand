@@ -1,4 +1,4 @@
-# Hand-labelled accuracy fixture.
+# Hand-labeled accuracy fixture.
 #
 # Expected values here are what a taxonomist would say is CORRECT, not a
 # snapshot of current output. They are the ground truth for "accurate" and the
