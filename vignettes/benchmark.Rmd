@@ -42,7 +42,7 @@ what_main <- c(
   exact = "Nothing: the full name with its author",
   epithet_substitution = "One letter of the epithet is replaced",
   epithet_deletion = "One letter of the epithet is deleted",
-  epithet_swap = "Two neighbouring letters of the epithet are swapped",
+  epithet_swap = "Two neighboring letters of the epithet are swapped",
   two_edits = "Two letters of the epithet are changed",
   short_epithet = "One letter deleted from an epithet of five letters or fewer",
   genus_deletion = "One letter of the genus is deleted",
@@ -349,7 +349,7 @@ a genus is used costs more than later calls.
   the code below). Settings such as the thresholds for fuzzy matching can be
   changed, and a package tuned to your own data could give different results.
   The defaults differ in kind: taxify allows a fraction of the name to differ
-  and counts a swap of two neighbouring letters as one edit, while taxastand
+  and counts a swap of two neighboring letters as one edit, while taxastand
   allows a fixed number of edits (`max_dist`) and, by default, counts a swap as
   two (`transpositions = FALSE`).
   How a name is passed in also matters: WorldFlora was given infraspecific
