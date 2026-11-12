@@ -1,0 +1,57 @@
+make_cache <- function() {
+  d <- withr::local_tempdir(.local_envir = parent.frame())
+  writeLines("a", file.path(d, "1a2b3c4d-wfo.zip"))
+  writeLines("bb", file.path(d, "ffffffff-ppg.csv"))
+  writeLines("x", file.path(d, "file1234.part"))
+  writeLines("mine", file.path(d, "notes.txt"))
+  d
+}
+
+test_that("ts_show_ref_cache() lists our files only", {
+  d <- make_cache()
+  expect_message(x <- ts_show_ref_cache(d), "Downloaded files")
+  expect_equal(x$file, c("file1234.part", "ppg.csv", "wfo.zip"))
+  expect_named(x, c("file", "size", "modified", "path"))
+  expect_false(any(grepl("notes.txt", x$path)))
+})
+
+test_that("ts_show_ref_cache() handles empty and missing folders", {
+  d <- withr::local_tempdir()
+  expect_message(x <- ts_show_ref_cache(d), "No downloaded files")
+  expect_equal(nrow(x), 0)
+  expect_message(x <- ts_show_ref_cache(file.path(d, "nope")), "No downloaded")
+  expect_equal(nrow(x), 0)
+  expect_false(dir.exists(file.path(d, "nope")))
+})
+
+test_that("ts_clear_ref_cache() deletes ours and keeps other files", {
+  d <- make_cache()
+  expect_message(del <- ts_clear_ref_cache(d, ask = FALSE), "Deleted 3")
+  expect_length(del, 3)
+  expect_equal(list.files(d), "notes.txt")
+  expect_message(ts_clear_ref_cache(d, ask = FALSE), "Nothing to delete")
+})
+
+test_that("ts_clear_ref_cache() older_than keeps recent files", {
+  d <- make_cache()
+  Sys.setFileTime(file.path(d, "1a2b3c4d-wfo.zip"), Sys.time() - 10 * 86400)
+  suppressMessages(del <- ts_clear_ref_cache(d, older_than = 5, ask = FALSE))
+  expect_equal(basename(del), "1a2b3c4d-wfo.zip")
+  expect_length(list.files(d), 3)
+})
+
+test_that("ts_clear_ref_cache() asks only when told to, and respects 'no'", {
+  d <- make_cache()
+  testthat::local_mocked_bindings(askYesNo = function(...) FALSE, .package = "utils")
+  expect_message(ts_clear_ref_cache(d, ask = TRUE), "Nothing deleted")
+  expect_length(list.files(d), 4)
+  expect_false(interactive()) # default is no prompt when not interactive
+  suppressMessages(ts_clear_ref_cache(d))
+  expect_equal(list.files(d), "notes.txt")
+})
+
+test_that("cache functions use the option", {
+  d <- make_cache()
+  withr::local_options(taxastand.cache_dir = d)
+  expect_equal(nrow(suppressMessages(ts_show_ref_cache())), 3)
+})

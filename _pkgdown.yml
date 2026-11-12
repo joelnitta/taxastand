@@ -22,6 +22,7 @@ reference:
   - ts_subset_ref
   - ts_format_ref
   - ts_optimize_ref
+  - ts_show_ref_cache
 - title: "Datasets"
 - contents:
   - filmy_taxonomy

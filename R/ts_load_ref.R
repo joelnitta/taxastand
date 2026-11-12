@@ -41,7 +41,9 @@
 #' in the option `taxastand.cache_dir` if set, otherwise a folder in
 #' [tempdir()], which is removed when R closes. To keep downloads between R
 #' sessions, give a `cache_dir` (or set the option). If the file is already
-#' there, it is used and not downloaded again, unless `refresh = TRUE`.
+#' there, it is used and not downloaded again, unless `refresh = TRUE`. See
+#' \code{\link{ts_show_ref_cache}()} and \code{\link{ts_clear_ref_cache}()} to
+#' check and free the space.
 #' Downloads from named sources can be large (World Flora Online is about
 #' 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 #' tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
@@ -205,10 +207,15 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
 }
 
 # Folder used to keep downloads
-.ts_cache_dir <- function(cache_dir = NULL) {
+.ts_cache_path <- function(cache_dir = NULL) {
   if (is.null(cache_dir)) cache_dir <- getOption("taxastand.cache_dir")
   if (is.null(cache_dir)) cache_dir <- file.path(tempdir(), "taxastand")
-  cache_dir <- path.expand(cache_dir)
+  path.expand(cache_dir)
+}
+
+# Same, but make sure the folder exists
+.ts_cache_dir <- function(cache_dir = NULL) {
+  cache_dir <- .ts_cache_path(cache_dir)
   if (!dir.exists(cache_dir)) {
     dir.create(cache_dir, recursive = TRUE)
   }

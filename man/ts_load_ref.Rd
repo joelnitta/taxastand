@@ -101,7 +101,9 @@ are kept in a folder for reuse: \code{cache_dir} if given, otherwise the folder
 in the option \code{taxastand.cache_dir} if set, otherwise a folder in
 \code{\link[=tempdir]{tempdir()}}, which is removed when R closes. To keep downloads between R
 sessions, give a \code{cache_dir} (or set the option). If the file is already
-there, it is used and not downloaded again, unless \code{refresh = TRUE}.
+there, it is used and not downloaded again, unless \code{refresh = TRUE}. See
+\code{\link{ts_show_ref_cache}()} and \code{\link{ts_clear_ref_cache}()} to
+check and free the space.
 Downloads from named sources can be large (World Flora Online is about
 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
