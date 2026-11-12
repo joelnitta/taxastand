@@ -29,6 +29,8 @@ Roxygen: list(
 Depends: R (>= 4.1.0)
 Suggests:
     covr,
+    DBI,
+    duckdb,
     rmarkdown,
     tibble,
     knitr,

@@ -107,7 +107,7 @@ test_that("zip files are recognised by content, not by name", {
   expect_false(.ts_is_zip(txt))
 })
 
-test_that("exactly one of source, url and file is needed", {
+test_that("exactly one of source, url or file is needed", {
   expect_error(ts_load_ref(), "exactly one")
   expect_error(ts_load_ref(source = "wfo", file = zip_fixture), "exactly one")
   expect_error(ts_load_ref(source = "nope", quiet = TRUE), "Unknown `source`")
@@ -160,7 +160,11 @@ fake_text <- function(link) {
   } else if (grepl("taxadb/2026/manifest.csv", link)) {
     taxadb_manifest()
   } else if (grepl("taxadb/22.12/manifest.csv", link)) {
-    stop("HTTP status was '404 Not Found'")
+    # an older snapshot, split into many files
+    paste0(
+      "provider,schema,version,title,rows,parts\n",
+      'itis,dwc,22.12,"itis",10,5\n'
+    )
   } else {
     stop("unexpected link: ", link)
   }
@@ -271,7 +275,7 @@ test_that("versions can be listed (no internet used)", {
   local_mocked_bindings(.ts_fetch_text = fake_text)
   expect_equal(.ts_versions_wfo(), c("2026-06", "2025-12"))
   expect_equal(.ts_versions_ppg(), c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
-  # taxadb snapshots without a manifest (22.12) are not offered
+  # taxadb snapshots split into many files (22.12) are not offered
   expect_equal(.ts_versions_taxadb("itis"), "2026")
   x <- ts_show_ref_sources(versions = TRUE)
   expect_equal(x$source, all_sources)
@@ -415,12 +419,88 @@ test_that("a Parquet file can be read from a path", {
   expect_equal(nrow(res), 4)
 })
 
-test_that("reading Parquet without nanoparquet gives an install hint", {
+test_that("reading Parquet without a reader gives an install hint", {
   local_mocked_bindings(.ts_have_package = function(pkg) FALSE)
   expect_error(
     ts_load_ref(file = test_path("fixtures", "mini-taxadb.parquet"), quiet = TRUE),
     "install.packages\\(\"nanoparquet\"\\)"
   )
+})
+
+test_that("duckdb and nanoparquet give the same rows", {
+  skip_if_not_installed("nanoparquet")
+  skip_if_not_installed("duckdb")
+  skip_if_not_installed("DBI")
+  f <- test_path("fixtures", "mini-taxadb.parquet")
+  keep <- .ts_sources()$itis$keep
+  only <- function(readers) {
+    function(pkg) pkg %in% readers
+  }
+  for (taxon in list("Pteridaceae", c("Pteridaceae", "Polypodiaceae"), "Nope")) {
+    for (rank in list(NULL, "family")) {
+      with_np <- NULL
+      with_duck <- NULL
+      local({
+        local_mocked_bindings(.ts_have_package = only("nanoparquet"))
+        with_np <<- .ts_read_parquet(f, keep, taxon, rank)
+      })
+      local({
+        local_mocked_bindings(.ts_have_package = only(c("duckdb", "DBI")))
+        with_duck <<- .ts_read_parquet(f, keep, taxon, rank)
+      })
+      # duckdb reads fewer rows, but subsetting gives the same result
+      expect_lte(nrow(with_duck), nrow(with_np))
+      if (!identical(taxon, "Nope")) {
+        a <- ts_subset_ref(with_np, taxon, rank = rank)
+        b <- ts_subset_ref(with_duck, taxon, rank = rank)
+        a <- a[order(a$taxonID), ]
+        b <- b[order(b$taxonID), ]
+        rownames(a) <- rownames(b) <- NULL
+        expect_equal(a, b)
+      }
+    }
+  }
+  # the rows read are the ones for the taxon, its synonyms and their accepted
+  # names: the synonyms have no family
+  local_mocked_bindings(.ts_have_package = only(c("duckdb", "DBI")))
+  x <- .ts_read_parquet(f, keep, "Pteridaceae", NULL)
+  expect_equal(sort(x$scientificName), c("Pteris", "Pteris vittata"))
+  x <- .ts_read_parquet(f, keep, "Polypodiaceae", NULL)
+  expect_equal(nrow(x), 3)
+  # all columns of keep that the file has are read, and no others
+  expect_false("vernacularName" %in% colnames(x))
+  # a rank that is not a column cannot be filtered with SQL: everything is read
+  expect_equal(nrow(.ts_read_parquet(f, keep, "Pteris", "genus")), 2)
+  expect_equal(nrow(.ts_read_parquet(f, keep, "Pteris", "species")), 5)
+})
+
+test_that("duckdb alone can read a Parquet file", {
+  skip_if_not_installed("duckdb")
+  skip_if_not_installed("DBI")
+  local_mocked_bindings(.ts_have_package = function(pkg) pkg != "nanoparquet")
+  f <- test_path("fixtures", "mini-taxadb.parquet")
+  expect_equal(nrow(ts_load_ref(file = f, quiet = TRUE)), 4)
+  expect_equal(
+    nrow(ts_load_ref(file = f, taxon = "Pteridaceae", quiet = TRUE)), 1
+  )
+  # a rank that is not a column: read everything, subset in R
+  expect_equal(
+    nrow(ts_load_ref(file = f, taxon = "Pteris", rank = "genus", quiet = TRUE)), 1
+  )
+})
+
+test_that("duckdb does not create a folder in the home directory", {
+  skip_if_not_installed("duckdb")
+  skip_if_not_installed("DBI")
+  skip_if_not("shared_home" %in% names(formals(duckdb::duckdb)))
+  home <- withr::local_tempdir()
+  withr::local_envvar(HOME = home, USERPROFILE = home)
+  local_mocked_bindings(.ts_have_package = function(pkg) pkg != "nanoparquet")
+  ts_load_ref(
+    file = test_path("fixtures", "mini-taxadb.parquet"), taxon = "Pteridaceae",
+    quiet = TRUE
+  )
+  expect_false(dir.exists(file.path(home, ".duckdb")))
 })
 
 test_that("unknown taxadb version gives the versions available", {
