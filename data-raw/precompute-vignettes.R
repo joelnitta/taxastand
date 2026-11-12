@@ -9,6 +9,7 @@
 #
 # setup-reference.Rmd.orig needs the taxadb, dplyr and nanoparquet packages and a network connection.
 
-old <- setwd("vignettes")
-knitr::knit("setup-reference.Rmd.orig", output = "setup-reference.Rmd")
-setwd(old)
+withr::with_dir(
+  "vignettes",
+  knitr::knit("setup-reference.Rmd.orig", output = "setup-reference.Rmd")
+)

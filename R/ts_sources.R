@@ -403,7 +403,7 @@ print.ts_ref_sources <- function(x, ...) {
   tryCatch(
     {
       con <- url(link, encoding = "UTF-8")
-      on.exit(close(con))
+      on.exit(close(con), add = TRUE)
       paste(readLines(con, warn = FALSE), collapse = "\n")
     },
     error = fail, warning = fail
