@@ -22,7 +22,10 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          # R-devel has no binary duckdb (a very slow compile that exceeds the
+          # timeout), so the optional duckdb reader is not installed there; its
+          # tests are skipped. Hard dependencies and the other Suggests only.
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release', deps: '"hard"', extra: 'any::rcmdcheck, any::testthat, any::withr, any::knitr, any::rmarkdown, any::tibble, any::nanoparquet'}
           - {os: ubuntu-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'oldrel-1'}
 
@@ -58,7 +61,8 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          dependencies: ${{ matrix.config.deps || '"all"' }}
+          extra-packages: ${{ matrix.config.extra || 'any::rcmdcheck' }}
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
