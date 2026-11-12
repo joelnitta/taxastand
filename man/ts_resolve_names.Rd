@@ -67,14 +67,14 @@ Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}(
 species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (\code{FALSE}).}
 
-\item{match_autonyms}{Logical; if the specific epithet and infraspecific
-epithet are the same (an autonym), drop the infraspecific rank and epithet
-from the query. For more information, see
+\item{match_autonyms}{Logical; match autonyms (names whose specific epithet
+and infraspecific epithet are the same) with the species name, whichever of
+the two is in the query and which in the reference. For more information, see
 \code{\link{ts_match_names}()}. Default: \code{FALSE}.}
 
 \item{match_autonyms_exclude}{Character vector; taxonomic names to exclude
-from collapsing with \code{match_autonyms}. Any names used must match those in
-\code{query} exactly, or they won't be excluded.}
+from \code{match_autonyms}. Any names used must match those in \code{query} exactly, or
+they won't be excluded.}
 
 \item{tbl_out}{Logical vector of length 1; should a tibble be returned?
 If \code{FALSE} (default), output will be a data.frame. This argument can
