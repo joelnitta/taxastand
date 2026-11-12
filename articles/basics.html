@@ -51,10 +51,10 @@
       <a href="../articles/basics.html">The basics</a>
     </li>
     <li>
-      <a href="../articles/benchmark.html">Benchmarks</a>
+      <a href="../articles/setup-reference.html">Setting up a reference</a>
     </li>
     <li>
-      <a href="../articles/taxadb.html">Using taxadb</a>
+      <a href="../articles/benchmark.html">Benchmarks</a>
     </li>
   </ul>
 </li>
@@ -103,9 +103,9 @@ resolution workflow, which consist of:</p>
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
 <p>We’ll start by loading <code>taxastand</code>. For more information
-on installing <code>taxastand</code>, see <a href="https://joelnitta.github.io/taxastand/index.html#installation" class="external-link">here</a>.</p>
+on installing <code>taxastand</code>, see <a href="https://joelnitta.github.io/taxastand/index.html#installation">here</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://joelnitta.github.io/taxastand/" class="external-link">taxastand</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://joelnitta.github.io/taxastand/">taxastand</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="name-parsing">Name parsing<a class="anchor" aria-label="anchor" href="#name-parsing"></a>
@@ -137,7 +137,7 @@ and returns a dataframe:</p>
 <span><span class="co">#&gt; 1                  &lt;NA&gt; (Bl.) K. Iwats.</span></span></code></pre></div>
 <p>The first column, <code>name</code>, is the original input name.
 <code>id</code> is a unique identifier attached to the name. The rest of
-the columns are <a href="https://joelnitta.github.io/taxastand/reference/ts_parse_names.html#value" class="external-link">the
+the columns are <a href="https://joelnitta.github.io/taxastand/reference/ts_parse_names.html#value">the
 parsed components of the name</a>.</p>
 <p>Note that the name parsing algorithm used by <code>taxastand</code>
 is case-sensitive! It assumes that the <a href="https://en.wikipedia.org/wiki/Binomial_nomenclature#Writing_binomial_names" class="external-link">standard
@@ -317,13 +317,12 @@ actually refer to the same species.</p>
 standard</strong> in the form of a dataframe. <code>taxastand</code>
 requires that the taxonomic standard conform to <a href="https://dwc.tdwg.org/" class="external-link">Darwin Core standards</a>. There are many
 sources of taxonomic data online, including <a href="https://www.gbif.org/en/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c" class="external-link">GBIF</a>,
-<a href="https://www.catalogueoflife.org/" class="external-link">Catalog of Life</a>, and <a href="https://www.itis.gov/" class="external-link">ITIS</a> among others. The <a href="taxadb.html">Using taxadb</a> vignette shows how to get a standard
-database such as ITIS with the taxadb package, and
-<code><a href="../reference/ts_format_ref.html">ts_format_ref()</a></code> turns a table with other column names or a
-separate author column into the format <code>taxastand</code> needs.
-<code>taxastand</code> does not check that the table is valid Darwin
-Core; the <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a>
-package can validate it (<code>dwctaxon::dct_validate()</code>).</p>
+<a href="https://www.catalogueoflife.org/" class="external-link">Catalog of Life</a>, and <a href="https://www.itis.gov/" class="external-link">ITIS</a> among others. The <a href="setup-reference.html">Setting up a reference</a> vignette shows
+how to get a standard database such as ITIS or PPG with
+<code><a href="../reference/ts_load_ref.html">ts_load_ref()</a></code>, and how to turn your own table into the
+format <code>taxastand</code> needs. <code>taxastand</code> does not
+check that the table is valid Darwin Core; the <a href="https://docs.ropensci.org/dwctaxon/" class="external-link">dwctaxon</a> package can
+validate it (<code>dwctaxon::dct_validate()</code>).</p>
 <p><code>taxastand</code> comes supplied with an example taxonomic
 standard for filmy ferns (family Hymenophyllaceae):</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -418,24 +417,9 @@ modifying rows while keeping synonyms mapped correctly.</p>
 <div class="section level2">
 <h2 id="large-references">Large references<a class="anchor" aria-label="anchor" href="#large-references"></a>
 </h2>
-<p>Before matching, <code>taxastand</code> parses the reference names
-and builds the keys it compares them with. With a reference the size of
-PPG or WFO this takes longer than the matching itself. If you will match
-several batches of queries against the same reference, optimize it once
-with <code><a href="../reference/ts_optimize_ref.html">ts_optimize_ref()</a></code> and pass the result in place of the
-reference:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_optimize_ref.html">ts_optimize_ref</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/ts_match_names.html">ts_match_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span></code></pre></div>
-<p>The results are the same as without optimizing. The genus of every
-name is found up front, and each genus is parsed the first time a query
-needs it, so the first batch pays for the genera it uses and later
-batches reuse them. The optimized reference therefore grows as it is
-used. If you optimize a reference with
-<code>strip_qualifiers = TRUE</code>, the qualifiers are removed from
-the reference names when they are parsed.</p>
+<p>If you will match several batches of queries against a large
+reference, optimize it once with <code><a href="../reference/ts_optimize_ref.html">ts_optimize_ref()</a></code>; see <a href="setup-reference.html#large-references">Large references</a> in the
+“Setting up a reference” vignette.</p>
 </div>
 <div class="footnotes footnotes-end-of-document">
 <hr>
