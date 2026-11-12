@@ -123,7 +123,7 @@ Here is a summary of the values taken by `match_type` (also documented in the "M
 
 The matching algorithm will prefer match codes higher in the list; so if a name could be matched both by `auto_punct` and `auto_fuzzy`, it will be matched based on `auto_punct`[^2]. For queries without an author, an identical canonical name (`auto_canon`) is preferred over a fuzzy canonical match (`auto_fuzzy_canon`).
 
-[^2]: The algorithm used by `taxastand` is optimized for plants, algae, and fungi, which vary in their [taxonomic rules](https://www.iapt-taxon.org/nomen/main.php) somewhat from animals. For example, plants include basionym authors in parentheses followed by the combination author, and typically don't include the year, whereas animals normally include the year and may not provide the combination author.
+[^2]: The algorithm used by `taxastand` is optimized for plants, algae, and fungi, which vary in their [taxonomic rules](https://www.iaptglobal.org/nomen/main.php) somewhat from animals. For example, plants include basionym authors in parentheses followed by the combination author, and typically don't include the year, whereas animals normally include the year and may not provide the combination author.
 
 ## Name resolution
 

@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Standardizes taxonomic names by matching species names to entries in a user-supplied reference taxonomy, then resolving synonyms to their accepted names. Fuzzy matching on parsed name components (genus, epithet, author, infraspecific rank, etc.) allows for orthographic differences between the query and reference names. This facilitates reproducible joining of datasets that use different taxonomic synonyms for the same species.
+Standardizes taxonomic names by matching species names to entries in a reference taxonomy, either downloaded from a named source (such as World Flora Online or the Pteridophyte Phylogeny Group classification) or supplied by the user, then resolving synonyms to their accepted names. Fuzzy matching on parsed name components (genus, epithet, author, infraspecific rank, etc.) allows for orthographic differences between the query and reference names. This facilitates reproducible joining of datasets that use different taxonomic synonyms for the same species.
 }
 \section{Messages}{
 Functions give messages (and some warnings, such as for names that could not
