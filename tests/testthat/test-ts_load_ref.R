@@ -97,7 +97,7 @@ test_that("the result works with ts_resolve_names()", {
   expect_equal(res$resolved_name, "Polypodium vulgare L.")
 })
 
-test_that("zip files are recognised by content, not by name", {
+test_that("zip files are recognized by content, not by name", {
   f <- withr::local_tempfile(fileext = ".dat")
   file.copy(zip_fixture, f)
   expect_true(.ts_is_zip(f))

@@ -6,14 +6,14 @@
 # building is a large speed-up when the reference is much bigger than the set
 # of query genera.
 #
-# Genera are compared in normalised form (tt_depunct(): lower-cased, punctuation
+# Genera are compared in normalized form (tt_depunct(): lower-cased, punctuation
 # and diacritics removed), which is how the matcher's keys compare them, so the
 # filter keeps everything that could match under those keys.
 
-# Normalised genus keys to keep, given the parsed query. This is the single
+# Normalized genus keys to keep, given the parsed query. This is the single
 # place to extend the set of genera considered. Query genera that are not in
 # the reference are fuzzy-matched to reference genera within `max_dist_genus`
-# (see tt_matchnames()), so those neighbouring genera are kept too.
+# (see tt_matchnames()), so those neighboring genera are kept too.
 .ts_genus_keep_keys <- function(query_parsed_df, ref_genus_keys = NULL,
                                 max_dist_genus = 0) {
   genera <- query_parsed_df$genus_name
@@ -31,7 +31,7 @@
 }
 
 # Cheap genus key from a raw (unparsed) name: its first word, ignoring a
-# leading hybrid sign, normalised with tt_depunct().
+# leading hybrid sign, normalized with tt_depunct().
 .ts_raw_genus_key <- function(x) {
   tt_depunct(sub(
     "^[[:space:]]*(?:\u00d7[[:space:]]*|x[[:space:]]+)?([^[:space:]]*).*$",
