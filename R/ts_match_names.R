@@ -520,7 +520,7 @@ ts_match_names <- function(
 # via a temporary file, as ts_write_names() does)
 .ts_parsed_lines <- function(parsed_df, key) {
   path <- tempfile(pattern = digest::digest(key), fileext = ".txt")
-  on.exit(unlink(path))
+  on.exit(unlink(path), add = TRUE)
   ts_write_names(parsed_df, path)
   readLines(path)
 }
