@@ -152,6 +152,9 @@
   and citation are recorded in the `ts_source` attribute. Downloads are kept
   in a folder only if you give a `cache_dir` (otherwise they are in
   `tempdir()`) (#115, #116, #117, part of #109).
+* New `ts_show_ref_cache()` and `ts_clear_ref_cache()` list and delete the files
+  downloaded by `ts_load_ref()`; other files in the folder are never touched
+  (#132, part of #109).
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.
