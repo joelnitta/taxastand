@@ -105,7 +105,6 @@ Here is a summary of the values taken by `match_type` (also documented in the "M
 - `exact`: Exact match to all parts of the name (genus hybrid marker, genus name, species hybrid marker, species epithet, infraspecific rank signifier, infraspecific rank, author string).
 - `autonym` (only applies if `match_autonyms` is `TRUE`): Exact match after an autonym in the query (a name whose infraspecific epithet repeats the specific epithet, such as `Blechnum lunare var. lunare`) is collapsed to the species name (`Blechnum lunare`).
 - `auto_punct`: Exact match to all parts of the name after removing mis-matching spaces, periods, non-ASCII author name characters, etc.
-- `auto_noauth` (only applies if `match_no_auth` is `TRUE`): Match between a query lacking an author and a reference name lacking an author that occurs only once in the reference.
 - `auto_basio-`: Match after excluding the basionym author from the reference. For example, `Cardaminopsis umbrosa Czerep.` vs. `Cardaminopsis umbrosa (Turcz.) Czerep.)`); the basionym author is `(Turcz.)`.
 - `auto_basio+`: Match after excluding the basionym author from the query.
 - `auto_in-`: Match after excluding all *in* elements from reference. An *in* element refers to phrases such as `Tagawa in Morton`. The version excluding *in* elements is `Tagawa`.
@@ -168,7 +167,7 @@ ts_resolve_names("Didymoglossum alatum (Sw.) Desv.", filmy_taxonomy)
 
 With the author, the query matches a single name exactly (`exact`), which resolves to its accepted name.
 
-Name resolution workflows typically involve tweaking the matching arguments (such as `match_no_auth`, `match_canon`, and `max_dist`) to resolve as many names as possible automatically, followed by some amount of manual editing of the names that remain unresolved.
+Name resolution workflows typically involve tweaking the matching arguments (such as `match_canon` and `max_dist`) to resolve as many names as possible automatically, followed by some amount of manual editing of the names that remain unresolved.
 
 A benefit of `taxastand` is that, if during the name resolution workflow we discover mistakes in the reference database, the reference database can be edited so that the query names resolve correctly (this is not possible with packages that rely on querying a remote taxonomic database that can't be modified by the user). The [dwctaxon](https://docs.ropensci.org/dwctaxon/) package has functions for editing Darwin Core taxonomic data, such as adding and modifying rows while keeping synonyms mapped correctly.
 

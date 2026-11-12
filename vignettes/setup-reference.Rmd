@@ -112,18 +112,18 @@ queries <- c(
   "Microsorum scolopendria",
   "Polypodium pelucidum Kaulf."
 )
-res <- ts_resolve_names(queries, itis, match_no_auth = TRUE)
+res <- ts_resolve_names(queries, itis)
 res[match(queries, res$query), c("query", "resolved_name", "matched_status", "match_type")]
 #>                                      query
 #> 1                    Polypodium vulgare L.
 #> 4 Phymatodes scolopendria (Burm. f.) Ching
 #> 2                  Microsorum scolopendria
 #> 3              Polypodium pelucidum Kaulf.
-#>                               resolved_name matched_status  match_type
-#> 1                     Polypodium vulgare L.       accepted       exact
-#> 4 Microsorum scolopendria (Burm. f.) Copel.        synonym       exact
-#> 2 Microsorum scolopendria (Burm. f.) Copel.       accepted auto_noauth
-#> 3              Polypodium pellucidum Kaulf.       accepted  auto_fuzzy
+#>                               resolved_name matched_status match_type
+#> 1                     Polypodium vulgare L.       accepted      exact
+#> 4 Microsorum scolopendria (Burm. f.) Copel.        synonym      exact
+#> 2 Microsorum scolopendria (Burm. f.) Copel.       accepted auto_canon
+#> 3              Polypodium pellucidum Kaulf.       accepted auto_fuzzy
 ```
 
 Some sources are Parquet files. These need the [nanoparquet](https://nanoparquet.r-lib.org/) or [duckdb](https://r.duckdb.org/) package; with duckdb, `taxon` is applied while reading, which is faster for very large files. `ts_load_ref()` says which package to install if neither is available.
@@ -217,7 +217,7 @@ Before matching, `taxastand` parses the reference names and builds the keys it c
 
 ``` r
 itis_prepared <- ts_optimize_ref(itis)
-res <- ts_resolve_names(queries, itis_prepared, match_no_auth = TRUE)
+res <- ts_resolve_names(queries, itis_prepared)
 ```
 
 The results are the same as without optimizing. The genus of every name is found up front, and each genus is parsed the first time a query needs it, so the first batch pays for the genera it uses and later batches reuse them. The optimized reference therefore grows as it is used. If you optimize a reference with `strip_qualifiers = TRUE`, the qualifiers are removed from the reference names when they are parsed.

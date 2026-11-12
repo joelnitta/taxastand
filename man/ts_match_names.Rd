@@ -11,7 +11,6 @@ ts_match_names(
   max_dist = 3,
   max_dist_genus = 2,
   transpositions = FALSE,
-  match_no_auth = FALSE,
   match_canon = FALSE,
   match_autonyms = FALSE,
   match_autonyms_exclude = NULL,
@@ -62,10 +61,6 @@ genus-level fuzzy matching off. Default: 2.}
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to \code{FALSE} for plain
 Levenshtein distance, which is somewhat faster. Default: \code{FALSE}.}
-
-\item{match_no_auth}{Logical; If no author is given in the query and the name
-(without author) occurs only once in the reference, accept the name in the
-reference as a match. Default: to not allow such a match (\code{FALSE}).}
 
 \item{match_canon}{Logical; Allow a "canonical name" match if only the genus,
 species epithet, and infraspecific epithet (if present) match exactly.
@@ -195,8 +190,6 @@ capitalization, and accented or other non-ASCII characters.
 
 \strong{Differences in how the author is cited (usually safe)}
 \itemize{
-\item \code{auto_noauth}: query and reference both lack an author and the name is
-unique in the reference (only when \code{match_no_auth = TRUE}).
 \item \verb{auto_basio-}, \verb{auto_basio+}: identical once the basionym author, e.g.
 \code{(Turcz.)} in \verb{Cardaminopsis umbrosa (Turcz.) Czerep.}, is dropped from
 the reference (\code{-}) or the query (\code{+}).

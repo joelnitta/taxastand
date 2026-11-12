@@ -73,7 +73,6 @@ test_that("Manually matched names work with collapsed infrasp names", {
       match = c("Bar foo", "Crepidomanes minutum")
     ),
     max_dist = 10,
-    match_no_auth = FALSE,
     match_canon = FALSE,
     match_autonyms = TRUE,
     match_autonyms_exclude = NULL,

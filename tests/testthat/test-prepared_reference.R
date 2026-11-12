@@ -34,13 +34,13 @@ test_that("a prepared reference gives the same results as the names", {
     without_ref_id(suppressWarnings(
       ts_match_names(
         queries, prepared,
-        match_no_auth = TRUE, match_canon = TRUE, transpositions = TRUE
+        match_canon = TRUE, transpositions = TRUE
       )
     )),
     without_ref_id(suppressWarnings(
       ts_match_names(
         queries, ref_names,
-        match_no_auth = TRUE, match_canon = TRUE, transpositions = TRUE
+        match_canon = TRUE, transpositions = TRUE
       )
     ))
   )
@@ -195,10 +195,10 @@ test_that("keys build up correctly as genera are added in batches", {
   q <- c("Asplenium nidus", "Hymenophyllum taiwanense", "Quercus pyrenaica")
   expect_equal(
     without_ref_id(suppressWarnings(
-      ts_match_names(q, prepared, match_no_auth = TRUE)
+      ts_match_names(q, prepared, match_canon = TRUE)
     )),
     without_ref_id(suppressWarnings(
-      ts_match_names(q, ref_names, match_no_auth = TRUE)
+      ts_match_names(q, ref_names, match_canon = TRUE)
     ))
   )
 })

@@ -10,7 +10,6 @@ ts_resolve_names(
   max_dist = 3,
   max_dist_genus = 2,
   transpositions = FALSE,
-  match_no_auth = FALSE,
   match_canon = FALSE,
   match_autonyms = FALSE,
   match_autonyms_exclude = NULL,
@@ -62,10 +61,6 @@ genus-level fuzzy matching off. See \code{\link{ts_match_names}()}. Default: 2.}
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to \code{FALSE} for plain
 Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}()}. Default: \code{FALSE}.}
-
-\item{match_no_auth}{Logical; If no author is given in the query and the name
-(without author) occurs only once in the reference, accept the name in the
-reference as a match. Default: to not allow such a match (\code{FALSE}).}
 
 \item{match_canon}{Logical; Allow a "canonical name" match if only the genus,
 species epithet, and infraspecific epithet (if present) match exactly.
