@@ -78,7 +78,7 @@ version that was used is recorded in the result.
 
 A file can be a comma- or tab-separated text file (such as \code{.csv}, \code{.tsv} or
 \code{.txt}, also compressed as \code{.gz}), a zipped Darwin Core Archive (\code{.zip}), or
-a Parquet file (which needs the nanoparquet package; \code{"itis"}, \code{"col"},
+a Parquet file (which needs the nanoparquet or the duckdb package; \code{"itis"}, \code{"col"},
 \code{"gbif"}, \code{"ncbi"}, \code{"ott"}, \code{"fb"} and \code{"slb"} are Parquet files of the
 \href{https://docs.ropensci.org/taxadb/}{taxadb} snapshots).
 The type is found from the contents of the file, not its name. For a Darwin
@@ -104,8 +104,10 @@ sessions, give a \code{cache_dir} (or set the option). If the file is already
 there, it is used and not downloaded again, unless \code{refresh = TRUE}.
 Downloads from named sources can be large (World Flora Online is about
 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
-tables also need a lot of memory (a few GB for GBIF), even when \code{taxon} is
-given.
+tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
+the duckdb package is installed and \code{taxon} is given, only the rows for
+\code{taxon} and their synonyms are read, which is much faster and needs much less
+memory; the result is the same.
 
 Checking that the data are what you expect is up to you: the
 \href{https://docs.ropensci.org/dwctaxon/}{dwctaxon} package can validate Darwin

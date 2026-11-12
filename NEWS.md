@@ -143,7 +143,8 @@
   `source` (`"wfo"`, the World Flora Online Plant List; `"ppg"`, the
   Pteridophyte Phylogeny Group classification; or the taxadb snapshots of
   `"itis"`, `"col"`, `"gbif"`, `"ncbi"`, `"ott"`, `"fb"` and `"slb"`, which
-  need the nanoparquet package; see the new `ts_show_ref_sources()` for
+  need the nanoparquet or the duckdb package (with duckdb, `taxon` is applied
+  while reading, which is much faster for large tables like GBIF); see the new `ts_show_ref_sources()` for
   licenses and citations; with `versions = TRUE` it also lists the versions
   you can download), an HTTPS `url`, or a `file` (CSV/TSV, zipped Darwin Core
   Archive or Parquet). The latest version of a

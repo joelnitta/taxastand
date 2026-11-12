@@ -19,7 +19,7 @@
 #'
 #' A file can be a comma- or tab-separated text file (such as `.csv`, `.tsv` or
 #' `.txt`, also compressed as `.gz`), a zipped Darwin Core Archive (`.zip`), or
-#' a Parquet file (which needs the nanoparquet package; `"itis"`, `"col"`,
+#' a Parquet file (which needs the nanoparquet or the duckdb package; `"itis"`, `"col"`,
 #' `"gbif"`, `"ncbi"`, `"ott"`, `"fb"` and `"slb"` are Parquet files of the
 #' [taxadb](https://docs.ropensci.org/taxadb/) snapshots).
 #' The type is found from the contents of the file, not its name. For a Darwin
@@ -44,8 +44,10 @@
 #' there, it is used and not downloaded again, unless `refresh = TRUE`.
 #' Downloads from named sources can be large (World Flora Online is about
 #' 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
-#' tables also need a lot of memory (a few GB for GBIF), even when `taxon` is
-#' given.
+#' tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
+#' the duckdb package is installed and `taxon` is given, only the rows for
+#' `taxon` and their synonyms are read, which is much faster and needs much less
+#' memory; the result is the same.
 #'
 #' Checking that the data are what you expect is up to you: the
 #' [dwctaxon](https://docs.ropensci.org/dwctaxon/) package can validate Darwin
@@ -113,7 +115,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   given <- c(source = !is.null(source), url = !is.null(url), file = !is.null(file))
   assertthat::assert_that(
     sum(given) == 1,
-    msg = "Give exactly one of `source`, `url` and `file`"
+    msg = "Give exactly one of `source`, `url` or `file`"
   )
   assertthat::assert_that(is.null(source) || assertthat::is.string(source))
   assertthat::assert_that(is.null(url) || assertthat::is.string(url))
@@ -177,7 +179,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   info$version <- version
   info$retrieved <- as.character(Sys.Date())
 
-  raw <- .ts_read_table(path, keep = keep)
+  raw <- .ts_read_table(path, keep = keep, taxon = taxon, rank = rank)
 
   if (!is.null(taxon)) {
     raw <- ts_subset_ref(raw, taxon, rank = rank, col_map = col_map)
@@ -278,22 +280,35 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
 }
 
 # Read a Parquet file as character columns (only the columns in `keep`, if
-# given). Needs the nanoparquet package.
-.ts_read_parquet <- function(path, keep = NULL) {
-  if (!.ts_have_package("nanoparquet")) {
+# given). With the duckdb package and a `taxon`, only the rows that
+# ts_subset_ref() will keep are read (it is still run afterwards, so the result
+# is the same); otherwise nanoparquet reads the whole file.
+.ts_read_parquet <- function(path, keep = NULL, taxon = NULL, rank = NULL) {
+  have_np <- .ts_have_package("nanoparquet")
+  have_duck <- .ts_have_package("duckdb") && .ts_have_package("DBI")
+  if (!have_np && !have_duck) {
     stop(
-      "Reading a Parquet file needs the nanoparquet package. ",
-      "Install it with install.packages(\"nanoparquet\").",
+      "Reading a Parquet file needs the nanoparquet or the duckdb package. ",
+      "Install one with install.packages(\"nanoparquet\").",
       call. = FALSE
     )
   }
-  schema <- nanoparquet::read_parquet_schema(path)
-  cols <- schema$name[!is.na(schema$type)] # the first row is the file itself
-  if (!is.null(keep)) cols <- intersect(cols, keep)
-  x <- as.data.frame(
-    nanoparquet::read_parquet(path, col_select = cols),
-    stringsAsFactors = FALSE
-  )
+  x <- NULL
+  if (have_duck && (!is.null(taxon) || !have_np)) {
+    x <- .ts_read_parquet_duckdb(path, keep, taxon, rank)
+  }
+  if (is.null(x) && !have_np) {
+    x <- .ts_read_parquet_duckdb(path, keep, NULL, NULL) # subset in R later
+  }
+  if (is.null(x)) {
+    schema <- nanoparquet::read_parquet_schema(path)
+    cols <- schema$name[!is.na(schema$type)] # the first row is the file itself
+    if (!is.null(keep)) cols <- intersect(cols, keep)
+    x <- as.data.frame(
+      nanoparquet::read_parquet(path, col_select = cols),
+      stringsAsFactors = FALSE
+    )
+  }
   x[] <- lapply(x, function(v) {
     if (is.character(v)) {
       v[!is.na(v) & !nzchar(v)] <- NA_character_
@@ -305,12 +320,62 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   x
 }
 
+# Read a Parquet file with duckdb. If `taxon` is given and the file has columns
+# for higher ranks, only the rows matching ts_subset_ref() are read: rows with
+# `taxon` in one of those columns, their synonyms, and the accepted names of
+# those synonyms. Returns NULL if `taxon` is given but cannot be used this way
+# (the caller then reads everything and ts_subset_ref() does the work).
+.ts_read_parquet_duckdb <- function(path, keep, taxon, rank) {
+  args <- list()
+  # do not create a folder in the home directory
+  if ("shared_home" %in% names(formals(duckdb::duckdb))) {
+    args$shared_home <- FALSE
+  }
+  con <- DBI::dbConnect(do.call(duckdb::duckdb, args))
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+  DBI::dbExecute(con, paste0(
+    "SET temp_directory = ", DBI::dbQuoteString(con, tempfile("duckdb")), ";"
+  ))
+  # duckdb otherwise keeps a lot of the file in memory (GBIF: 2.3 GB, 1 GB with
+  # this limit, in about the same time)
+  DBI::dbExecute(con, "SET memory_limit = '1GB';")
+  src <- paste0("read_parquet(", DBI::dbQuoteString(con, path), ")")
+  all_cols <- DBI::dbGetQuery(
+    con, paste0("DESCRIBE SELECT * FROM ", src)
+  )$column_name
+  cols <- if (is.null(keep)) all_cols else intersect(all_cols, keep)
+  q <- function(x) as.character(DBI::dbQuoteIdentifier(con, x))
+  select <- paste(q(cols), collapse = ", ")
+
+  rank_cols <- intersect(subset_rank_columns(), all_cols)
+  if (!is.null(rank)) rank_cols <- intersect(rank_cols, tolower(trimws(rank)))
+  use_filter <- !is.null(taxon) && length(rank_cols) > 0 &&
+    all(c("taxonID", "acceptedNameUsageID") %in% all_cols)
+  if (!is.null(taxon) && !use_filter) {
+    return(NULL)
+  }
+  if (!use_filter) {
+    return(DBI::dbGetQuery(con, paste0("SELECT ", select, " FROM ", src)))
+  }
+
+  taxa <- paste(DBI::dbQuoteString(con, unique(trimws(taxon))), collapse = ", ")
+  hit_where <- paste(paste0(q(rank_cols), " IN (", taxa, ")"), collapse = " OR ")
+  DBI::dbGetQuery(con, paste0(
+    "WITH base AS (SELECT ", select, " FROM ", src, "), ",
+    "hit AS (SELECT * FROM base WHERE ", hit_where, "), ",
+    "kept AS (SELECT * FROM hit UNION SELECT * FROM base WHERE ",
+    q("acceptedNameUsageID"), " IN (SELECT ", q("taxonID"), " FROM hit)) ",
+    "SELECT * FROM kept UNION SELECT * FROM base WHERE ",
+    q("taxonID"), " IN (SELECT ", q("acceptedNameUsageID"), " FROM kept)"
+  ))
+}
+
 .ts_have_package <- function(pkg) requireNamespace(pkg, quietly = TRUE)
 
 # Read a table from a text file or a Darwin Core Archive (zip) as character
-.ts_read_table <- function(path, keep = NULL) {
+.ts_read_table <- function(path, keep = NULL, taxon = NULL, rank = NULL) {
   if (.ts_is_parquet(path)) {
-    return(.ts_read_parquet(path, keep))
+    return(.ts_read_parquet(path, keep, taxon, rank))
   }
   if (.ts_is_zip(path)) {
     dir <- tempfile("dwca")

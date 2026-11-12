@@ -247,10 +247,13 @@ print.ts_ref_sources <- function(x, ...) {
 }
 
 # Versions of taxadb snapshots that have a Darwin Core table for the provider
+# in a single Parquet file. (Older snapshots, such as 22.12, are split into many
+# files; only the first would be read, so they are not offered.)
 .ts_versions_taxadb <- function(provider) {
   manifests <- .ts_taxadb_manifests()
   has <- vapply(manifests, function(m) {
-    any(m$provider == provider & m$schema == "dwc")
+    parts <- if ("parts" %in% colnames(m)) m$parts else 1
+    any(m$provider == provider & m$schema == "dwc" & parts == 1, na.rm = TRUE)
   }, logical(1))
   names(manifests)[has]
 }
