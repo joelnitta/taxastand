@@ -67,13 +67,13 @@ Levenshtein distance, which is somewhat faster. Default: \code{FALSE}.}
 species epithet, and infraspecific epithet (if present) match exactly.
 Default: to not allow such a match (\code{FALSE}).}
 
-\item{match_autonyms}{Logical; if the specific epithet and infraspecific
-epithet are the same (an autonym), drop the infraspecific rank and epithet
-from the query. Default: \code{FALSE}.}
+\item{match_autonyms}{Logical; match autonyms (names whose specific epithet
+and infraspecific epithet are the same) with the species name, whichever of
+the two is in the query and which in the reference. Default: \code{FALSE}.}
 
 \item{match_autonyms_exclude}{Character vector; taxonomic names to exclude
-from collapsing with \code{match_autonyms}. Any names used must match those in
-\code{query} exactly, or they won't be excluded.}
+from \code{match_autonyms}. Any names used must match those in \code{query} exactly, or
+they won't be excluded.}
 
 \item{simple}{Logical; return the output in a simplified format with only the
 query name, matched reference name, and match type. Default: \code{FALSE}.}
@@ -165,14 +165,17 @@ is the faster option. Alternatively, parse the names first using
 \code{\link{ts_parse_names}()}, and use the results as input to \code{query}
 and/or \code{reference}.
 
-\code{match_autonyms} is useful in situations where the reference database does
-not use names that have the same specific epithet and infraspecific epithet
-(an autonym). For example, reference name "Blechnum lunare" and query
-"Blechnum lunare var. lunare". In this case, if \code{match_autonyms} is \code{TRUE},
-"Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
-If the collapsed name then matches exactly, the \code{match_type} is \code{autonym}
-(not \code{exact}), since the literal query and the matched name are different
-(see example below).
+\code{match_autonyms} is useful when the query and the reference do not agree on
+whether to use names that have the same specific epithet and infraspecific
+epithet (autonyms). It works both ways. If the query is an autonym and the
+reference has only the species name (query "Blechnum lunare var. lunare",
+reference "Blechnum lunare"), the species name is queried instead. If the
+query is the species name and the reference has an autonym (query
+"Blechnum lunare", reference "Blechnum lunare var. lunare"), the autonym is
+tried too, with any infraspecific rank. When the two names differ and match
+exactly this way, the \code{match_type} is \code{autonym} (not \code{exact}). A match to the
+species name or to the name as written is preferred over this one (see
+example below).
 }
 \section{Match types}{
 
@@ -186,10 +189,10 @@ author), every one of them is returned, so the ambiguity is visible.
 \strong{Identical after normalization (safe to accept)}
 \itemize{
 \item \code{exact}: all parts of the name, including the author, are identical.
-\item \code{autonym}: identical once an autonym in the query (a name whose
-infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
-var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
-\code{match_autonyms} is \code{TRUE}).
+\item \code{autonym}: identical once an autonym (a name whose infraspecific epithet
+repeats the specific epithet, e.g. "Blechnum lunare var. lunare") in the
+query or the reference is collapsed to the species name, "Blechnum lunare"
+(only when \code{match_autonyms} is \code{TRUE}).
 \item \code{auto_punct}: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.
 }

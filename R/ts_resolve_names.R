@@ -55,13 +55,13 @@
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus,
 #' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
-#' @param match_autonyms Logical; if the specific epithet and infraspecific
-#' epithet are the same (an autonym), drop the infraspecific rank and epithet
-#' from the query. For more information, see
+#' @param match_autonyms Logical; match autonyms (names whose specific epithet
+#' and infraspecific epithet are the same) with the species name, whichever of
+#' the two is in the query and which in the reference. For more information, see
 #' \code{\link{ts_match_names}()}. Default: `FALSE`.
 #' @param match_autonyms_exclude Character vector; taxonomic names to exclude
-#' from collapsing with `match_autonyms`. Any names used must match those in
-#' `query` exactly, or they won't be excluded.
+#' from `match_autonyms`. Any names used must match those in `query` exactly, or
+#' they won't be excluded.
 #' @param ref_taxonomy Alias of `ref`, the name used before taxastand 3.0.0; it
 #'   will be deprecated in a future version.
 #' @param collapse_infra,collapse_infra_exclude Aliases of `match_autonyms` and

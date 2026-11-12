@@ -358,3 +358,57 @@ test_that("using `match_no_auth` says once that it is an alias", {
   .ts_session$no_auth_told <- NULL
   expect_no_message(ts_match_names("Foo bar", "Foo bar"))
 })
+
+test_that("match_autonyms also finds an autonym in the reference", {
+  ref <- c("Blechnum lunare var. lunare (Sw.) Hook.", "Foo bar subsp. bar L.")
+  res <- ts_match_names(
+    c(
+      "Blechnum lunare (Sw.) Hook.", "Blechnum lunare", "Foo bar L.",
+      "Quercus robur"
+    ),
+    ref,
+    match_autonyms = TRUE
+  )
+  expect_equal(res$match_type, c("autonym", "auto_canon", "autonym", "no_match"))
+  expect_equal(res$reference[1:3], c(ref[1], ref[1], ref[2]))
+  # the query columns describe the query, not the variant that was tried
+  expect_true(all(is.na(res$infraspecific_epithet_query)))
+  expect_equal(res$infraspecific_epithet_ref[1], "lunare")
+  # off by default
+  expect_equal(
+    ts_match_names("Blechnum lunare (Sw.) Hook.", ref)$match_type, "no_match"
+  )
+  # an excluded name is not tried as an autonym
+  expect_equal(
+    ts_match_names(
+      "Blechnum lunare (Sw.) Hook.", ref,
+      match_autonyms = TRUE, match_autonyms_exclude = "Blechnum lunare (Sw.) Hook."
+    )$match_type,
+    "no_match"
+  )
+})
+
+test_that("match_autonyms keeps a species match over an autonym in the reference", {
+  ref <- c("Blechnum lunare (Sw.) Hook.", "Blechnum lunare var. lunare (Sw.) Hook.")
+  res <- ts_match_names("Blechnum lunare (Sw.) Hook.", ref, match_autonyms = TRUE)
+  expect_equal(res$match_type, "exact")
+  expect_equal(res$reference, ref[1])
+})
+
+test_that("an autonym query matches an autonym in the reference literally", {
+  ref <- "Blechnum lunare var. lunare (Sw.) Hook."
+  res <- ts_match_names(ref, ref, match_autonyms = TRUE)
+  expect_equal(res$match_type, "exact")
+  expect_equal(res$reference, ref)
+})
+
+test_that("ts_resolve_names resolves an autonym in the reference", {
+  tax <- data.frame(
+    taxonID = c("1", "2"), acceptedNameUsageID = c(NA, "1"),
+    taxonomicStatus = c("accepted", "synonym"),
+    scientificName = c("Foo bar L.", "Foo baz subsp. baz Sm.")
+  )
+  res <- ts_resolve_names("Foo baz Sm.", tax, match_autonyms = TRUE)
+  expect_equal(res$resolved_name, "Foo bar L.")
+  expect_equal(res$match_type, "autonym")
+})

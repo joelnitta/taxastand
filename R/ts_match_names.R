@@ -19,14 +19,17 @@
 #' \code{\link{ts_parse_names}()}, and use the results as input to `query`
 #' and/or `reference`.
 #'
-#' `match_autonyms` is useful in situations where the reference database does
-#' not use names that have the same specific epithet and infraspecific epithet
-#' (an autonym). For example, reference name "Blechnum lunare" and query
-#' "Blechnum lunare var. lunare". In this case, if `match_autonyms` is `TRUE`,
-#' "Blechnum lunare" will be queried instead of "Blechnum lunare var. lunare".
-#' If the collapsed name then matches exactly, the `match_type` is `autonym`
-#' (not `exact`), since the literal query and the matched name are different
-#' (see example below).
+#' `match_autonyms` is useful when the query and the reference do not agree on
+#' whether to use names that have the same specific epithet and infraspecific
+#' epithet (autonyms). It works both ways. If the query is an autonym and the
+#' reference has only the species name (query "Blechnum lunare var. lunare",
+#' reference "Blechnum lunare"), the species name is queried instead. If the
+#' query is the species name and the reference has an autonym (query
+#' "Blechnum lunare", reference "Blechnum lunare var. lunare"), the autonym is
+#' tried too, with any infraspecific rank. When the two names differ and match
+#' exactly this way, the `match_type` is `autonym` (not `exact`). A match to the
+#' species name or to the name as written is preferred over this one (see
+#' example below).
 #'
 #' @section Match types:
 #' The `match_type` column says how a query was matched. Types are tried in
@@ -38,10 +41,10 @@
 #'
 #' **Identical after normalization (safe to accept)**
 #' - `exact`: all parts of the name, including the author, are identical.
-#' - `autonym`: identical once an autonym in the query (a name whose
-#'   infraspecific epithet repeats the specific epithet, e.g. "Blechnum lunare
-#'   var. lunare") is collapsed to the species name, "Blechnum lunare" (only when
-#'   `match_autonyms` is `TRUE`).
+#' - `autonym`: identical once an autonym (a name whose infraspecific epithet
+#'   repeats the specific epithet, e.g. "Blechnum lunare var. lunare") in the
+#'   query or the reference is collapsed to the species name, "Blechnum lunare"
+#'   (only when `match_autonyms` is `TRUE`).
 #' - `auto_punct`: identical after ignoring differences in spaces, periods,
 #'   capitalization, and accented or other non-ASCII characters.
 #'
@@ -129,12 +132,12 @@
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus,
 #' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
-#' @param match_autonyms Logical; if the specific epithet and infraspecific
-#' epithet are the same (an autonym), drop the infraspecific rank and epithet
-#' from the query. Default: `FALSE`.
+#' @param match_autonyms Logical; match autonyms (names whose specific epithet
+#' and infraspecific epithet are the same) with the species name, whichever of
+#' the two is in the query and which in the reference. Default: `FALSE`.
 #' @param match_autonyms_exclude Character vector; taxonomic names to exclude
-#' from collapsing with `match_autonyms`. Any names used must match those in
-#' `query` exactly, or they won't be excluded.
+#' from `match_autonyms`. Any names used must match those in `query` exactly, or
+#' they won't be excluded.
 #' @param reference Alias of `ref`, the name used before taxastand 3.0.0; it
 #' will be deprecated in a future version.
 #' @param collapse_infra,collapse_infra_exclude Aliases of `match_autonyms` and
@@ -307,9 +310,11 @@ ts_match_names <- function(
 
   # Optionally collapse infraspecific name
   collapsed <- NULL
+  variants <- NULL
   if (isTRUE(match_autonyms)) {
     collapsed <- .ts_collapse_infra(query_parsed_df, match_autonyms_exclude)
     query_parsed_df <- collapsed$parsed
+    variants <- .ts_autonym_variants(collapsed, match_autonyms_exclude)
   }
 
   ref_prep <- .ts_prepare_reference(
@@ -326,7 +331,10 @@ ts_match_names <- function(
 
   # Run matching (one row per match; see .tt_assemble() for the columns)
   results <- tt_matchnames(
-    query_lines = .ts_parsed_lines(query_parsed_df, query),
+    query_lines = .ts_parsed_lines(
+      if (is.null(variants)) query_parsed_df else rbind(query_parsed_df, variants$parsed),
+      query
+    ),
     ref_lines = if (is.null(ref_prep$keys)) {
       .ts_parsed_lines(ref_prep$parsed, ref)
     },
@@ -337,6 +345,10 @@ ts_match_names <- function(
     max_dist_genus = max_dist_genus,
     transpositions = transpositions
   )
+
+  if (!is.null(variants)) {
+    results <- .ts_use_autonym_variants(results, variants, query_parsed_df$id)
+  }
 
   # Add back in the original search terms (query and reference)
   results$query <-
@@ -488,6 +500,66 @@ ts_match_names <- function(
   )
 }
 
+# Extra queries for match_autonyms, so that an autonym in the reference can be
+# found: a species-level query is also asked as an autonym ("Blechnum lunare"
+# as "Blechnum lunare var. lunare"), and an autonym that was collapsed is also
+# asked as it was written. `base_id` is the id of the query each one stands for.
+.ts_autonym_variants <- function(collapsed, exclude) {
+  kept <- collapsed$parsed
+  orig <- collapsed$original[match(kept$id, collapsed$original$id), ]
+  was_autonym <- kept$id %in% collapsed$autonym_ids
+  species_level <- !was_autonym & is.na(kept$infraspecific_epithet) &
+    !is.na(kept$specific_epithet) & !kept$name %in% exclude
+  literal <- orig[was_autonym, ]
+  constructed <- kept[species_level, ]
+  constructed$infraspecific_rank <- rep("var.", nrow(constructed))
+  constructed$infraspecific_epithet <- constructed$specific_epithet
+  parsed <- rbind(literal, constructed)
+  if (nrow(parsed) == 0) {
+    return(NULL)
+  }
+  base_id <- c(kept$id[was_autonym], kept$id[species_level])
+  parsed$id <- paste0(base_id, "-autonym")
+  list(
+    parsed = parsed, base_id = base_id,
+    literal = c(rep(TRUE, nrow(literal)), rep(FALSE, nrow(constructed)))
+  )
+}
+
+# Use the matches of the autonym variants for the queries that otherwise have
+# no match, or only fuzzy matches. A constructed variant that matches exactly
+# (or differs only in rank) is an `autonym` match; other match types are kept.
+.ts_use_autonym_variants <- function(results, variants, query_ids) {
+  is_variant <- results$id_query %in% variants$parsed$id
+  base <- results[!is_variant, ]
+  hits <- results[is_variant, ]
+  hits <- hits[hits$match_type != "no_match" &
+    !grepl("^auto_fuzzy", hits$match_type), ]
+  if (nrow(hits) == 0) {
+    return(base)
+  }
+  i <- match(hits$id_query, variants$parsed$id)
+  hits$id_query <- variants$base_id[i]
+  hits$match_type[!variants$literal[i] &
+    hits$match_type %in% c("exact", "auto_irank")] <- "autonym"
+  unresolved <- vapply(
+    split(base$match_type, base$id_query),
+    function(x) all(x == "no_match" | grepl("^auto_fuzzy", x)),
+    logical(1)
+  )
+  hits <- hits[hits$id_query %in% names(unresolved)[unresolved], ]
+  if (nrow(hits) == 0) {
+    return(base)
+  }
+  # the variant's own query fields are replaced by those of the query
+  query_cols <- setdiff(grep("_query$", names(results), value = TRUE), "id_query")
+  hits[query_cols] <- base[match(hits$id_query, base$id_query), query_cols]
+  out <- rbind(base[!base$id_query %in% hits$id_query, ], hits)
+  out <- out[order(match(out$id_query, query_ids)), ]
+  rownames(out) <- NULL
+  out
+}
+
 # Parsed reference names (and, when available, their match keys), restricted to
 # those that could match a query genus (see R/genus_filter.R) before the
 # expensive parsing and key building. A character vector is wrapped in a
@@ -542,7 +614,7 @@ ts_match_names <- function(
   # An autonym that matched exactly only after being collapsed is not an exact
   # match of the name that was queried
   out$match_type[out$id %in% collapsed$autonym_ids &
-    out$match_type %in% "exact"] <- "autonym"
+    out$match_type %in% "exact" & is.na(out$infraspecific_epithet_ref)] <- "autonym"
   out$id <- NULL
   .ts_front_cols(out)
 }
