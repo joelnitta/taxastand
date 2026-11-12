@@ -54,16 +54,24 @@ ts_show_ref_sources <- function(versions = FALSE, tidy = FALSE) {
   )
   if (versions) {
     .ts_state$taxadb_manifests <- NULL # look again for new versions
+    errors <- character(0)
     out$versions <- lapply(srcs, function(s) {
       if (interactive()) .ts_inform("Looking up the versions of ", s$name, " ...")
       tryCatch(
         s$list_versions(),
         error = function(e) {
-          .ts_inform("Could not list the versions of ", s$name, ": ", conditionMessage(e))
+          errors[s$name] <<- conditionMessage(e)
           NA_character_
         }
       )
     })
+    # one message per kind of failure (sources that share a lookup fail together)
+    for (msg in unique(errors)) {
+      .ts_inform(
+        "Could not list the versions of ",
+        paste(names(errors)[errors == msg], collapse = ", "), ": ", msg
+      )
+    }
     names(out$versions) <- names(srcs)
   }
   if (tidy && !versions) {

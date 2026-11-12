@@ -304,6 +304,24 @@ test_that("a source that can't be reached gives NA versions and a message", {
   expect_true(any(grepl("Versions: not available", capture.output(print(x)))))
 })
 
+test_that("the same failure for several sources is reported once", {
+  withr::local_options(taxastand.verbosity = "inform")
+  local_mocked_bindings(
+    .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
+  )
+  msgs <- character(0)
+  withCallingHandlers(
+    ts_show_ref_sources(versions = TRUE),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+  expect_length(msgs, 1)
+  expect_match(msgs, "World Flora Online Plant List, .*Integrated Taxonomic")
+  expect_match(msgs, "no internet")
+})
+
 test_that("a failed download of a named source points to the versions", {
   local_mocked_bindings(
     .ts_fetch_text = function(link) '{"tag_name": "v9.9.9"}',
