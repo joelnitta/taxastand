@@ -55,11 +55,11 @@ ts_show_ref_sources <- function(versions = FALSE, tidy = FALSE) {
   if (versions) {
     .ts_state$taxadb_manifests <- NULL # look again for new versions
     out$versions <- lapply(srcs, function(s) {
-      if (interactive()) message("Looking up the versions of ", s$name, " ...")
+      if (interactive()) .ts_inform("Looking up the versions of ", s$name, " ...")
       tryCatch(
         s$list_versions(),
         error = function(e) {
-          message("Could not list the versions of ", s$name, ": ", conditionMessage(e))
+          .ts_inform("Could not list the versions of ", s$name, ": ", conditionMessage(e))
           NA_character_
         }
       )

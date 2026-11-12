@@ -8,6 +8,7 @@ make_cache <- function() {
 }
 
 test_that("ts_show_ref_cache() lists our files only", {
+  withr::local_options(taxastand.verbosity = "inform")
   d <- make_cache()
   expect_message(x <- ts_show_ref_cache(d), "Downloaded files")
   expect_equal(x$file, c("file1234.part", "ppg.csv", "wfo.zip"))
@@ -16,6 +17,7 @@ test_that("ts_show_ref_cache() lists our files only", {
 })
 
 test_that("ts_show_ref_cache() handles empty and missing folders", {
+  withr::local_options(taxastand.verbosity = "inform")
   d <- withr::local_tempdir()
   expect_message(x <- ts_show_ref_cache(d), "No downloaded files")
   expect_equal(nrow(x), 0)
@@ -25,6 +27,7 @@ test_that("ts_show_ref_cache() handles empty and missing folders", {
 })
 
 test_that("ts_clear_ref_cache() deletes ours and keeps other files", {
+  withr::local_options(taxastand.verbosity = "inform")
   d <- make_cache()
   expect_message(del <- ts_clear_ref_cache(d, ask = FALSE), "Deleted 3")
   expect_length(del, 3)
@@ -33,6 +36,7 @@ test_that("ts_clear_ref_cache() deletes ours and keeps other files", {
 })
 
 test_that("ts_clear_ref_cache() older_than keeps recent files", {
+  withr::local_options(taxastand.verbosity = "inform")
   d <- make_cache()
   Sys.setFileTime(file.path(d, "1a2b3c4d-wfo.zip"), Sys.time() - 10 * 86400)
   suppressMessages(del <- ts_clear_ref_cache(d, older_than = 5, ask = FALSE))
@@ -41,6 +45,7 @@ test_that("ts_clear_ref_cache() older_than keeps recent files", {
 })
 
 test_that("ts_clear_ref_cache() asks only when told to, and respects 'no'", {
+  withr::local_options(taxastand.verbosity = "inform")
   d <- make_cache()
   testthat::local_mocked_bindings(askYesNo = function(...) FALSE, .package = "utils")
   expect_message(ts_clear_ref_cache(d, ask = TRUE), "Nothing deleted")
@@ -51,6 +56,7 @@ test_that("ts_clear_ref_cache() asks only when told to, and respects 'no'", {
 })
 
 test_that("cache functions use the option", {
+  withr::local_options(taxastand.verbosity = "inform")
   d <- make_cache()
   withr::local_options(taxastand.cache_dir = d)
   expect_equal(nrow(suppressMessages(ts_show_ref_cache())), 3)

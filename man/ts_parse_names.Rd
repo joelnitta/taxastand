@@ -21,7 +21,9 @@ If \code{FALSE} (default), output will be a data.frame. This argument can
 be controlled via the option \code{ts_tbl_out}; see Examples.}
 
 \item{quiet}{Logical; if TRUE, suppress warning messages that would normally
-be issued}
+be issued. Superseded by the option \code{taxastand.verbosity} (see
+\code{\link{taxastand-package}}), which also works for
+\code{\link{ts_match_names}()} and \code{\link{ts_resolve_names}()}.}
 
 \item{strip_qualifiers}{Logical; if \code{TRUE}, remove standalone
 open-nomenclature qualifiers (\code{cf.} and \code{aff.}, as reviewed by Sigovini,

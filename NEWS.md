@@ -152,6 +152,18 @@
   and citation are recorded in the `ts_source` attribute. Downloads are kept
   in a folder only if you give a `cache_dir` (otherwise they are in
   `tempdir()`) (#115, #116, #117, part of #109).
+* **Messages are controlled by one package option, `taxastand.verbosity`
+  (#133).** `options(taxastand.verbosity = "quiet")` silences the messages and
+  the warnings about names that were excluded (not parsed or placeholders), in
+  `ts_load_ref()`, `ts_show_ref_sources()`, `ts_show_ref_cache()`,
+  `ts_clear_ref_cache()`, `ts_parse_names()`, `ts_match_names()` and
+  `ts_resolve_names()`; the default is `"inform"`. This follows rOpenSci
+  advice to set verbosity at the package level. The unreleased `quiet`
+  argument of `ts_load_ref()` was removed. `ts_parse_names(quiet = TRUE)` still
+  works but is superseded by the option. `ts_load_ref()` now gives one line
+  (`Loaded 309 names from ITIS (version 2026), license CC0.`), no longer reports
+  the path of a cached file, and gives the citation once per R session for each
+  source (it is always in `attr(x, "ts_source")`).
 * New `ts_show_ref_cache()` and `ts_clear_ref_cache()` list and delete the files
   downloaded by `ts_load_ref()`; other files in the folder are never touched
   (#132, part of #109).

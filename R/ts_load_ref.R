@@ -43,7 +43,8 @@
 #' sessions, give a `cache_dir` (or set the option). If the file is already
 #' there, it is used and not downloaded again, unless `refresh = TRUE`. See
 #' \code{\link{ts_show_ref_cache}()} and \code{\link{ts_clear_ref_cache}()} to
-#' check and free the space.
+#' check and free the space. To silence the messages, set
+#' `options(taxastand.verbosity = "quiet")` (see \code{\link{taxastand-package}}).
 #' Downloads from named sources can be large (World Flora Online is about
 #' 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 #' tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
@@ -76,7 +77,6 @@
 #'   and \code{\link{ts_format_ref}()} (both). Not needed for named sources.
 #' @param refresh Logical; download again even if the file is already in
 #'   `cache_dir`? Default `FALSE`.
-#' @param quiet Logical; suppress the messages? Default `FALSE`.
 #'
 #' @return A dataframe as returned by \code{\link{ts_format_ref}()}, with the
 #'   `ts_source` attribute describing where the data came from (the source,
@@ -113,7 +113,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
                         cache_dir = NULL, taxon = NULL, rank = NULL,
                         col_map = NULL,
                         drop_ranks = ts_ranks_above_species(),
-                        refresh = FALSE, quiet = FALSE) {
+                        refresh = FALSE) {
   given <- c(source = !is.null(source), url = !is.null(url), file = !is.null(file))
   assertthat::assert_that(
     sum(given) == 1,
@@ -125,8 +125,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   assertthat::assert_that(is.null(version) || assertthat::is.string(version))
   assertthat::assert_that(is.null(cache_dir) || assertthat::is.string(cache_dir))
   assertthat::assert_that(
-    assertthat::is.flag(refresh), assertthat::noNA(refresh),
-    assertthat::is.flag(quiet), assertthat::noNA(quiet)
+    assertthat::is.flag(refresh), assertthat::noNA(refresh)
   )
 
   info <- list()
@@ -161,7 +160,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
       msg = "`url` must be an HTTPS URL (starting with 'https://')"
     )
     path <- tryCatch(
-      .ts_cached_download(url, cache_dir, refresh, quiet),
+      .ts_cached_download(url, cache_dir, refresh),
       error = function(e) {
         hint <- if (!is.null(source)) {
           "\nTo see the versions you can use, run ts_show_ref_sources(versions = TRUE)."
@@ -191,17 +190,17 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     raw,
     col_map = col_map, drop_ranks = drop_ranks, source = info
   )
-  if (!quiet) {
-    from <- if (!is.null(info$name)) info$name else if (!is.null(url)) url else file
-    message(
-      "Loaded ", nrow(out), " names from ", from,
-      if (!is.null(version)) paste0(" (version ", version, ")"), "."
-    )
-    if (!is.null(info$license)) {
-      message(
-        "License: ", info$license, ". Please cite: ", info$citation
-      )
-    }
+  from <- if (!is.null(info$name)) info$name else if (!is.null(url)) url else file
+  .ts_inform(
+    "Loaded ", nrow(out), " names from ", from,
+    if (!is.null(info$version)) paste0(" (version ", info$version, ")"),
+    if (!is.null(info$license)) paste0(", license ", info$license), "."
+  )
+  # the citation is given once per R session for each source
+  if (!is.null(source) && !is.null(info$citation) && !.ts_quiet() &&
+    !source %in% .ts_state$cited) {
+    message("Please cite: ", info$citation)
+    .ts_state$cited <- c(.ts_state$cited, source)
   }
   out
 }
@@ -223,7 +222,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
 }
 
 # Download `url` into the cache (unless it is already there); return the path
-.ts_cached_download <- function(url, cache_dir, refresh, quiet) {
+.ts_cached_download <- function(url, cache_dir, refresh) {
   dir <- .ts_cache_dir(cache_dir)
   name <- basename(sub("[?#].*$", "", url))
   if (!nzchar(name)) name <- "download"
@@ -232,10 +231,9 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     dir, paste0(substr(digest::digest(url, algo = "md5"), 1, 8), "-", name)
   )
   if (file.exists(dest) && !refresh) {
-    if (!quiet) message("Using the file already downloaded: ", dest)
     return(dest)
   }
-  if (!quiet) message("Downloading ", url)
+  .ts_inform("Downloading ", url)
   tmp <- tempfile(tmpdir = dir, fileext = ".part")
   on.exit(unlink(tmp), add = TRUE)
   ok <- tryCatch(
