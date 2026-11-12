@@ -21,7 +21,9 @@
 #'    exception).
 #' 5. Tidies values: `taxonomicStatus` is lower-cased and trimmed, empty
 #'    strings become `NA`, and rows with no name and exact duplicate rows are
-#'    removed.
+#'    removed. A missing `taxonID` (some databases give none to synonyms) is
+#'    replaced by a made-up unique one, such as `"taxastand:17"`, because
+#'    \code{\link{ts_resolve_names}()} needs every name to have an ID.
 #'
 #' There is no controlled vocabulary for taxonomic ranks, and databases differ
 #' in how many infraspecific ranks they use. Rows are therefore dropped using a
@@ -136,6 +138,12 @@ ts_format_ref <- function(ref, col_map = NULL, drop_ranks = ts_ranks_above_speci
   keep_cols <- c(required, "taxonRank", hierarchy_columns())
   out <- ref[, intersect(keep_cols, colnames(ref)), drop = FALSE]
   out <- out[!duplicated(out), , drop = FALSE]
+  # Some databases give no ID to synonyms. Resolving needs every name to have
+  # one, so make up unique IDs for these.
+  no_id <- is.na(out$taxonID)
+  if (any(no_id)) {
+    out$taxonID[no_id] <- paste0("taxastand:", seq_len(nrow(out))[no_id])
+  }
   rownames(out) <- NULL
   if (!is.null(source)) attr(out, "ts_source") <- source
   out

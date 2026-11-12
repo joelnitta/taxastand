@@ -68,16 +68,19 @@ result can be used directly as \code{ref} in \code{\link{ts_match_names}()} and
 Give the data in one of three ways, and only one:
 \itemize{
 \item \code{source}: the name of a source that taxastand knows how to download, such
-as \code{"wfo"} (World Flora Online) or \code{"ppg"} (Pteridophyte Phylogeny Group).
-See \code{\link{ts_show_ref_sources}()} for the list, licenses and how to
-cite them. The latest version is used unless you give a \code{version}, and the
+as \code{"wfo"} (World Flora Online) or \code{"itis"} (the Integrated Taxonomic
+Information System). See \code{\link{ts_show_ref_sources}()} for the
+list, licenses and how to cite them. The latest version is used unless you give a \code{version}, and the
 version that was used is recorded in the result.
 \item \code{url}: a direct link (HTTPS) to a file, not to a web page about it.
 \item \code{file}: the path to a file on your computer.
 }
 
 A file can be a comma- or tab-separated text file (such as \code{.csv}, \code{.tsv} or
-\code{.txt}, also compressed as \code{.gz}), or a zipped Darwin Core Archive (\code{.zip}).
+\code{.txt}, also compressed as \code{.gz}), a zipped Darwin Core Archive (\code{.zip}), or
+a Parquet file (which needs the nanoparquet package; \code{"itis"}, \code{"col"},
+\code{"gbif"}, \code{"ncbi"}, \code{"ott"}, \code{"fb"} and \code{"slb"} are Parquet files of the
+\href{https://docs.ropensci.org/taxadb/}{taxadb} snapshots).
 The type is found from the contents of the file, not its name. For a Darwin
 Core Archive, the file with the taxa (the "core") and its columns are found
 from the \code{meta.xml} file in the archive. All columns are read as text.
@@ -100,7 +103,9 @@ in the option \code{taxastand.cache_dir} if set, otherwise a folder in
 sessions, give a \code{cache_dir} (or set the option). If the file is already
 there, it is used and not downloaded again, unless \code{refresh = TRUE}.
 Downloads from named sources can be large (World Flora Online is about
-120 MB), so loading can take a few minutes.
+120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
+tables also need a lot of memory (a few GB for GBIF), even when \code{taxon} is
+given.
 
 Checking that the data are what you expect is up to you: the
 \href{https://docs.ropensci.org/dwctaxon/}{dwctaxon} package can validate Darwin

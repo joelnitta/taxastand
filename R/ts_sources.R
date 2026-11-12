@@ -53,6 +53,7 @@ ts_show_ref_sources <- function(versions = FALSE, tidy = FALSE) {
     stringsAsFactors = FALSE
   )
   if (versions) {
+    .ts_state$taxadb_manifests <- NULL # look again for new versions
     out$versions <- lapply(srcs, function(s) {
       if (interactive()) message("Looking up the versions of ", s$name, " ...")
       tryCatch(
@@ -146,7 +147,134 @@ print.ts_ref_sources <- function(x, ...) {
       resolve = .ts_resolve_ppg,
       list_versions = .ts_versions_ppg,
       keep = NULL
+    ),
+    itis = .ts_taxadb_source(
+      "itis", "Integrated Taxonomic Information System (ITIS)",
+      "All kingdoms, mostly North American taxa", "CC0 1.0",
+      "https://www.itis.gov/"
+    ),
+    col = .ts_taxadb_source(
+      "col", "Catalogue of Life (COL)",
+      "All kingdoms", "CC BY 4.0", "https://www.catalogueoflife.org/"
+    ),
+    gbif = .ts_taxadb_source(
+      "gbif", "GBIF Backbone Taxonomy",
+      "All kingdoms", "CC BY 4.0", "https://www.gbif.org/"
+    ),
+    ncbi = .ts_taxadb_source(
+      "ncbi", "NCBI Taxonomy",
+      "Organisms in the sequence databases", "CC0 1.0",
+      "https://www.ncbi.nlm.nih.gov/taxonomy"
+    ),
+    ott = .ts_taxadb_source(
+      "ott", "Open Tree Taxonomy (OTT)",
+      "All kingdoms, as used by the Open Tree of Life", "CC0 1.0",
+      "https://tree.opentreeoflife.org/"
+    ),
+    fb = .ts_taxadb_source(
+      "fb", "FishBase", "Fishes", "CC BY-NC 4.0", "https://fishbase.org/"
+    ),
+    slb = .ts_taxadb_source(
+      "slb", "SeaLifeBase", "Marine organisms other than fishes",
+      "CC BY-NC 4.0", "https://www.sealifebase.org/"
     )
+  )
+}
+
+# The taxadb snapshots (https://docs.ropensci.org/taxadb/) are Parquet files, one
+# per provider, in a public folder of data.source.coop. Each version of the
+# snapshots has a `manifest.csv` that describes the files.
+.ts_taxadb_base <- "https://data.source.coop/cboettig/taxadb/"
+
+.ts_taxadb_source <- function(provider, name, description, license, url) {
+  list(
+    name = name,
+    description = paste0(description, " (via taxadb)"),
+    license = license,
+    citation = paste0(
+      name, ", ", url, " Accessed through taxadb: Norman, K.E.A., ",
+      "Chamberlain, S. & Boettiger, C. (2020) taxadb: A high-performance local ",
+      "taxonomic database interface. Methods in Ecology and Evolution 11: ",
+      "1153-1159. https://doi.org/10.1111/2041-210X.13440"
+    ),
+    url = url,
+    resolve = function(version) .ts_resolve_taxadb(provider, version),
+    list_versions = function() .ts_versions_taxadb(provider),
+    keep = c(
+      "taxonID", "scientificName", "scientificNameAuthorship", "taxonRank",
+      "parentNameUsageID", "taxonomicStatus", "acceptedNameUsageID",
+      "kingdom", "phylum", "class", "order", "family", "genus"
+    )
+  )
+}
+
+# Versions of the taxadb snapshots that have a manifest, as a named list of
+# manifests (dataframes), newest first. Kept for the session, because it is
+# needed for each provider; `refresh = TRUE` looks again.
+.ts_state <- new.env(parent = emptyenv())
+
+.ts_taxadb_manifests <- function(refresh = FALSE) {
+  if (!refresh && !is.null(.ts_state$taxadb_manifests)) {
+    return(.ts_state$taxadb_manifests)
+  }
+  xml <- .ts_fetch_text(
+    "https://data.source.coop/cboettig?list-type=2&prefix=taxadb/&delimiter=/"
+  )
+  versions <- unique(sub(
+    "^<Prefix>taxadb/([^/]*)/</Prefix>$", "\\1",
+    regmatches(xml, gregexpr("<Prefix>taxadb/[^/<]*/</Prefix>", xml))[[1]]
+  ))
+  manifests <- list()
+  for (v in versions) {
+    m <- tryCatch(
+      utils::read.csv(
+        text = .ts_fetch_text(paste0(.ts_taxadb_base, v, "/manifest.csv")),
+        stringsAsFactors = FALSE, na.strings = ""
+      ),
+      error = function(e) NULL
+    )
+    if (!is.null(m) && all(c("provider", "schema") %in% colnames(m))) {
+      manifests[[v]] <- m
+    }
+  }
+  if (length(manifests) == 0) {
+    stop("Could not find any taxadb snapshots", call. = FALSE)
+  }
+  ord <- order(numeric_version(names(manifests), strict = FALSE), decreasing = TRUE)
+  manifests <- manifests[ord]
+  .ts_state$taxadb_manifests <- manifests
+  manifests
+}
+
+# Versions of taxadb snapshots that have a Darwin Core table for the provider
+.ts_versions_taxadb <- function(provider) {
+  manifests <- .ts_taxadb_manifests()
+  has <- vapply(manifests, function(m) {
+    any(m$provider == provider & m$schema == "dwc")
+  }, logical(1))
+  names(manifests)[has]
+}
+
+.ts_resolve_taxadb <- function(provider, version) {
+  available <- .ts_versions_taxadb(provider)
+  if (is.null(version)) version <- available[1]
+  if (!version %in% available) {
+    stop(
+      "Version '", version, "' of the taxadb snapshots has no table for '",
+      provider, "'. Versions you can use: ", paste(available, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  m <- .ts_taxadb_manifests()[[version]]
+  row <- m[m$provider == provider & m$schema == "dwc", , drop = FALSE][1, ]
+  extra <- list()
+  if ("upstream_version" %in% colnames(row) && !is.na(row$upstream_version)) {
+    extra$upstream_version <- as.character(row$upstream_version)
+  }
+  list(
+    version = version,
+    url = paste0(.ts_taxadb_base, version, "/dwc_", provider, "_part_0.parquet"),
+    extra = extra
   )
 }
 
