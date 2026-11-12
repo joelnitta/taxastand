@@ -136,10 +136,7 @@ ts_resolve_names <- function(
   ref_taxonomy = NULL,
   match_no_auth = NULL
 ) {
-  match_canon <- .ts_alias(
-    match_canon, match_no_auth, missing(match_canon),
-    "match_canon", "match_no_auth"
-  )
+  match_canon <- .ts_alias_match_no_auth(match_canon, match_no_auth, missing(match_canon))
   ref <- .ts_alias(ref, ref_taxonomy, missing(ref), "ref", "ref_taxonomy")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),

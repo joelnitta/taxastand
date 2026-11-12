@@ -102,6 +102,24 @@ ts_classify_result <- function(match_results) {
   old
 }
 
+# TEMPORARY: delete this helper, the `match_no_auth` argument of
+# ts_match_names() and ts_resolve_names(), and the test of this helper when the
+# alias is removed (#143). Handles `match_no_auth` as an alias of `match_canon`
+# and says once per session that it is an alias.
+.ts_session <- new.env(parent = emptyenv())
+
+.ts_alias_match_no_auth <- function(match_canon, match_no_auth, canon_missing) {
+  if (!is.null(match_no_auth) && !isTRUE(.ts_session$no_auth_told)) {
+    .ts_inform(
+      "`match_no_auth` was removed; it is now an alias of `match_canon`, ",
+      "which also allows canonical-name matches for queries with an author. ",
+      "Use `match_canon` instead."
+    )
+    .ts_session$no_auth_told <- TRUE
+  }
+  .ts_alias(match_canon, match_no_auth, canon_missing, "match_canon", "match_no_auth")
+}
+
 # Messages -------------------------------------------------------------------
 
 # Is the option `taxastand.verbosity` set to "quiet"? ("inform" by default.)
