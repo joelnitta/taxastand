@@ -7,8 +7,8 @@
 #
 #   Rscript data-raw/precompute-vignettes.R
 #
-# taxadb.Rmd.orig needs the taxadb and dplyr packages and a network connection.
+# setup-reference.Rmd.orig needs the taxadb, dplyr and nanoparquet packages and a network connection.
 
 old <- setwd("vignettes")
-knitr::knit("taxadb.Rmd.orig", output = "taxadb.Rmd")
+knitr::knit("setup-reference.Rmd.orig", output = "setup-reference.Rmd")
 setwd(old)

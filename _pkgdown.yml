@@ -2,6 +2,8 @@ home:
   title: Standardize Taxonomic Names
   description: >
     Matches species names to a taxonomic standard. Resolves synonyms consistently and reproducibly.
+redirects:
+  - [articles/taxadb.html, articles/setup-reference.html]
 template:
   params:
     bootswatch: lumen
