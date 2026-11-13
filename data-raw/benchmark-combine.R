@@ -3,15 +3,20 @@
 #
 #   Rscript data-raw/benchmark-combine.R [results.rds [extra.rds ...]]
 #
-# Run from the package root, after the benchmark run. Each `extra.rds` is the result
-# of a later run of some more kinds of error (data-raw/benchmark-vignette.R with
-# kinds= and speed=no) on the same reference and machine; its accuracy and
-# queries are added to those of `results.rds` (any number of extra files). A tool
-# that is in both has its accuracy for the kinds in `extra.rds` replaced, so one
-# tool can be rerun alone.
+# Run from the package root, after the benchmark run. Each `extra.rds` is the
+# result of a later run of some more kinds of error
+# (data-raw/benchmark-vignette.R with kinds= and speed=no) on the same
+# reference and machine; its accuracy and queries are added to those of
+# `results.rds` (any number of extra files). A tool that is in both has its
+# accuracy for the kinds in `extra.rds` replaced, so one tool can be rerun
+# alone.
 
 args <- commandArgs(trailingOnly = TRUE)
-f <- if (length(args)) args[[1]] else "data-raw/benchmark-results/benchmark-wfo-all.rds"
+f <- if (length(args)) {
+  args[[1]]
+} else {
+  "data-raw/benchmark-results/benchmark-wfo-all.rds"
+}
 r <- readRDS(f)
 extra_date <- NULL
 for (extra_file in args[-1]) {
@@ -47,7 +52,8 @@ rownames(ex) <- NULL
 # session of this machine, with the compared packages loaded
 si <- r$session_info
 if (is.null(si)) {
-  for (p in c("taxify", "WorldFlora", "U.Taxonstand", "vectra")) loadNamespace(p)
+  for (p in c("taxify", "WorldFlora", "U.Taxonstand",
+    "vectra")) loadNamespace(p)
   si <- utils::capture.output(utils::sessionInfo())
 }
 res <- list(

@@ -1,7 +1,8 @@
 raw <- data.frame(
   id = c("1", "2", "3", "4", "5", "1"),
   acc = c("1", "1", "3", "", "5", "1"),
-  status = c(" Accepted", "SYNONYM", "accepted", "accepted", "accepted", "accepted"),
+  status = c(" Accepted", "SYNONYM", "accepted", "accepted", "accepted",
+    "accepted"),
   name = c(
     "Polypodium vulgare", "Polypodium rotundatum", "Polypodium",
     "Polypodiaceae", "Asplenium nidus L.", "Polypodium vulgare"
@@ -19,25 +20,25 @@ map <- c(
 test_that("ts_format_ref() maps columns, adds authors, drops higher ranks", {
   out <- ts_format_ref(raw, col_map = map)
   expect_s3_class(out, "data.frame")
-  expect_equal(
+  expect_identical(
     colnames(out),
     c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName",
       "taxonRank")
   )
   # genus and family dropped; row 6 duplicates row 1 once tidied
-  expect_equal(out$taxonID, c("1", "2", "5"))
-  expect_equal(
+  expect_identical(out$taxonID, c("1", "2", "5"))
+  expect_identical(
     out$scientificName,
     c("Polypodium vulgare L.", "Polypodium rotundatum Willd.",
       "Asplenium nidus L.")
   )
-  expect_equal(out$taxonomicStatus, c("accepted", "synonym", "accepted"))
-  expect_equal(out$taxonRank, rep("species", 3))
+  expect_identical(out$taxonomicStatus, c("accepted", "synonym", "accepted"))
+  expect_identical(out$taxonRank, rep("species", 3))
 })
 
 test_that("an author already in the name is not added twice", {
   out <- ts_format_ref(raw, col_map = map)
-  expect_equal(out$scientificName[3], "Asplenium nidus L.")
+  expect_identical(out$scientificName[3], "Asplenium nidus L.")
 })
 
 test_that("empty strings become NA", {
@@ -52,12 +53,13 @@ test_that("only ranks above species are dropped, other ranks are kept", {
     taxonID = as.character(1:4), acceptedNameUsageID = NA_character_,
     taxonomicStatus = "accepted",
     scientificName = c("A b", "A b subsp. c", "A b nothovar. d", "A"),
-    taxonRank = c("species", "nothosubspecies", NA, "subgenus")
+    taxonRank = c("species", "nothosubspecies", NA, "subgenus"),
+    stringsAsFactors = FALSE
   )
   out <- ts_format_ref(x)
-  expect_equal(out$taxonID, c("1", "2", "3"))
-  expect_equal(nrow(ts_format_ref(x, drop_ranks = NULL)), 4)
-  expect_equal(
+  expect_identical(out$taxonID, c("1", "2", "3"))
+  expect_identical(nrow(ts_format_ref(x, drop_ranks = NULL)), 4L)
+  expect_identical(
     ts_format_ref(x, drop_ranks = "nothosubspecies")$taxonID,
     c("1", "3", "4")
   )
@@ -66,26 +68,28 @@ test_that("only ranks above species are dropped, other ranks are kept", {
 test_that("no taxonRank column means no rank filtering", {
   x <- data.frame(
     taxonID = c("1", "2"), acceptedNameUsageID = NA_character_,
-    taxonomicStatus = "accepted", scientificName = c("A b", "A")
+    taxonomicStatus = "accepted", scientificName = c("A b", "A"),
+    stringsAsFactors = FALSE
   )
-  expect_equal(nrow(ts_format_ref(x)), 2)
+  expect_identical(nrow(ts_format_ref(x)), 2L)
 })
 
 test_that("source is kept as an attribute", {
   src <- list(provider = "Example", version = "1")
-  expect_equal(attr(ts_format_ref(raw, map, source = src), "ts_source"), src)
+  expect_identical(attr(ts_format_ref(raw, map, source = src), "ts_source"),
+    src)
   expect_null(attr(ts_format_ref(raw, map), "ts_source"))
 })
 
 test_that("a mapped column replaces a column with the same Darwin Core name", {
   x <- cbind(raw, taxonID = c("a", "b", "c", "d", "e", "f"))
-  expect_equal(ts_format_ref(x, map)$taxonID, c("1", "2", "5"))
+  expect_identical(ts_format_ref(x, map)$taxonID, c("1", "2", "5"))
 })
 
 test_that("the result works as a reference", {
   out <- ts_format_ref(raw, map)
   res <- ts_resolve_names("Polypodium rotundatum Willd.", out)
-  expect_equal(res$resolved_name, "Polypodium vulgare L.")
+  expect_identical(res$resolved_name, "Polypodium vulgare L.")
   expect_s3_class(ts_optimize_ref(out), "ts_reference")
 })
 
@@ -105,10 +109,11 @@ test_that("hierarchy columns are kept, other columns are dropped", {
     taxonomicStatus = c("accepted", "synonym"),
     scientificName = c("Pteris vittata L.", "Ceratopteris vittata Foo"),
     family = c("Pteridaceae", NA), parentNameUsageID = c("9", NA),
-    extra = c("a", "b")
+    extra = c("a", "b"),
+    stringsAsFactors = FALSE
   )
   res <- ts_format_ref(x)
-  expect_equal(
+  expect_identical(
     colnames(res),
     c(
       "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName",
@@ -122,10 +127,11 @@ test_that("ts_subset_ref() works after ts_format_ref() for rank columns", {
     taxonID = c("1", "2", "3"), acceptedNameUsageID = c("1", "2", "1"),
     taxonomicStatus = c("accepted", "accepted", "synonym"),
     scientificName = c("Pteris vittata L.", "Equisetum arvense L.", "Foo bar"),
-    family = c("Pteridaceae", "Equisetaceae", NA)
+    family = c("Pteridaceae", "Equisetaceae", NA),
+    stringsAsFactors = FALSE
   )
   res <- ts_subset_ref(ts_format_ref(x), "Pteridaceae")
-  expect_equal(res$taxonID, c("1", "3"))
+  expect_identical(res$taxonID, c("1", "3"))
 })
 
 test_that("missing taxonIDs get made-up unique ones and resolve", {
@@ -133,15 +139,16 @@ test_that("missing taxonIDs get made-up unique ones and resolve", {
     taxonID = c("A:1", NA, NA),
     acceptedNameUsageID = c("A:1", "A:1", "A:1"),
     taxonomicStatus = c("accepted", "synonym", "synonym"),
-    scientificName = c("Foo bar L.", "Foo baz Willd.", "Foo baz Willd.")
+    scientificName = c("Foo bar L.", "Foo baz Willd.", "Foo baz Willd."),
+    stringsAsFactors = FALSE
   )
   res <- ts_format_ref(x)
   # the duplicate synonym row was removed first
-  expect_equal(nrow(res), 2)
+  expect_identical(nrow(res), 2L)
   expect_false(anyNA(res$taxonID))
-  expect_equal(res$taxonID[1], "A:1")
+  expect_identical(res$taxonID[1], "A:1")
   expect_match(res$taxonID[2], "^taxastand:")
-  expect_equal(
+  expect_identical(
     ts_resolve_names("Foo baz Willd.", res)$resolved_name, "Foo bar L."
   )
 })

@@ -55,13 +55,15 @@ for queries whose genus is not in the reference; the candidates are then the
 names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
 \code{max_dist}. Matches have the type \code{auto_fuzzy_genus}. Set to 0 to turn
-genus-level fuzzy matching off. See \code{\link{ts_match_names}()}. Default: 2.}
+genus-level fuzzy matching off. See \code{\link{ts_match_names}()}.
+Default: 2.}
 
 \item{transpositions}{Logical; count a swap of two adjacent letters (e.g.
 \code{Qurecus} for \code{Quercus}, a common typing error) as one edit instead of two
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to \code{FALSE} for plain
-Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}()}. Default: \code{FALSE}.}
+Levenshtein distance, which is somewhat faster. See
+\code{\link{ts_match_names}()}. Default: \code{FALSE}.}
 
 \item{match_canon}{Logical; Allow a "canonical name" match if only the genus,
 species epithet, and infraspecific epithet (if present) match exactly.
@@ -114,9 +116,12 @@ Includes the following columns:
 \item \code{query}: Query name
 \item \code{resolved_name}: Accepted name after resolving synonyms
 \item \code{matched_name}: Name matched to query
-\item \code{resolved_status}: Taxonomic status of the resolved name (same as \code{taxonomicStatus} in \code{ref})
-\item \code{matched_status}: Taxonomic status of the matched name (same as \code{taxonomicStatus} in \code{ref})
-\item \code{match_type}: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
+\item \code{resolved_status}: Taxonomic status of the resolved name (same as
+\code{taxonomicStatus} in \code{ref})
+\item \code{matched_status}: Taxonomic status of the matched name (same as
+\code{taxonomicStatus} in \code{ref})
+\item \code{match_type}: Type of match (see the "Match types" section of
+\code{\link{ts_match_names}()})
 \item \code{dist}: Edit distance between the query and the matched name for fuzzy
 matches, \code{NA} otherwise
 }

@@ -40,11 +40,11 @@ take some time (a few seconds, and longer with a slow connection).
 \examples{
 ts_show_ref_sources()
 
-\dontrun{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Needs internet
 ts_show_ref_sources(versions = TRUE)
 
 # One row per version
 ts_show_ref_sources(versions = TRUE, tidy = TRUE)
-}
+\dontshow{\}) # examplesIf}
 }

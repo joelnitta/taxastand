@@ -61,12 +61,15 @@ ts_optimize_ref <- function(ref, strip_qualifiers = FALSE) {
 
 #' @export
 print.ts_reference <- function(x, ...) {
-  cat("<ts_reference>", length(x$names), "names in", length(x$genera), "genera\n")
+  cat(
+    "<ts_reference>", length(x$names), "names in", length(x$genera),
+    "genera\n"
+  )
   cat("  genera parsed so far:", length(x$state$loaded), "\n")
   invisible(x)
 }
 
-# ---- Internals ----------------------------------------------------------------
+# ---- Internals ------------------------------------------------------------
 #
 # A prepared reference keeps its raw names and the genus key of each, plus a
 # mutable `state` environment holding a pool of every record parsed so far.
@@ -81,7 +84,10 @@ print.ts_reference <- function(x, ...) {
 #   batches               one .tt_record_keys() object per batch, whose lazy
 #                         key(method) fills `keys` (the pool-wide key vectors,
 #                         extended batch by batch as they are asked for)
-.ts_new_reference <- function(names, strip_qualifiers = FALSE, taxonomy = NULL) {
+.ts_new_reference <- function(
+  names, strip_qualifiers = FALSE,
+  taxonomy = NULL
+) {
   genus_key <- .ts_raw_genus_key(names)
   empty <- .tt_record_keys(character())
   state <- new.env(parent = emptyenv())

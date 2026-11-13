@@ -12,7 +12,8 @@
 # nolint start: object_name_linter.
 #
 # Input is the parsed pipe-delimited format produced by tt_parsenames /
-# ts_write_names: id|g_hybrid|genus|s_hybrid|species|rank|infrasp|author # nolint: commented_code_linter.
+# ts_write_names, with the fields id, g_hybrid, genus, s_hybrid, species, rank,
+# infrasp and author separated by pipes.
 # Output is the 18-field result format documented in ts_match_names().
 #
 # Fuzzy matching uses base adist() (Levenshtein distance); a pair is a fuzzy
@@ -36,41 +37,57 @@
   gsub("th", "t", x, fixed = TRUE)
 }
 
+# Split a vector of parsed `id|...` lines into the fields matchnames needs and
+# clean them (read_data lines 154-158): blank out NULL / \N, cleanspaces
+.tt_clean_fields <- function(lines) {
+  # Split into 8 fields (exactly 7 pipes); fields may be empty.
+  fields <- .tt_split_fields(lines, 8L)
+  clean <- function(x) {
+    x[x == "NULL" | x == "\\N"] <- ""
+    .tt_cleanspaces(x)
+  }
+  list(
+    code = fields[[1]],
+    xg = clean(fields[[2]]), g = clean(fields[[3]]), xs = clean(fields[[4]]),
+    s = clean(fields[[5]]), st = clean(fields[[6]]), ssp = clean(fields[[7]]),
+    # the author keeps everything after the 7th pipe
+    a = clean(sub("^([^|]*\\|){7}(.*)$", "\\2", lines, perl = TRUE))
+  )
+}
+
+# The orthographic-variant keys of the records whose epithets contain a letter
+# group that .tt_orthfold() changes; all other records have the same key as
+# `out`, their punct / canon key
+.tt_orth_key <- function(out, f, method) {
+  i <- grep("ae|oe|y|ph|rh|th|ii", tolower(paste(f$s, f$ssp)), perl = TRUE)
+  if (method == "orthvar") {
+    out[i] <- paste0(
+      tt_depunct(paste0(f$xg, f$g, f$xs))[i],
+      .tt_orthfold(tt_depunct(f$s[i])),
+      tt_depunct(f$st[i]),
+      .tt_orthfold(tt_depunct(f$ssp[i])),
+      tt_depunct(f$a[i])
+    )
+  } else {
+    out[i] <- paste0(
+      tt_depunct(f$g[i]),
+      .tt_orthfold(tt_depunct(f$s[i])),
+      .tt_orthfold(tt_depunct(f$ssp[i]))
+    )
+  }
+  out
+}
+
 # Parse a vector of parsed `id|...` lines into the fields matchnames needs.
 # Returns a list of equal-length vectors plus `key(method)`, which computes
 # (and memoizes) the comparison key for a match method only when first asked
 # for, so a method no query ever reaches costs nothing.
 .tt_record_keys <- function(lines) {
-  lines <- enc2utf8(lines)
-  # Split into 8 fields (exactly 7 pipes); fields may be empty.
-  fields <- .tt_split_fields(lines, 8L)
-  f <- function(i) {
-    if (i == 8L) {
-      # the author keeps everything after the 7th pipe
-      sub("^([^|]*\\|){7}(.*)$", "\\2", lines, perl = TRUE)
-    } else {
-      fields[[i]]
-    }
-  }
-  code <- f(1)
-
-  # Field cleaning (read_data lines 154-158): blank out NULL / \N, cleanspaces
-  clean <- function(x) {
-    x[x == "NULL" | x == "\\N"] <- ""
-    .tt_cleanspaces(x)
-  }
-  xg <- clean(f(2))
-  g <- clean(f(3))
-  xs <- clean(f(4))
-  s <- clean(f(5))
-  st <- clean(f(6))
-  ssp <- clean(f(7))
-  a <- clean(f(8))
-
-  namex <- paste0(xg, g, xs, s, st, ssp) # all parts, no author
-  exact <- .tt_cleanspaces(paste(xg, g, xs, s, st, ssp, a))
+  f <- .tt_clean_fields(enc2utf8(lines))
+  a <- f$a
+  namex <- paste0(f$xg, f$g, f$xs, f$s, f$st, f$ssp) # all parts, no author
+  exact <- .tt_cleanspaces(paste(f$xg, f$g, f$xs, f$s, f$st, f$ssp, a))
   punct_in <- paste0(namex, a)
-
   cache <- new.env(parent = emptyenv())
 
   # tt_depunct() is a pure function of its input string, so a key that differs
@@ -83,12 +100,6 @@
     out
   }
 
-  # Records whose epithets contain a letter group that .tt_orthfold() changes;
-  # all other records have the same orthvar key as their punct / canon key
-  orth_trigger <- function() {
-    which(grepl("ae|oe|y|ph|rh|th|ii", tolower(paste(s, ssp)), perl = TRUE))
-  }
-
   key <- function(method) {
     if (!is.null(cache[[method]])) {
       return(cache[[method]])
@@ -96,36 +107,16 @@
     val <- switch(method,
       exact = exact,
       punct = tt_depunct(punct_in),
-      canon = tt_depunct(paste0(g, s, ssp)),
-      irank = derive(paste0(xg, g, xs, s, ssp, a)),
+      canon = tt_depunct(paste0(f$g, f$s, f$ssp)),
+      irank = derive(paste0(f$xg, f$g, f$xs, f$s, f$ssp, a)),
       basio = derive(paste0(namex, sub("^\\([^)]+\\)", "", a))),
       `in` = derive(paste0(namex, sub(" [iI]n .*$", "", a))),
       exin = derive(paste0(namex, sub(" ([eE]x|[iI]n) .*$", "", a))),
       basexin = derive(
         paste0(namex, sub("(^\\([^)]+\\)| ([eE]x|[iI]n) .*$)", "", a))
       ),
-      orthvar = {
-        out <- key("punct")
-        i <- orth_trigger()
-        out[i] <- paste0(
-          tt_depunct(paste0(xg, g, xs))[i],
-          .tt_orthfold(tt_depunct(s[i])),
-          tt_depunct(st[i]),
-          .tt_orthfold(tt_depunct(ssp[i])),
-          tt_depunct(a[i])
-        )
-        out
-      },
-      canonorth = {
-        out <- key("canon")
-        i <- orth_trigger()
-        out[i] <- paste0(
-          tt_depunct(g[i]),
-          .tt_orthfold(tt_depunct(s[i])),
-          .tt_orthfold(tt_depunct(ssp[i]))
-        )
-        out
-      },
+      orthvar = .tt_orth_key(key("punct"), f, method),
+      canonorth = .tt_orth_key(key("canon"), f, method),
       stop("unknown key method: ", method)
     )
     assign(method, val, envir = cache)
@@ -133,8 +124,8 @@
   }
 
   list(
-    code = code, genus = g,
-    fields = list(xg = xg, g = g, xs = xs, s = s, st = st, ssp = ssp, a = a),
+    code = f$code, genus = f$g,
+    fields = f[c("xg", "g", "xs", "s", "st", "ssp", "a")],
     no_auth = (a == ""), auct = grepl("^auct\\.?$", a),
     key = key
   )
@@ -201,9 +192,10 @@
 #'   edit (optimal string alignment distance) instead of two (Levenshtein).
 #' @return Data frame of character columns, one row per match (a query with
 #'   several fuzzy hits gets several rows; an unmatched query gets one row with
-#'   `match_type` "no_match"), with the 18 columns documented in `ts_match_names()` (`id_query`, `id_ref`,
-#'   `match_type`, `dist` (integer edit distance of fuzzy hits, else `NA`), then the seven parsed name fields suffixed `_query` and
-#'   `_ref`). Empty values are `NA`.
+#'   `match_type` "no_match"), with the 18 columns documented in
+#'   `ts_match_names()` (`id_query`, `id_ref`, `match_type`, `dist` (integer
+#'   edit distance of fuzzy hits, else `NA`), then the seven parsed name fields
+#'   suffixed `_query` and `_ref`). Empty values are `NA`.
 #' @keywords internal
 #' @importFrom stats setNames
 #' @importFrom utils adist
@@ -219,9 +211,6 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     max_dist_genus = as.numeric(max_dist_genus),
     transpositions = transpositions
   )
-  A <- m$A
-  B <- m$B
-
   # Exact and rule-based stages, most certain first
   .tt_stage_eq(m, "exact", "exact")
   .tt_stage_eq(m, "punct", "auto_punct")
@@ -232,11 +221,24 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   .tt_stage_eq(m, "irank", "auto_irank")
   .tt_stage_eq(m, "orthvar", "auto_orthvar")
 
+  .tt_stages_canon_fuzzy(m, match_canon)
+
+  .tt_assemble(m)
+}
+
+# The stages after the rule-based ones: canonical-name matches (if allowed) and
+# fuzzy matches, for what is still unmatched
+.tt_stages_canon_fuzzy <- function(m, match_canon) {
+  A <- m$A
+  B <- m$B
   # auct.: only a canonical-form match is allowed, else no_match
   cfo <- isTRUE(match_canon)
   auct <- m$pending[A$auct[m$pending]]
   if (cfo && length(auct)) {
-    .tt_accept(m, auct, .tt_lookup(m, A$key("canon")[auct], "canon"), "auto_canon")
+    .tt_accept(
+      m, auct, .tt_lookup(m, A$key("canon")[auct], "canon"),
+      "auto_canon"
+    )
   }
 
   # Fuzzy matching (only if the genus is present in the reference): queries
@@ -251,15 +253,16 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   # Optional canonical-form match for anything still unmatched
   others <- m$pending[!A$auct[m$pending]]
   if (cfo && length(others)) {
-    .tt_accept(m, others, .tt_lookup(m, A$key("canon")[others], "canon"), "auto_canon")
+    .tt_accept(
+      m, others, .tt_lookup(m, A$key("canon")[others], "canon"),
+      "auto_canon"
+    )
   }
 
   # Genus-level fuzzy matching for queries whose genus is not in the reference
   others <- m$pending[!A$auct[m$pending]]
   others <- others[!A$genus[others] %in% B$genus]
   if (m$max_dist_genus > 0 && length(others)) .tt_stage_genusfuzzy(m, others)
-
-  .tt_assemble(m)
 }
 
 # ---- Matching state and stages -----------------------------------------------
@@ -301,7 +304,10 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # Accept matches (not to the query itself) for queries `idx`; `rc` is a list of
 # candidate ref codes per query (see .tt_lookup())
 .tt_accept <- function(m, idx, rc, type) {
-  rc <- Map(function(codes, self) unique(codes[codes != self]), rc, m$A$code[idx])
+  rc <- Map(
+    function(codes, self) unique(codes[codes != self]), rc,
+    m$A$code[idx]
+  )
   ok <- lengths(rc) > 0L
   if (any(ok)) {
     m$res_code[idx[ok]] <- rc[ok]

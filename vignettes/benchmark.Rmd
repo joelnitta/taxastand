@@ -10,22 +10,30 @@ editor_options:
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4.5)
+knitr::opts_chunk$set(
+  collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4.5
+)
 # The benchmark code ships with the package (inst/benchmark). show_code() prints
 # one of its labeled sections ("# ---- label ----") as a code block. The code
 # is not run here, and it is not in a chunk of this vignette on purpose: it uses
 # packages that taxastand does not depend on.
-bench_src <- readLines(system.file("benchmark", "benchmark-lib.R", package = "taxastand"))
+bench_src <- readLines(
+  system.file("benchmark", "benchmark-lib.R", package = "taxastand")
+)
 show_code <- function(label) {
   marks <- grep("^# ---- .* ----$", bench_src)
   start <- grep(sprintf("^# ---- %s ----$", label), bench_src)
   end <- marks[marks > start][1] - 1
   if (is.na(end)) end <- length(bench_src)
   code <- bench_src[(start + 1):end]
-  while (length(code) && !nzchar(code[length(code)])) code <- code[-length(code)]
+  while (length(code) && !nzchar(code[length(code)])) {
+    code <- code[-length(code)]
+  }
   cat("```r\n", paste(code, collapse = "\n"), "\n```\n\n", sep = "")
 }
-res <- readRDS(system.file("extdata", "benchmark-results.rds", package = "taxastand"))
+res <- readRDS(
+  system.file("extdata", "benchmark-results.rds", package = "taxastand")
+)
 pct <- function(x) sprintf("%.0f%%", 100 * x)
 tool_labels <- c(
   taxastand = "taxastand", taxastand_oneoff = "taxastand (one-off)",
@@ -49,20 +57,29 @@ what_main <- c(
   author_punctuation = "Periods removed from the author",
   author_typo = "One letter deleted from the author",
   no_author_exact = "The name without its author",
-  no_author_epithet_deletion = "The name without its author, with a letter of the epithet deleted",
+  no_author_epithet_deletion = paste0(
+    "The name without its author, with a letter of the epithet deleted"
+  ),
   basionym_missing = "The basionym author (in parentheses) is missing",
   ex_dropped = "The *ex* element of the author is dropped",
   rank_changed = "The infraspecific rank is changed (var. or subsp.)",
-  spelling_variant = "A standard Latin spelling variant of the epithet (y/i, ph/f, th/t, rh/r, ae/e)"
+  spelling_variant = paste0(
+    "A standard Latin spelling variant of the epithet ",
+    "(y/i, ph/f, th/t, rh/r, ae/e)"
+  )
 )
 # the same kinds of difference for names that several records share
 what_shared <- c(
   homonym = "A name that several records share, queried with its own author",
   homonym_typo = "The same, with a letter of the epithet deleted",
   homonym_basionym_missing = "A shared name, with the basionym author missing",
-  homonym_ex_dropped = "A shared name, with the *ex* element of the author dropped",
+  homonym_ex_dropped = paste0(
+    "A shared name, with the *ex* element of the author dropped"
+  ),
   homonym_rank_changed = "A shared name, with the infraspecific rank changed",
-  homonym_spelling_variant = "A shared name, with a Latin spelling variant of the epithet"
+  homonym_spelling_variant = paste0(
+    "A shared name, with a Latin spelling variant of the epithet"
+  )
 )
 what <- c(what_main, what_shared)
 # the nomenclatural kinds (differences that taxastand checks explicitly)
@@ -75,7 +92,8 @@ kind_table <- function(kinds) {
     data.frame(
       kind = paste0("`", kinds, "`"), `what changes` = unname(what[kinds]),
       example = sprintf("%s → %s", ex$original, ex$query),
-      check.names = FALSE
+      check.names = FALSE,
+      stringsAsFactors = FALSE
     )
   )
 }
@@ -234,7 +252,10 @@ from the reference, so most of them are for names that only one record has.
 ## Accuracy: Finding the right record
 
 ```{r}
-knitr::kable(wide("recall"), caption = "Share of queries for which the right record was returned")
+knitr::kable(
+  wide("recall"),
+  caption = "Share of queries for which the right record was returned"
+)
 ```
 
 ## Accuracy: Single answers
@@ -252,7 +273,13 @@ single <- function(kinds = names(what_main)) {
   }
   out
 }
-knitr::kable(single(), caption = "Share of queries that got a single answer / share of those answers that were right")
+knitr::kable(
+  single(),
+  caption = paste0(
+    "Share of queries that got a single answer / share of those answers ",
+    "that were right"
+  )
+)
 ```
 
 Where a package returns several records, taxastand's result tells you which
@@ -279,15 +306,33 @@ kind_table(names(what_shared))
 ```
 
 ```{r}
-knitr::kable(wide("recall", names(what_shared)), caption = "Names shared by several records: share of queries for which the right record was returned")
+knitr::kable(
+  wide("recall", names(what_shared)),
+  caption = paste0(
+    "Names shared by several records: share of queries for which the right ",
+    "record was returned"
+  )
+)
 ```
 
 ```{r}
-knitr::kable(wide("unambiguous", names(what_shared)), caption = "Names shared by several records: share of queries for which only the right record was returned")
+knitr::kable(
+  wide("unambiguous", names(what_shared)),
+  caption = paste0(
+    "Names shared by several records: share of queries for which only the ",
+    "right record was returned"
+  )
+)
 ```
 
 ```{r}
-knitr::kable(single(names(what_shared)), caption = "Names shared by several records: share of queries that got a single answer / share of those answers that were right")
+knitr::kable(
+  single(names(what_shared)),
+  caption = paste0(
+    "Names shared by several records: share of queries that got a single ",
+    "answer / share of those answers that were right"
+  )
+)
 ```
 
 When a name is shared, the packages differ much more than above:
@@ -319,7 +364,7 @@ speed_table <- function() {
   s <- do.call(rbind, res$speed)
   s$tool <- speed_labels[s$tool]
   w <- reshape(s, idvar = "tool", timevar = "n_queries", direction = "wide")
-  names(w) <- sub("seconds\\.", "", names(w))
+  names(w) <- sub("seconds.", "", names(w), fixed = TRUE)
   rownames(w) <- NULL
   w
 }

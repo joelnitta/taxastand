@@ -250,7 +250,10 @@ ts_match_names <- function(
   reference = NULL,
   match_no_auth = NULL
 ) {
-  match_canon <- .ts_alias_match_no_auth(match_canon, match_no_auth, missing(match_canon))
+  match_canon <- .ts_alias_match_no_auth(
+    match_canon, match_no_auth,
+    missing(match_canon)
+  )
   ref <- .ts_alias(ref, reference, missing(ref), "ref", "reference")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),
@@ -267,27 +270,37 @@ ts_match_names <- function(
     match_autonyms_exclude, strip_qualifiers
   )
 
-  # Parse or load query names. For manual matches, the matched name is used
-  # instead of the query to generate an exact match.
-  manual_replacement_df <- NULL
-  if (is.character(query)) {
-    if (!is.null(manual_match)) {
-      manual_replacement_df <- .ts_manual_replacement(query, manual_match)
-      query <- unique(manual_replacement_df$query_new)
-    }
-    query_parsed_df <- ts_parse_names(
-      query,
-      strip_qualifiers = strip_qualifiers,
-      exclude_placeholders = exclude_placeholders
-    )
-  } else {
-    query_parsed_df <- query # already parsed
-    if (!is.null(manual_match)) {
-      query_parsed_df <- .ts_manual_parsed(
-        query_parsed_df, manual_match, strip_qualifiers, exclude_placeholders
-      )
-    }
+  results <- .ts_match_core(
+    query, ref, manual_match, max_dist, max_dist_genus, transpositions,
+    match_canon, match_autonyms, match_autonyms_exclude, strip_qualifiers,
+    exclude_placeholders
+  )
+  .ts_match_output(results, simple, tbl_out)
+}
+
+# Return only the main columns if `simple`, and a tibble if `tbl_out`
+.ts_match_output <- function(results, simple, tbl_out) {
+  if (simple) {
+    results <- results[, c("query", "reference", "match_type")]
   }
+  if (isTRUE(tbl_out)) {
+    return(.ts_as_tibble(results))
+  }
+  results
+}
+
+# ---- Helpers for ts_match_names() --------------------------------------------
+
+# Parse the query, run the matching and put the results in order (the
+# arguments are those of ts_match_names())
+.ts_match_core <- function(query, ref, manual_match, max_dist, max_dist_genus,
+                           transpositions, match_canon, match_autonyms,
+                           match_autonyms_exclude, strip_qualifiers,
+                           exclude_placeholders) {
+  q <- .ts_match_parse_query(
+    query, manual_match, strip_qualifiers, exclude_placeholders
+  )
+  query_parsed_df <- q$parsed
 
   # Optionally collapse infraspecific name
   collapsed <- NULL
@@ -295,7 +308,6 @@ ts_match_names <- function(
     collapsed <- .ts_collapse_infra(query_parsed_df, match_autonyms_exclude)
     query_parsed_df <- collapsed$parsed
   }
-
   ref_prep <- .ts_prepare_reference(
     ref, query_parsed_df, max_dist_genus, strip_qualifiers
   )
@@ -316,12 +328,53 @@ ts_match_names <- function(
     )
   }
 
-  # Run matching (one row per match; see .tt_assemble() for the columns)
+  results <- .ts_run_matching(
+    query_parsed_df, variants, q$query, ref, ref_prep, max_dist, match_canon,
+    max_dist_genus, transpositions
+  )
+  .ts_finish_matching(results, collapsed, manual_match, q$replacement)
+}
+
+
+# Parse or load the query names. For manual matches, the matched name is used
+# instead of the query to generate an exact match. Returns the parsed names
+# (`parsed`), the query that was parsed (`query`) and the replacements made
+# for manual matches (`replacement`, NULL if none).
+.ts_match_parse_query <- function(query, manual_match, strip_qualifiers,
+                                  exclude_placeholders) {
+  replacement <- NULL
+  if (is.character(query)) {
+    if (!is.null(manual_match)) {
+      replacement <- .ts_manual_replacement(query, manual_match)
+      query <- unique(replacement$query_new)
+    }
+    parsed <- ts_parse_names(
+      query,
+      strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = exclude_placeholders
+    )
+  } else {
+    parsed <- query # already parsed
+    if (!is.null(manual_match)) {
+      parsed <- .ts_manual_parsed(
+        parsed, manual_match, strip_qualifiers, exclude_placeholders
+      )
+    }
+  }
+  list(parsed = parsed, query = query, replacement = replacement)
+}
+
+# Run the matching engine (one row per match; see .tt_assemble() for the
+# columns) and add back in the original search terms (query and reference)
+.ts_run_matching <- function(query_parsed_df, variants, query, ref, ref_prep,
+                             max_dist, match_canon, max_dist_genus,
+                             transpositions) {
+  parsed_all <- query_parsed_df
+  if (!is.null(variants)) {
+    parsed_all <- rbind(query_parsed_df, variants$parsed)
+  }
   results <- tt_matchnames(
-    query_lines = .ts_parsed_lines(
-      if (is.null(variants)) query_parsed_df else rbind(query_parsed_df, variants$parsed),
-      query
-    ),
+    query_lines = .ts_parsed_lines(parsed_all, query),
     ref_lines = if (is.null(ref_prep$keys)) {
       .ts_parsed_lines(ref_prep$parsed, ref)
     },
@@ -331,24 +384,22 @@ ts_match_names <- function(
     max_dist_genus = max_dist_genus,
     transpositions = transpositions
   )
-
   if (!is.null(variants)) {
     results <- .ts_use_autonym_variants(results, variants, query_parsed_df$id)
   }
-
-  # Add back in the original search terms (query and reference)
   results$query <-
     query_parsed_df$name[match(results$id_query, query_parsed_df$id)]
   results$reference <- ref_prep$names[match(results$id_ref, ref_prep$ids)]
-  results <- .ts_front_cols(results)
+  .ts_front_cols(results)
+}
 
-  # Add back in names that were duplicated due to collapsed infrasp names
+# Add back in names that were duplicated due to collapsed infrasp names, and
+# restore manual matches to the original query input (marking them as manual)
+.ts_finish_matching <- function(results, collapsed, manual_match,
+                                manual_replacement_df) {
   if (!is.null(collapsed)) {
     results <- .ts_expand_collapsed(results, collapsed)
   }
-
-  # For manual matches, restore back to original query input, and specify
-  # that match was made manually
   if (!is.null(manual_match)) {
     results <- if (is.null(manual_replacement_df)) {
       .ts_mark_manual(results, manual_match)
@@ -356,19 +407,8 @@ ts_match_names <- function(
       .ts_restore_manual(results, manual_replacement_df, manual_match)
     }
   }
-
-  if (simple) {
-    results <- results[, c("query", "reference", "match_type")]
-  }
-
-  if (isTRUE(tbl_out)) {
-    return(.ts_as_tibble(results))
-  }
-
   results
 }
-
-# ---- Helpers for ts_match_names() --------------------------------------------
 
 # Validate the arguments of ts_match_names()
 .ts_check_match_args <- function(
@@ -388,34 +428,45 @@ ts_match_names <- function(
       "or the output of ts_optimize_ref()"
     )
   )
-  assertthat::assert_that(assertthat::is.number(max_dist))
-  assertthat::assert_that(assertthat::is.number(max_dist_genus))
-  assertthat::assert_that(assertthat::is.flag(transpositions))
-  assertthat::assert_that(is.logical(match_canon))
-  assertthat::assert_that(is.logical(simple))
-  assertthat::assert_that(assertthat::is.flag(tbl_out))
-  assertthat::assert_that(assertthat::is.flag(match_autonyms))
-  assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
+  assertthat::assert_that(
+    assertthat::is.number(max_dist),
+    assertthat::is.number(max_dist_genus),
+    assertthat::is.flag(transpositions),
+    is.logical(match_canon),
+    is.logical(simple),
+    assertthat::is.flag(tbl_out),
+    assertthat::is.flag(match_autonyms),
+    assertthat::is.flag(strip_qualifiers)
+  )
   if (!is.null(match_autonyms_exclude)) {
     assertthat::assert_that(is.character(match_autonyms_exclude))
   }
-  if (!is.null(manual_match)) {
-    assertthat::assert_that(
-      isTRUE(inherits(manual_match, "data.frame")),
-      msg = "manual_match must be of class 'data.frame'"
-    )
-    assertthat::assert_that(
-      isTRUE(all(c("query", "match") %in% colnames(manual_match))),
-      msg = "manual_match must have `query` and `match` columns"
-    )
-    assertthat::assert_that(is.character(manual_match$query))
-    assertthat::assert_that(is.character(manual_match$match))
-    assertthat::assert_that(assertthat::noNA(manual_match$query))
-    assertthat::assert_that(
-      !anyDuplicated(manual_match$query),
-      msg = "All values of manual_match$query must be unique"
-    )
+  .ts_check_manual_match(manual_match)
+  invisible(TRUE)
+}
+
+# Validate manual_match (NULL if there is none)
+.ts_check_manual_match <- function(manual_match) {
+  if (is.null(manual_match)) {
+    return(invisible(TRUE))
   }
+  assertthat::assert_that(
+    isTRUE(inherits(manual_match, "data.frame")),
+    msg = "manual_match must be of class 'data.frame'"
+  )
+  assertthat::assert_that(
+    isTRUE(all(c("query", "match") %in% colnames(manual_match))),
+    msg = "manual_match must have `query` and `match` columns"
+  )
+  assertthat::assert_that(
+    is.character(manual_match$query),
+    is.character(manual_match$match),
+    assertthat::noNA(manual_match$query)
+  )
+  assertthat::assert_that(
+    !anyDuplicated(manual_match$query),
+    msg = "All values of manual_match$query must be unique"
+  )
   invisible(TRUE)
 }
 
@@ -461,7 +512,8 @@ ts_match_names <- function(
 # from the id of each dropped name to the id of the first identical one.
 .ts_collapse_infra <- function(parsed, exclude) {
   original <- parsed
-  same <- (parsed$specific_epithet == parsed$infraspecific_epithet) %in% TRUE &
+  same <- (parsed$specific_epithet == parsed$infraspecific_epithet) &
+    !is.na(parsed$specific_epithet == parsed$infraspecific_epithet) &
     !parsed$name %in% exclude
   assertthat::assert_that(!anyNA(same))
   parsed$infraspecific_epithet[same] <- NA
@@ -569,7 +621,10 @@ ts_match_names <- function(
     return(base)
   }
   # the variant's own query fields are replaced by those of the query
-  query_cols <- setdiff(grep("_query$", names(results), value = TRUE), "id_query")
+  query_cols <- setdiff(
+    grep("_query$", names(results), value = TRUE),
+    "id_query"
+  )
   hits[query_cols] <- base[match(hits$id_query, base$id_query), query_cols]
   out <- rbind(base[!base$id_query %in% hits$id_query, ], hits)
   out <- out[order(match(out$id_query, query_ids)), ]
@@ -631,7 +686,8 @@ ts_match_names <- function(
   # An autonym that matched exactly only after being collapsed is not an exact
   # match of the name that was queried
   out$match_type[out$id %in% collapsed$autonym_ids &
-    out$match_type %in% "exact" & is.na(out$infraspecific_epithet_ref)] <- "autonym"
+    !is.na(out$match_type) & out$match_type == "exact" &
+    is.na(out$infraspecific_epithet_ref)] <- "autonym"
   out$id <- NULL
   .ts_front_cols(out)
 }

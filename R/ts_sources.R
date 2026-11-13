@@ -29,16 +29,17 @@
 #' @examples
 #' ts_show_ref_sources()
 #'
-#' \dontrun{
+#' @examplesIf interactive()
 #' # Needs internet
 #' ts_show_ref_sources(versions = TRUE)
 #'
 #' # One row per version
 #' ts_show_ref_sources(versions = TRUE, tidy = TRUE)
-#' }
 ts_show_ref_sources <- function(versions = FALSE, tidy = FALSE) {
-  assertthat::assert_that(assertthat::is.flag(versions), assertthat::noNA(versions))
-  assertthat::assert_that(assertthat::is.flag(tidy), assertthat::noNA(tidy))
+  assertthat::assert_that(
+    assertthat::is.flag(versions), assertthat::noNA(versions),
+    assertthat::is.flag(tidy), assertthat::noNA(tidy)
+  )
   srcs <- .ts_sources()
   pick <- function(field) {
     vapply(srcs, function(s) s[[field]], character(1), USE.NAMES = FALSE)
@@ -53,39 +54,48 @@ ts_show_ref_sources <- function(versions = FALSE, tidy = FALSE) {
     stringsAsFactors = FALSE
   )
   if (versions) {
-    .ts_state$taxadb_manifests <- NULL # look again for new versions
-    errors <- character(0)
-    out$versions <- lapply(srcs, function(s) {
-      if (interactive()) .ts_inform("Looking up the versions of ", s$name, " ...")
-      tryCatch(
-        s$list_versions(),
-        error = function(e) {
-          errors[s$name] <<- conditionMessage(e)
-          NA_character_
-        }
-      )
-    })
-    # one message per kind of failure (sources that share a lookup fail together)
-    for (msg in unique(errors)) {
-      .ts_inform(
-        "Could not list the versions of ",
-        paste(names(errors)[errors == msg], collapse = ", "), ": ", msg
-      )
-    }
-    names(out$versions) <- names(srcs)
+    out$versions <- .ts_look_up_versions(srcs)
   }
   if (tidy && !versions) {
     return(out) # one row per source, and no versions to spread over rows
   }
   if (tidy) {
     n <- lengths(out$versions)
-    long <- out[rep(seq_len(nrow(out)), n), colnames(out) != "versions", drop = FALSE]
+    long <- out[rep(seq_len(nrow(out)), n), colnames(out) != "versions",
+      drop = FALSE
+    ]
     long$version <- unlist(out$versions, use.names = FALSE)
     rownames(long) <- NULL
     return(long)
   }
   class(out) <- c("ts_ref_sources", class(out))
   out
+}
+
+# The versions of each source (a list with the source ids as names; NA for a
+# source that could not be reached, with one message for each kind of failure)
+.ts_look_up_versions <- function(srcs) {
+  .ts_state$taxadb_manifests <- NULL # look again for new versions
+  looked_up <- lapply(srcs, function(s) {
+    if (interactive()) .ts_inform("Looking up the versions of ", s$name, " ...")
+    tryCatch(
+      list(versions = s$list_versions(), error = NA_character_),
+      error = function(e) {
+        list(versions = NA_character_, error = conditionMessage(e))
+      }
+    )
+  })
+  errors <- vapply(looked_up, function(x) x$error, character(1))
+  names(errors) <- vapply(srcs, function(s) s$name, character(1))
+  errors <- errors[!is.na(errors)]
+  # sources that share a lookup fail together
+  for (msg in unique(errors)) {
+    .ts_inform(
+      "Could not list the versions of ",
+      toString(names(errors)[errors == msg]), ": ", msg
+    )
+  }
+  stats::setNames(lapply(looked_up, function(x) x$versions), names(srcs))
 }
 
 #' @export
@@ -105,11 +115,11 @@ print.ts_ref_sources <- function(x, ...) {
         "not available"
       } else if (length(v) > n_show) {
         paste0(
-          paste(v[seq_len(n_show)], collapse = ", "), ", ... (", length(v),
+          toString(v[seq_len(n_show)]), ", ... (", length(v),
           " in total)"
         )
       } else {
-        paste(v, collapse = ", ")
+        toString(v)
       }
       cat("  Versions: ", line, "\n", sep = "")
     }
@@ -120,42 +130,54 @@ print.ts_ref_sources <- function(x, ...) {
   invisible(x)
 }
 
+# World Flora Online and PPG, the two sources that are not in taxadb
+.ts_source_wfo <- function() {
+  list(
+    name = "World Flora Online Plant List",
+    description = paste0(
+      "Plants (vascular plants and bryophytes); a new version every June ",
+      "and December"
+    ),
+    license = "CC0 1.0",
+    citation = paste0(
+      "The World Flora Online Consortium. World Flora Online Plant List. ",
+      "https://doi.org/10.5281/zenodo.7460141"
+    ),
+    url = "https://wfoplantlist.org/",
+    resolve = .ts_resolve_wfo,
+    list_versions = .ts_versions_wfo,
+    keep = c(
+      "taxonID", "scientificName", "scientificNameAuthorship", "taxonRank",
+      "parentNameUsageID", "taxonomicStatus", "acceptedNameUsageID",
+      "family", "subfamily", "tribe", "subtribe", "genus"
+    )
+  )
+}
+
+.ts_source_ppg <- function() {
+  list(
+    name = "Pteridophyte Phylogeny Group classification (PPG II)",
+    description = "Ferns and lycophytes",
+    license = "CC BY 4.0",
+    citation = paste0(
+      "Pteridophyte Phylogeny Group. PPG taxonomic database. ",
+      "https://doi.org/10.5281/zenodo.22760360"
+    ),
+    url = "https://github.com/pteridogroup/ppg",
+    resolve = .ts_resolve_ppg,
+    list_versions = .ts_versions_ppg,
+    keep = NULL
+  )
+}
+
 # Registry of named sources. For each: descriptive fields, `resolve(version)`
 # that returns the concrete `version` and the `url` of the file to download,
 # `list_versions()` that returns the downloadable versions (newest first), and
 # `keep`, the columns to read (NULL for all).
 .ts_sources <- function() {
   list(
-    wfo = list(
-      name = "World Flora Online Plant List",
-      description = "Plants (vascular plants and bryophytes); a new version every June and December",
-      license = "CC0 1.0",
-      citation = paste0(
-        "The World Flora Online Consortium. World Flora Online Plant List. ",
-        "https://doi.org/10.5281/zenodo.7460141"
-      ),
-      url = "https://wfoplantlist.org/",
-      resolve = .ts_resolve_wfo,
-      list_versions = .ts_versions_wfo,
-      keep = c(
-        "taxonID", "scientificName", "scientificNameAuthorship", "taxonRank",
-        "parentNameUsageID", "taxonomicStatus", "acceptedNameUsageID",
-        "family", "subfamily", "tribe", "subtribe", "genus"
-      )
-    ),
-    ppg = list(
-      name = "Pteridophyte Phylogeny Group classification (PPG II)",
-      description = "Ferns and lycophytes",
-      license = "CC BY 4.0",
-      citation = paste0(
-        "Pteridophyte Phylogeny Group. PPG taxonomic database. ",
-        "https://doi.org/10.5281/zenodo.22760360"
-      ),
-      url = "https://github.com/pteridogroup/ppg",
-      resolve = .ts_resolve_ppg,
-      list_versions = .ts_versions_ppg,
-      keep = NULL
-    ),
+    wfo = .ts_source_wfo(),
+    ppg = .ts_source_ppg(),
     itis = .ts_taxadb_source(
       "itis", "Integrated Taxonomic Information System (ITIS)",
       "All kingdoms, mostly North American taxa", "CC0 1.0",
@@ -189,7 +211,8 @@ print.ts_ref_sources <- function(x, ...) {
   )
 }
 
-# The taxadb snapshots (https://docs.ropensci.org/taxadb/) are Parquet files, one
+# The taxadb snapshots (https://docs.ropensci.org/taxadb/) are Parquet files,
+# one
 # per provider, in a public folder of data.source.coop. Each version of the
 # snapshots has a `manifest.csv` that describes the files.
 .ts_taxadb_base <- "https://data.source.coop/cboettig/taxadb/"
@@ -201,7 +224,8 @@ print.ts_ref_sources <- function(x, ...) {
     license = license,
     citation = paste0(
       name, ", ", url, " Accessed through taxadb: Norman, K.E.A., ",
-      "Chamberlain, S. & Boettiger, C. (2020) taxadb: A high-performance local ",
+      "Chamberlain, S. & Boettiger, C. (2020) taxadb: A high-performance ",
+      "local ",
       "taxonomic database interface. Methods in Ecology and Evolution 11: ",
       "1153-1159. https://doi.org/10.1111/2041-210X.13440"
     ),
@@ -248,7 +272,9 @@ print.ts_ref_sources <- function(x, ...) {
   if (length(manifests) == 0) {
     stop("Could not find any taxadb snapshots", call. = FALSE)
   }
-  ord <- order(numeric_version(names(manifests), strict = FALSE), decreasing = TRUE)
+  ord <- order(numeric_version(names(manifests), strict = FALSE),
+    decreasing = TRUE
+  )
   manifests <- manifests[ord]
   .ts_state$taxadb_manifests <- manifests
   manifests
@@ -272,7 +298,7 @@ print.ts_ref_sources <- function(x, ...) {
   if (!version %in% available) {
     stop(
       "Version '", version, "' of the taxadb snapshots has no table for '",
-      provider, "'. Versions you can use: ", paste(available, collapse = ", "),
+      provider, "'. Versions you can use: ", toString(available),
       call. = FALSE
     )
   }
@@ -284,7 +310,10 @@ print.ts_ref_sources <- function(x, ...) {
   }
   list(
     version = version,
-    url = paste0(.ts_taxadb_base, version, "/dwc_", provider, "_part_0.parquet"),
+    url = paste0(
+      .ts_taxadb_base, version, "/dwc_", provider,
+      "_part_0.parquet"
+    ),
     extra = extra
   )
 }
@@ -298,7 +327,7 @@ print.ts_ref_sources <- function(x, ...) {
     if (nrow(recs) == 0) {
       stop(
         "WFO version '", version, "' was not found. Versions you can use: ",
-        paste(.ts_versions_wfo(), collapse = ", "),
+        toString(.ts_versions_wfo()),
         call. = FALSE
       )
     }
@@ -406,6 +435,7 @@ print.ts_ref_sources <- function(x, ...) {
       on.exit(close(con), add = TRUE)
       paste(readLines(con, warn = FALSE), collapse = "\n")
     },
-    error = fail, warning = fail
+    error = fail,
+    warning = fail
   )
 }

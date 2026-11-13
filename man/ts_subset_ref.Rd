@@ -7,9 +7,9 @@
 ts_subset_ref(ref, taxon, rank = NULL, col_map = NULL)
 }
 \arguments{
-\item{ref}{Dataframe of taxonomic names in Darwin Core format, or close to it,
-with at least \code{taxonID} and \code{acceptedNameUsageID}, and either columns for
-higher ranks or \code{parentNameUsageID} (and \code{scientificName}).}
+\item{ref}{Dataframe of taxonomic names in Darwin Core format, or close to
+it, with at least \code{taxonID} and \code{acceptedNameUsageID}, and either columns
+for higher ranks or \code{parentNameUsageID} (and \code{scientificName}).}
 
 \item{taxon}{Character vector of taxon names to keep, such as
 \code{"Polypodiaceae"} or \code{c("Polypodiaceae", "Dryopteridaceae")}. Rows for
@@ -60,12 +60,16 @@ name.
 x <- data.frame(
   taxonID = c("1", "2", "3", "4", "5"),
   acceptedNameUsageID = c("1", "2", "3", "1", "5"),
-  taxonomicStatus = c("accepted", "accepted", "accepted", "synonym", "accepted"),
+  taxonomicStatus = c(
+    "accepted", "accepted", "accepted", "synonym", "accepted"
+  ),
   scientificName = c(
     "Polypodium vulgare L.", "Pteris vittata L.", "Pteris cretica L.",
     "Polypodium rotundatum Willd.", "Equisetum arvense L."
   ),
-  family = c("Polypodiaceae", "Pteridaceae", "Pteridaceae", NA, "Equisetaceae")
+  family = c(
+    "Polypodiaceae", "Pteridaceae", "Pteridaceae", NA, "Equisetaceae"
+  )
 )
 ts_subset_ref(x, "Pteridaceae")
 ts_subset_ref(x, c("Polypodiaceae", "Equisetaceae"))

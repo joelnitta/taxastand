@@ -29,11 +29,14 @@
   "([A-Z][a-z\u00eb-]+) ?", # 2 genus name
   "([\u00d7xX]? |[\u00d7X]?) ?", # 3 species hybrid sign
   "([a-z\ufb02-][a-z\ufb02-]+)? ?", # 4 specific epithet
-  "(var\\.|f\\.|forma|subf\\.|taxon|fo\\.|subsp\\.|prol\\.|nothovar\\.|lus\\.|\\[infrasp\\.unranked\\])? ?", # 5 rank
+  # 5 rank
+  "(var\\.|f\\.|forma|subf\\.|taxon|fo\\.|subsp\\.|prol\\.|nothovar\\.|",
+  "lus\\.|\\[infrasp\\.unranked\\])? ?",
   "([a-z\ufb02_-]+)? ?", # 6 infraspecific epithet
   # 7 author: ']' placed first (literal), '-' last (literal); includes
   # [:alnum:] plus the combining diacritics used in author names
-  "([] [().&;,\u2019'[:alnum:]\u0301 \u0300 \u0308 \u0306 \u030c \u0327 \u0326 \u0303 \u030a \u0302 -]+)?$"
+  "([] [().&;,\u2019'[:alnum:]\u0301 \u0300 \u0308 \u0306 \u030c ",
+  "\u0327 \u0326 \u0303 \u030a \u0302 -]+)?$"
 )
 
 # Per-field validation regexes (parsenames lines 94-99)
@@ -63,6 +66,29 @@
   ")(?=\\s|$)"
 )
 
+# The letters with diacritics that tt_depunct() flattens, and what they become
+# (single letters are replaced as fixed strings, groups as character classes)
+.tt_diacritics <- local({
+  from <- c(
+    "[\u00f9\u00fa\u00fb\u00fc]", "\u00d1",
+    "[\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5]",
+    "[\u00ec\u00ed\u00ee\u00ef]",
+    "[\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8]",
+    "\u00c7", "\u00e6", "\u00d0", "[\u00fd\u00ff]",
+    "[\u00c8\u00c9\u00ca\u00cb]", "\u00f1",
+    "[\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5]",
+    "[\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8]", "\u00df",
+    "[\u00d9\u00da\u00db\u00dc]", "[\u00de\u00fe]", "[\u00e7\u010d]",
+    "[\u00cc\u00cd\u00ce\u00cf]", "\u00f0",
+    "[\u00e8\u00e9\u00ea\u00eb]", "\u00c6", "\u00dd"
+  )
+  to <- c(
+    "u", "N", "A", "i", "O", "C", "ae", "D", "y", "E", "n", "a", "o", "b", "U",
+    "p", "c", "I", "d", "e", "Ae", "Y"
+  )
+  list(from = from, to = to, fixed = !startsWith(from, "["))
+})
+
 #' Remove punctuation and flatten diacritics
 #'
 #' Used by name parsing and matching. Vectorised over `x`.
@@ -78,28 +104,12 @@ tt_depunct <- function(x) {
   nonascii <- which(nchar(x, type = "bytes") != nchar(x, type = "chars"))
   if (length(nonascii)) {
     y <- x[nonascii]
-    y <- gsub("[\u00f9\u00fa\u00fb\u00fc]", "u", y) # \u00f9\u00fa\u00fb\u00fc
-    y <- gsub("[\u00d1]", "N", y) # \u00d1
-    y <- gsub("[\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5]", "A", y) # \u00c0\u00c1\u00c2\u00c3\u00c4\u00c5
-    y <- gsub("[\u00ec\u00ed\u00ee\u00ef]", "i", y) # \u00ec\u00ed\u00ee\u00ef
-    y <- gsub("[\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8]", "O", y) # \u00d2\u00d3\u00d4\u00d5\u00d6\u00d8
-    y <- gsub("[\u00c7]", "C", y) # \u00c7
-    y <- gsub("[\u00e6]", "ae", y) # \u00e6
-    y <- gsub("[\u00d0]", "D", y) # \u00d0
-    y <- gsub("[\u00fd\u00ff]", "y", y) # \u00fd\u00ff
-    y <- gsub("[\u00c8\u00c9\u00ca\u00cb]", "E", y) # \u00c8\u00c9\u00ca\u00cb
-    y <- gsub("[\u00f1]", "n", y) # \u00f1
-    y <- gsub("[\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5]", "a", y) # \u00e0\u00e1\u00e2\u00e3\u00e4\u00e5
-    y <- gsub("[\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8]", "o", y) # \u00f2\u00f3\u00f4\u00f5\u00f6\u00f8
-    y <- gsub("[\u00df]", "b", y) # \u00df
-    y <- gsub("[\u00d9\u00da\u00db\u00dc]", "U", y) # \u00d9\u00da\u00db\u00dc
-    y <- gsub("[\u00de\u00fe]", "p", y) # \u00de\u00fe
-    y <- gsub("[\u00e7\u010d]", "c", y) # \u00e7\u010d
-    y <- gsub("[\u00cc\u00cd\u00ce\u00cf]", "I", y) # \u00cc\u00cd\u00ce\u00cf
-    y <- gsub("[\u00f0]", "d", y) # \u00f0
-    y <- gsub("[\u00e8\u00e9\u00ea\u00eb]", "e", y) # \u00e8\u00e9\u00ea\u00eb
-    y <- gsub("[\u00c6]", "Ae", y) # \u00c6
-    y <- gsub("[\u00dd]", "Y", y) # \u00dd
+    for (i in seq_along(.tt_diacritics$from)) {
+      y <- gsub(
+        .tt_diacritics$from[i], .tt_diacritics$to[i], y,
+        fixed = .tt_diacritics$fixed[i]
+      )
+    }
     x[nonascii] <- y
   }
 
@@ -174,8 +184,16 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   parsed <- gsub("\\|[xX]\\|", "|\u00d7|", parsed, perl = TRUE)
   parsed <- gsub("^[xX]\\|", "\u00d7|", parsed, perl = TRUE)
 
-  # Validation (test = 1; lines 87-101). A name fails if it produced no pipe,
-  # any field regex fails, or the depuncted re-made string differs from input.
+  fail <- .tt_parse_failed(parsed, name)
+
+  # On failure the original returns "" -> output line is just `id|`
+  out_parsed <- ifelse(fail, "", parsed)
+  paste0(id, "|", out_parsed)
+}
+
+# Validation (test = 1; lines 87-101). A name fails if it produced no pipe,
+# any field regex fails, or the depuncted re-made string differs from input.
+.tt_parse_failed <- function(parsed, name) {
   matched <- grepl("|", parsed, fixed = TRUE)
 
   remade <- gsub("|", " ", parsed, fixed = TRUE)
@@ -183,28 +201,16 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   remade <- gsub("(^ | $)", "", remade, perl = TRUE)
 
   fields <- .tt_split_fields(parsed, 6L)
-  p1 <- fields[[1]]
-  p2 <- fields[[2]]
-  p3 <- fields[[3]]
-  p4 <- fields[[4]]
-  p5 <- fields[[5]]
-  p6 <- fields[[6]]
-
   depunct_eq <-
     gsub("\u00d7", "x", tt_depunct(remade), fixed = TRUE) ==
       gsub("\u00d7", "x", tt_depunct(name), fixed = TRUE)
 
-  fail <-
-    !matched |
-      !grepl(.tt_v1, p1, perl = TRUE) |
-      !grepl(.tt_v2, p2, perl = TRUE) |
-      !grepl(.tt_v3, p3, perl = TRUE) |
-      !grepl(.tt_v4, p4, perl = TRUE) |
-      !grepl(.tt_v5, p5, perl = TRUE) |
-      !grepl(.tt_v6, p6, perl = TRUE) |
-      !depunct_eq
-
-  # On failure the original returns "" -> output line is just `id|`
-  out_parsed <- ifelse(fail, "", parsed)
-  paste0(id, "|", out_parsed)
+  !matched |
+    !grepl(.tt_v1, fields[[1]], perl = TRUE) |
+    !grepl(.tt_v2, fields[[2]], perl = TRUE) |
+    !grepl(.tt_v3, fields[[3]], perl = TRUE) |
+    !grepl(.tt_v4, fields[[4]], perl = TRUE) |
+    !grepl(.tt_v5, fields[[5]], perl = TRUE) |
+    !grepl(.tt_v6, fields[[6]], perl = TRUE) |
+    !depunct_eq
 }

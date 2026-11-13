@@ -19,7 +19,8 @@ names or mapped to them with \code{col_map}. May also have
 \code{scientificNameAuthorship} and \code{taxonRank}.}
 
 \item{col_map}{Named character vector to rename columns of \code{ref}. Each name
-is the Darwin Core name and each value is the column of \code{ref} that holds it.
+is the Darwin Core name and each value is the column of \code{ref} that holds
+it.
 For example,
 \code{c(taxonID = "taxon_id", scientificName = "canonical_name")}.
 Columns that already have Darwin Core names need not be listed. Default
@@ -38,8 +39,9 @@ It is stored in the \code{ts_source} attribute of the result.}
 \value{
 A dataframe with columns \code{taxonID}, \code{acceptedNameUsageID},
 \code{taxonomicStatus} and \code{scientificName} (and \code{taxonRank}, if \code{ref} had it),
-plus any columns for the hierarchy of the names that \code{ref} had: higher ranks
-such as \code{family} and \code{parentNameUsageID}. Other columns are dropped. It
+plus any columns for the hierarchy of the names that \code{ref} had: higher
+ranks such as \code{family} and \code{parentNameUsageID}. Other columns are dropped.
+It
 has the \code{ts_source} attribute if \code{source} was given.
 }
 \description{
