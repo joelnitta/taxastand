@@ -2,60 +2,62 @@ zip_fixture <- test_path("fixtures", "mini-dwca.zip")
 
 test_that("a Darwin Core Archive is read and formatted", {
   res <- ts_load_ref(file = zip_fixture, version = "test")
-  expect_equal(res$taxonID, c("3", "4", "7"))
-  expect_equal(res$scientificName[1:2], c(
+  expect_identical(res$taxonID, c("3", "4", "7"))
+  expect_identical(res$scientificName[1:2], c(
     "Polypodium vulgare L.", "Polypodium rotundatum Willd."
   ))
-  expect_equal(unique(res$taxonomicStatus), c("accepted", "synonym"))
+  expect_identical(unique(res$taxonomicStatus), c("accepted", "synonym"))
   src <- attr(res, "ts_source")
-  expect_equal(src$file, zip_fixture)
-  expect_equal(src$version, "test")
-  expect_true(!is.null(src$retrieved))
+  expect_identical(src$file, zip_fixture)
+  expect_identical(src$version, "test")
+  expect_false(is.null(src$retrieved))
 })
 
 test_that("taxon subsets before formatting", {
   res <- ts_load_ref(
     file = zip_fixture, taxon = "Polypodiaceae"
   )
-  expect_equal(res$taxonID, c("3", "4"))
+  expect_identical(res$taxonID, c("3", "4"))
 })
 
 test_that("csv and tsv files are read", {
   x <- data.frame(
     taxonID = c("1", "2"), acceptedNameUsageID = c("1", "1"),
     taxonomicStatus = c("accepted", "synonym"),
-    scientificName = c("Foo bar L.", "Foo baz Willd.")
+    scientificName = c("Foo bar L.", "Foo baz Willd."),
+    stringsAsFactors = FALSE
   )
   f_csv <- withr::local_tempfile(fileext = ".csv")
   write.csv(x, f_csv, row.names = FALSE)
   f_tsv <- withr::local_tempfile(fileext = ".tsv")
   write.table(x, f_tsv, sep = "\t", row.names = FALSE, quote = FALSE)
-  expect_equal(
+  expect_identical(
     ts_load_ref(file = f_csv)$scientificName, x$scientificName
   )
-  expect_equal(
+  expect_identical(
     ts_load_ref(file = f_tsv)$scientificName, x$scientificName
   )
 })
 
 test_that("downloads are cached and can be refreshed (no internet used)", {
-  calls <- 0
+  seen <- new.env()
+  seen$calls <- 0
   local_mocked_bindings(.ts_fetch = function(url, dest) {
-    calls <<- calls + 1
+    seen$calls <- seen$calls + 1
     file.copy(zip_fixture, dest, overwrite = TRUE)
     invisible(dest)
   })
   cache <- withr::local_tempdir()
   url <- "https://example.org/data/ref.zip"
   res <- ts_load_ref(url = url, cache_dir = cache)
-  expect_equal(nrow(res), 3)
-  expect_equal(attr(res, "ts_source")$url, url)
-  expect_equal(length(list.files(cache)), 1)
-  expect_equal(calls, 1)
+  expect_identical(nrow(res), 3L)
+  expect_identical(attr(res, "ts_source")$url, url)
+  expect_length(list.files(cache), 1)
+  expect_identical(seen$calls, 1)
   ts_load_ref(url = url, cache_dir = cache)
-  expect_equal(calls, 1)
+  expect_identical(seen$calls, 1)
   ts_load_ref(url = url, cache_dir = cache, refresh = TRUE)
-  expect_equal(calls, 2)
+  expect_identical(seen$calls, 2)
   # no partial files left
   expect_false(any(grepl("\\.part$", list.files(cache))))
 })
@@ -67,7 +69,7 @@ test_that("the default cache is in tempdir() and the option is used", {
   ))
   d <- withr::local_tempdir()
   withr::local_options(taxastand.cache_dir = file.path(d, "opt"))
-  expect_equal(.ts_cache_dir(), file.path(d, "opt"))
+  expect_identical(.ts_cache_dir(), file.path(d, "opt"))
   expect_true(dir.exists(file.path(d, "opt")))
 })
 
@@ -94,14 +96,14 @@ test_that("input checks work", {
 test_that("the result works with ts_resolve_names()", {
   ref <- ts_load_ref(file = zip_fixture)
   res <- ts_resolve_names("Polypodium rotundatum Willd.", ref)
-  expect_equal(res$resolved_name, "Polypodium vulgare L.")
+  expect_identical(res$resolved_name, "Polypodium vulgare L.")
 })
 
 test_that("zip files are recognized by content, not by name", {
   f <- withr::local_tempfile(fileext = ".dat")
   file.copy(zip_fixture, f)
   expect_true(.ts_is_zip(f))
-  expect_equal(nrow(ts_load_ref(file = f)), 3)
+  expect_identical(nrow(ts_load_ref(file = f)), 3L)
   txt <- withr::local_tempfile(fileext = ".zip")
   writeLines("a,b\n1,2", txt)
   expect_false(.ts_is_zip(txt))
@@ -123,7 +125,8 @@ zenodo_json <- function(id, version) {
   )
 }
 
-all_sources <- c("wfo", "ppg", "itis", "col", "gbif", "ncbi", "ott", "fb", "slb")
+all_sources <- c("wfo", "ppg", "itis", "col", "gbif", "ncbi", "ott", "fb",
+  "slb")
 
 taxadb_manifest <- function() {
   providers <- c("itis", "col", "gbif", "ncbi", "ott", "fb", "slb")
@@ -147,11 +150,14 @@ fake_text <- function(link) {
       zenodo_json(110, "2023-06-deprecated"), ", ",
       zenodo_json(100, "1.4.202207"), "]}}"
     )
-  } else if (grepl("releases/latest", link)) {
+  } else if (grepl("releases/latest", link, fixed = TRUE)) {
     '{"tag_name": "v2.1.0", "name": "a"}'
   } else if (grepl("api.github.com", link)) {
-    '[{"tag_name": "v2.1.0"}, {"tag_name": "v2.0.0"}, {"tag_name": "v0.0.0.9009"}]'
-  } else if (grepl("list-type=2", link)) {
+    paste0(
+      '[{"tag_name": "v2.1.0"}, {"tag_name": "v2.0.0"}, ',
+      '{"tag_name": "v0.0.0.9009"}]'
+    )
+  } else if (grepl("list-type=2", link, fixed = TRUE)) {
     paste0(
       "<ListBucketResult><CommonPrefixes><Prefix>taxadb/2026/</Prefix>",
       "</CommonPrefixes><CommonPrefixes><Prefix>taxadb/22.12/</Prefix>",
@@ -173,7 +179,7 @@ fake_text <- function(link) {
 test_that("wfo: latest and specific versions are resolved and recorded", {
   local_mocked_bindings(
     .ts_fetch_text = function(link) {
-      if (grepl("versions/latest", link)) {
+      if (grepl("versions/latest", link, fixed = TRUE)) {
         zenodo_json(222, "2026-06")
       } else {
         expect_match(link, "records/222/versions")
@@ -182,61 +188,62 @@ test_that("wfo: latest and specific versions are resolved and recorded", {
       }
     }
   )
-  expect_equal(
+  expect_identical(
     .ts_resolve_wfo(NULL)$url,
     "https://zenodo.org/records/222/files/_DwC_backbone_R.zip?download=1"
   )
-  expect_equal(.ts_resolve_wfo("2025-12")$version, "2025-12")
+  expect_identical(.ts_resolve_wfo("2025-12")$version, "2025-12")
   expect_match(.ts_resolve_wfo("2025-12")$url, "records/111/")
   expect_error(.ts_resolve_wfo("1999-01"), "not found")
 })
 
 test_that("wfo: tab-separated file with quotes is read and formatted", {
   withr::local_options(taxastand.verbosity = "inform")
-  urls <- character()
+  seen <- new.env()
+  seen$urls <- character()
   local_mocked_bindings(
     .ts_fetch_text = function(link) zenodo_json(222, "2026-06"),
     .ts_fetch = function(url, dest) {
-      urls <<- c(urls, url)
+      seen$urls <- c(seen$urls, url)
       file.copy(test_path("fixtures", "mini-wfo.zip"), dest, overwrite = TRUE)
       invisible(dest)
     }
   )
   cache <- withr::local_tempdir()
-  expect_message(
-    res <- ts_load_ref(source = "wfo", cache_dir = cache),
-    "license CC0"
-  )
-  expect_match(urls, "records/222/")
+  expect_message(ts_load_ref(source = "wfo", cache_dir = cache), "license CC0")
+  res <- suppressMessages(ts_load_ref(source = "wfo", cache_dir = cache))
+  expect_match(seen$urls, "records/222/")
   # genus and family rows are dropped; the stray quote in the remarks did not
   # stop the reading; wrapping quotes are removed; the author is added
-  expect_equal(res$taxonID, c("wfo-3", "wfo-4", "wfo-5", "wfo-6"))
-  expect_equal(res$scientificName[1:2], c(
+  expect_identical(res$taxonID, c("wfo-3", "wfo-4", "wfo-5", "wfo-6"))
+  expect_identical(res$scientificName[1:2], c(
     "Polypodium vulgare L.", "Polypodium rotundatum Willd."
   ))
   # only the columns that are needed are read
   expect_false("taxonRemarks" %in% colnames(res))
   expect_true("family" %in% colnames(res))
   # unchecked names are kept
-  expect_equal(res$taxonomicStatus[4], "unchecked")
+  expect_identical(res$taxonomicStatus[4], "unchecked")
   src <- attr(res, "ts_source")
-  expect_equal(src$source, "wfo")
-  expect_equal(src$version, "2026-06")
-  expect_equal(src$license, "CC0 1.0")
+  expect_identical(src$source, "wfo")
+  expect_identical(src$version, "2026-06")
+  expect_identical(src$license, "CC0 1.0")
   expect_match(src$citation, "zenodo.7460141")
 
   sub <- ts_load_ref(
     source = "wfo", cache_dir = cache, taxon = "Polypodiaceae"
   )
-  expect_equal(sub$taxonID, c("wfo-3", "wfo-4"))
+  expect_identical(sub$taxonID, c("wfo-3", "wfo-4"))
 })
 
 test_that("ppg: the latest release is found and the csv is read", {
-  fetched <- character()
+  seen <- new.env()
   local_mocked_bindings(
-    .ts_fetch_text = function(link) '{"url": "x", "tag_name": "v2.1.0", "name": "v"}',
+    .ts_fetch_text = function(link) {
+      '{"url": "x", "tag_name": "v2.1.0", "name": "v"}'
+    },
     .ts_fetch = function(url, dest) {
-      fetched <<- url
+      seen$fetched <- url
       file.copy(test_path("fixtures", "mini-ppg.csv"), dest, overwrite = TRUE)
       invisible(dest)
     }
@@ -244,19 +251,19 @@ test_that("ppg: the latest release is found and the csv is read", {
   res <- ts_load_ref(
     source = "ppg", cache_dir = withr::local_tempdir()
   )
-  expect_equal(
-    fetched,
+  expect_identical(
+    seen$fetched,
     "https://raw.githubusercontent.com/pteridogroup/ppg/v2.1.0/data/ppg.csv"
   )
-  expect_equal(res$taxonID, c("wfo-3", "wfo-4", "wfo-5"))
-  expect_equal(attr(res, "ts_source")$version, "v2.1.0")
+  expect_identical(res$taxonID, c("wfo-3", "wfo-4", "wfo-5"))
+  expect_identical(attr(res, "ts_source")$version, "v2.1.0")
   # a table with only parentNameUsageID is subset by walking down the parents
   sub <- ts_load_ref(
     source = "ppg", version = "v2.0.0", cache_dir = withr::local_tempdir(),
     taxon = "Polypodiaceae"
   )
-  expect_equal(sub$taxonID, c("wfo-3", "wfo-4"))
-  expect_equal(attr(sub, "ts_source")$version, "v2.0.0")
+  expect_identical(sub$taxonID, c("wfo-3", "wfo-4"))
+  expect_identical(attr(sub, "ts_source")$version, "v2.0.0")
 })
 
 test_that("failure to reach a source gives an informative error", {
@@ -268,27 +275,29 @@ test_that("failure to reach a source gives an informative error", {
 
 test_that("ts_show_ref_sources() lists the sources", {
   x <- ts_show_ref_sources()
-  expect_equal(x$source, all_sources)
-  expect_true(all(nzchar(x$license)) && all(nzchar(x$citation)))
+  expect_identical(x$source, all_sources)
+  expect_true(all(nzchar(x$license)))
+  expect_true(all(nzchar(x$citation)))
 })
 
 test_that("versions can be listed (no internet used)", {
   local_mocked_bindings(.ts_fetch_text = fake_text)
-  expect_equal(.ts_versions_wfo(), c("2026-06", "2025-12"))
-  expect_equal(.ts_versions_ppg(), c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
+  expect_identical(.ts_versions_wfo(), c("2026-06", "2025-12"))
+  expect_identical(.ts_versions_ppg(), c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
   # taxadb snapshots split into many files (22.12) are not offered
-  expect_equal(.ts_versions_taxadb("itis"), "2026")
+  expect_identical(.ts_versions_taxadb("itis"), "2026")
   x <- ts_show_ref_sources(versions = TRUE)
-  expect_equal(x$source, all_sources)
-  expect_equal(x$versions$wfo, c("2026-06", "2025-12"))
-  expect_equal(x$versions$ppg, c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
-  expect_equal(x$versions$gbif, "2026")
+  expect_identical(x$source, all_sources)
+  expect_identical(x$versions$wfo, c("2026-06", "2025-12"))
+  expect_identical(x$versions$ppg, c("v2.1.0", "v2.0.0", "v0.0.0.9009"))
+  expect_identical(x$versions$gbif, "2026")
   out <- capture.output(print(x))
   expect_true(any(grepl("^wfo: World Flora Online", out)))
   expect_true(any(grepl("Versions: 2026-06, 2025-12$", out)))
   expect_false("versions" %in% colnames(ts_show_ref_sources()))
   # an unknown version lists the versions that can be used
-  expect_error(.ts_resolve_wfo("2020-01"), "Versions you can use: 2026-06, 2025-12")
+  expect_error(.ts_resolve_wfo("2020-01"),
+    "Versions you can use: 2026-06, 2025-12")
   expect_error(
     .ts_resolve_taxadb("itis", "22.12"), "Versions you can use: 2026"
   )
@@ -299,9 +308,11 @@ test_that("a source that can't be reached gives NA versions and a message", {
   local_mocked_bindings(
     .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
   )
-  expect_message(x <- ts_show_ref_sources(versions = TRUE), "no internet")
+  expect_message(ts_show_ref_sources(versions = TRUE), "no internet")
+  x <- suppressMessages(ts_show_ref_sources(versions = TRUE))
   expect_true(all(is.na(unlist(x$versions))))
-  expect_true(any(grepl("Versions: not available", capture.output(print(x)))))
+  expect_true(any(grepl("Versions: not available", capture.output(print(x)),
+    fixed = TRUE)))
 })
 
 test_that("the same failure for several sources is reported once", {
@@ -309,14 +320,7 @@ test_that("the same failure for several sources is reported once", {
   local_mocked_bindings(
     .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
   )
-  msgs <- character(0)
-  withCallingHandlers(
-    ts_show_ref_sources(versions = TRUE),
-    message = function(m) {
-      msgs <<- c(msgs, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
-  )
+  msgs <- testthat::capture_messages(ts_show_ref_sources(versions = TRUE))
   expect_length(msgs, 1)
   expect_match(msgs, "World Flora Online Plant List, .*Integrated Taxonomic")
   expect_match(msgs, "no internet")
@@ -341,7 +345,8 @@ test_that("long version lists are shortened when printed", {
   x$versions$wfo <- paste0("2020-0", 1:9)
   out <- capture.output(print(x))
   expect_true(any(grepl(
-    "Versions: 2020-01, 2020-02, 2020-03, 2020-04, 2020-05, \\.\\.\\. \\(9 in total\\)", out
+    "Versions: 2020-01, 2020-02, 2020-03, 2020-04, 2020-05, ... (9 in total)",
+    out, fixed = TRUE
   )))
   # subsets without all the columns still print
   expect_no_error(capture.output(print(x[, c("source", "versions")])))
@@ -350,10 +355,10 @@ test_that("long version lists are shortened when printed", {
 test_that("tidy output has one row per version", {
   local_mocked_bindings(.ts_fetch_text = fake_text)
   x <- ts_show_ref_sources(versions = TRUE, tidy = TRUE)
-  expect_equal(
+  expect_identical(
     x$source, c("wfo", "wfo", "ppg", "ppg", "ppg", all_sources[3:9])
   )
-  expect_equal(
+  expect_identical(
     x$version,
     c("2026-06", "2025-12", "v2.1.0", "v2.0.0", "v0.0.0.9009", rep("2026", 7))
   )
@@ -369,9 +374,10 @@ test_that("tidy output keeps a source that could not be reached", {
     .ts_fetch_text = function(link) stop("no internet", call. = FALSE)
   )
   expect_message(
-    x <- ts_show_ref_sources(versions = TRUE, tidy = TRUE), "no internet"
+    ts_show_ref_sources(versions = TRUE, tidy = TRUE), "no internet"
   )
-  expect_equal(x$source, all_sources)
+  x <- suppressMessages(ts_show_ref_sources(versions = TRUE, tidy = TRUE))
+  expect_identical(x$source, all_sources)
   expect_true(all(is.na(x$version)))
 })
 
@@ -383,7 +389,7 @@ test_that("tidy = TRUE does not look up versions unless versions = TRUE", {
     ts_show_ref_sources(tidy = TRUE),
     ts_show_ref_sources(versions = FALSE, tidy = TRUE)
   )) {
-    expect_equal(x$source, all_sources)
+    expect_identical(x$source, all_sources)
     expect_false(any(c("version", "versions") %in% colnames(x)))
     expect_false(inherits(x, "ts_ref_sources"))
   }
@@ -392,44 +398,48 @@ test_that("tidy = TRUE does not look up versions unless versions = TRUE", {
 test_that("taxadb providers: a Parquet file is downloaded and formatted", {
   withr::local_options(taxastand.verbosity = "inform")
   skip_if_not_installed("nanoparquet")
-  fetched <- character()
+  seen <- new.env()
+  seen$fetched <- character()
   local_mocked_bindings(
     .ts_fetch_text = fake_text,
     .ts_fetch = function(url, dest) {
-      fetched <<- c(fetched, url)
-      file.copy(test_path("fixtures", "mini-taxadb.parquet"), dest, overwrite = TRUE)
+      seen$fetched <- c(seen$fetched, url)
+      file.copy(test_path("fixtures", "mini-taxadb.parquet"), dest,
+        overwrite = TRUE)
       invisible(dest)
     }
   )
   cache <- withr::local_tempdir()
   expect_message(
-    res <- ts_load_ref(source = "itis", cache_dir = cache), "license CC0"
+    ts_load_ref(source = "itis", cache_dir = cache), "license CC0"
   )
-  expect_equal(
-    fetched, "https://data.source.coop/cboettig/taxadb/2026/dwc_itis_part_0.parquet"
+  res <- suppressMessages(ts_load_ref(source = "itis", cache_dir = cache))
+  expect_identical(
+    seen$fetched,
+      "https://data.source.coop/cboettig/taxadb/2026/dwc_itis_part_0.parquet"
   )
   # the genus is dropped, the author is added, and the synonym with no ID gets
   # one so that it can be resolved
-  expect_equal(nrow(res), 4)
-  expect_equal(res$scientificName[1:3], c(
+  expect_identical(nrow(res), 4L)
+  expect_identical(res$scientificName[1:3], c(
     "Polypodium vulgare L.", "Polypodium rotundatum Willd.",
     "Polypodium vulgare var. alpinum Foo"
   ))
   expect_false(anyNA(res$taxonID))
   expect_false("vernacularName" %in% colnames(res))
   src <- attr(res, "ts_source")
-  expect_equal(src$source, "itis")
-  expect_equal(src$version, "2026")
-  expect_equal(src$upstream_version, "2026-07-28")
+  expect_identical(src$source, "itis")
+  expect_identical(src$version, "2026")
+  expect_identical(src$upstream_version, "2026-07-28")
   expect_match(src$citation, "10.1111/2041-210X.13440")
-  expect_equal(
+  expect_identical(
     ts_resolve_names("Polypodium vulgare var. alpinum Foo", res)$resolved_name,
     "Polypodium vulgare L."
   )
   sub <- ts_load_ref(
     source = "itis", cache_dir = cache, taxon = "Pteridaceae"
   )
-  expect_equal(sub$scientificName, "Pteris vittata L.")
+  expect_identical(sub$scientificName, "Pteris vittata L.")
 })
 
 test_that("a Parquet file can be read from a path", {
@@ -437,7 +447,7 @@ test_that("a Parquet file can be read from a path", {
   res <- ts_load_ref(
     file = test_path("fixtures", "mini-taxadb.parquet")
   )
-  expect_equal(nrow(res), 4)
+  expect_identical(nrow(res), 4L)
 })
 
 test_that("reading Parquet without a reader gives an install hint", {
@@ -457,18 +467,15 @@ test_that("duckdb and nanoparquet give the same rows", {
   only <- function(readers) {
     function(pkg) pkg %in% readers
   }
-  for (taxon in list("Pteridaceae", c("Pteridaceae", "Polypodiaceae"), "Nope")) {
+  for (taxon in list("Pteridaceae", c("Pteridaceae", "Polypodiaceae"),
+    "Nope")) {
     for (rank in list(NULL, "family")) {
-      with_np <- NULL
-      with_duck <- NULL
-      local({
-        local_mocked_bindings(.ts_have_package = only("nanoparquet"))
-        with_np <<- .ts_read_parquet(f, keep, taxon, rank)
-      })
-      local({
-        local_mocked_bindings(.ts_have_package = only(c("duckdb", "DBI")))
-        with_duck <<- .ts_read_parquet(f, keep, taxon, rank)
-      })
+      read_with <- function(readers) {
+        local_mocked_bindings(.ts_have_package = only(readers))
+        .ts_read_parquet(f, keep, taxon, rank)
+      }
+      with_np <- read_with("nanoparquet")
+      with_duck <- read_with(c("duckdb", "DBI"))
       # duckdb reads fewer rows, but subsetting gives the same result
       expect_lte(nrow(with_duck), nrow(with_np))
       if (!identical(taxon, "Nope")) {
@@ -477,7 +484,7 @@ test_that("duckdb and nanoparquet give the same rows", {
         a <- a[order(a$taxonID), ]
         b <- b[order(b$taxonID), ]
         rownames(a) <- rownames(b) <- NULL
-        expect_equal(a, b)
+        expect_identical(a, b)
       }
     }
   }
@@ -485,14 +492,14 @@ test_that("duckdb and nanoparquet give the same rows", {
   # names: the synonyms have no family
   local_mocked_bindings(.ts_have_package = only(c("duckdb", "DBI")))
   x <- .ts_read_parquet(f, keep, "Pteridaceae", NULL)
-  expect_equal(sort(x$scientificName), c("Pteris", "Pteris vittata"))
+  expect_identical(sort(x$scientificName), c("Pteris", "Pteris vittata"))
   x <- .ts_read_parquet(f, keep, "Polypodiaceae", NULL)
-  expect_equal(nrow(x), 3)
+  expect_identical(nrow(x), 3L)
   # all columns of keep that the file has are read, and no others
   expect_false("vernacularName" %in% colnames(x))
   # a rank that is not a column cannot be filtered with SQL: everything is read
-  expect_equal(nrow(.ts_read_parquet(f, keep, "Pteris", "genus")), 2)
-  expect_equal(nrow(.ts_read_parquet(f, keep, "Pteris", "species")), 5)
+  expect_identical(nrow(.ts_read_parquet(f, keep, "Pteris", "genus")), 2L)
+  expect_identical(nrow(.ts_read_parquet(f, keep, "Pteris", "species")), 5L)
 })
 
 test_that("duckdb alone can read a Parquet file", {
@@ -500,13 +507,13 @@ test_that("duckdb alone can read a Parquet file", {
   skip_if_not_installed("DBI")
   local_mocked_bindings(.ts_have_package = function(pkg) pkg != "nanoparquet")
   f <- test_path("fixtures", "mini-taxadb.parquet")
-  expect_equal(nrow(ts_load_ref(file = f)), 4)
-  expect_equal(
-    nrow(ts_load_ref(file = f, taxon = "Pteridaceae")), 1
+  expect_identical(nrow(ts_load_ref(file = f)), 4L)
+  expect_identical(
+    nrow(ts_load_ref(file = f, taxon = "Pteridaceae")), 1L
   )
   # a rank that is not a column: read everything, subset in R
-  expect_equal(
-    nrow(ts_load_ref(file = f, taxon = "Pteris", rank = "genus")), 1
+  expect_identical(
+    nrow(ts_load_ref(file = f, taxon = "Pteris", rank = "genus")), 1L
   )
 })
 
@@ -531,11 +538,12 @@ test_that("unknown taxadb version gives the versions available", {
   )
 })
 
-test_that("messages are short, the citation is given once, and the option silences them", {
+test_that("messages are short, cite once, and can be silenced", {
   withr::local_options(taxastand.verbosity = "inform")
-  .ts_state <- taxastand:::.ts_state
   old <- .ts_state$cited
-  on.exit(.ts_state$cited <- old, add = TRUE)
+  withr::defer({
+    .ts_state$cited <- old
+  })
   .ts_state$cited <- NULL
   local_mocked_bindings(
     .ts_fetch = function(url, dest) {
@@ -547,12 +555,14 @@ test_that("messages are short, the citation is given once, and the option silenc
     .package = "taxastand"
   )
   cache <- withr::local_tempdir()
-  msgs <- testthat::capture_messages(ts_load_ref(source = "ppg", cache_dir = cache))
+  msgs <- testthat::capture_messages(ts_load_ref(source = "ppg",
+    cache_dir = cache))
   expect_true(any(grepl("^Loaded .* names from", msgs)))
-  expect_true(any(grepl("Please cite", msgs)))
-  expect_false(any(grepl("already downloaded", msgs)))
-  msgs <- testthat::capture_messages(ts_load_ref(source = "ppg", cache_dir = cache))
-  expect_false(any(grepl("Please cite", msgs)))
+  expect_true(any(grepl("Please cite", msgs, fixed = TRUE)))
+  expect_false(any(grepl("already downloaded", msgs, fixed = TRUE)))
+  msgs <- testthat::capture_messages(ts_load_ref(source = "ppg",
+    cache_dir = cache))
+  expect_false(any(grepl("Please cite", msgs, fixed = TRUE)))
   withr::with_options(
     list(taxastand.verbosity = "quiet"),
     expect_no_message(ts_load_ref(source = "ppg", cache_dir = cache))
@@ -571,4 +581,93 @@ test_that("the option silences parser warnings in ts_match_names()", {
       ts_match_names(c("Pteris vittata L.", "!!! ???"), "Pteris vittata L.")
     )
   )
+})
+
+test_that(".ts_fetch copies a file and turns a failure into an error", {
+  src <- withr::local_tempfile(fileext = ".txt")
+  writeLines("hello", src)
+  dest <- withr::local_tempfile()
+  link <- paste0("file://", src)
+  expect_identical(.ts_fetch(link, dest), dest)
+  expect_identical(readLines(dest), "hello")
+  expect_error(.ts_fetch(paste0(link, "-missing"), withr::local_tempfile()))
+})
+
+test_that("downloads with no file name in the URL, or empty, are handled", {
+  cache <- withr::local_tempdir()
+  local_mocked_bindings(.ts_fetch = function(url, dest) {
+    writeLines("x", dest)
+    invisible(dest)
+  })
+  path <- suppressMessages(.ts_cached_download("#fragment", cache, FALSE))
+  expect_match(basename(path), "-download$")
+  local_mocked_bindings(.ts_fetch = function(url, dest) {
+    file.create(dest)
+    invisible(dest)
+  })
+  expect_error(
+    suppressMessages(.ts_cached_download("https://example.org/a.csv", cache, FALSE)),
+    "the file is empty"
+  )
+  expect_length(list.files(cache, pattern = "part$"), 0)
+})
+
+test_that(".ts_fetch_text reads a link and gives an informative error", {
+  src <- withr::local_tempfile(fileext = ".txt")
+  writeLines(c("a", "b"), src)
+  expect_identical(.ts_fetch_text(paste0("file://", src)), "a\nb")
+  expect_error(
+    .ts_fetch_text(paste0("file://", src, "-missing")),
+    "Check your internet connection"
+  )
+})
+
+test_that("a zip file without meta.xml needs exactly one table", {
+  dir <- withr::local_tempdir()
+  writeLines("a,b", file.path(dir, "one.csv"))
+  writeLines("a,b", file.path(dir, "two.csv"))
+  expect_error(
+    .ts_read_dwca(dir, c("one.csv", "two.csv")),
+    "does not hold exactly one table"
+  )
+  expect_identical(colnames(.ts_read_dwca(dir, "one.csv")), c("a", "b"))
+})
+
+test_that("meta.xml without separator or header settings is read", {
+  dir <- withr::local_tempdir()
+  writeLines(
+    c(
+      '<archive><core rowType="taxon">',
+      "<files><location>taxa.csv</location></files>",
+      '<id index="0"/>',
+      '<field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>',
+      "</core></archive>"
+    ),
+    file.path(dir, "meta.xml")
+  )
+  writeLines("1,Pteris vittata L.", file.path(dir, "taxa.csv"))
+  x <- .ts_read_dwca(dir, c("meta.xml", "taxa.csv"))
+  expect_identical(colnames(x), c("taxonID", "scientificName"))
+  expect_identical(x$scientificName, "Pteris vittata L.")
+})
+
+test_that("columns that are not text are read as text from Parquet", {
+  skip_if_not_installed("nanoparquet")
+  f <- withr::local_tempfile(fileext = ".parquet")
+  nanoparquet::write_parquet(
+    data.frame(taxonID = 1:2, scientificName = c("a b", ""), stringsAsFactors = FALSE),
+    f
+  )
+  x <- .ts_read_parquet(f)
+  expect_identical(x$taxonID, c("1", "2"))
+  expect_identical(x$scientificName, c("a b", NA))
+})
+
+test_that("unreadable version information gives informative errors", {
+  expect_error(.ts_zenodo_records("{}"), "Could not read the version")
+  local_mocked_bindings(.ts_fetch_text = function(link) "{}")
+  expect_error(.ts_resolve_ppg(NULL), "Could not find the latest PPG release")
+  expect_error(.ts_versions_ppg(), "Could not find any PPG releases")
+  .ts_state$taxadb_manifests <- NULL
+  expect_error(.ts_taxadb_manifests(refresh = TRUE), "Could not find any taxadb")
 })

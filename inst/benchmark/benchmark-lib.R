@@ -13,7 +13,8 @@
 # ---- reference ----
 # One row per distinct authored name, with columns:
 #   taxonID, canonical, authorship (NA if none), full (canonical + authorship),
-#   taxonRank (lower case), taxonomicStatus, acceptedNameUsageID (NA if accepted)
+#   taxonRank (lower case), taxonomicStatus, acceptedNameUsageID (NA if
+#   accepted)
 load_reference <- function(source = c("ppg", "wfo"), ppg_path = NULL,
                            ppg_version = "v2.0.0", wfo_backbone = "wfo") {
   source <- match.arg(source)
@@ -75,7 +76,8 @@ damage <- function(x, kind, from = 1L) {
   }
   i <- if (n - from > 0L) from - 1L + sample.int(n - from, 1L) else from
   switch(kind,
-    substitution = `substr<-`(x, i, i, if (substr(x, i, i) == "q") "z" else "q"),
+    substitution = `substr<-`(x, i, i, if (substr(x, i,
+      i) == "q") "z" else "q"),
     deletion = paste0(substr(x, 1, i - 1), substr(x, i + 1, n)),
     swap = {
       i <- min(i, n - 1L)
@@ -95,7 +97,8 @@ damage <- function(x, kind, from = 1L) {
 #   exact, no_author_exact     the name as in the reference (without author)
 #   epithet_*, genus_deletion  one letter changed, with the author
 #   two_edits                  two letters changed in the epithet
-#   short_epithet              one deletion in an epithet of five letters or less
+#   short_epithet              one deletion in an epithet of five letters or
+#                              less
 #   author_punctuation         periods removed from the author
 #   author_typo                a letter deleted in the author
 #   homonym, homonym_typo      a name shared by records with different authors,
@@ -161,14 +164,16 @@ make_queries <- function(ref, n = 100, seed = 20261109) {
   # swap var. and subsp.
   swap_rank <- function(x) {
     ifelse(
-      grepl(" var[.] ", x), sub(" var[.] ", " subsp. ", x),
-      sub(" subsp[.] ", " var. ", x)
+      grepl(" var. ", x, fixed = TRUE), sub(" var. ", " subsp. ", x,
+        fixed = TRUE),
+      sub(" subsp. ", " var. ", x, fixed = TRUE)
     )
   }
   # fold one Latin spelling variant (the first that applies) in an epithet
   spelling_variant <- function(x) {
     vapply(x, function(e) {
-      for (pat in list(c("y", "i"), c("ph", "f"), c("th", "t"), c("rh", "r"), c("ae", "e"))) {
+      for (pat in list(c("y", "i"), c("ph", "f"), c("th", "t"), c("rh", "r"),
+        c("ae", "e"))) {
         if (grepl(pat[1], e, fixed = TRUE)) {
           return(sub(pat[1], pat[2], e, fixed = TRUE))
         }
@@ -296,7 +301,11 @@ summarize_scores <- function(scores) {
       unambiguous = mean(s$unambiguous),
       mean_hits = if (any(answered)) mean(s$n_hits[answered]) else NA_real_,
       pick_answered = mean(s$picked),
-      pick_precision = if (any(s$picked)) mean(s$pick_correct[s$picked]) else NA_real_
+      pick_precision = if (any(s$picked)) {
+        mean(s$pick_correct[s$picked])
+      } else {
+        NA_real_
+      }
     )
   }
   out <- do.call(rbind, lapply(split(scores, scores$kind), f))
@@ -330,9 +339,13 @@ make_taxastand <- function(ref, prepared = TRUE) {
     taxonomicStatus = ref$taxonomicStatus, scientificName = ref$full,
     stringsAsFactors = FALSE
   )
-  setup <- system.time(
-    reference <- if (prepared) taxastand::ts_optimize_ref(tax) else tax$scientificName
-  )[["elapsed"]]
+  start <- proc.time()
+  reference <- if (prepared) {
+    taxastand::ts_optimize_ref(tax)
+  } else {
+    tax$scientificName
+  }
+  setup <- (proc.time() - start)[["elapsed"]]
   list(
     setup_s = setup,
     run = function(q) {
@@ -396,11 +409,13 @@ make_utaxonstand <- function(ref) {
         Rank = ifelse(parts$infraspecific, 3, 2), stringsAsFactors = FALSE
       )
       # nameMatch() prints progress bars; discard them
-      utils::capture.output(r <- suppressWarnings(suppressMessages(
-        U.Taxonstand::nameMatch(
-          spList = sp, spSource = db, author = TRUE, matchFirst = FALSE
-        )
-      )))
+      utils::capture.output({
+        r <- suppressWarnings(suppressMessages(
+          U.Taxonstand::nameMatch(
+            spList = sp, spSource = db, author = TRUE, matchFirst = FALSE
+          )
+        ))
+      })
       # one row per matched record; Name_in_database may be empty on no match
       ok <- !is.na(r$ID_in_database) & r$ID_in_database != ""
       idx <- match(
@@ -426,7 +441,8 @@ make_worldflora <- function(ref) {
       taxonID = ref$taxonID, scientificNameID = "",
       scientificName = ref$canonical,
       taxonRank = toupper(ref$taxonRank), parentNameUsageID = "",
-      scientificNameAuthorship = ifelse(is.na(ref$authorship), "", ref$authorship),
+      scientificNameAuthorship = ifelse(is.na(ref$authorship), "",
+        ref$authorship),
       family = "", genus = vapply(parts, `[`, "", 1),
       specificEpithet = vapply(parts, `[`, "", 2),
       infraspecificEpithet = vapply(parts, function(p) {
@@ -451,13 +467,15 @@ make_worldflora <- function(ref) {
         if (!nrow(spec)) {
           return(NULL)
         }
-        utils::capture.output(r <- suppressWarnings(suppressMessages(
-          WorldFlora::WFO.match(
-            spec.data = spec, WFO.data = wfo, Authorship = "Authorship",
-            acceptedNameUsageID.match = FALSE, no.dates = TRUE,
-            verbose = FALSE, counter = 1e9, ...
-          )
-        )))
+        utils::capture.output({
+          r <- suppressWarnings(suppressMessages(
+            WorldFlora::WFO.match(
+              spec.data = spec, WFO.data = wfo, Authorship = "Authorship",
+              acceptedNameUsageID.match = FALSE, no.dates = TRUE,
+              verbose = FALSE, counter = 1e9, ...
+            )
+          ))
+        })
         r <- r[!is.na(r$taxonID) & r$taxonID != "", ]
         # WFO.one() chooses one record per query, preferring the best author
         # match (Auth.dist); it expects the columns that WFO.match() adds only
@@ -465,10 +483,12 @@ make_worldflora <- function(ref) {
         r$New.accepted <- FALSE
         r$Old.status <- ""
         r$Old.ID <- ""
-        utils::capture.output(one <- WorldFlora::WFO.one(
-          r,
-          Auth.dist = "Auth.dist", verbose = FALSE, counter = 1e9
-        ))
+        utils::capture.output({
+          one <- WorldFlora::WFO.one(
+            r,
+            Auth.dist = "Auth.dist", verbose = FALSE, counter = 1e9
+          )
+        })
         data.frame(
           query = r$key, id = r$taxonID,
           pick = paste(r$key, r$taxonID) %in% paste(one$key, one$taxonID),
@@ -506,7 +526,8 @@ make_worldflora <- function(ref) {
 # The queries are shuffled (fixed seed) so that every size is a mix of the
 # kinds of error: the query set is ordered by kind, and exact names are much
 # cheaper to match than damaged ones.
-time_adapter <- function(adapter, queries, sizes = c(1, 10, 100, 1000), reps = 3) {
+time_adapter <- function(adapter, queries, sizes = c(1, 10, 100, 1000),
+  reps = 3) {
   set.seed(20261109)
   queries <- sample(queries)
   adapter$run(queries[seq_len(min(5, length(queries)))])

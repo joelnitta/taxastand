@@ -5,7 +5,8 @@ test_that("Input checks work", {
   )
   partial_names_df <- data.frame(
     id = "1",
-    genus_hybrid_sign = "x"
+    genus_hybrid_sign = "x",
+    stringsAsFactors = FALSE
   )
   expect_error(
     ts_write_names(partial_names_df, tempfile()),

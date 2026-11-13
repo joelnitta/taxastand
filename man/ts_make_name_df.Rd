@@ -18,6 +18,8 @@ Dataframe with two columns: \code{id} and \code{name}
 Make a dataframe with taxonomic names
 }
 \examples{
-taxastand:::ts_make_name_df("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+taxastand:::ts_make_name_df(
+  "Foogenus x barspecies var. foosubsp (L.) F. Bar"
+)
 }
 \keyword{internal}

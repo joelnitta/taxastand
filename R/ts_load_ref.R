@@ -12,16 +12,16 @@
 #' - `source`: the name of a source that taxastand knows how to download, such
 #'   as `"wfo"` (World Flora Online) or `"itis"` (the Integrated Taxonomic
 #'   Information System). See \code{\link{ts_show_ref_sources}()} for the
-#'   list, licenses and how to cite them. The latest version is used unless you give a `version`, and the
-#'   version that was used is recorded in the result.
+#'   list, licenses and how to cite them. The latest version is used unless you
+#'   give a `version`, and the version that was used is recorded in the result.
 #' - `url`: a direct link (HTTPS) to a file, not to a web page about it.
 #' - `file`: the path to a file on your computer.
 #'
 #' A file can be a comma- or tab-separated text file (such as `.csv`, `.tsv` or
 #' `.txt`, also compressed as `.gz`), a zipped Darwin Core Archive (`.zip`), or
-#' a Parquet file (which needs the nanoparquet or the duckdb package; `"itis"`, `"col"`,
-#' `"gbif"`, `"ncbi"`, `"ott"`, `"fb"` and `"slb"` are Parquet files of the
-#' [taxadb](https://docs.ropensci.org/taxadb/) snapshots).
+#' a Parquet file (which needs the nanoparquet or the duckdb package; `"itis"`,
+#' `"col"`, `"gbif"`, `"ncbi"`, `"ott"`, `"fb"` and `"slb"` are Parquet files
+#' of the [taxadb](https://docs.ropensci.org/taxadb/) snapshots).
 #' The type is found from the contents of the file, not its name. For a Darwin
 #' Core Archive, the file with the taxa (the "core") and its columns are found
 #' from the `meta.xml` file in the archive. All columns are read as text.
@@ -44,7 +44,8 @@
 #' there, it is used and not downloaded again, unless `refresh = TRUE`. See
 #' \code{\link{ts_show_ref_cache}()} and \code{\link{ts_clear_ref_cache}()} to
 #' check and free the space. To silence the messages, set
-#' `options(taxastand.verbosity = "quiet")` (see \code{\link{taxastand-package}}).
+#' `options(taxastand.verbosity = "quiet")` (see
+#' \code{\link{taxastand-package}}).
 #' Downloads from named sources can be large (World Flora Online is about
 #' 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 #' tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
@@ -63,8 +64,8 @@
 #'   are fine.
 #' @param file Character; path to a file.
 #' @param version Optional character. For `source`, the version to download,
-#'   such as `"2026-06"` for `"wfo"` (versions from `"2022-12"` on) or `"v2.1.0"`
-#'   for `"ppg"`; the default is the latest version (see
+#'   such as `"2026-06"` for `"wfo"` (versions from `"2022-12"` on) or
+#'   `"v2.1.0"` for `"ppg"`; the default is the latest version (see
 #'   `ts_show_ref_sources(versions = TRUE)` for the versions you can use). For
 #'   `url` and `file`, a label for the version of the data, which is only
 #'   stored in the `ts_source` attribute of the result so the reference can be
@@ -90,84 +91,41 @@
 #'   data.frame(
 #'     taxonID = c("1", "2"), acceptedNameUsageID = c("1", "1"),
 #'     taxonomicStatus = c("accepted", "synonym"),
-#'     scientificName = c("Polypodium vulgare L.", "Polypodium rotundatum Willd.")
+#'     scientificName = c(
+#'       "Polypodium vulgare L.", "Polypodium rotundatum Willd."
+#'     )
 #'   ),
 #'   f,
 #'   row.names = FALSE
 #' )
 #' ts_load_ref(file = f, version = "example")
 #'
-#' \dontrun{
-#' # Download a named source and keep only one family. The file is kept in
-#' # `cache_dir` so it is not downloaded again next time.
-#' ref <- ts_load_ref(
-#'   source = "wfo",
-#'   taxon = "Polypodiaceae",
-#'   cache_dir = "~/taxastand-data"
-#' )
+#' @examplesIf interactive()
+#' # Download a named source (needs internet) and keep only one family. The
+#' # file goes to a temporary folder unless you give `cache_dir`, where it is
+#' # kept so it is not downloaded again next time.
+#' ref <- ts_load_ref(source = "wfo", taxon = "Polypodiaceae")
 #'
-#' # Download a file from a URL
-#' ref <- ts_load_ref(url = "https://example.org/taxonomy.zip")
-#' }
+#' # A direct link (HTTPS) to a file works too:
+#' # ts_load_ref(url = "https://example.org/taxonomy.zip")
 ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
                         cache_dir = NULL, taxon = NULL, rank = NULL,
                         col_map = NULL,
                         drop_ranks = ts_ranks_above_species(),
                         refresh = FALSE) {
-  given <- c(source = !is.null(source), url = !is.null(url), file = !is.null(file))
-  assertthat::assert_that(
-    sum(given) == 1,
-    msg = "Give exactly one of `source`, `url` or `file`"
-  )
-  assertthat::assert_that(is.null(source) || assertthat::is.string(source))
-  assertthat::assert_that(is.null(url) || assertthat::is.string(url))
-  assertthat::assert_that(is.null(file) || assertthat::is.string(file))
-  assertthat::assert_that(is.null(version) || assertthat::is.string(version))
-  assertthat::assert_that(is.null(cache_dir) || assertthat::is.string(cache_dir))
-  assertthat::assert_that(
-    assertthat::is.flag(refresh), assertthat::noNA(refresh)
-  )
+  .ts_check_load_args(source, url, file, version, cache_dir, refresh)
 
   info <- list()
   keep <- NULL
   if (!is.null(source)) {
-    srcs <- .ts_sources()
-    assertthat::assert_that(
-      source %in% names(srcs),
-      msg = paste0(
-        "Unknown `source` '", source, "'. Choose one of: ",
-        paste(names(srcs), collapse = ", "),
-        " (see ts_show_ref_sources()), or use `url` or `file`."
-      )
-    )
-    spec <- srcs[[source]]
-    .ts_state$taxadb_manifests <- NULL # look again for new versions
-    resolved <- spec$resolve(version)
-    version <- resolved$version
-    url <- resolved$url
+    spec <- .ts_load_source(source, version)
+    version <- spec$version
+    url <- spec$url
     keep <- spec$keep
-    info <- c(
-      list(
-        source = source, name = spec$name, license = spec$license,
-        citation = spec$citation
-      ),
-      resolved$extra
-    )
+    info <- spec$info
   }
   if (!is.null(url)) {
-    assertthat::assert_that(
-      grepl("^https://", url),
-      msg = "`url` must be an HTTPS URL (starting with 'https://')"
-    )
-    path <- tryCatch(
-      .ts_cached_download(url, cache_dir, refresh),
-      error = function(e) {
-        hint <- if (!is.null(source)) {
-          "\nTo see the versions you can use, run ts_show_ref_sources(versions = TRUE)."
-        }
-        stop(conditionMessage(e), hint, call. = FALSE)
-      }
-    )
+    path <- .ts_load_download(url, source, cache_dir, refresh)
     info$url <- url
   } else {
     assertthat::assert_that(
@@ -190,19 +148,99 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     raw,
     col_map = col_map, drop_ranks = drop_ranks, source = info
   )
-  from <- if (!is.null(info$name)) info$name else if (!is.null(url)) url else file
+  .ts_load_report(out, info, source, url, file)
+  out
+}
+
+# Validate the arguments of ts_load_ref()
+.ts_check_load_args <- function(source, url, file, version, cache_dir,
+                                refresh) {
+  given <- c(
+    source = !is.null(source), url = !is.null(url),
+    file = !is.null(file)
+  )
+  assertthat::assert_that(
+    sum(given) == 1,
+    msg = "Give exactly one of `source`, `url` or `file`"
+  )
+  assertthat::assert_that(
+    is.null(source) || assertthat::is.string(source),
+    is.null(url) || assertthat::is.string(url),
+    is.null(file) || assertthat::is.string(file),
+    is.null(version) || assertthat::is.string(version),
+    is.null(cache_dir) || assertthat::is.string(cache_dir),
+    assertthat::is.flag(refresh), assertthat::noNA(refresh)
+  )
+}
+
+# Look up a named source: the version and the URL to download, the columns to
+# keep, and the information to record in the result (`info`)
+.ts_load_source <- function(source, version) {
+  srcs <- .ts_sources()
+  assertthat::assert_that(
+    source %in% names(srcs),
+    msg = paste0(
+      "Unknown `source` '", source, "'. Choose one of: ",
+      toString(names(srcs)),
+      " (see ts_show_ref_sources()), or use `url` or `file`."
+    )
+  )
+  spec <- srcs[[source]]
+  .ts_state$taxadb_manifests <- NULL # look again for new versions
+  resolved <- spec$resolve(version)
+  list(
+    version = resolved$version,
+    url = resolved$url,
+    keep = spec$keep,
+    info = c(
+      list(
+        source = source, name = spec$name, license = spec$license,
+        citation = spec$citation
+      ),
+      resolved$extra
+    )
+  )
+}
+
+# Download (or find in the cache) the file at `url`; return its path
+.ts_load_download <- function(url, source, cache_dir, refresh) {
+  assertthat::assert_that(
+    grepl("^https://", url),
+    msg = "`url` must be an HTTPS URL (starting with 'https://')"
+  )
+  tryCatch(
+    .ts_cached_download(url, cache_dir, refresh),
+    error = function(e) {
+      hint <- if (!is.null(source)) {
+        paste0(
+          "\nTo see the versions you can use, run ",
+          "ts_show_ref_sources(versions = TRUE)."
+        )
+      }
+      stop(conditionMessage(e), hint, call. = FALSE)
+    }
+  )
+}
+
+# Say what was loaded; the citation is given once per R session for each source
+.ts_load_report <- function(out, info, source, url, file) {
+  from <- if (!is.null(info$name)) {
+    info$name
+  } else if (!is.null(url)) {
+    url
+  } else {
+    file
+  }
   .ts_inform(
     "Loaded ", nrow(out), " names from ", from,
     if (!is.null(info$version)) paste0(" (version ", info$version, ")"),
     if (!is.null(info$license)) paste0(", license ", info$license), "."
   )
-  # the citation is given once per R session for each source
   if (!is.null(source) && !is.null(info$citation) && !.ts_quiet() &&
     !source %in% .ts_state$cited) {
     message("Please cite: ", info$citation)
     .ts_state$cited <- c(.ts_state$cited, source)
   }
-  out
 }
 
 # Folder used to keep downloads
@@ -350,7 +388,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   )$column_name
   cols <- if (is.null(keep)) all_cols else intersect(all_cols, keep)
   q <- function(x) as.character(DBI::dbQuoteIdentifier(con, x))
-  select <- paste(q(cols), collapse = ", ")
+  select <- toString(q(cols))
 
   rank_cols <- intersect(subset_rank_columns(), all_cols)
   if (!is.null(rank)) rank_cols <- intersect(rank_cols, tolower(trimws(rank)))
@@ -363,8 +401,10 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     return(DBI::dbGetQuery(con, paste0("SELECT ", select, " FROM ", src)))
   }
 
-  taxa <- paste(DBI::dbQuoteString(con, unique(trimws(taxon))), collapse = ", ")
-  hit_where <- paste(paste0(q(rank_cols), " IN (", taxa, ")"), collapse = " OR ")
+  taxa <- toString(DBI::dbQuoteString(con, unique(trimws(taxon))))
+  hit_where <- paste(paste0(q(rank_cols), " IN (", taxa, ")"),
+    collapse = " OR "
+  )
   DBI::dbGetQuery(con, paste0(
     "WITH base AS (SELECT ", select, " FROM ", src, "), ",
     "hit AS (SELECT * FROM base WHERE ", hit_where, "), ",
@@ -406,8 +446,8 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   first <- readLines(path, n = skip + 1, warn = FALSE, encoding = "UTF-8")
   first <- first[length(first)]
   if (is.null(sep)) {
-    n_tab <- lengths(regmatches(first, gregexpr("\t", first)))
-    n_comma <- lengths(regmatches(first, gregexpr(",", first)))
+    n_tab <- lengths(regmatches(first, gregexpr("\t", first, fixed = TRUE)))
+    n_comma <- lengths(regmatches(first, gregexpr(",", first, fixed = TRUE)))
     sep <- if (length(first) && n_tab > n_comma) "\t" else ","
   }
   tab <- identical(sep, "\t")
@@ -453,43 +493,61 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     length(core) == 1,
     msg = "meta.xml in the zip file has no core table"
   )
-  attr_of <- function(tag, name) {
-    m <- regmatches(tag, regexpr(paste0(name, "=\"[^\"]*\""), tag))
-    if (length(m) == 0) {
-      return(NA_character_)
-    }
-    sub(paste0(name, "=\"([^\"]*)\""), "\\1", m)
-  }
   core_tag <- regmatches(core, regexpr("<core\\b[^>]*>", core))
-  sep <- attr_of(core_tag, "fieldsTerminatedBy")
-  sep <- if (is.na(sep)) "," else gsub("\\\\t", "\t", sep)
-  skip <- suppressWarnings(as.integer(attr_of(core_tag, "ignoreHeaderLines")))
+  sep <- .ts_xml_attr(core_tag, "fieldsTerminatedBy")
+  sep <- if (is.na(sep)) "," else gsub("\\t", "\t", sep, fixed = TRUE)
+  skip <- suppressWarnings(
+    as.integer(.ts_xml_attr(core_tag, "ignoreHeaderLines"))
+  )
   if (is.na(skip)) skip <- 0L
-  loc <- sub("</location>", "", sub(".*<location>", "", regmatches(
-    core, regexpr("<location>[^<]*</location>", core)
-  )))
+  loc <- regmatches(core, regexpr("<location>[^<]*</location>", core))
+  loc <- sub("</location>", "", sub(".*<location>", "", loc), fixed = TRUE)
   file <- files[basename(files) == basename(loc)]
   assertthat::assert_that(
     length(file) >= 1,
-    msg = paste0("The core file ", loc, " named in meta.xml is not in the zip file")
+    msg = paste0(
+      "The core file ", loc,
+      " named in meta.xml is not in the zip file"
+    )
   )
-  x <- .ts_read_delim(file.path(dir, file[1]), sep = sep, header = FALSE, skip = skip)
+  x <- .ts_read_delim(file.path(dir, file[1]),
+    sep = sep, header = FALSE,
+    skip = skip
+  )
 
-  # name the columns from the terms in meta.xml
+  colnames(x) <- .ts_dwca_colnames(core, ncol(x))
+  x
+}
+
+# The value of the attribute `name` in the XML `tag`, NA if it has none
+.ts_xml_attr <- function(tag, name) {
+  m <- regmatches(tag, regexpr(paste0(name, "=\"[^\"]*\""), tag))
+  if (length(m) == 0) {
+    return(NA_character_)
+  }
+  sub(paste0(name, "=\"([^\"]*)\""), "\\1", m)
+}
+
+# Name the `n` columns of the core table from the terms in meta.xml (`core` is
+# the text of its core element). The id column is the taxonID unless a field
+# says that it is something else.
+.ts_dwca_colnames <- function(core, n) {
   fields <- regmatches(core, gregexpr("<field\\b[^>]*>", core))[[1]]
-  idx <- as.integer(vapply(fields, attr_of, "", name = "index"))
-  term <- vapply(fields, attr_of, "", name = "term")
+  idx <- as.integer(vapply(fields, .ts_xml_attr, "", name = "index"))
+  term <- vapply(fields, .ts_xml_attr, "", name = "term")
   term <- sub("^.*[/#]", "", term)
-  nm <- paste0("V", seq_len(ncol(x)))
-  ok <- !is.na(idx) & idx + 1 <= ncol(x)
+  nm <- paste0("V", seq_len(n))
+  ok <- !is.na(idx) & idx + 1 <= n
   nm[idx[ok] + 1] <- term[ok]
   id_tag <- regmatches(core, regexpr("<id\\b[^>]*>", core))
   if (length(id_tag) == 1 && !"taxonID" %in% nm) {
-    id_idx <- suppressWarnings(as.integer(attr_of(id_tag, "index")))
-    if (!is.na(id_idx) && id_idx + 1 <= ncol(x) && grepl("^V[0-9]+$", nm[id_idx + 1])) {
+    id_idx <- suppressWarnings(as.integer(.ts_xml_attr(id_tag, "index")))
+    if (!is.na(id_idx) && id_idx + 1 <= n && grepl(
+      "^V[0-9]+$",
+      nm[id_idx + 1]
+    )) {
       nm[id_idx + 1] <- "taxonID"
     }
   }
-  colnames(x) <- make.unique(nm)
-  x
+  make.unique(nm)
 }

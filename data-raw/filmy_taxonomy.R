@@ -1,5 +1,3 @@
-library(tidyverse)
-
 # Load the example standard taxonomy for resolving names.
 #
 # The example standard taxonomy is the family Hymenophyllaceae from
@@ -18,12 +16,12 @@ library(tidyverse)
 # script remains reproducible without depending on a live external URL.
 taxa_path <- "data-raw/taxa_hymenophyllaceae_col_2019-06-19.tsv"
 
-filmy_taxonomy <- read_tsv(taxa_path)
+filmy_taxonomy <- readr::read_tsv(taxa_path)
 
 # Replace "v. d. Bosch" with "V. D. Bosch"
 # see https://github.com/camwebb/taxon-tools/issues/10
 filmy_taxonomy <-
-  filmy_taxonomy %>%
+  filmy_taxonomy |>
   dplyr::mutate(
     scientificName = stringr::str_replace_all(
       scientificName,

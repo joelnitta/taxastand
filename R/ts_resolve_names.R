@@ -46,12 +46,14 @@
 #' names in reference genera within this distance, and the whole name (or the
 #' canonical name, for a query without an author) must still be within
 #' `max_dist`. Matches have the type `auto_fuzzy_genus`. Set to 0 to turn
-#' genus-level fuzzy matching off. See \code{\link{ts_match_names}()}. Default: 2.
+#' genus-level fuzzy matching off. See \code{\link{ts_match_names}()}.
+#' Default: 2.
 #' @param transpositions Logical; count a swap of two adjacent letters (e.g.
 #' `Qurecus` for `Quercus`, a common typing error) as one edit instead of two
 #' when computing fuzzy-match distances (optimal string alignment distance
 #' rather than plain Levenshtein distance). Set to `FALSE` for plain
-#' Levenshtein distance, which is somewhat faster. See \code{\link{ts_match_names}()}. Default: `FALSE`.
+#' Levenshtein distance, which is somewhat faster. See
+#' \code{\link{ts_match_names}()}. Default: `FALSE`.
 #' @param match_canon Logical; Allow a "canonical name" match if only the genus,
 #' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
@@ -91,9 +93,12 @@
 #' - `query`: Query name
 #' - `resolved_name`: Accepted name after resolving synonyms
 #' - `matched_name`: Name matched to query
-#' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref`)
-#' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref`)
-#' - `match_type`: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
+#' - `resolved_status`: Taxonomic status of the resolved name (same as
+#'   `taxonomicStatus` in `ref`)
+#' - `matched_status`: Taxonomic status of the matched name (same as
+#'   `taxonomicStatus` in `ref`)
+#' - `match_type`: Type of match (see the "Match types" section of
+#'   \code{\link{ts_match_names}()})
 #' - `dist`: Edit distance between the query and the matched name for fuzzy
 #'   matches, `NA` otherwise
 #'
@@ -133,7 +138,9 @@ ts_resolve_names <- function(
   ref_taxonomy = NULL,
   match_no_auth = NULL
 ) {
-  match_canon <- .ts_alias_match_no_auth(match_canon, match_no_auth, missing(match_canon))
+  match_canon <- .ts_alias_match_no_auth(
+    match_canon, match_no_auth, missing(match_canon)
+  )
   ref <- .ts_alias(ref, ref_taxonomy, missing(ref), "ref", "ref_taxonomy")
   match_autonyms <- .ts_alias(
     match_autonyms, collapse_infra, missing(match_autonyms),
@@ -144,7 +151,62 @@ ts_resolve_names <- function(
     missing(match_autonyms_exclude),
     "match_autonyms_exclude", "collapse_infra_exclude"
   )
-  # Check input
+  ref_parts <- .ts_resolve_check(
+    query, ref, match_autonyms_exclude, tbl_out, strip_qualifiers, closest_only
+  )
+
+  match_results <- .ts_resolve_get_matches(
+    query, ref_parts$ref_names, closest_only, max_dist, max_dist_genus,
+    transpositions, match_canon, match_autonyms, match_autonyms_exclude,
+    strip_qualifiers, exclude_placeholders
+  )
+  results <- .ts_resolve_matches(match_results, ref_parts$ref_df)
+
+  # Return as tibble or dataframe
+  if (isTRUE(tbl_out)) {
+    return(.ts_as_tibble(results))
+  }
+
+  results
+}
+
+# The matches of `query`: match the names first if it is a character vector
+# (the other arguments are those of ts_match_names()), else it has been matched
+# already. Add the edit distance (missing if the matches did not include it),
+# and keep only the closest fuzzy matches if `closest_only`.
+.ts_resolve_get_matches <- function(query, ref_names, closest_only, max_dist,
+                                    max_dist_genus, transpositions, match_canon,
+                                    match_autonyms, match_autonyms_exclude,
+                                    strip_qualifiers, exclude_placeholders) {
+  if (is.character(query)) {
+    match_results <- ts_match_names(
+      query = query, ref = ref_names, max_dist = max_dist,
+      max_dist_genus = max_dist_genus, transpositions = transpositions,
+      match_canon = match_canon, match_autonyms = match_autonyms,
+      match_autonyms_exclude = match_autonyms_exclude,
+      strip_qualifiers = strip_qualifiers,
+      exclude_placeholders = exclude_placeholders
+    )
+  } else {
+    match_results <- query # already matched with ts_match_names()
+  }
+  if (!"dist" %in% colnames(match_results)) {
+    assertthat::assert_that(
+      !closest_only,
+      msg = "closest_only needs a `dist` column in the matched query"
+    )
+    match_results$dist <- NA_integer_
+  }
+  if (closest_only) {
+    match_results <- .ts_closest_fuzzy(match_results)
+  }
+  match_results
+}
+
+# Check the input of ts_resolve_names(); return the reference as a dataframe
+# (`ref_df`) and as what ts_match_names() takes (`ref_names`)
+.ts_resolve_check <- function(query, ref, match_autonyms_exclude, tbl_out,
+                              strip_qualifiers, closest_only) {
   assertthat::assert_that(
     is.character(query) | inherits(query, "data.frame"),
     msg = "query must be of class 'data.frame' or a character vector"
@@ -156,7 +218,6 @@ ts_resolve_names <- function(
       "or the output of ts_optimize_ref()"
     )
   )
-  ref_names <- NULL
   if (inherits(ref, "ts_reference")) {
     ref_names <- ref
     ref_df <- ref$taxonomy
@@ -172,46 +233,21 @@ ts_resolve_names <- function(
     ref_df <- ref
     ref_names <- unique(ref_df$scientificName)
   }
-  assertthat::assert_that(assertthat::is.flag(tbl_out))
-  assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
   assertthat::assert_that(
+    assertthat::is.flag(tbl_out),
+    assertthat::is.flag(strip_qualifiers),
     assertthat::is.flag(closest_only), assertthat::noNA(closest_only)
   )
   if (!is.null(match_autonyms_exclude)) {
     assertthat::assert_that(is.character(match_autonyms_exclude))
   }
+  list(ref_df = ref_df, ref_names = ref_names)
+}
 
-  # If needed, match names first
-  if (is.character(query)) {
-    match_results <- ts_match_names(
-      query = query,
-      ref = ref_names,
-      max_dist = max_dist,
-      max_dist_genus = max_dist_genus,
-      transpositions = transpositions,
-      match_canon = match_canon,
-      match_autonyms = match_autonyms,
-      match_autonyms_exclude = match_autonyms_exclude,
-      strip_qualifiers = strip_qualifiers,
-      exclude_placeholders = exclude_placeholders
-    )
-  } else {
-    match_results <- query # already matched with ts_match_names()
-  }
-
-  # Edit distance of fuzzy matches (missing if the matches did not include it)
-  if (!"dist" %in% colnames(match_results)) {
-    assertthat::assert_that(
-      !closest_only,
-      msg = "closest_only needs a `dist` column in the matched query"
-    )
-    match_results$dist <- NA_integer_
-  }
-  if (closest_only) {
-    match_results <- .ts_closest_fuzzy(match_results)
-  }
-
-  # Classify results of matching
+# Resolve matched names to accepted names: classify the matches, then take the
+# successes (a single match to an accepted name or to synonyms of one accepted
+# name) and the failures (everything else)
+.ts_resolve_matches <- function(match_results, ref_df) {
   match_results_classified <- ts_classify_result(match_results)
   match_results_classified <- match_results_classified[
     , c("query", "reference", "match_type", "dist", "result_type")
@@ -222,19 +258,55 @@ ts_resolve_names <- function(
     acceptedNameUsageID = ref_df$acceptedNameUsageID,
     taxonomicStatus = ref_df$taxonomicStatus
   )
-  match_results_classified <- .ts_join(
+  classified <- .ts_join(
     match_results_classified, ref_info, "reference", "scientificName"
   )
-  aid <- match_results_classified$acceptedNameUsageID
-  tid <- match_results_classified$taxonID
 
-  # Separate out single matches to an accepted name (success type 1)
-  # consider accepted names have either no acceptedNameUsageID or
-  # acceptedNameUsageID is same as taxonID
+  success <- rbind(
+    .ts_resolve_accepted(classified),
+    .ts_resolve_synonyms(classified, ref_info, ref_df)
+  )
+
+  # anything else is a failure
+  failure <- classified[!classified$query %in% success$query, , drop = FALSE]
+  failure <- data.frame(
+    query = failure$query,
+    resolved_name = rep(NA_character_, nrow(failure)),
+    matched_name = failure$reference,
+    resolved_status = rep(NA_character_, nrow(failure)),
+    matched_status = failure$taxonomicStatus,
+    match_type = failure$match_type,
+    dist = failure$dist
+  )
+
+  results_raw <- rbind(success, failure)
+  assertthat::assert_that(
+    all(results_raw$query %in% match_results$query),
+    msg = "query values in results must all be present in match_results"
+  )
+  assertthat::assert_that(
+    all(match_results$query %in% results_raw$query),
+    msg = "query values in match_results must all be present in results"
+  )
+  results <- results_raw[
+    , c(
+      "query", "resolved_name", "matched_name", "resolved_status",
+      "matched_status", "match_type", "dist"
+    )
+  ]
+  rownames(results) <- NULL
+  results
+}
+
+# Single matches to an accepted name (success type 1). Accepted names have
+# either no acceptedNameUsageID or one that is the same as taxonID.
+.ts_resolve_accepted <- function(classified) {
+  aid <- classified$acceptedNameUsageID
+  tid <- classified$taxonID
   is_accepted <- (is.na(aid) | aid == "" | tid == aid) &
-    match_results_classified$result_type == "single_match"
-  accepted <- match_results_classified[is_accepted %in% TRUE, , drop = FALSE]
-  accepted_single_match <- data.frame(
+    classified$result_type == "single_match"
+  accepted <- classified[!is.na(is_accepted) & is_accepted, , drop = FALSE]
+  data.frame(
     query = accepted$query,
     resolved_name = accepted$reference,
     matched_name = accepted$reference,
@@ -243,11 +315,15 @@ ts_resolve_names <- function(
     match_type = accepted$match_type,
     dist = accepted$dist
   )
+}
 
-  # Separate out matches to a single synonym (success type 2)
-  # Consider synonym anything with acceptedNameUsageID not matching taxonID
+# Matches to synonyms that all resolve to the same accepted name (success type
+# 2). A synonym is anything with an acceptedNameUsageID that is not the taxonID.
+.ts_resolve_synonyms <- function(classified, ref_info, ref_df) {
+  aid <- classified$acceptedNameUsageID
+  tid <- classified$taxonID
   is_syn <- !is.na(aid) & aid != "" & aid != tid
-  syn <- match_results_classified[is_syn %in% TRUE, , drop = FALSE]
+  syn <- classified[!is.na(is_syn) & is_syn, , drop = FALSE]
   syn <- .ts_join(
     syn,
     data.frame(
@@ -265,7 +341,7 @@ ts_resolve_names <- function(
     FUN = function(z) length(unique(z))
   )
   syn <- syn[n_resolved == 1, , drop = FALSE]
-  accepted_single_synonyms <- data.frame(
+  data.frame(
     query = syn$query,
     resolved_name = syn$resolved_name,
     matched_name = syn$reference,
@@ -274,49 +350,6 @@ ts_resolve_names <- function(
     match_type = syn$match_type,
     dist = syn$dist
   )
-
-  # Combine name resolution successes
-  success <- rbind(accepted_single_match, accepted_single_synonyms)
-
-  # Anything else is a failure
-  failure <- match_results_classified[
-    !match_results_classified$query %in% success$query, ,
-    drop = FALSE
-  ]
-  failure <- data.frame(
-    query = failure$query,
-    resolved_name = rep(NA_character_, nrow(failure)),
-    matched_name = failure$reference,
-    resolved_status = rep(NA_character_, nrow(failure)),
-    matched_status = failure$taxonomicStatus,
-    match_type = failure$match_type,
-    dist = failure$dist
-  )
-
-  # Combine into final results
-  results_raw <- rbind(success, failure)
-  assertthat::assert_that(
-    all(results_raw$query %in% match_results$query),
-    msg = "query values in results must all be present in match_results"
-  )
-  assertthat::assert_that(
-    all(match_results$query %in% results_raw$query),
-    msg = "query values in match_results must all be present in results"
-  )
-  results <- results_raw[
-    , c(
-      "query", "resolved_name", "matched_name", "resolved_status",
-      "matched_status", "match_type", "dist"
-    )
-  ]
-  rownames(results) <- NULL
-
-  # Return as tibble or dataframe
-  if (isTRUE(tbl_out)) {
-    return(.ts_as_tibble(results))
-  }
-
-  results
 }
 
 # Keep, for each query, only the fuzzy matches at the smallest distance

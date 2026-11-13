@@ -137,7 +137,9 @@ In order to conduct name resolution, we require a **taxonomic standard** in the 
 data(filmy_taxonomy)
 
 # Take a look at the columns used by taxastand
-head(filmy_taxonomy[c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName")])
+head(filmy_taxonomy[c(
+  "taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName"
+)])
 ```
 
 Here, `taxonID` is a unique identifier for each taxonomic name. `acceptedNameUsageID` only applies in the case of synonyms: it tells us the `taxonID` of the accepted name corresponding to that synonym. `taxonomicStatus` describes the status of the name, typically either as an accepted name, synonym, or something else ("dubious", etc.). Finally, the `scientificName` is the full scientific name, preferably with the author.

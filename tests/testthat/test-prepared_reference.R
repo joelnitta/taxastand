@@ -25,12 +25,12 @@ without_ref_id <- function(x) x[, setdiff(colnames(x), "id_ref")]
 test_that("a prepared reference gives the same results as the names", {
   prepared <- ts_optimize_ref(ref_names)
   expect_s3_class(prepared, "ts_reference")
-  expect_equal(
+  expect_identical(
     without_ref_id(suppressWarnings(ts_match_names(queries, prepared))),
     without_ref_id(suppressWarnings(ts_match_names(queries, ref_names)))
   )
   # any option still works
-  expect_equal(
+  expect_identical(
     without_ref_id(suppressWarnings(
       ts_match_names(
         queries, prepared,
@@ -58,14 +58,14 @@ test_that("a prepared reference can be reused and fills in per genus", {
   again <- suppressWarnings(
     ts_match_names("Asplenium nidis L.", prepared, simple = TRUE)
   )
-  expect_equal(again, first)
+  expect_identical(again, first)
   expect_output(print(prepared), "genera parsed so far: 1")
   res <- suppressWarnings(
     ts_match_names(c("Asplenium nidis L.", "Polypodium vulgare L."), prepared,
       simple = TRUE
     )
   )
-  expect_equal(res$match_type, c("auto_fuzzy", "exact"))
+  expect_identical(res$match_type, c("auto_fuzzy", "exact"))
   expect_output(print(prepared), "genera parsed so far: 2")
 })
 
@@ -78,7 +78,7 @@ test_that("records keep their reference order when genera are combined", {
   )
   prepared <- ts_optimize_ref(ref2)
   q <- c("Quercus robur L.", "Asplenium nidus L.")
-  expect_equal(
+  expect_identical(
     without_ref_id(ts_match_names(q, prepared)),
     without_ref_id(ts_match_names(q, ref2))
   )
@@ -93,22 +93,23 @@ test_that("ts_resolve_names() accepts a prepared Darwin Core reference", {
     ),
     taxonomicStatus = c("accepted", "synonym", "accepted", "accepted"),
     acceptedNameUsageID = c(NA, "1", NA, NA),
-    other = "ignored"
+    other = "ignored",
+    stringsAsFactors = FALSE
   )
   prepared <- ts_optimize_ref(taxonomy)
   q <- c("Pteris aquilina L.", "Asplenium nidis L.", "Zzyzx foo")
-  expect_equal(
+  expect_identical(
     suppressWarnings(ts_resolve_names(q, prepared)),
     suppressWarnings(ts_resolve_names(q, taxonomy))
   )
   # also works with the output of ts_match_names()
   matched <- suppressWarnings(ts_match_names(q, prepared, simple = TRUE))
-  expect_equal(
+  expect_identical(
     ts_resolve_names(matched, prepared),
     ts_resolve_names(matched, taxonomy)
   )
   # a data.frame prepared reference can be used for matching too
-  expect_equal(
+  expect_identical(
     without_ref_id(suppressWarnings(ts_match_names(q, prepared))),
     without_ref_id(suppressWarnings(ts_match_names(q, taxonomy$scientificName)))
   )
@@ -126,7 +127,7 @@ test_that("names that cannot be parsed are reported once, then skipped", {
   # a genus whose names all fail does not error
   prepared2 <- ts_optimize_ref(c("Foo !!! ???", "Polypodium vulgare L."))
   res <- suppressWarnings(ts_match_names("Foo bar", prepared2, simple = TRUE))
-  expect_equal(res$match_type, "no_match")
+  expect_identical(res$match_type, "no_match")
 })
 
 test_that("duplicated reference names are an error, as without preparing", {
@@ -149,15 +150,15 @@ test_that("strip_qualifiers applies to the reference at preparation", {
   res <- suppressWarnings(
     ts_match_names("Tectaria crenata Cav.", prepared, simple = TRUE)
   )
-  expect_equal(res$match_type, "exact")
-  expect_equal(res$reference, "Tectaria cf. crenata Cav.")
+  expect_identical(res$match_type, "exact")
+  expect_identical(res$reference, "Tectaria cf. crenata Cav.")
 })
 
 test_that("ts_optimize_ref() checks its input", {
   expect_error(ts_optimize_ref(1:3), "character vector or data.frame")
   expect_error(ts_optimize_ref(c("a b", NA)), "missing values")
   expect_error(
-    ts_optimize_ref(data.frame(name = "a b")),
+    ts_optimize_ref(data.frame(name = "a b", stringsAsFactors = FALSE)),
     "scientificName"
   )
   expect_error(
@@ -186,14 +187,14 @@ test_that("keys build up correctly as genera are added in batches", {
     c("Asplenium nidis L.", "Cyathea medullaris Sw.", "Polypodium vulgare")
   )
   for (q in batches) {
-    expect_equal(
+    expect_identical(
       without_ref_id(suppressWarnings(ts_match_names(q, prepared))),
       without_ref_id(suppressWarnings(ts_match_names(q, ref_names)))
     )
   }
   # a key that no earlier call needed is built for all the batches added so far
   q <- c("Asplenium nidus", "Hymenophyllum taiwanense", "Quercus pyrenaica")
-  expect_equal(
+  expect_identical(
     without_ref_id(suppressWarnings(
       ts_match_names(q, prepared, match_canon = TRUE)
     )),

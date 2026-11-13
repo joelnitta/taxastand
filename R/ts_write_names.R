@@ -31,7 +31,7 @@ ts_write_names <- function(df, path) {
     isTRUE(all(tt_col_names %in% colnames(df))),
     msg = paste0(
       "df must include the following columns: ",
-      paste(tt_col_names, collapse = ", ")
+      toString(tt_col_names)
     )
   )
 

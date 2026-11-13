@@ -6,12 +6,16 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 ppg_version <- "v2.0.0"
-ppg_path <- if (length(args) >= 1) args[[1]] else file.path(tempdir(), "ppg.csv")
+ppg_path <- if (length(args) >= 1) args[[1]] else file.path(tempdir(),
+  "ppg.csv")
 max_dist <- if (length(args) >= 2) as.numeric(args[[2]]) else 3
 
 if (!file.exists(ppg_path)) {
   utils::download.file(
-    sprintf("https://raw.githubusercontent.com/pteridogroup/ppg/%s/data/ppg.csv", ppg_version),
+    sprintf(
+      "https://raw.githubusercontent.com/pteridogroup/ppg/%s/data/ppg.csv",
+      ppg_version
+    ),
     ppg_path, quiet = TRUE
   )
 }
@@ -35,8 +39,8 @@ queries <- c(
   "Polypodium vulgare L."                   # exact
 )
 
-t <- system.time(
-  res <- ts_resolve_names(queries, ppg, max_dist = max_dist)
-)[["elapsed"]]
+start <- proc.time()
+res <- ts_resolve_names(queries, ppg, max_dist = max_dist)
+t <- (proc.time() - start)[["elapsed"]]
 cat(sprintf("max_dist = %s: %.1f s, %d result rows\n", max_dist, t, nrow(res)))
 print(table(res$match_type))

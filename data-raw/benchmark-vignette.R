@@ -5,7 +5,8 @@
 # root; it measures the working tree (devtools::load_all()):
 #
 #   Rscript data-raw/benchmark-vignette.R reference=ppg n=100
-#   Rscript data-raw/benchmark-vignette.R reference=wfo n=100 tools=taxastand,taxify
+#   Rscript data-raw/benchmark-vignette.R reference=wfo n=100
+#     tools=taxastand,taxify
 #
 # Arguments (key=value, all optional)
 #   reference  ppg (default) or wfo. The shared reference table. "wfo" is read
@@ -30,26 +31,39 @@
 #              data-raw/benchmark-results/benchmark-<reference>.rds)
 #
 # Every tool matches against the same reference table (see
-# inst/benchmark/benchmark-lib.R), so each comparison is paired: only the matching
-# differs. The output is a list; copy the final results to
+# inst/benchmark/benchmark-lib.R), so each comparison is paired: only the
+# matching differs. The output is a list; copy the final results to
 # inst/extdata/benchmark-results.rds for the vignette.
 
 args <- strsplit(commandArgs(trailingOnly = TRUE), "=", fixed = TRUE)
 args <- stats::setNames(
   vapply(args, `[`, "", 2), vapply(args, `[`, "", 1)
 )
-opt <- function(name, default) if (name %in% names(args)) args[[name]] else default
+opt <- function(name, default) {
+  if (name %in% names(args)) args[[name]] else default
+}
 reference <- opt("reference", "ppg")
 n <- as.integer(opt("n", 100))
 tools <- strsplit(
-  opt("tools", if (reference == "ppg") "taxastand,utaxonstand,worldflora" else "taxastand,taxify"),
-  ","
+  opt("tools",
+    if (reference == "ppg") {
+      "taxastand,utaxonstand,worldflora"
+    } else {
+      "taxastand,taxify"
+    }
+  ),
+  ",",
+  fixed = TRUE
 )[[1]]
-sizes <- as.integer(strsplit(opt("sizes", "1,10,100,1000"), ",")[[1]])
-slow_sizes <- as.integer(strsplit(opt("slow_sizes", "1,10,100"), ",")[[1]])
-kinds <- if ("kinds" %in% names(args)) strsplit(args[["kinds"]], ",")[[1]]
+sizes <- as.integer(strsplit(opt("sizes", "1,10,100,1000"), ",",
+  fixed = TRUE)[[1]])
+slow_sizes <- as.integer(strsplit(opt("slow_sizes", "1,10,100"), ",",
+  fixed = TRUE)[[1]])
+kinds <- if ("kinds" %in% names(args)) strsplit(args[["kinds"]], ",",
+  fixed = TRUE)[[1]]
 do_speed <- identical(opt("speed", "yes"), "yes")
-out <- opt("out", sprintf("data-raw/benchmark-results/benchmark-%s.rds", reference))
+out <- opt("out", sprintf("data-raw/benchmark-results/benchmark-%s.rds",
+  reference))
 dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
 
 suppressMessages(devtools::load_all(quiet = TRUE))
@@ -83,15 +97,20 @@ for (tool in tools) {
   adapter <- builders[[tool]]()
   setup[[tool]] <- adapter$setup_s
   cat("setup:", round(adapter$setup_s, 1), "s\n")
-  t_run <- system.time(hits <- adapter$run(queries$query))[["elapsed"]]
-  cat("matched", nrow(queries), "queries in", round(t_run, 1), "s (first run)\n")
+  start <- proc.time()
+  hits <- adapter$run(queries$query)
+  t_run <- (proc.time() - start)[["elapsed"]]
+  cat("matched", nrow(queries), "queries in", round(t_run, 1),
+    "s (first run)\n")
   first_run[[tool]] <- t_run
   scores <- score_queries(queries, hits)
   accuracy[[tool]] <- summarize_scores(scores)
   print(accuracy[[tool]])
   if (do_speed) {
-    tool_sizes <- if (tool %in% c("utaxonstand", "worldflora")) slow_sizes else sizes
-    speed[[tool]] <- cbind(tool = tool, time_adapter(adapter, queries$query, tool_sizes))
+    tool_sizes <- if (tool %in% c("utaxonstand",
+      "worldflora")) slow_sizes else sizes
+    speed[[tool]] <- cbind(tool = tool, time_adapter(adapter, queries$query,
+      tool_sizes))
     print(speed[[tool]])
   }
 }
@@ -104,7 +123,10 @@ res <- list(
   versions = c(
     taxastand = as.character(utils::packageVersion("taxastand")),
     vapply(
-      intersect(c("taxify", "WorldFlora", "U.Taxonstand"), rownames(utils::installed.packages())),
+      Filter(
+        function(p) nzchar(system.file(package = p)),
+        c("taxify", "WorldFlora", "U.Taxonstand")
+      ),
       function(p) as.character(utils::packageVersion(p)), ""
     )
   ),

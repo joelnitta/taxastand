@@ -4,7 +4,8 @@
 # that must be downloaded first (install_backbones("wfo") is ~800 MB), so run
 # this by hand:
 #
-#   Rscript data-raw/benchmark-vs-taxify.R [ppg.csv] [taxify_backbone] [out_dir] [reference]
+#   Rscript data-raw/benchmark-vs-taxify.R [ppg.csv] [taxify_backbone]
+#     [out_dir] [reference]
 #
 # Defaults: PPG v2.0.0 is downloaded to a temp file; taxify backbone "wfo";
 # results go to data-raw/benchmark-results/; reference "ppg". Run from the
@@ -42,7 +43,8 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 ppg_version <- "v2.0.0"
-ppg_path <- if (length(args) >= 1) args[[1]] else file.path(tempdir(), "ppg.csv")
+ppg_path <- if (length(args) >= 1) args[[1]] else file.path(tempdir(),
+  "ppg.csv")
 bb <- if (length(args) >= 2) args[[2]] else "wfo"
 out_dir <- if (length(args) >= 3) args[[3]] else "data-raw/benchmark-results"
 reference <- if (length(args) >= 4) args[[4]] else "ppg"
@@ -52,18 +54,26 @@ set.seed(20261107)
 
 if (reference == "ppg" && !file.exists(ppg_path)) {
   utils::download.file(
-    sprintf("https://raw.githubusercontent.com/pteridogroup/ppg/%s/data/ppg.csv", ppg_version),
+    sprintf(
+      "https://raw.githubusercontent.com/pteridogroup/ppg/%s/data/ppg.csv",
+      ppg_version
+    ),
     ppg_path, quiet = TRUE
   )
 }
 suppressMessages(devtools::load_all(quiet = TRUE))
 have_taxify <- requireNamespace("taxify", quietly = TRUE)
-if (!have_taxify) message("taxify is not installed: running the taxastand half only")
+if (!have_taxify) {
+  message("taxify is not installed: running the taxastand half only")
+}
 if (reference == "taxify" && !have_taxify) {
-  stop("reference = \"taxify\" needs taxify installed (its backbone is the reference)")
+  stop(
+    "reference = \"taxify\" needs taxify installed ",
+    "(its backbone is the reference)"
+  )
 }
 
-# ---- Reference -----------------------------------------------------------------
+# ---- Reference -------------------------------------------------------------
 # One row per name, with the columns used below (named after PPG's):
 # scientificName (canonical name), scientificNameAuthorship, taxonRank,
 # taxonID, acceptedNameUsageID (NA for accepted names), taxonomicStatus
@@ -81,7 +91,8 @@ load_taxify_backbone <- function(bb) {
     "taxonomic_status", "accepted_taxon_id"
   )
   if (!all(need %in% colnames(x))) {
-    stop("taxify backbone lacks columns: ", paste(setdiff(need, colnames(x)), collapse = ", "))
+    stop("taxify backbone lacks columns: ", toString(setdiff(need,
+      colnames(x))))
   }
   data.frame(
     taxonID = x$taxon_id, scientificName = x$canonical_name,
@@ -96,10 +107,12 @@ load_taxify_backbone <- function(bb) {
 ppg <- if (reference == "ppg") load_ppg() else load_taxify_backbone(bb)
 ppg <- ppg[ppg$taxonRank %in% c("species", "subspecies", "variety", "form"), ]
 ppg$canonical <- ppg$scientificName
-has_auth <- !is.na(ppg$scientificNameAuthorship) & ppg$scientificNameAuthorship != ""
+has_auth <- !is.na(ppg$scientificNameAuthorship) &
+  ppg$scientificNameAuthorship != ""
 ppg$scientificNameAuthorship[!has_auth] <- NA
 ppg$full <- ppg$canonical
-ppg$full[has_auth] <- paste(ppg$canonical[has_auth], ppg$scientificNameAuthorship[has_auth])
+ppg$full[has_auth] <- paste(ppg$canonical[has_auth],
+  ppg$scientificNameAuthorship[has_auth])
 ppg <- ppg[!duplicated(ppg$full), ]
 ref_tax <- data.frame(
   taxonID = ppg$taxonID, acceptedNameUsageID = ppg$acceptedNameUsageID,
@@ -171,7 +184,8 @@ if (have_taxify && reference == "ppg") {
 } else {
   held <- canon_pool
 }
-cat("Names in reference:", length(canon_pool), " also in backbone:", length(held), "\n")
+cat("Names in reference:", length(canon_pool), " also in backbone:",
+  length(held), "\n")
 
 # ---- 1. Homonyms -------------------------------------------------------------
 hom <- ppg[!is.na(ppg$scientificNameAuthorship) & ppg$canonical %in% held, ]
@@ -234,7 +248,10 @@ homonyms$taxastand_correct_vs_ppg <- sum(
 if (have_taxify) homonyms$taxify <- discriminates(run_taxify)
 
 # ---- 2. Typos ----------------------------------------------------------------
-sp <- ppg[ppg$taxonRank == "species" & ppg$canonical %in% held & !is.na(ppg$scientificNameAuthorship), ]
+sp <- ppg[
+  ppg$taxonRank == "species" & ppg$canonical %in% held &
+    !is.na(ppg$scientificNameAuthorship),
+]
 sp <- sp[sample(nrow(sp), min(300, nrow(sp))), ]
 genus <- sub(" .*", "", sp$canonical)
 epi <- sub("^\\S+ (\\S+).*", "\\1", sp$canonical)
@@ -259,18 +276,22 @@ typos <- do.call(rbind, lapply(names(kinds), function(k) {
   keep <- e2 != epi
   base <- paste(genus, e2)
   rbind(
-    data.frame(kind = k, authored = FALSE, query = base[keep], truth = sp$canonical[keep]),
+    data.frame(kind = k, authored = FALSE, query = base[keep],
+      truth = sp$canonical[keep]),
     data.frame(kind = k, authored = TRUE,
-      query = paste(base, sub("^\\S+ \\S+ ?", "", sp$full))[keep], truth = sp$canonical[keep])
+      query = paste(base, sub("^\\S+ \\S+ ?", "", sp$full))[keep],
+        truth = sp$canonical[keep])
   )
 }))
 typos <- typos[!duplicated(typos$query), ]
 recall <- function(run) {
   h <- run(typos$query)
-  typos$found <- mapply(function(q, t) t %in% h$hit[h$query == q], typos$query, typos$truth)
+  typos$found <- mapply(function(q, t) t %in% h$hit[h$query == q], typos$query,
+    typos$truth)
   typos$n_hits <- vapply(typos$query, function(q) sum(h$query == q), 0L)
   agg <- stats::aggregate(cbind(found, n_hits) ~ kind + authored, typos, mean)
-  agg$n <- as.vector(table(typos$kind, typos$authored)[cbind(agg$kind, ifelse(agg$authored, "TRUE", "FALSE"))])
+  agg$n <- as.vector(table(typos$kind, typos$authored)[cbind(agg$kind,
+    ifelse(agg$authored, "TRUE", "FALSE"))])
   agg
 }
 # taxastand returns every hit within max_dist by default; "closest" keeps only
@@ -298,7 +319,8 @@ timing <- function(run, label) {
 speed <- timing(run_taxastand, "taxastand")
 speed <- rbind(speed, timing(run_taxastand_closest, "taxastand_closest"))
 speed <- rbind(speed, timing(run_taxastand_prepared, "taxastand_prepared"))
-speed <- rbind(speed, timing(run_taxastand_prepared_closest, "taxastand_prepared_closest"))
+speed <- rbind(speed, timing(run_taxastand_prepared_closest,
+  "taxastand_prepared_closest"))
 if (have_taxify) speed <- rbind(speed, timing(run_taxify, "taxify"))
 
 # ---- Report and save ---------------------------------------------------------
@@ -314,15 +336,20 @@ print(speed)
 
 res <- list(
   date = Sys.time(), reference = reference, reference_names = nrow(ref_tax),
-  ppg_version = if (reference == "ppg") ppg_version, taxify_backbone = if (have_taxify) bb,
+  ppg_version = if (reference == "ppg") ppg_version,
+    taxify_backbone = if (have_taxify) bb,
   taxastand_version = as.character(utils::packageVersion("taxastand")),
-  taxify_version = if (have_taxify) as.character(utils::packageVersion("taxify")),
+  taxify_version = if (have_taxify) {
+    as.character(utils::packageVersion("taxify"))
+  },
   r_version = R.version.string, platform = R.version$platform,
   homonym_pairs = pairs, homonyms = homonyms,
-  homonym_detail = lapply(homonyms[c("taxastand", "taxify")], attr, "detail"), typo_queries = typos,
+  homonym_detail = lapply(homonyms[c("taxastand", "taxify")], attr, "detail"),
+    typo_queries = typos,
   typos = typo_res, speed = speed
 )
 saveRDS(res, file.path(out_dir, "benchmark-vs-taxify.rds"))
 utils::write.csv(speed, file.path(out_dir, "speed.csv"), row.names = FALSE)
-writeLines(utils::capture.output(utils::sessionInfo()), file.path(out_dir, "session-info.txt"))
+writeLines(utils::capture.output(utils::sessionInfo()), file.path(out_dir,
+  "session-info.txt"))
 cat("\nResults written to", out_dir, "\n")

@@ -20,9 +20,9 @@ session. There is never a prompt when not interactive.}
 }
 \value{
 \code{ts_show_ref_cache()} returns a dataframe with one row per file: the
-original \code{file} name, \code{size} (such as "121.7 MB"), \code{modified} and \code{path}. It is empty if
-there is nothing in the folder. \code{ts_clear_ref_cache()} invisibly returns
-the paths of the deleted files.
+original \code{file} name, \code{size} (such as "121.7 MB"), \code{modified} and \code{path}.
+It is empty if there is nothing in the folder. \code{ts_clear_ref_cache()}
+invisibly returns the paths of the deleted files.
 }
 \description{
 \code{ts_show_ref_cache()} lists the files that \code{\link{ts_load_ref}()} has

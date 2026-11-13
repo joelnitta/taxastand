@@ -7,7 +7,8 @@
 #
 #   Rscript data-raw/precompute-vignettes.R
 #
-# setup-reference.Rmd.orig needs the taxadb, dplyr and nanoparquet packages and a network connection.
+# setup-reference.Rmd.orig needs the taxadb, dplyr and nanoparquet packages and
+# a network connection.
 
 withr::with_dir(
   "vignettes",

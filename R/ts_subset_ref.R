@@ -25,9 +25,9 @@
 #' are outside `taxon`, so that every synonym in the result has its accepted
 #' name.
 #'
-#' @param ref Dataframe of taxonomic names in Darwin Core format, or close to it,
-#'   with at least `taxonID` and `acceptedNameUsageID`, and either columns for
-#'   higher ranks or `parentNameUsageID` (and `scientificName`).
+#' @param ref Dataframe of taxonomic names in Darwin Core format, or close to
+#'   it, with at least `taxonID` and `acceptedNameUsageID`, and either columns
+#'   for higher ranks or `parentNameUsageID` (and `scientificName`).
 #' @param taxon Character vector of taxon names to keep, such as
 #'   `"Polypodiaceae"` or `c("Polypodiaceae", "Dryopteridaceae")`. Rows for
 #'   all of them are kept.
@@ -47,21 +47,23 @@
 #' x <- data.frame(
 #'   taxonID = c("1", "2", "3", "4", "5"),
 #'   acceptedNameUsageID = c("1", "2", "3", "1", "5"),
-#'   taxonomicStatus = c("accepted", "accepted", "accepted", "synonym", "accepted"),
+#'   taxonomicStatus = c(
+#'     "accepted", "accepted", "accepted", "synonym", "accepted"
+#'   ),
 #'   scientificName = c(
 #'     "Polypodium vulgare L.", "Pteris vittata L.", "Pteris cretica L.",
 #'     "Polypodium rotundatum Willd.", "Equisetum arvense L."
 #'   ),
-#'   family = c("Polypodiaceae", "Pteridaceae", "Pteridaceae", NA, "Equisetaceae")
+#'   family = c(
+#'     "Polypodiaceae", "Pteridaceae", "Pteridaceae", NA, "Equisetaceae"
+#'   )
 #' )
 #' ts_subset_ref(x, "Pteridaceae")
 #' ts_subset_ref(x, c("Polypodiaceae", "Equisetaceae"))
 ts_subset_ref <- function(ref, taxon, rank = NULL, col_map = NULL) {
-  assertthat::assert_that(inherits(ref, "data.frame"))
   assertthat::assert_that(
-    is.character(taxon), length(taxon) >= 1, !anyNA(taxon), all(nzchar(taxon))
-  )
-  assertthat::assert_that(
+    inherits(ref, "data.frame"),
+    is.character(taxon), length(taxon) >= 1, !anyNA(taxon), all(nzchar(taxon)),
     is.null(rank) || (is.character(rank) && length(rank) == 1 && !is.na(rank))
   )
   orig <- ref
@@ -71,7 +73,7 @@ ts_subset_ref <- function(ref, taxon, rank = NULL, col_map = NULL) {
   assertthat::assert_that(
     length(missing_cols) == 0,
     msg = paste0(
-      "`ref` is missing required columns: ", paste(missing_cols, collapse = ", ")
+      "`ref` is missing required columns: ", toString(missing_cols)
     )
   )
 
@@ -80,70 +82,95 @@ ts_subset_ref <- function(ref, taxon, rank = NULL, col_map = NULL) {
   if (!is.null(rank)) rank <- tolower(trimws(rank))
   id <- as.character(ref$taxonID)
 
-  found <- rep(FALSE, length(taxon))
-  keep <- rep(FALSE, nrow(ref))
-
-  if (length(rank_cols) > 0 && (is.null(rank) || rank %in% rank_cols)) {
-    # (1) higher-rank columns
-    cols <- if (is.null(rank)) rank_cols else rank
-    for (col in cols) {
-      v <- trimws(as.character(ref[[col]]))
-      hit <- !is.na(v) & v %in% taxon
-      keep <- keep | hit
-      found <- found | taxon %in% v
-    }
-  } else if ("parentNameUsageID" %in% colnames(ref) &&
-    "scientificName" %in% colnames(ref)) {
-    # (2) walk down from the named taxon
-    assertthat::assert_that(
-      is.null(rank) || "taxonRank" %in% colnames(ref),
-      msg = "`rank` was given but `ref` has no `taxonRank` column"
-    )
-    nm <- trimws(as.character(ref$scientificName))
-    accepted <- is.na(ref$acceptedNameUsageID) |
-      as.character(ref$acceptedNameUsageID) == id
-    start <- rep(FALSE, nrow(ref))
-    for (i in seq_along(taxon)) {
-      hit <- accepted & !is.na(nm) &
-        (nm == taxon[i] | startsWith(nm, paste0(taxon[i], " ")))
-      if (!is.null(rank)) hit <- hit & tolower(trimws(ref$taxonRank)) %in% rank
-      hit[is.na(hit)] <- FALSE
-      found[i] <- any(hit)
-      start <- start | hit
-    }
-    parent <- as.character(ref$parentNameUsageID)
-    keep <- start
-    repeat {
-      add <- !keep & !is.na(parent) & parent %in% id[keep]
-      if (!any(add)) break
-      keep <- keep | add
-    }
-  } else {
-    stop(
-      "Can't find the members of `taxon`: `ref` has no columns for higher ranks ",
-      "(such as `family`) and no `parentNameUsageID` column, so there is no ",
-      "hierarchy to subset with.",
-      call. = FALSE
-    )
-  }
+  hits <- .ts_subset_hits(ref, taxon, rank, id, rank_cols)
+  keep <- hits$keep
+  found <- hits$found
 
   if (!any(found)) {
     stop("None of `taxon` was found in `ref`.", call. = FALSE)
   }
   if (!all(found)) {
     warning(
-      "Not found in `ref`: ", paste(taxon[!found], collapse = ", "),
+      "Not found in `ref`: ", toString(taxon[!found]),
       call. = FALSE
     )
   }
 
-  # add synonyms of kept names, then the accepted names of kept synonyms
-  acc <- as.character(ref$acceptedNameUsageID)
-  keep <- keep | (!is.na(acc) & acc %in% id[keep])
-  keep <- keep | (id %in% acc[keep])
+  keep <- .ts_subset_add_synonyms(keep, ref, id)
 
   # rows of the original table, so the same `col_map` still works afterwards
   orig[keep, , drop = FALSE]
+}
+
+# Add the synonyms of the kept names, then the accepted names of kept synonyms
+.ts_subset_add_synonyms <- function(keep, ref, id) {
+  acc <- as.character(ref$acceptedNameUsageID)
+  keep <- keep | (!is.na(acc) & acc %in% id[keep])
+  keep | (id %in% acc[keep])
+}
+
+# Find the rows in the taxa, and which of the taxa were found: with the
+# columns of higher ranks if there are any, else by walking down from the named
+# taxon with parentNameUsageID
+.ts_subset_hits <- function(ref, taxon, rank, id, rank_cols) {
+  if (length(rank_cols) > 0 && (is.null(rank) || rank %in% rank_cols)) {
+    return(.ts_subset_by_columns(
+      ref, taxon, if (is.null(rank)) rank_cols else rank
+    ))
+  }
+  if (all(c("parentNameUsageID", "scientificName") %in% colnames(ref))) {
+    return(.ts_subset_by_parents(ref, taxon, rank, id))
+  }
+  stop(
+    "Can't find the members of `taxon`: `ref` has no columns for higher ",
+    "ranks (such as `family`) and no `parentNameUsageID` column, so there ",
+    "is no hierarchy to subset with.",
+    call. = FALSE
+  )
+}
+
+# Rows in the taxa (`keep`) according to the columns of higher ranks, and which
+# of the taxa were found (`found`)
+.ts_subset_by_columns <- function(ref, taxon, cols) {
+  found <- rep(FALSE, length(taxon))
+  keep <- rep(FALSE, nrow(ref))
+  for (col in cols) {
+    v <- trimws(as.character(ref[[col]]))
+    hit <- !is.na(v) & v %in% taxon
+    keep <- keep | hit
+    found <- found | taxon %in% v
+  }
+  list(keep = keep, found = found)
+}
+
+# Same, by finding the (accepted) taxa by name and walking down through
+# parentNameUsageID
+.ts_subset_by_parents <- function(ref, taxon, rank, id) {
+  assertthat::assert_that(
+    is.null(rank) || "taxonRank" %in% colnames(ref),
+    msg = "`rank` was given but `ref` has no `taxonRank` column"
+  )
+  found <- rep(FALSE, length(taxon))
+  nm <- trimws(as.character(ref$scientificName))
+  accepted <- is.na(ref$acceptedNameUsageID) |
+    as.character(ref$acceptedNameUsageID) == id
+  start <- rep(FALSE, nrow(ref))
+  for (i in seq_along(taxon)) {
+    hit <- accepted & !is.na(nm) &
+      (nm == taxon[i] | startsWith(nm, paste0(taxon[i], " ")))
+    if (!is.null(rank)) hit <- hit & tolower(trimws(ref$taxonRank)) %in% rank
+    hit[is.na(hit)] <- FALSE
+    found[i] <- any(hit)
+    start <- start | hit
+  }
+  parent <- as.character(ref$parentNameUsageID)
+  keep <- start
+  repeat {
+    add <- !keep & !is.na(parent) & parent %in% id[keep]
+    if (!any(add)) break
+    keep <- keep | add
+  }
+  list(keep = keep, found = found)
 }
 
 # Columns that may hold the higher taxa of a name, used by ts_subset_ref()

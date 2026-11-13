@@ -16,15 +16,17 @@
 #'   session. There is never a prompt when not interactive.
 #'
 #' @return `ts_show_ref_cache()` returns a dataframe with one row per file: the
-#'   original `file` name, `size` (such as "121.7 MB"), `modified` and `path`. It is empty if
-#'   there is nothing in the folder. `ts_clear_ref_cache()` invisibly returns
-#'   the paths of the deleted files.
+#'   original `file` name, `size` (such as "121.7 MB"), `modified` and `path`.
+#'   It is empty if there is nothing in the folder. `ts_clear_ref_cache()`
+#'   invisibly returns the paths of the deleted files.
 #' @export
 #' @examples
 #' ts_show_ref_cache()
 #' ts_clear_ref_cache()
 ts_show_ref_cache <- function(cache_dir = NULL) {
-  assertthat::assert_that(is.null(cache_dir) || assertthat::is.string(cache_dir))
+  assertthat::assert_that(
+    is.null(cache_dir) || assertthat::is.string(cache_dir)
+  )
   dir <- .ts_cache_path(cache_dir)
   paths <- .ts_cache_files(dir)
   info <- file.info(paths)
@@ -49,16 +51,18 @@ ts_show_ref_cache <- function(cache_dir = NULL) {
 #' @export
 ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
                                ask = interactive()) {
-  assertthat::assert_that(is.null(cache_dir) || assertthat::is.string(cache_dir))
   assertthat::assert_that(
+    is.null(cache_dir) || assertthat::is.string(cache_dir),
     is.null(older_than) ||
-      (is.numeric(older_than) && length(older_than) == 1 && !is.na(older_than))
+      (is.numeric(older_than) && length(older_than) == 1 && !is.na(older_than)),
+    assertthat::is.flag(ask), !is.na(ask)
   )
-  assertthat::assert_that(assertthat::is.flag(ask), !is.na(ask))
   dir <- .ts_cache_path(cache_dir)
   paths <- .ts_cache_files(dir)
   if (!is.null(older_than)) {
-    age <- as.numeric(difftime(Sys.time(), file.info(paths)$mtime, units = "days"))
+    age <- as.numeric(difftime(Sys.time(), file.info(paths)$mtime,
+      units = "days"
+    ))
     paths <- paths[age > older_than]
   }
   if (length(paths) == 0) {
@@ -83,7 +87,9 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
 
 # Files in `dir` that ts_load_ref() made: "<8 hex>-<name>" and "*.part"
 .ts_cache_files <- function(dir) {
-  if (!dir.exists(dir)) return(character(0))
+  if (!dir.exists(dir)) {
+    return(character(0))
+  }
   f <- list.files(dir, full.names = TRUE)
   f <- f[!dir.exists(f)]
   f[grepl("^[0-9a-f]{8}-.", basename(f)) | grepl("\\.part$", basename(f))]
@@ -94,7 +100,10 @@ ts_clear_ref_cache <- function(cache_dir = NULL, older_than = NULL,
   vapply(
     bytes,
     function(b) {
-      format(structure(b, class = "object_size"), units = "auto", standard = "SI")
+      format(structure(b, class = "object_size"),
+        units = "auto",
+        standard = "SI"
+      )
     },
     character(1)
   )

@@ -28,8 +28,8 @@ are fine.}
 \item{file}{Character; path to a file.}
 
 \item{version}{Optional character. For \code{source}, the version to download,
-such as \code{"2026-06"} for \code{"wfo"} (versions from \code{"2022-12"} on) or \code{"v2.1.0"}
-for \code{"ppg"}; the default is the latest version (see
+such as \code{"2026-06"} for \code{"wfo"} (versions from \code{"2022-12"} on) or
+\code{"v2.1.0"} for \code{"ppg"}; the default is the latest version (see
 \code{ts_show_ref_sources(versions = TRUE)} for the versions you can use). For
 \code{url} and \code{file}, a label for the version of the data, which is only
 stored in the \code{ts_source} attribute of the result so the reference can be
@@ -67,17 +67,17 @@ Give the data in one of three ways, and only one:
 \item \code{source}: the name of a source that taxastand knows how to download, such
 as \code{"wfo"} (World Flora Online) or \code{"itis"} (the Integrated Taxonomic
 Information System). See \code{\link{ts_show_ref_sources}()} for the
-list, licenses and how to cite them. The latest version is used unless you give a \code{version}, and the
-version that was used is recorded in the result.
+list, licenses and how to cite them. The latest version is used unless you
+give a \code{version}, and the version that was used is recorded in the result.
 \item \code{url}: a direct link (HTTPS) to a file, not to a web page about it.
 \item \code{file}: the path to a file on your computer.
 }
 
 A file can be a comma- or tab-separated text file (such as \code{.csv}, \code{.tsv} or
 \code{.txt}, also compressed as \code{.gz}), a zipped Darwin Core Archive (\code{.zip}), or
-a Parquet file (which needs the nanoparquet or the duckdb package; \code{"itis"}, \code{"col"},
-\code{"gbif"}, \code{"ncbi"}, \code{"ott"}, \code{"fb"} and \code{"slb"} are Parquet files of the
-\href{https://docs.ropensci.org/taxadb/}{taxadb} snapshots).
+a Parquet file (which needs the nanoparquet or the duckdb package; \code{"itis"},
+\code{"col"}, \code{"gbif"}, \code{"ncbi"}, \code{"ott"}, \code{"fb"} and \code{"slb"} are Parquet files
+of the \href{https://docs.ropensci.org/taxadb/}{taxadb} snapshots).
 The type is found from the contents of the file, not its name. For a Darwin
 Core Archive, the file with the taxa (the "core") and its columns are found
 from the \code{meta.xml} file in the archive. All columns are read as text.
@@ -101,7 +101,8 @@ sessions, give a \code{cache_dir} (or set the option). If the file is already
 there, it is used and not downloaded again, unless \code{refresh = TRUE}. See
 \code{\link{ts_show_ref_cache}()} and \code{\link{ts_clear_ref_cache}()} to
 check and free the space. To silence the messages, set
-\code{options(taxastand.verbosity = "quiet")} (see \code{\link{taxastand-package}}).
+\code{options(taxastand.verbosity = "quiet")} (see
+\code{\link{taxastand-package}}).
 Downloads from named sources can be large (World Flora Online is about
 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
@@ -120,23 +121,22 @@ write.csv(
   data.frame(
     taxonID = c("1", "2"), acceptedNameUsageID = c("1", "1"),
     taxonomicStatus = c("accepted", "synonym"),
-    scientificName = c("Polypodium vulgare L.", "Polypodium rotundatum Willd.")
+    scientificName = c(
+      "Polypodium vulgare L.", "Polypodium rotundatum Willd."
+    )
   ),
   f,
   row.names = FALSE
 )
 ts_load_ref(file = f, version = "example")
 
-\dontrun{
-# Download a named source and keep only one family. The file is kept in
-# `cache_dir` so it is not downloaded again next time.
-ref <- ts_load_ref(
-  source = "wfo",
-  taxon = "Polypodiaceae",
-  cache_dir = "~/taxastand-data"
-)
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+# Download a named source (needs internet) and keep only one family. The
+# file goes to a temporary folder unless you give `cache_dir`, where it is
+# kept so it is not downloaded again next time.
+ref <- ts_load_ref(source = "wfo", taxon = "Polypodiaceae")
 
-# Download a file from a URL
-ref <- ts_load_ref(url = "https://example.org/taxonomy.zip")
-}
+# A direct link (HTTPS) to a file works too:
+# ts_load_ref(url = "https://example.org/taxonomy.zip")
+\dontshow{\}) # examplesIf}
 }

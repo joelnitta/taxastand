@@ -7,7 +7,9 @@
 #' @return Dataframe with two columns: `id` and `name`
 #' @keywords internal
 #' @examples
-#' taxastand:::ts_make_name_df("Foogenus x barspecies var. foosubsp (L.) F. Bar")
+#' taxastand:::ts_make_name_df(
+#'   "Foogenus x barspecies var. foosubsp (L.) F. Bar"
+#' )
 ts_make_name_df <- function(taxa) {
   assertthat::assert_that(is.character(taxa))
   assertthat::assert_that(
@@ -87,7 +89,8 @@ ts_classify_result <- function(match_results) {
   tibble::as_tibble(x)
 }
 
-# Use a renamed argument's old name. `old` is NULL unless the old name was given.
+# Use a renamed argument's old name. `old` is NULL unless the old name was
+# given.
 # When both are given they must agree.
 .ts_alias <- function(new, old, new_missing, new_name, old_name) {
   if (is.null(old)) {
@@ -117,7 +120,10 @@ ts_classify_result <- function(match_results) {
     )
     .ts_session$no_auth_told <- TRUE
   }
-  .ts_alias(match_canon, match_no_auth, canon_missing, "match_canon", "match_no_auth")
+  .ts_alias(
+    match_canon, match_no_auth, canon_missing, "match_canon",
+    "match_no_auth"
+  )
 }
 
 # Messages -------------------------------------------------------------------

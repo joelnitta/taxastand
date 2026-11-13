@@ -8,11 +8,13 @@ test_that("Input checks work", {
     "ref must be of class"
   )
   expect_error(
-    ts_match_names(10, data.frame(genus = "Foogenus")),
+    ts_match_names(10, data.frame(genus = "Foogenus",
+      stringsAsFactors = FALSE)),
     "query must be of class"
   )
   expect_error(
-    ts_match_names(data.frame(genus = "Foogenus"), 10),
+    ts_match_names(data.frame(genus = "Foogenus", stringsAsFactors = FALSE),
+      10),
     "ref must be of class"
   )
 })
@@ -32,7 +34,8 @@ test_that("Manually matched names work", {
     ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
     manual_match = data.frame(
       query = "Hymeefee erae",
-      match = "Hymenophyllum polyanthos"
+      match = "Hymenophyllum polyanthos",
+      stringsAsFactors = FALSE
     ),
     simple = TRUE
   )
@@ -70,7 +73,8 @@ test_that("Manually matched names work with collapsed infrasp names", {
     ),
     manual_match = data.frame(
       query = c("Bar foo var. foo", "Crepidomanes minutawtaw"),
-      match = c("Bar foo", "Crepidomanes minutum")
+      match = c("Bar foo", "Crepidomanes minutum"),
+      stringsAsFactors = FALSE
     ),
     max_dist = 10,
     match_canon = FALSE,
@@ -92,26 +96,26 @@ test_that("collapsed autonyms that match exactly get match_type 'autonym'", {
     ref,
     match_autonyms = TRUE, simple = TRUE
   )
-  expect_equal(
+  expect_identical(
     res$match_type,
     c("autonym", "exact", "autonym", "auto_fuzzy_canon")
   )
   # the plain species name is still exact, and the queries keep their text
-  expect_equal(res$reference[1:2], c("Blechnum lunare", "Blechnum lunare"))
-  expect_equal(res$query[1], "Blechnum lunare var. lunare")
+  expect_identical(res$reference[1:2], c("Blechnum lunare", "Blechnum lunare"))
+  expect_identical(res$query[1], "Blechnum lunare var. lunare")
   # an excluded name is not collapsed, so it matches exactly if it is present
   res_ex <- ts_match_names(
     "Blechnum lunare var. lunare", c(ref, "Blechnum lunare var. lunare"),
     match_autonyms = TRUE,
     match_autonyms_exclude = "Blechnum lunare var. lunare", simple = TRUE
   )
-  expect_equal(res_ex$match_type, "exact")
+  expect_identical(res_ex$match_type, "exact")
   # without match_autonyms the autonym only matches if the reference has it
   res_no <- ts_match_names(
     "Blechnum lunare var. lunare", c(ref, "Blechnum lunare var. lunare"),
     simple = TRUE
   )
-  expect_equal(res_no$match_type, "exact")
+  expect_identical(res_no$match_type, "exact")
 })
 
 test_that("collapse_infra and collapse_infra_exclude still work as aliases", {
@@ -125,10 +129,10 @@ test_that("collapse_infra and collapse_infra_exclude still work as aliases", {
     q, ref,
     collapse_infra = TRUE, collapse_infra_exclude = "Foo bar var. bar"
   )
-  expect_equal(old, new)
-  expect_equal(old$match_type[1], "autonym")
+  expect_identical(old, new)
+  expect_identical(old$match_type[1], "autonym")
   # the same value under both names is fine; different values are an error
-  expect_equal(
+  expect_identical(
     ts_match_names(q, ref, match_autonyms = TRUE, collapse_infra = TRUE),
     ts_match_names(q, ref, match_autonyms = TRUE)
   )
@@ -151,15 +155,15 @@ test_that("collapse_infra and collapse_infra_exclude still work as aliases", {
   )
 })
 
-test_that("strip_qualifiers = TRUE resolves an open-nomenclature qualifier to the right match", {
+test_that("strip_qualifiers = TRUE resolves an open qualifier correctly", {
   match_res <- ts_match_names(
     query = "Tectaria cf. crenata",
     ref = c("Tectaria crenata", "Tectaria subvariolosa"),
     strip_qualifiers = TRUE,
     simple = TRUE
   )
-  expect_equal(match_res$reference, "Tectaria crenata")
-  expect_equal(match_res$match_type, "exact")
+  expect_identical(match_res$reference, "Tectaria crenata")
+  expect_identical(match_res$match_type, "exact")
 })
 
 test_that("Incorrectly specified manual match fails", {
@@ -169,7 +173,8 @@ test_that("Incorrectly specified manual match fails", {
       ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         query = "Hymeefee erae",
-        match = "Hymenophyllum poWHAT"
+        match = "Hymenophyllum poWHAT",
+        stringsAsFactors = FALSE
       ),
       simple = TRUE
     ),
@@ -181,7 +186,8 @@ test_that("Incorrectly specified manual match fails", {
       ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         query = c("Crepidomanes minutus", "Crepidomanes minutus"),
-        match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
+        match = c("Hymenophyllum polyanthos", "Crepidomanes minutum"),
+        stringsAsFactors = FALSE
       ),
       simple = TRUE
     ),
@@ -193,7 +199,8 @@ test_that("Incorrectly specified manual match fails", {
       ref = c("Crepidomanes minutum", "Hymenophyllum polyanthos"),
       manual_match = data.frame(
         name = c("Hymenophyllum polyantha", "Crepidomanes minutu"),
-        match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
+        match = c("Hymenophyllum polyanthos", "Crepidomanes minutum"),
+        stringsAsFactors = FALSE
       ),
       simple = TRUE
     ),
@@ -206,24 +213,26 @@ test_that("manual_match works when the query is a parsed dataframe", {
   ref <- c("Crepidomanes minutum", "Hymenophyllum polyanthos")
   manual <- data.frame(
     query = c("Hymeefee erae", "Not in query"),
-    match = c("Hymenophyllum polyanthos", "Crepidomanes minutum")
+    match = c("Hymenophyllum polyanthos", "Crepidomanes minutum"),
+    stringsAsFactors = FALSE
   )
   cols <- c("query", "reference", "match_type", "dist")
   from_chr <- ts_match_names(q, ref, manual_match = manual)
   from_df <- ts_match_names(ts_parse_names(q), ref, manual_match = manual)
-  expect_equal(from_df[, cols], from_chr[, cols])
-  expect_equal(
+  expect_identical(from_df[, cols], from_chr[, cols])
+  expect_identical(
     from_df$match_type[from_df$query == "Hymeefee erae"], "manual"
   )
-  expect_equal(
+  expect_identical(
     from_df$reference[from_df$query == "Hymeefee erae"],
     "Hymenophyllum polyanthos"
   )
   # the other names are matched as usual
-  expect_false("manual" %in% from_df$match_type[from_df$query != "Hymeefee erae"])
+  others <- from_df$match_type[from_df$query != "Hymeefee erae"]
+  expect_false("manual" %in% others)
 })
 
-test_that("manual_match with a parsed query works with collapsed infrasp names", {
+test_that("manual_match with a parsed query works with collapsed infrasp", {
   q <- c(
     "Crepidomanes minutus", "Crepidomanes minutawtaw",
     "Blechnum lunare var. lunare", "Blechnum lunare",
@@ -235,7 +244,8 @@ test_that("manual_match with a parsed query works with collapsed infrasp names",
   )
   manual <- data.frame(
     query = c("Bar foo var. foo", "Crepidomanes minutawtaw"),
-    match = c("Bar foo", "Crepidomanes minutum")
+    match = c("Bar foo", "Crepidomanes minutum"),
+    stringsAsFactors = FALSE
   )
   args <- list(
     ref = ref, manual_match = manual, max_dist = 10,
@@ -243,20 +253,21 @@ test_that("manual_match with a parsed query works with collapsed infrasp names",
   )
   from_chr <- do.call(ts_match_names, c(list(query = q), args))
   from_df <- do.call(ts_match_names, c(list(query = ts_parse_names(q)), args))
-  expect_equal(from_df, from_chr)
+  expect_identical(from_df, from_chr)
 })
 
 test_that("manual_match with a parsed query respects strip_qualifiers", {
   q <- "Tectaria cf. zzzz"
   ref <- c("Tectaria crenata", "Tectaria subvariolosa")
   # the query name is compared as given (the qualifier is kept in `name`)
-  manual <- data.frame(query = "Tectaria cf. zzzz", match = "Tectaria crenata")
+  manual <- data.frame(query = "Tectaria cf. zzzz", match = "Tectaria crenata",
+    stringsAsFactors = FALSE)
   res <- ts_match_names(
     ts_parse_names(q, strip_qualifiers = TRUE), ref,
     manual_match = manual, strip_qualifiers = TRUE, simple = TRUE
   )
-  expect_equal(res$match_type, "manual")
-  expect_equal(res$reference, "Tectaria crenata")
+  expect_identical(res$match_type, "manual")
+  expect_identical(res$reference, "Tectaria crenata")
 })
 
 test_that("a manually matched name that cannot be parsed is an error", {
@@ -264,7 +275,8 @@ test_that("a manually matched name that cannot be parsed is an error", {
   expect_error(
     ts_match_names(
       ts_parse_names("Hymeefee erae"), ref,
-      manual_match = data.frame(query = "Hymeefee erae", match = "Foo !!! ???")
+      manual_match = data.frame(query = "Hymeefee erae", match = "Foo !!! ???",
+        stringsAsFactors = FALSE)
     ),
     "could not be parsed"
   )
@@ -277,8 +289,8 @@ test_that("ts_match_names accepts pre-parsed query and reference", {
   parsed <- ts_match_names(
     ts_parse_names(q), ts_parse_names(r), simple = TRUE
   )
-  expect_equal(parsed, direct)
-  expect_equal(
+  expect_identical(parsed, direct)
+  expect_identical(
     ts_match_names(q, ts_parse_names(r), simple = TRUE), direct
   )
 })
@@ -304,7 +316,8 @@ test_that("tbl_out = TRUE returns a tibble", {
 })
 
 test_that("tbl_out = TRUE without tibble installed gives a clear error", {
-  local_mocked_bindings(requireNamespace = function(...) FALSE, .package = "base")
+  local_mocked_bindings(requireNamespace = function(...) FALSE,
+    .package = "base")
   expect_error(
     ts_parse_names("Crepidomanes minutum", tbl_out = TRUE),
     "tibble"
@@ -314,7 +327,7 @@ test_that("tbl_out = TRUE without tibble installed gives a clear error", {
 test_that("`reference` still works as an alias of `ref`", {
   q <- "Gonocormus minutum"
   r <- unique(filmy_taxonomy$scientificName)
-  expect_equal(
+  expect_identical(
     ts_match_names(q, reference = r, simple = TRUE),
     ts_match_names(q, ref = r, simple = TRUE)
   )
@@ -328,16 +341,18 @@ test_that("`match_no_auth` still works as an alias of `match_canon`", {
   .ts_session$no_auth_told <- TRUE
   q <- "Foo bar Zed."
   ref <- "Foo bar L."
-  expect_equal(
+  expect_identical(
     ts_match_names(q, ref, max_dist = 0)$match_type, "no_match"
   )
   old <- ts_match_names(q, ref, max_dist = 0, match_no_auth = TRUE)
-  expect_equal(old$match_type, "auto_canon")
-  expect_equal(old, ts_match_names(q, ref, max_dist = 0, match_canon = TRUE))
-  expect_equal(
+  expect_identical(old$match_type, "auto_canon")
+  expect_identical(old, ts_match_names(q, ref, max_dist = 0,
+    match_canon = TRUE))
+  expect_identical(
     ts_resolve_names(q, data.frame(
       taxonID = "1", acceptedNameUsageID = NA_character_,
-      taxonomicStatus = "accepted", scientificName = ref
+      taxonomicStatus = "accepted", scientificName = ref,
+      stringsAsFactors = FALSE
     ), max_dist = 0, match_no_auth = TRUE)$resolved_name,
     ref
   )
@@ -369,70 +384,98 @@ test_that("match_autonyms also finds an autonym in the reference", {
     ref,
     match_autonyms = TRUE
   )
-  expect_equal(res$match_type, c("autonym", "auto_canon", "autonym", "no_match"))
-  expect_equal(res$reference[1:3], c(ref[1], ref[1], ref[2]))
+  expect_identical(res$match_type, c("autonym", "auto_canon", "autonym",
+    "no_match"))
+  expect_identical(res$reference[1:3], c(ref[1], ref[1], ref[2]))
   # the query columns describe the query, not the variant that was tried
   expect_true(all(is.na(res$infraspecific_epithet_query)))
-  expect_equal(res$infraspecific_epithet_ref[1], "lunare")
+  expect_identical(res$infraspecific_epithet_ref[1], "lunare")
   # off by default
-  expect_equal(
+  expect_identical(
     ts_match_names("Blechnum lunare (Sw.) Hook.", ref)$match_type, "no_match"
   )
   # an excluded name is not tried as an autonym
-  expect_equal(
+  expect_identical(
     ts_match_names(
       "Blechnum lunare (Sw.) Hook.", ref,
-      match_autonyms = TRUE, match_autonyms_exclude = "Blechnum lunare (Sw.) Hook."
+      match_autonyms = TRUE,
+        match_autonyms_exclude = "Blechnum lunare (Sw.) Hook."
     )$match_type,
     "no_match"
   )
 })
 
-test_that("match_autonyms keeps a species match over an autonym in the reference", {
-  ref <- c("Blechnum lunare (Sw.) Hook.", "Blechnum lunare var. lunare (Sw.) Hook.")
-  res <- ts_match_names("Blechnum lunare (Sw.) Hook.", ref, match_autonyms = TRUE)
-  expect_equal(res$match_type, "exact")
-  expect_equal(res$reference, ref[1])
+test_that("match_autonyms keeps a species match over a reference autonym", {
+  ref <- c("Blechnum lunare (Sw.) Hook.",
+    "Blechnum lunare var. lunare (Sw.) Hook.")
+  res <- ts_match_names("Blechnum lunare (Sw.) Hook.", ref,
+    match_autonyms = TRUE)
+  expect_identical(res$match_type, "exact")
+  expect_identical(res$reference, ref[1])
 })
 
 test_that("an autonym query matches an autonym in the reference literally", {
   ref <- "Blechnum lunare var. lunare (Sw.) Hook."
   res <- ts_match_names(ref, ref, match_autonyms = TRUE)
-  expect_equal(res$match_type, "exact")
-  expect_equal(res$reference, ref)
+  expect_identical(res$match_type, "exact")
+  expect_identical(res$reference, ref)
 })
 
 test_that("ts_resolve_names resolves an autonym in the reference", {
   tax <- data.frame(
     taxonID = c("1", "2"), acceptedNameUsageID = c(NA, "1"),
     taxonomicStatus = c("accepted", "synonym"),
-    scientificName = c("Foo bar L.", "Foo baz subsp. baz Sm.")
+    scientificName = c("Foo bar L.", "Foo baz subsp. baz Sm."),
+    stringsAsFactors = FALSE
   )
   res <- ts_resolve_names("Foo baz Sm.", tax, match_autonyms = TRUE)
-  expect_equal(res$resolved_name, "Foo bar L.")
-  expect_equal(res$match_type, "autonym")
+  expect_identical(res$resolved_name, "Foo bar L.")
+  expect_identical(res$match_type, "autonym")
 })
 
-test_that("autonyms in the reference are found for spelling variants and in all reference forms", {
+test_that("reference autonyms are found for spelling variants and all forms", {
   ref <- c("Foo silvestris var. silvestris L.", "Bar baz L.")
   res <- ts_match_names("Foo sylvestris L.", ref, match_autonyms = TRUE)
-  expect_equal(res$match_type, "auto_orthvar")
-  expect_equal(res$reference, ref[1])
+  expect_identical(res$match_type, "auto_orthvar")
+  expect_identical(res$reference, ref[1])
   # the same result for a prepared reference and for parsed reference names
   prep <- ts_optimize_ref(ref)
-  expect_equal(
+  expect_identical(
     ts_match_names("Foo silvestris L.", prep, match_autonyms = TRUE)$match_type,
     "autonym"
   )
-  expect_equal(
+  expect_identical(
     ts_match_names(
       "Foo silvestris L.", ts_parse_names(ref), match_autonyms = TRUE
     )$match_type,
     "autonym"
   )
   # a reference without autonyms is not affected
-  expect_equal(
+  expect_identical(
     ts_match_names("Quercus robur L.", ref, match_autonyms = TRUE)$match_type,
     "no_match"
   )
+})
+
+test_that("a manual_match with no matching query changes nothing", {
+  ref <- c("Pteris vittata L.", "Pteris cretica L.")
+  parsed <- ts_parse_names("Pteris vittata L.")
+  plain <- ts_match_names(parsed, ref)
+  with_manual <- ts_match_names(
+    parsed, ref,
+    manual_match = data.frame(
+      query = "Nothing here", match = "Pteris cretica L.",
+      stringsAsFactors = FALSE
+    )
+  )
+  expect_identical(with_manual[colnames(plain)], plain)
+})
+
+test_that("match_autonyms leaves a query alone when no variant matches", {
+  ref <- c("Blechnum lunare var. lunare (L.) Bar", "Pteris vittata L.")
+  res <- ts_match_names(
+    "Blechnum lunare Zzzzzzzzzz", ref,
+    match_autonyms = TRUE, match_canon = FALSE, max_dist = 0
+  )
+  expect_identical(res$match_type, "no_match")
 })

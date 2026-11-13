@@ -68,7 +68,12 @@ ts_parse_names <- function(
   exclude_placeholders = TRUE
 ) {
   # Check input: must be character vector, no NA values, all unique
-  assertthat::assert_that(is.character(taxa))
+  assertthat::assert_that(
+    is.character(taxa),
+    assertthat::is.flag(tbl_out),
+    assertthat::is.flag(strip_qualifiers),
+    assertthat::is.flag(exclude_placeholders)
+  )
   assertthat::assert_that(
     assertthat::noNA(taxa),
     msg = "Input taxa may not contain NAs"
@@ -77,12 +82,11 @@ ts_parse_names <- function(
     !anyDuplicated(taxa),
     msg = "Input taxa must be unique"
   )
-  assertthat::assert_that(assertthat::is.flag(tbl_out))
-  assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
-  assertthat::assert_that(assertthat::is.flag(exclude_placeholders))
 
   # Format input names for parsing as `id|taxon_name` records, for example
-  # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar` # nolint: commented_code_linter.
+  # nolint start: commented_code_linter.
+  # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar`
+  # nolint end
   taxa_tbl <- ts_make_name_df(taxa)
   taxa_tbl$record <- paste(taxa_tbl$id, taxa_tbl$name, sep = "|")
 
@@ -91,33 +95,53 @@ ts_parse_names <- function(
     taxa_tbl$record,
     strip_qualifiers = strip_qualifiers
   )
-
-  # Read in results of parsing, format as dataframe
-
-  # The output is one record per line, with fields separated by '|' (pipe symbol)
-  name_parts <- c(
-    "genus_hybrid_sign",
-    "genus_name",
-    "species_hybrid_sign",
-    "specific_epithet",
-    "infraspecific_rank",
-    "infraspecific_epithet",
-    "author"
+  parsed_names <- .ts_read_parsed(parsed_lines)
+  parsed_names <- .ts_drop_unparsed(
+    parsed_names, taxa_tbl, exclude_placeholders, quiet
   )
 
-  # Split into the id and the name parts (8 fields; fields may be empty). Fill
-  # in NA if that name part is missing.
-  fields <- .tt_split_fields(parsed_lines, length(name_parts) + 1L)
-  parsed_names <- data.frame(id = fields[[1]])
-  for (i in seq_along(name_parts)) {
-    field <- fields[[i + 1L]]
-    field[field == ""] <- NA_character_
-    parsed_names[[name_parts[i]]] <- field
+  # Return parsed names as dataframe or tibble
+  results <- parsed_names[, c("name", "id", .ts_name_parts)]
+
+  if (isTRUE(tbl_out)) {
+    return(.ts_as_tibble(results))
   }
 
-  # Add "fail" column if all name parts are missing (couldn't be parsed properly)
-  parsed_names$fail <- rowSums(!is.na(parsed_names[, name_parts])) == 0
+  results
+}
 
+# The parts of a name, in the order of the parser output
+.ts_name_parts <- c(
+  "genus_hybrid_sign",
+  "genus_name",
+  "species_hybrid_sign",
+  "specific_epithet",
+  "infraspecific_rank",
+  "infraspecific_epithet",
+  "author"
+)
+
+# Read the output of the parser (one record per line, with fields separated by
+# '|' (pipe symbol)) as a dataframe: the id and the name parts, with NA if that
+# name part is missing, and a "fail" column that is TRUE if all name parts are
+# missing (couldn't be parsed properly)
+.ts_read_parsed <- function(parsed_lines) {
+  # Split into the id and the name parts (8 fields; fields may be empty)
+  fields <- .tt_split_fields(parsed_lines, length(.ts_name_parts) + 1L)
+  parsed_names <- data.frame(id = fields[[1]])
+  for (i in seq_along(.ts_name_parts)) {
+    field <- fields[[i + 1L]]
+    field[field == ""] <- NA_character_
+    parsed_names[[.ts_name_parts[i]]] <- field
+  }
+  parsed_names$fail <- rowSums(!is.na(parsed_names[, .ts_name_parts])) == 0
+  parsed_names
+}
+
+# Remove the names that failed to parse and the placeholders (with a warning
+# unless `quiet`), and add back in the original name
+.ts_drop_unparsed <- function(parsed_names, taxa_tbl, exclude_placeholders,
+                              quiet) {
   # Placeholder names (e.g. "Genus sp.") are not species names: exclude them
   placeholder <- rep(FALSE, nrow(parsed_names))
   if (exclude_placeholders) {
@@ -127,7 +151,7 @@ ts_parse_names <- function(
       .ts_warn(
         "The following names are placeholders for an identification above ",
         "species rank and are excluded from results: ",
-        paste(orig_name[placeholder], collapse = ", ")
+        toString(orig_name[placeholder])
       )
     }
     parsed_names$fail <- parsed_names$fail | placeholder
@@ -143,10 +167,7 @@ ts_parse_names <- function(
   unparsed <- parsed_names$fail & !placeholder
   if (any(unparsed) && !quiet) {
     failed_ids <- parsed_names$id[unparsed]
-    failed_names <- paste(
-      taxa_tbl$name[taxa_tbl$id %in% failed_ids],
-      collapse = ", "
-    )
+    failed_names <- toString(taxa_tbl$name[taxa_tbl$id %in% failed_ids])
     .ts_warn(
       "The following names could not be parsed and are excluded from results: ",
       failed_names
@@ -159,15 +180,7 @@ ts_parse_names <- function(
   # Remove failures, drop "fail" column
   parsed_names <- parsed_names[!parsed_names$fail, ]
   parsed_names$fail <- NULL
-
-  # Return parsed names as dataframe or tibble
-  results <- parsed_names[, c("name", "id", name_parts)]
-
-  if (isTRUE(tbl_out)) {
-    return(.ts_as_tibble(results))
-  }
-
-  results
+  parsed_names
 }
 
 # Tokens marking an identification that stopped above species rank (open
