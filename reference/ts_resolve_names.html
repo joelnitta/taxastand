@@ -147,16 +147,15 @@ Default: to not allow such a match (<code>FALSE</code>).</p></dd>
 
 
 <dt id="arg-match-autonyms">match_autonyms<a class="anchor" aria-label="anchor" href="#arg-match-autonyms"></a></dt>
-<dd><p>Logical; if the specific epithet and infraspecific
-epithet are the same (an autonym), drop the infraspecific rank and epithet
-from the query. For more information, see
-<code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
+<dd><p>Logical; match autonyms (names whose specific epithet
+and infraspecific epithet are the same) with the species name. For more
+information, see <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-match-autonyms-exclude">match_autonyms_exclude<a class="anchor" aria-label="anchor" href="#arg-match-autonyms-exclude"></a></dt>
 <dd><p>Character vector; taxonomic names to exclude
-from collapsing with <code>match_autonyms</code>. Any names used must match those in
-<code>query</code> exactly, or they won't be excluded.</p></dd>
+from <code>match_autonyms</code>. Any names used must match those in <code>query</code> exactly, or
+they won't be excluded.</p></dd>
 
 
 <dt id="arg-tbl-out">tbl_out<a class="anchor" aria-label="anchor" href="#arg-tbl-out"></a></dt>
