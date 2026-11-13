@@ -356,8 +356,8 @@ name in the taxonomic standard (<code>reference</code>):</p>
 <span><span class="co">#&gt; 1 Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.</span></span>
 <span><span class="co">#&gt;                     matched_name resolved_status matched_status</span></span>
 <span><span class="co">#&gt; 1 Gonocormus minutus (Bl.) Bosch   accepted name        synonym</span></span>
-<span><span class="co">#&gt;         match_type</span></span>
-<span><span class="co">#&gt; 1 auto_fuzzy_canon</span></span></code></pre></div>
+<span><span class="co">#&gt;         match_type dist</span></span>
+<span><span class="co">#&gt; 1 auto_fuzzy_canon    1</span></span></code></pre></div>
 <p>In this case, the query, <code>Gonocormus minutum</code> was a
 misspelled name that is actually a synonym for <em>Crepidomanes
 minutum</em> (Bl.) K. Iwats. Under the hood,
@@ -373,9 +373,9 @@ unambiguously:</p>
 <span><span class="co">#&gt;                  query resolved_name                         matched_name</span></span>
 <span><span class="co">#&gt; 1 Didymoglossum alatum          &lt;NA&gt;     Didymoglossum alatum (Sw.) Desv.</span></span>
 <span><span class="co">#&gt; 2 Didymoglossum alatum          &lt;NA&gt; Didymoglossum alatum (Schkuhr) Presl</span></span>
-<span><span class="co">#&gt;   resolved_status    matched_status match_type</span></span>
-<span><span class="co">#&gt; 1            &lt;NA&gt; ambiguous synonym auto_canon</span></span>
-<span><span class="co">#&gt; 2            &lt;NA&gt; ambiguous synonym auto_canon</span></span></code></pre></div>
+<span><span class="co">#&gt;   resolved_status    matched_status match_type dist</span></span>
+<span><span class="co">#&gt; 1            &lt;NA&gt; ambiguous synonym auto_canon   NA</span></span>
+<span><span class="co">#&gt; 2            &lt;NA&gt; ambiguous synonym auto_canon   NA</span></span></code></pre></div>
 <p>In this case, name resolution using the default settings produced 2
 possible answers, but no <code>resolved_name</code>. The trouble is that
 our query lacked an author. A query without an author is matched on its
@@ -392,7 +392,9 @@ include the author in the query:</p>
 <span><span class="co">#&gt;                              query                       resolved_name</span></span>
 <span><span class="co">#&gt; 1 Didymoglossum alatum (Sw.) Desv. Vandenboschia radicans (Sw.) Copel.</span></span>
 <span><span class="co">#&gt;                       matched_name resolved_status    matched_status match_type</span></span>
-<span><span class="co">#&gt; 1 Didymoglossum alatum (Sw.) Desv.   accepted name ambiguous synonym      exact</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 Didymoglossum alatum (Sw.) Desv.   accepted name ambiguous synonym      exact</span></span>
+<span><span class="co">#&gt;   dist</span></span>
+<span><span class="co">#&gt; 1   NA</span></span></code></pre></div>
 <p>With the author, the query matches a single name exactly
 (<code>exact</code>), which resolves to its accepted name.</p>
 <p>Name resolution workflows typically involve tweaking the matching

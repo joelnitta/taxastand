@@ -83,7 +83,7 @@ function resolves synonyms to their accepted names.</p>
 <span>  tbl_out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"ts_tbl_out"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  strip_qualifiers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  exclude_placeholders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  fuzzy_canon_hits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"closest"</span><span class="op">)</span>,</span>
+<span>  closest_only <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  collapse_infra <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  collapse_infra_exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ref_taxonomy <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -180,14 +180,11 @@ rank) with a warning, instead of matching them as if they were species. See
 character vector. Default: <code>TRUE</code>.</p></dd>
 
 
-<dt id="arg-fuzzy-canon-hits">fuzzy_canon_hits<a class="anchor" aria-label="anchor" href="#arg-fuzzy-canon-hits"></a></dt>
-<dd><p>Either <code>"all"</code> (default) or <code>"closest"</code>. Controls
-which hits are returned when a query <em>without an author</em> has no identical
-canonical name in the reference and is fuzzy-matched on its canonical name
-(match type <code>auto_fuzzy_canon</code>). <code>"all"</code> returns every reference name within
-<code>max_dist</code>, which is the most informative but can include many unrelated
-names when epithets are short. <code>"closest"</code> returns only the names at the
-smallest distance found (ties are all kept, so real ambiguity still shows).</p></dd>
+<dt id="arg-closest-only">closest_only<a class="anchor" aria-label="anchor" href="#arg-closest-only"></a></dt>
+<dd><p>Logical; for each query with fuzzy matches, keep only
+the fuzzy hits at the smallest distance (ties are all kept, so real ambiguity
+still shows) and drop the more distant ones, which can be unrelated names
+when epithets are short. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-collapse-infra-collapse-infra-exclude">collapse_infra, collapse_infra_exclude<a class="anchor" aria-label="anchor" href="#arg-collapse-infra-collapse-infra-exclude"></a></dt>
@@ -216,6 +213,8 @@ Includes the following columns:</p><ul><li><p><code>query</code>: Query name</p>
 <li><p><code>resolved_status</code>: Taxonomic status of the resolved name (same as <code>taxonomicStatus</code> in <code>ref</code>)</p></li>
 <li><p><code>matched_status</code>: Taxonomic status of the matched name (same as <code>taxonomicStatus</code> in <code>ref</code>)</p></li>
 <li><p><code>match_type</code>: Type of match (see the "Match types" section of <code><a href="ts_match_names.html">ts_match_names()</a></code>)</p></li>
+<li><p><code>dist</code>: Edit distance between the query and the matched name for fuzzy
+matches, <code>NA</code> otherwise</p></li>
 </ul><p>Names that could not be matched or resolve to multiple, different synonyms
 have <code>NA</code> for <code>resolved_name</code>.</p>
     </div>
@@ -249,18 +248,20 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">filmy_taxonomy</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ts_resolve_names</span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   query     resolved_name matched_name resolved_status matched_status match_type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocorm… Crepidomanes… Gonocormus … accepted name   synonym        auto_fuzz…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: dist &lt;int&gt;</span></span>
 <span class="r-in"><span><span class="co"># If you always want tibble output without specifying `tbl_out = TRUE`</span></span></span>
 <span class="r-in"><span><span class="co"># every time, set the option:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>ts_tbl_out <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ts_resolve_names</span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">filmy_taxonomy</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   query     resolved_name matched_name resolved_status matched_status match_type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocorm… Crepidomanes… Gonocormus … accepted name   synonym        auto_fuzz…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: dist &lt;int&gt;</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
