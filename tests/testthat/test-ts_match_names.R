@@ -412,3 +412,27 @@ test_that("ts_resolve_names resolves an autonym in the reference", {
   expect_equal(res$resolved_name, "Foo bar L.")
   expect_equal(res$match_type, "autonym")
 })
+
+test_that("autonyms in the reference are found for spelling variants and in all reference forms", {
+  ref <- c("Foo silvestris var. silvestris L.", "Bar baz L.")
+  res <- ts_match_names("Foo sylvestris L.", ref, match_autonyms = TRUE)
+  expect_equal(res$match_type, "auto_orthvar")
+  expect_equal(res$reference, ref[1])
+  # the same result for a prepared reference and for parsed reference names
+  prep <- ts_optimize_ref(ref)
+  expect_equal(
+    ts_match_names("Foo silvestris L.", prep, match_autonyms = TRUE)$match_type,
+    "autonym"
+  )
+  expect_equal(
+    ts_match_names(
+      "Foo silvestris L.", ts_parse_names(ref), match_autonyms = TRUE
+    )$match_type,
+    "autonym"
+  )
+  # a reference without autonyms is not affected
+  expect_equal(
+    ts_match_names("Quercus robur L.", ref, match_autonyms = TRUE)$match_type,
+    "no_match"
+  )
+})
