@@ -82,14 +82,10 @@
 #' rank) with a warning, instead of matching them as if they were species. See
 #' \code{\link{ts_parse_names}()}. Only has an effect when `query` is a
 #' character vector. Default: `TRUE`.
-#'
-#' @param fuzzy_canon_hits Either `"all"` (default) or `"closest"`. Controls
-#' which hits are returned when a query *without an author* has no identical
-#' canonical name in the reference and is fuzzy-matched on its canonical name
-#' (match type `auto_fuzzy_canon`). `"all"` returns every reference name within
-#' `max_dist`, which is the most informative but can include many unrelated
-#' names when epithets are short. `"closest"` returns only the names at the
-#' smallest distance found (ties are all kept, so real ambiguity still shows).
+#' @param closest_only Logical; for each query with fuzzy matches, keep only
+#' the fuzzy hits at the smallest distance (ties are all kept, so real ambiguity
+#' still shows) and drop the more distant ones, which can be unrelated names
+#' when epithets are short. Default: `FALSE`.
 #' @return Dataframe; results of resolving synonyms in matched taxonomic names.
 #' Includes the following columns:
 #' - `query`: Query name
@@ -98,6 +94,8 @@
 #' - `resolved_status`: Taxonomic status of the resolved name (same as `taxonomicStatus` in `ref`)
 #' - `matched_status`: Taxonomic status of the matched name (same as `taxonomicStatus` in `ref`)
 #' - `match_type`: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
+#' - `dist`: Edit distance between the query and the matched name for fuzzy
+#'   matches, `NA` otherwise
 #'
 #' Names that could not be matched or resolve to multiple, different synonyms
 #' have `NA` for `resolved_name`.
@@ -129,7 +127,7 @@ ts_resolve_names <- function(
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest"),
+  closest_only = FALSE,
   collapse_infra = NULL,
   collapse_infra_exclude = NULL,
   ref_taxonomy = NULL,
@@ -176,7 +174,9 @@ ts_resolve_names <- function(
   }
   assertthat::assert_that(assertthat::is.flag(tbl_out))
   assertthat::assert_that(assertthat::is.flag(strip_qualifiers))
-  fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
+  assertthat::assert_that(
+    assertthat::is.flag(closest_only), assertthat::noNA(closest_only)
+  )
   if (!is.null(match_autonyms_exclude)) {
     assertthat::assert_that(is.character(match_autonyms_exclude))
   }
@@ -192,19 +192,29 @@ ts_resolve_names <- function(
       match_canon = match_canon,
       match_autonyms = match_autonyms,
       match_autonyms_exclude = match_autonyms_exclude,
-      simple = TRUE,
       strip_qualifiers = strip_qualifiers,
-      exclude_placeholders = exclude_placeholders,
-      fuzzy_canon_hits = fuzzy_canon_hits
+      exclude_placeholders = exclude_placeholders
     )
   } else {
     match_results <- query # already matched with ts_match_names()
   }
 
+  # Edit distance of fuzzy matches (missing if the matches did not include it)
+  if (!"dist" %in% colnames(match_results)) {
+    assertthat::assert_that(
+      !closest_only,
+      msg = "closest_only needs a `dist` column in the matched query"
+    )
+    match_results$dist <- NA_integer_
+  }
+  if (closest_only) {
+    match_results <- .ts_closest_fuzzy(match_results)
+  }
+
   # Classify results of matching
   match_results_classified <- ts_classify_result(match_results)
   match_results_classified <- match_results_classified[
-    , c("query", "reference", "match_type", "result_type")
+    , c("query", "reference", "match_type", "dist", "result_type")
   ]
   ref_info <- data.frame(
     scientificName = ref_df$scientificName,
@@ -230,7 +240,8 @@ ts_resolve_names <- function(
     matched_name = accepted$reference,
     resolved_status = accepted$taxonomicStatus,
     matched_status = accepted$taxonomicStatus,
-    match_type = accepted$match_type
+    match_type = accepted$match_type,
+    dist = accepted$dist
   )
 
   # Separate out matches to a single synonym (success type 2)
@@ -260,7 +271,8 @@ ts_resolve_names <- function(
     matched_name = syn$reference,
     resolved_status = syn$resolved_status,
     matched_status = syn$taxonomicStatus,
-    match_type = syn$match_type
+    match_type = syn$match_type,
+    dist = syn$dist
   )
 
   # Combine name resolution successes
@@ -277,7 +289,8 @@ ts_resolve_names <- function(
     matched_name = failure$reference,
     resolved_status = rep(NA_character_, nrow(failure)),
     matched_status = failure$taxonomicStatus,
-    match_type = failure$match_type
+    match_type = failure$match_type,
+    dist = failure$dist
   )
 
   # Combine into final results
@@ -293,7 +306,7 @@ ts_resolve_names <- function(
   results <- results_raw[
     , c(
       "query", "resolved_name", "matched_name", "resolved_status",
-      "matched_status", "match_type"
+      "matched_status", "match_type", "dist"
     )
   ]
   rownames(results) <- NULL
@@ -304,4 +317,17 @@ ts_resolve_names <- function(
   }
 
   results
+}
+
+# Keep, for each query, only the fuzzy matches at the smallest distance
+.ts_closest_fuzzy <- function(match_results) {
+  fuzzy <- grepl("^auto_fuzzy", match_results$match_type)
+  min_dist <- ave(
+    ifelse(fuzzy, match_results$dist, NA_integer_), match_results$query,
+    FUN = function(x) if (all(is.na(x))) NA_integer_ else min(x, na.rm = TRUE)
+  )
+  keep <- !fuzzy | (!is.na(match_results$dist) & match_results$dist == min_dist)
+  out <- match_results[keep, , drop = FALSE]
+  rownames(out) <- NULL
+  out
 }

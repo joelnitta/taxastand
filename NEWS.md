@@ -114,10 +114,12 @@
   epithet + infraspecific epithet), ignoring the author. A canonical-name match
   is reported as `auto_canon`, and a misspelled one as the new match type
   `auto_fuzzy_canon`; all reference names within `max_dist` are returned, so
-  ambiguity shows up in `ts_resolve_names()`. The new argument
-  `fuzzy_canon_hits = "closest"` instead keeps only the nearest hits (ties kept),
-  which avoids unrelated names with short epithets. Queries with an author are
-  still matched on the whole name (`auto_fuzzy`).
+  ambiguity shows up in `ts_resolve_names()`, whose output now has a `dist`
+  column (the edit distance of fuzzy matches). The new argument
+  `closest_only = TRUE` of `ts_resolve_names()` instead keeps only the nearest
+  fuzzy hits of each query (ties kept), which avoids unrelated names with short
+  epithets. Queries with an author are still matched on the whole name
+  (`auto_fuzzy`).
 
 * **Breaking: the default `max_dist` is now 3 (was 10) (#47).** `max_dist` is
   the Levenshtein distance on the whole depunctuated name including the author,

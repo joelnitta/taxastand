@@ -194,9 +194,6 @@
 #'   (e.g. memoized by a prepared reference); used instead of `ref_lines`.
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).
-#' @param canon_closest Logical; for fuzzy canonical-name matches of queries
-#'   without an author, return only the hits at the smallest distance (ties
-#'   kept) instead of all hits within `max_dist`.
 #' @param max_dist_genus Integer; max Levenshtein distance between the query
 #'   genus and a reference genus for genus-level fuzzy matching, used only for
 #'   queries whose genus is not in the reference. 0 disables it.
@@ -213,14 +210,13 @@
 #' @noRd
 tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
                           match_canon = FALSE,
-                          canon_closest = FALSE, max_dist_genus = 0,
+                          max_dist_genus = 0,
                           transpositions = FALSE, ref_keys = NULL) {
   m <- .tt_new_match(
     A = .tt_record_keys(query_lines),
     B = if (is.null(ref_keys)) .tt_record_keys(ref_lines) else ref_keys,
     max_dist = as.numeric(max_dist),
     max_dist_genus = as.numeric(max_dist_genus),
-    canon_closest = canon_closest,
     transpositions = transpositions
   )
   A <- m$A
@@ -271,14 +267,12 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # per-query results without `<<-`: `res_code` (list of matched ref codes),
 # `res_type`, `res_dist` (list of fuzzy distances) and `pending` (queries not
 # yet matched).
-.tt_new_match <- function(A, B, max_dist, max_dist_genus, canon_closest,
-                          transpositions) {
+.tt_new_match <- function(A, B, max_dist, max_dist_genus, transpositions) {
   m <- new.env(parent = emptyenv())
   m$A <- A
   m$B <- B
   m$max_dist <- max_dist
   m$max_dist_genus <- max_dist_genus
-  m$canon_closest <- canon_closest
   m$transpositions <- transpositions
   n_q <- length(A$code)
   m$res_code <- vector("list", n_q)
@@ -411,8 +405,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # not count towards the distance. All same-genus refs with an identical
 # canonical name are returned ("auto_canon"); failing that, those whose
 # canonical name differs only by Latin spelling variants ("auto_orthvar");
-# failing that, all within max_dist ("auto_fuzzy_canon"), or only the closest
-# of those if `canon_closest`.
+# failing that, all within max_dist ("auto_fuzzy_canon").
 .tt_stage_canonfuzzy <- function(m, idx) {
   rcf <- m$B$key("canon")
   qcf <- m$A$key("canon")
@@ -434,7 +427,6 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
         type <- "auto_orthvar"
       } else {
         keep <- !is.na(d) & d <= m$max_dist
-        if (m$canon_closest && any(keep)) keep <- keep & d == min(d[keep])
         type <- "auto_fuzzy_canon"
       }
     }
@@ -490,9 +482,6 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     k <- keys[[if (m$A$no_auth[qi]) "canon" else "whole"]]
     d <- .tt_fuzzy_dist(m, k$q[qi], k$r[rows])
     keep <- !is.na(d) & d <= m$max_dist
-    if (m$canon_closest && m$A$no_auth[qi] && any(keep)) {
-      keep <- keep & d == min(d[keep])
-    }
     if (any(keep)) {
       .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy_genus", d[keep])
     }

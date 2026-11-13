@@ -16,7 +16,7 @@ ts_resolve_names(
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest"),
+  closest_only = FALSE,
   collapse_infra = NULL,
   collapse_infra_exclude = NULL,
   ref_taxonomy = NULL,
@@ -91,13 +91,10 @@ rank) with a warning, instead of matching them as if they were species. See
 \code{\link{ts_parse_names}()}. Only has an effect when \code{query} is a
 character vector. Default: \code{TRUE}.}
 
-\item{fuzzy_canon_hits}{Either \code{"all"} (default) or \code{"closest"}. Controls
-which hits are returned when a query \emph{without an author} has no identical
-canonical name in the reference and is fuzzy-matched on its canonical name
-(match type \code{auto_fuzzy_canon}). \code{"all"} returns every reference name within
-\code{max_dist}, which is the most informative but can include many unrelated
-names when epithets are short. \code{"closest"} returns only the names at the
-smallest distance found (ties are all kept, so real ambiguity still shows).}
+\item{closest_only}{Logical; for each query with fuzzy matches, keep only
+the fuzzy hits at the smallest distance (ties are all kept, so real ambiguity
+still shows) and drop the more distant ones, which can be unrelated names
+when epithets are short. Default: \code{FALSE}.}
 
 \item{collapse_infra, collapse_infra_exclude}{Aliases of \code{match_autonyms} and
 \code{match_autonyms_exclude}, kept so that existing code keeps working.}
@@ -120,6 +117,8 @@ Includes the following columns:
 \item \code{resolved_status}: Taxonomic status of the resolved name (same as \code{taxonomicStatus} in \code{ref})
 \item \code{matched_status}: Taxonomic status of the matched name (same as \code{taxonomicStatus} in \code{ref})
 \item \code{match_type}: Type of match (see the "Match types" section of \code{\link{ts_match_names}()})
+\item \code{dist}: Edit distance between the query and the matched name for fuzzy
+matches, \code{NA} otherwise
 }
 
 Names that could not be matched or resolve to multiple, different synonyms

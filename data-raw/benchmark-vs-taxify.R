@@ -119,12 +119,18 @@ ppg$accepted <- accepted_canonical(seq_len(nrow(ppg)))
 # accepted (accepted canonical name, NA if not resolved)
 # `reference` is the names, or the output of ts_optimize_ref()
 make_taxastand <- function(reference, closest = FALSE) {
-  hits <- if (closest) "closest" else "all"
   function(q) {
-    m <- suppressWarnings(ts_match_names(
-      q, reference, simple = TRUE, fuzzy_canon_hits = hits
-    ))
+    m <- suppressWarnings(ts_match_names(q, reference))
     m <- m[m$match_type != "no_match", ]
+    if (closest) {
+      # keep only the fuzzy hits at the smallest distance of each query
+      fuzzy <- grepl("^auto_fuzzy", m$match_type)
+      min_dist <- ave(
+        ifelse(fuzzy, m$dist, NA_integer_), m$query,
+        FUN = function(x) suppressWarnings(min(x, na.rm = TRUE))
+      )
+      m <- m[!fuzzy | m$dist == min_dist, ]
+    }
     data.frame(
       query = m$query, hit = ppg$canonical[match(m$reference, ppg$full)],
       accepted = ppg$accepted[match(m$reference, ppg$full)],

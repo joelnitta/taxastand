@@ -113,17 +113,6 @@ test_that("tt_matchnames: plain Levenshtein distance, no trailing penalty", {
   expect_equal(res3$match_type, "no_match")
 })
 
-test_that("tt_matchnames: canon_closest keeps only the nearest canonical hits", {
-  ref <- c("r1||Foo||bart|||A", "r2||Foo||barnn|||B", "r3||Foo||bar t|||C")
-  all_hits <- tt_matchnames("q1||Foo||bar|||", ref, max_dist = 3)
-  expect_setequal(all_hits$id_ref, c("r1", "r2", "r3"))
-  closest <- tt_matchnames("q1||Foo||bar|||", ref, max_dist = 3, canon_closest = TRUE)
-  # r1 ("bart") and r3 ("bar t" -> "bart" once depunctuated) are both at
-  # distance 1; r2 is at distance 2
-  expect_setequal(closest$id_ref, c("r1", "r3"))
-  expect_true(all(closest$match_type == "auto_fuzzy_canon"))
-})
-
 test_that(".tt_osa counts an adjacent swap as one edit", {
   osa <- function(a, b) .tt_osa(strsplit(a, "")[[1]], b)
   expect_equal(osa("qurecus", "quercus"), 1L)
@@ -214,18 +203,6 @@ test_that("tt_matchnames: a name never matches itself", {
   rec <- "a||Foo||bar|||L."
   expect_equal(tt_matchnames(rec, rec)$match_type, "no_match")
   expect_equal(tt_matchnames("a||Foo||bar|||", rec)$match_type, "no_match")
-})
-
-test_that("tt_matchnames: closest-only applies to genus-level fuzzy hits", {
-  ref <- c("r1||Foo||bar|||", "r2||Foo||baxxx|||")
-  q <- "q1||Fo||bar|||"
-  all <- tt_matchnames(q, ref, max_dist = 4, max_dist_genus = 2)
-  expect_equal(nrow(all), 2)
-  closest <- tt_matchnames(
-    q, ref, max_dist = 4, max_dist_genus = 2, canon_closest = TRUE
-  )
-  expect_equal(closest$id_ref, "r1")
-  expect_equal(closest$match_type, "auto_fuzzy_genus")
 })
 
 test_that("tt_matchnames handles no queries; .tt_osa handles empty strings", {

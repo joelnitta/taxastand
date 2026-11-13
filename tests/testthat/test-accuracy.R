@@ -193,7 +193,7 @@ test_that("a query list identical to the reference still resolves", {
   expect_equal(res$match_type, "exact")
 })
 
-test_that("fuzzy_canon_hits = 'closest' resolves ambiguity from distant hits", {
+test_that("ts_match_names returns all fuzzy hits; resolve can keep the closest", {
   extra <- data.frame(
     taxonID = c("101", "102"),
     scientificName = c("Pteridium aquilxnxm Foo", "Pteridium aquilinaxx Bar"), # distance 2, 3
@@ -205,13 +205,28 @@ test_that("fuzzy_canon_hits = 'closest' resolves ambiguity from distant hits", {
   all_hits <- suppressWarnings(
     ts_match_names(q, ref2$scientificName, max_dist = 3)
   )
-  closest <- suppressWarnings(
-    ts_match_names(q, ref2$scientificName, max_dist = 3, fuzzy_canon_hits = "closest")
-  )
   expect_equal(nrow(all_hits), 3)
-  expect_equal(closest$reference, "Pteridium aquilinum (L.) Kuhn")
-  expect_error(
-    ts_match_names(q, ref2$scientificName, fuzzy_canon_hits = "none"),
-    "should be one of"
+  expect_equal(sort(all_hits$dist), c(1L, 2L, 3L))
+  res_all <- suppressWarnings(ts_resolve_names(q, ref2, max_dist = 3))
+  expect_equal(nrow(res_all), 3)
+  expect_equal(sort(res_all$dist), c(1L, 2L, 3L))
+  res <- suppressWarnings(
+    ts_resolve_names(q, ref2, max_dist = 3, closest_only = TRUE)
   )
+  expect_equal(res$matched_name, "Pteridium aquilinum (L.) Kuhn")
+  expect_equal(res$dist, 1L)
+  # ties are kept, and non-fuzzy matches have no distance
+  res_exact <- ts_resolve_names(
+    c("Pteridium aquilinum (L.) Kuhn", q), ref2, max_dist = 3,
+    closest_only = TRUE
+  )
+  expect_true(is.na(res_exact$dist[res_exact$query != q]))
+  # an already matched query without distances cannot be filtered
+  expect_error(
+    ts_resolve_names(
+      all_hits[c("query", "reference", "match_type")], ref2, closest_only = TRUE
+    ),
+    "needs a `dist` column"
+  )
+  expect_error(ts_resolve_names(q, ref2, closest_only = NA), "missing")
 })
