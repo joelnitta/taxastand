@@ -18,7 +18,6 @@ ts_match_names(
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
   collapse_infra_exclude = NULL,
   reference = NULL,
@@ -94,14 +93,6 @@ already-parsed data.frames are passed in. Default: \code{FALSE}.}
 rank) with a warning, instead of matching them as if they were species. See
 \code{\link{ts_parse_names}()}. Only has an effect when \code{query} is a
 character vector. Default: \code{TRUE}.}
-
-\item{fuzzy_canon_hits}{Either \code{"all"} (default) or \code{"closest"}. Controls
-which hits are returned when a query \emph{without an author} has no identical
-canonical name in the reference and is fuzzy-matched on its canonical name
-(match type \code{auto_fuzzy_canon}). \code{"all"} returns every reference name within
-\code{max_dist}, which is the most informative but can include many unrelated
-names when epithets are short. \code{"closest"} returns only the names at the
-smallest distance found (ties are all kept, so real ambiguity still shows).}
 
 \item{collapse_infra, collapse_infra_exclude}{Aliases of \code{match_autonyms} and
 \code{match_autonyms_exclude}, kept so that existing code keeps working.}
@@ -228,7 +219,7 @@ are genuinely different.
 \item \code{auto_fuzzy}: query has an author; the whole name (author included) is
 within \code{max_dist} of a reference name.
 \item \code{auto_fuzzy_canon}: query has no author; the canonical names are within
-\code{max_dist}. Which hits are returned is set by \code{fuzzy_canon_hits}.
+\code{max_dist}.
 }
 
 \strong{Fuzzy genus matches (misspelled genus; always verify)}

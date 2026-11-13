@@ -72,7 +72,7 @@
 #' - `auto_fuzzy`: query has an author; the whole name (author included) is
 #'   within `max_dist` of a reference name.
 #' - `auto_fuzzy_canon`: query has no author; the canonical names are within
-#'   `max_dist`. Which hits are returned is set by `fuzzy_canon_hits`.
+#'   `max_dist`.
 #'
 #' **Fuzzy genus matches (misspelled genus; always verify)**
 #' - `auto_fuzzy_genus`: the genus of the query is not in the reference, but is
@@ -153,14 +153,6 @@
 #' rank) with a warning, instead of matching them as if they were species. See
 #' \code{\link{ts_parse_names}()}. Only has an effect when `query` is a
 #' character vector. Default: `TRUE`.
-#'
-#' @param fuzzy_canon_hits Either `"all"` (default) or `"closest"`. Controls
-#' which hits are returned when a query *without an author* has no identical
-#' canonical name in the reference and is fuzzy-matched on its canonical name
-#' (match type `auto_fuzzy_canon`). `"all"` returns every reference name within
-#' `max_dist`, which is the most informative but can include many unrelated
-#' names when epithets are short. `"closest"` returns only the names at the
-#' smallest distance found (ties are all kept, so real ambiguity still shows).
 #' @return Dataframe with the following columns (if `simple` is `FALSE`):
 #' - query: Query name
 #' - reference: Matched reference name
@@ -253,7 +245,6 @@ ts_match_names <- function(
   tbl_out = getOption("ts_tbl_out", default = FALSE),
   strip_qualifiers = FALSE,
   exclude_placeholders = TRUE,
-  fuzzy_canon_hits = c("all", "closest"),
   collapse_infra = NULL,
   collapse_infra_exclude = NULL,
   reference = NULL,
@@ -275,7 +266,6 @@ ts_match_names <- function(
     match_canon, simple, tbl_out, match_autonyms,
     match_autonyms_exclude, strip_qualifiers
   )
-  fuzzy_canon_hits <- match.arg(fuzzy_canon_hits)
 
   # Parse or load query names. For manual matches, the matched name is used
   # instead of the query to generate an exact match.
@@ -338,7 +328,6 @@ ts_match_names <- function(
     ref_keys = ref_prep$keys,
     max_dist = max_dist,
     match_canon = match_canon,
-    canon_closest = identical(fuzzy_canon_hits, "closest"),
     max_dist_genus = max_dist_genus,
     transpositions = transpositions
   )
