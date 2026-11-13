@@ -310,16 +310,22 @@ ts_match_names <- function(
 
   # Optionally collapse infraspecific name
   collapsed <- NULL
-  variants <- NULL
   if (isTRUE(match_autonyms)) {
     collapsed <- .ts_collapse_infra(query_parsed_df, match_autonyms_exclude)
     query_parsed_df <- collapsed$parsed
-    variants <- .ts_autonym_variants(collapsed, match_autonyms_exclude)
   }
 
   ref_prep <- .ts_prepare_reference(
     ref, query_parsed_df, max_dist_genus, strip_qualifiers
   )
+
+  # With match_autonyms, also ask for the autonyms that the reference has
+  variants <- NULL
+  if (isTRUE(match_autonyms)) {
+    variants <- .ts_autonym_variants(
+      collapsed, match_autonyms_exclude, .ts_ref_autonym_keys(ref_prep)
+    )
+  }
 
   # Check that manually matched ref names are in data
   if (!is.null(manual_match)) {
@@ -503,8 +509,10 @@ ts_match_names <- function(
 # Extra queries for match_autonyms, so that an autonym in the reference can be
 # found: a species-level query is also asked as an autonym ("Blechnum lunare"
 # as "Blechnum lunare var. lunare"), and an autonym that was collapsed is also
-# asked as it was written. `base_id` is the id of the query each one stands for.
-.ts_autonym_variants <- function(collapsed, exclude) {
+# asked as it was written. Only those whose genus and species are an autonym in
+# the reference (`ref_keys`) are kept. `base_id` is the id of the query each one
+# stands for.
+.ts_autonym_variants <- function(collapsed, exclude, ref_keys) {
   kept <- collapsed$parsed
   orig <- collapsed$original[match(kept$id, collapsed$original$id), ]
   was_autonym <- kept$id %in% collapsed$autonym_ids
@@ -515,15 +523,44 @@ ts_match_names <- function(
   constructed$infraspecific_rank <- rep("var.", nrow(constructed))
   constructed$infraspecific_epithet <- constructed$specific_epithet
   parsed <- rbind(literal, constructed)
-  if (nrow(parsed) == 0) {
+  base_id <- c(kept$id[was_autonym], kept$id[species_level])
+  is_literal <- c(rep(TRUE, nrow(literal)), rep(FALSE, nrow(constructed)))
+  keep <- .ts_autonym_key(parsed$genus_name, parsed$specific_epithet) %in%
+    ref_keys
+  if (!any(keep)) {
     return(NULL)
   }
-  base_id <- c(kept$id[was_autonym], kept$id[species_level])
-  parsed$id <- paste0(base_id, "-autonym")
-  list(
-    parsed = parsed, base_id = base_id,
-    literal = c(rep(TRUE, nrow(literal)), rep(FALSE, nrow(constructed)))
-  )
+  parsed <- parsed[keep, ]
+  parsed$id <- paste0(base_id[keep], "-autonym")
+  list(parsed = parsed, base_id = base_id[keep], literal = is_literal[keep])
+}
+
+# Key of a genus and specific epithet that is the same for spellings that
+# differ only in punctuation, case or Latin orthographic variants
+.ts_autonym_key <- function(genus, epithet) {
+  genus[is.na(genus)] <- ""
+  epithet[is.na(epithet)] <- ""
+  paste0(tt_depunct(genus), .tt_orthfold(tt_depunct(epithet)))
+}
+
+# Keys (see .ts_autonym_key()) of the genus and species of the autonyms in the
+# reference
+.ts_ref_autonym_keys <- function(ref_prep) {
+  if (is.null(ref_prep$keys)) {
+    p <- ref_prep$parsed
+    genus <- p$genus_name
+    epithet <- p$specific_epithet
+    infra <- p$infraspecific_epithet
+  } else {
+    genus <- ref_prep$keys$fields$g
+    epithet <- ref_prep$keys$fields$s
+    infra <- ref_prep$keys$fields$ssp
+  }
+  infra[is.na(infra)] <- ""
+  epithet[is.na(epithet)] <- ""
+  same <- nzchar(infra) &
+    .tt_orthfold(tt_depunct(epithet)) == .tt_orthfold(tt_depunct(infra))
+  unique(.ts_autonym_key(genus[same], epithet[same]))
 }
 
 # Use the matches of the autonym variants for the queries that otherwise have
