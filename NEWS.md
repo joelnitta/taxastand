@@ -80,11 +80,7 @@
 * **`match_autonyms` now works both ways (#144).** It used to collapse only an
   autonym in the query. A species name in the query (`Blechnum lunare`) now also
   matches an autonym in the reference (`Blechnum lunare var. lunare`), with any
-  infraspecific rank, as `autonym`. A match to the species name or to the name
-  as written is preferred; the autonym is tried only for queries that otherwise
-  have no match or only fuzzy matches. An autonym query that is also an autonym
-  in the reference is now found (it used to be collapsed and missed) and is
-  `exact`.
+  infraspecific rank, as `autonym`.
 * The `collapse_infra` and `collapse_infra_exclude` arguments of
   `ts_match_names()` and `ts_resolve_names()` are renamed `match_autonyms` and
   `match_autonyms_exclude` (#101), since they are about autonyms, the

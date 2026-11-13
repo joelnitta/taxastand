@@ -21,15 +21,7 @@
 #'
 #' `match_autonyms` is useful when the query and the reference do not agree on
 #' whether to use names that have the same specific epithet and infraspecific
-#' epithet (autonyms). It works both ways. If the query is an autonym and the
-#' reference has only the species name (query "Blechnum lunare var. lunare",
-#' reference "Blechnum lunare"), the species name is queried instead. If the
-#' query is the species name and the reference has an autonym (query
-#' "Blechnum lunare", reference "Blechnum lunare var. lunare"), the autonym is
-#' tried too, with any infraspecific rank. When the two names differ and match
-#' exactly this way, the `match_type` is `autonym` (not `exact`). A match to the
-#' species name or to the name as written is preferred over this one (see
-#' example below).
+#' epithet (autonyms).
 #'
 #' @section Match types:
 #' The `match_type` column says how a query was matched. Types are tried in
@@ -133,8 +125,8 @@
 #' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
 #' @param match_autonyms Logical; match autonyms (names whose specific epithet
-#' and infraspecific epithet are the same) with the species name, whichever of
-#' the two is in the query and which in the reference. Default: `FALSE`.
+#' and infraspecific epithet are the same) with the species name.
+#' Default: `FALSE`.
 #' @param match_autonyms_exclude Character vector; taxonomic names to exclude
 #' from `match_autonyms`. Any names used must match those in `query` exactly, or
 #' they won't be excluded.
