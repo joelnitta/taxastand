@@ -56,9 +56,8 @@
 #' species epithet, and infraspecific epithet (if present) match exactly.
 #' Default: to not allow such a match (`FALSE`).
 #' @param match_autonyms Logical; match autonyms (names whose specific epithet
-#' and infraspecific epithet are the same) with the species name, whichever of
-#' the two is in the query and which in the reference. For more information, see
-#' \code{\link{ts_match_names}()}. Default: `FALSE`.
+#' and infraspecific epithet are the same) with the species name. For more
+#' information, see \code{\link{ts_match_names}()}. Default: `FALSE`.
 #' @param match_autonyms_exclude Character vector; taxonomic names to exclude
 #' from `match_autonyms`. Any names used must match those in `query` exactly, or
 #' they won't be excluded.
