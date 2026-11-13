@@ -181,10 +181,9 @@ author), every one of them is returned, so the ambiguity is visible.
 \strong{Identical after normalization (safe to accept)}
 \itemize{
 \item \code{exact}: all parts of the name, including the author, are identical.
-\item \code{autonym}: identical once an autonym (a name whose infraspecific epithet
-repeats the specific epithet, e.g. "Blechnum lunare var. lunare") in the
-query or the reference is collapsed to the species name, "Blechnum lunare"
-(only when \code{match_autonyms} is \code{TRUE}).
+\item \code{autonym}: identical once an autonym (e.g. "Blechnum lunare var. lunare")
+is collapsed to the species name, "Blechnum lunare" (only when
+\code{match_autonyms} is \code{TRUE}).
 \item \code{auto_punct}: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.
 }
