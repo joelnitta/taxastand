@@ -103,7 +103,7 @@ The name matching algorithm was able to narrow the match down to `Hymenophyllum 
 Here is a summary of the values taken by `match_type` (also documented in the "Match types" section of `?ts_match_names`, ordered by how much each can be trusted):
 
 - `exact`: Exact match to all parts of the name (genus hybrid marker, genus name, species hybrid marker, species epithet, infraspecific rank signifier, infraspecific rank, author string).
-- `autonym` (only applies if `match_autonyms` is `TRUE`): Exact match after an autonym (a name whose infraspecific epithet repeats the specific epithet, such as `Blechnum lunare var. lunare`) in the query or the reference is collapsed to the species name (`Blechnum lunare`).
+- `autonym` (only applies if `match_autonyms` is `TRUE`): Exact match after an autonym (such as `Blechnum lunare var. lunare`) is collapsed to the species name (`Blechnum lunare`).
 - `auto_punct`: Exact match to all parts of the name after removing mis-matching spaces, periods, non-ASCII author name characters, etc.
 - `auto_basio-`: Match after excluding the basionym author from the reference. For example, `Cardaminopsis umbrosa Czerep.` vs. `Cardaminopsis umbrosa (Turcz.) Czerep.)`); the basionym author is `(Turcz.)`.
 - `auto_basio+`: Match after excluding the basionym author from the query.
