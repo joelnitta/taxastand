@@ -114,8 +114,8 @@ are fine.</p></dd>
 
 <dt id="arg-version">version<a class="anchor" aria-label="anchor" href="#arg-version"></a></dt>
 <dd><p>Optional character. For <code>source</code>, the version to download,
-such as <code>"2026-06"</code> for <code>"wfo"</code> (versions from <code>"2022-12"</code> on) or <code>"v2.1.0"</code>
-for <code>"ppg"</code>; the default is the latest version (see
+such as <code>"2026-06"</code> for <code>"wfo"</code> (versions from <code>"2022-12"</code> on) or
+<code>"v2.1.0"</code> for <code>"ppg"</code>; the default is the latest version (see
 <code>ts_show_ref_sources(versions = TRUE)</code> for the versions you can use). For
 <code>url</code> and <code>file</code>, a label for the version of the data, which is only
 stored in the <code>ts_source</code> attribute of the result so the reference can be
@@ -154,15 +154,15 @@ read).</p>
     <p>Give the data in one of three ways, and only one:</p><ul><li><p><code>source</code>: the name of a source that taxastand knows how to download, such
 as <code>"wfo"</code> (World Flora Online) or <code>"itis"</code> (the Integrated Taxonomic
 Information System). See <code><a href="ts_show_ref_sources.html">ts_show_ref_sources()</a></code> for the
-list, licenses and how to cite them. The latest version is used unless you give a <code>version</code>, and the
-version that was used is recorded in the result.</p></li>
+list, licenses and how to cite them. The latest version is used unless you
+give a <code>version</code>, and the version that was used is recorded in the result.</p></li>
 <li><p><code>url</code>: a direct link (HTTPS) to a file, not to a web page about it.</p></li>
 <li><p><code>file</code>: the path to a file on your computer.</p></li>
 </ul><p>A file can be a comma- or tab-separated text file (such as <code>.csv</code>, <code>.tsv</code> or
 <code>.txt</code>, also compressed as <code>.gz</code>), a zipped Darwin Core Archive (<code>.zip</code>), or
-a Parquet file (which needs the nanoparquet or the duckdb package; <code>"itis"</code>, <code>"col"</code>,
-<code>"gbif"</code>, <code>"ncbi"</code>, <code>"ott"</code>, <code>"fb"</code> and <code>"slb"</code> are Parquet files of the
-<a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> snapshots).
+a Parquet file (which needs the nanoparquet or the duckdb package; <code>"itis"</code>,
+<code>"col"</code>, <code>"gbif"</code>, <code>"ncbi"</code>, <code>"ott"</code>, <code>"fb"</code> and <code>"slb"</code> are Parquet files
+of the <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> snapshots).
 The type is found from the contents of the file, not its name. For a Darwin
 Core Archive, the file with the taxa (the "core") and its columns are found
 from the <code>meta.xml</code> file in the archive. All columns are read as text.</p>
@@ -181,7 +181,8 @@ sessions, give a <code>cache_dir</code> (or set the option). If the file is alre
 there, it is used and not downloaded again, unless <code>refresh = TRUE</code>. See
 <code><a href="ts_show_ref_cache.html">ts_show_ref_cache()</a></code> and <code><a href="ts_show_ref_cache.html">ts_clear_ref_cache()</a></code> to
 check and free the space. To silence the messages, set
-<code>options(taxastand.verbosity = "quiet")</code> (see <code><a href="taxastand-package.html">taxastand-package</a></code>).
+<code>options(taxastand.verbosity = "quiet")</code> (see
+<code><a href="taxastand-package.html">taxastand-package</a></code>).
 Downloads from named sources can be large (World Flora Online is about
 120 MB, and GBIF about 360 MB), so loading can take a few minutes. Large
 tables also need a lot of memory (a few GB for GBIF). For Parquet files, if
@@ -201,29 +202,28 @@ Core taxonomic data. Check the license of the data before reusing it.</p>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    taxonID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"2"</span><span class="op">)</span>, acceptedNameUsageID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"1"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    taxonomicStatus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"accepted"</span>, <span class="st">"synonym"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    scientificName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Polypodium vulgare L."</span>, <span class="st">"Polypodium rotundatum Willd."</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    scientificName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      <span class="st">"Polypodium vulgare L."</span>, <span class="st">"Polypodium rotundatum Willd."</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="va">f</span>,</span></span>
 <span class="r-in"><span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ts_load_ref</span><span class="op">(</span>file <span class="op">=</span> <span class="va">f</span>, version <span class="op">=</span> <span class="st">"example"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded 2 names from /tmp/Rtmpu36ypt/file18912d24e004.csv (version example).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded 2 names from /tmp/Rtmp6smwq6/file1834cd88971.csv (version example).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   taxonID acceptedNameUsageID taxonomicStatus               scientificName</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1                   1        accepted        Polypodium vulgare L.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2                   1         synonym Polypodium rotundatum Willd.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Download a named source and keep only one family. The file is kept in</span></span></span>
-<span class="r-in"><span><span class="co"># `cache_dir` so it is not downloaded again next time.</span></span></span>
-<span class="r-in"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu">ts_load_ref</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  source <span class="op">=</span> <span class="st">"wfo"</span>,</span></span>
-<span class="r-in"><span>  taxon <span class="op">=</span> <span class="st">"Polypodiaceae"</span>,</span></span>
-<span class="r-in"><span>  cache_dir <span class="op">=</span> <span class="st">"~/taxastand-data"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+<span class="r-in"><span><span class="co"># Download a named source (needs internet) and keep only one family. The</span></span></span>
+<span class="r-in"><span><span class="co"># file goes to a temporary folder unless you give `cache_dir`, where it is</span></span></span>
+<span class="r-in"><span><span class="co"># kept so it is not downloaded again next time.</span></span></span>
+<span class="r-in"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu">ts_load_ref</span><span class="op">(</span>source <span class="op">=</span> <span class="st">"wfo"</span>, taxon <span class="op">=</span> <span class="st">"Polypodiaceae"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Download a file from a URL</span></span></span>
-<span class="r-in"><span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu">ts_load_ref</span><span class="op">(</span>url <span class="op">=</span> <span class="st">"https://example.org/taxonomy.zip"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># A direct link (HTTPS) to a file works too:</span></span></span>
+<span class="r-in"><span><span class="co"># ts_load_ref(url = "https://example.org/taxonomy.zip")</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>
   </div>

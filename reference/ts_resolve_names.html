@@ -129,7 +129,8 @@ for queries whose genus is not in the reference; the candidates are then the
 names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
 <code>max_dist</code>. Matches have the type <code>auto_fuzzy_genus</code>. Set to 0 to turn
-genus-level fuzzy matching off. See <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: 2.</p></dd>
+genus-level fuzzy matching off. See <code><a href="ts_match_names.html">ts_match_names()</a></code>.
+Default: 2.</p></dd>
 
 
 <dt id="arg-transpositions">transpositions<a class="anchor" aria-label="anchor" href="#arg-transpositions"></a></dt>
@@ -137,7 +138,8 @@ genus-level fuzzy matching off. See <code><a href="ts_match_names.html">ts_match
 <code>Qurecus</code> for <code>Quercus</code>, a common typing error) as one edit instead of two
 when computing fuzzy-match distances (optimal string alignment distance
 rather than plain Levenshtein distance). Set to <code>FALSE</code> for plain
-Levenshtein distance, which is somewhat faster. See <code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
+Levenshtein distance, which is somewhat faster. See
+<code><a href="ts_match_names.html">ts_match_names()</a></code>. Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-match-canon">match_canon<a class="anchor" aria-label="anchor" href="#arg-match-canon"></a></dt>
@@ -210,9 +212,12 @@ have an author.</p></dd>
 Includes the following columns:</p><ul><li><p><code>query</code>: Query name</p></li>
 <li><p><code>resolved_name</code>: Accepted name after resolving synonyms</p></li>
 <li><p><code>matched_name</code>: Name matched to query</p></li>
-<li><p><code>resolved_status</code>: Taxonomic status of the resolved name (same as <code>taxonomicStatus</code> in <code>ref</code>)</p></li>
-<li><p><code>matched_status</code>: Taxonomic status of the matched name (same as <code>taxonomicStatus</code> in <code>ref</code>)</p></li>
-<li><p><code>match_type</code>: Type of match (see the "Match types" section of <code><a href="ts_match_names.html">ts_match_names()</a></code>)</p></li>
+<li><p><code>resolved_status</code>: Taxonomic status of the resolved name (same as
+<code>taxonomicStatus</code> in <code>ref</code>)</p></li>
+<li><p><code>matched_status</code>: Taxonomic status of the matched name (same as
+<code>taxonomicStatus</code> in <code>ref</code>)</p></li>
+<li><p><code>match_type</code>: Type of match (see the "Match types" section of
+<code><a href="ts_match_names.html">ts_match_names()</a></code>)</p></li>
 <li><p><code>dist</code>: Edit distance between the query and the matched name for fuzzy
 matches, <code>NA</code> otherwise</p></li>
 </ul><p>Names that could not be matched or resolve to multiple, different synonyms

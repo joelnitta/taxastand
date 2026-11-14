@@ -97,7 +97,8 @@ names or mapped to them with <code>col_map</code>. May also have
 
 <dt id="arg-col-map">col_map<a class="anchor" aria-label="anchor" href="#arg-col-map"></a></dt>
 <dd><p>Named character vector to rename columns of <code>ref</code>. Each name
-is the Darwin Core name and each value is the column of <code>ref</code> that holds it.
+is the Darwin Core name and each value is the column of <code>ref</code> that holds
+it.
 For example,
 <code>c(taxonID = "taxon_id", scientificName = "canonical_name")</code>.
 Columns that already have Darwin Core names need not be listed. Default
@@ -122,8 +123,9 @@ It is stored in the <code>ts_source</code> attribute of the result.</p></dd>
     <h2>Value</h2>
     <p>A dataframe with columns <code>taxonID</code>, <code>acceptedNameUsageID</code>,
 <code>taxonomicStatus</code> and <code>scientificName</code> (and <code>taxonRank</code>, if <code>ref</code> had it),
-plus any columns for the hierarchy of the names that <code>ref</code> had: higher ranks
-such as <code>family</code> and <code>parentNameUsageID</code>. Other columns are dropped. It
+plus any columns for the hierarchy of the names that <code>ref</code> had: higher
+ranks such as <code>family</code> and <code>parentNameUsageID</code>. Other columns are dropped.
+It
 has the <code>ts_source</code> attribute if <code>source</code> was given.</p>
     </div>
     <div id="details">

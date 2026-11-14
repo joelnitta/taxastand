@@ -91,9 +91,9 @@ above species, which are needed to walk down from <code>taxon</code>.</p>
 
 
 <dl><dt id="arg-ref">ref<a class="anchor" aria-label="anchor" href="#arg-ref"></a></dt>
-<dd><p>Dataframe of taxonomic names in Darwin Core format, or close to it,
-with at least <code>taxonID</code> and <code>acceptedNameUsageID</code>, and either columns for
-higher ranks or <code>parentNameUsageID</code> (and <code>scientificName</code>).</p></dd>
+<dd><p>Dataframe of taxonomic names in Darwin Core format, or close to
+it, with at least <code>taxonID</code> and <code>acceptedNameUsageID</code>, and either columns
+for higher ranks or <code>parentNameUsageID</code> (and <code>scientificName</code>).</p></dd>
 
 
 <dt id="arg-taxon">taxon<a class="anchor" aria-label="anchor" href="#arg-taxon"></a></dt>
@@ -141,12 +141,16 @@ name.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  taxonID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"4"</span>, <span class="st">"5"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  acceptedNameUsageID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"1"</span>, <span class="st">"5"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  taxonomicStatus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"accepted"</span>, <span class="st">"accepted"</span>, <span class="st">"accepted"</span>, <span class="st">"synonym"</span>, <span class="st">"accepted"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  taxonomicStatus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="st">"accepted"</span>, <span class="st">"accepted"</span>, <span class="st">"accepted"</span>, <span class="st">"synonym"</span>, <span class="st">"accepted"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
 <span class="r-in"><span>  scientificName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="st">"Polypodium vulgare L."</span>, <span class="st">"Pteris vittata L."</span>, <span class="st">"Pteris cretica L."</span>,</span></span>
 <span class="r-in"><span>    <span class="st">"Polypodium rotundatum Willd."</span>, <span class="st">"Equisetum arvense L."</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Polypodiaceae"</span>, <span class="st">"Pteridaceae"</span>, <span class="st">"Pteridaceae"</span>, <span class="cn">NA</span>, <span class="st">"Equisetaceae"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="st">"Polypodiaceae"</span>, <span class="st">"Pteridaceae"</span>, <span class="st">"Pteridaceae"</span>, <span class="cn">NA</span>, <span class="st">"Equisetaceae"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ts_subset_ref</span><span class="op">(</span><span class="va">x</span>, <span class="st">"Pteridaceae"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   taxonID acceptedNameUsageID taxonomicStatus    scientificName      family</span>
