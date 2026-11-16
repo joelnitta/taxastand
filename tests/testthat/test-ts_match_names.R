@@ -208,6 +208,55 @@ test_that("Incorrectly specified manual match fails", {
   )
 })
 
+test_that("manual_match can hold names for queries not in this call", {
+  # The reference is filtered to the genera that could match a query before
+  # matching. A manual match for a query that is not being matched now can
+  # point to a genus that no query has, so the manual matches are checked
+  # against the whole reference (e.g. one table of manual matches used for
+  # several batches of queries)
+  ref <- data.frame(
+    taxonID = c("1", "2", "3"),
+    acceptedNameUsageID = c(NA, NA, NA),
+    taxonomicStatus = c("accepted", "accepted", "accepted"),
+    scientificName = c(
+      "Gymnosphaera boivinii (Mett. ex Ettingsh.) Tardieu",
+      "Hymenophyllum polyanthos (Sw.) Sw.",
+      "Crepidomanes minutum (Blume) K.Iwats."
+    ),
+    stringsAsFactors = FALSE
+  )
+  manual <- data.frame(
+    query = c("Cyathea boiviniiformis", "Hymeefee erae"),
+    match = c(
+      "Gymnosphaera boivinii (Mett. ex Ettingsh.) Tardieu",
+      "Hymenophyllum polyanthos (Sw.) Sw."
+    ),
+    stringsAsFactors = FALSE
+  )
+  refs <- list(
+    character = ref$scientificName,
+    parsed = ts_parse_names(ref$scientificName),
+    optimized = ts_optimize_ref(ref)
+  )
+  q <- c("Hymeefee erae", "Crepidomanes minutum (Blume) K.Iwats.")
+  for (r in names(refs)) {
+    res <- ts_match_names(q, refs[[r]], manual_match = manual, simple = TRUE)
+    expect_identical(res$match_type, c("manual", "exact"), label = r)
+    expect_identical(
+      res$reference,
+      c("Hymenophyllum polyanthos (Sw.) Sw.", ref$scientificName[3]),
+      label = r
+    )
+  }
+  # a match name that is in no genus of the reference still fails
+  bad <- manual
+  bad$match[1] <- "Gymnosphaera nonexistens Foo"
+  expect_error(
+    ts_match_names(q, refs$optimized, manual_match = bad),
+    "One or more manually matched reference names not in reference data"
+  )
+})
+
 test_that("manual_match works when the query is a parsed dataframe", {
   q <- c("Crepidomanes minutus", "Hymeefee erae", "Hymenophyllum polyantha")
   ref <- c("Crepidomanes minutum", "Hymenophyllum polyanthos")

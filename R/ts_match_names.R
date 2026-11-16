@@ -323,7 +323,9 @@ ts_match_names <- function(
   # Check that manually matched ref names are in data
   if (!is.null(manual_match)) {
     assertthat::assert_that(
-      isTRUE(all(manual_match$match %in% ref_prep$names)),
+      # (against the whole reference: ref_prep only has the genera that
+      # could match a query, and a manual match can change the genus)
+      isTRUE(all(manual_match$match %in% .ts_all_ref_names(ref))),
       msg = "One or more manually matched reference names not in reference data"
     )
   }
@@ -713,4 +715,12 @@ ts_match_names <- function(
   out$query <- out$query_original
   out$query_original <- NULL
   out[, c("query", setdiff(colnames(out), "query"))]
+}
+
+# Every name in a reference (parsed dataframe, ts_reference or character
+# vector), before any genus filtering
+.ts_all_ref_names <- function(ref) {
+  if (inherits(ref, "data.frame")) return(ref$name)
+  if (inherits(ref, "ts_reference")) return(ref$names)
+  ref
 }

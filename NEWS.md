@@ -165,6 +165,14 @@
 
 ## Bug fixes
 
+* `ts_match_names()` checked the `match` names of `manual_match` against
+  only the part of the reference whose genus could match a query (since the
+  genus filter of #43). A `manual_match` table with rows for queries that are
+  not in the call (for example one table used for several batches of
+  queries) then failed with "One or more manually matched reference names
+  not in reference data" whenever such a row pointed to a genus that no
+  query has. The names are now checked against the whole reference.
+
 * Fix `ts_match_names(..., collapse_infra = TRUE)`'s internal deduplication
   key, which used `paste0(..., sep = "_")` -- `paste0()` has no `sep`
   argument, so the separator was silently dropped, joining name components
