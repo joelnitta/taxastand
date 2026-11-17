@@ -14,6 +14,7 @@ ts_load_ref(
   rank = NULL,
   col_map = NULL,
   drop_ranks = ts_ranks_above_species(),
+  keep_cols = NULL,
   refresh = FALSE
 )
 }
@@ -43,6 +44,10 @@ cited.}
 
 \item{col_map, drop_ranks}{Passed to \code{\link{ts_subset_ref}()} (\code{col_map})
 and \code{\link{ts_format_ref}()} (both). Not needed for named sources.}
+
+\item{keep_cols}{Passed to \code{\link{ts_format_ref}()}: names of other
+columns to keep, such as \code{"nomenclaturalStatus"}. For named sources that
+only read some columns of the file (such as \code{"wfo"}), these are read too.}
 
 \item{refresh}{Logical; download again even if the file is already in
 \code{cache_dir}? Default \code{FALSE}.}

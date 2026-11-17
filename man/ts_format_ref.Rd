@@ -8,6 +8,7 @@ ts_format_ref(
   ref,
   col_map = NULL,
   drop_ranks = ts_ranks_above_species(),
+  keep_cols = NULL,
   source = NULL
 )
 }
@@ -32,6 +33,11 @@ Columns that already have Darwin Core names need not be listed. Default
 section and series). Use \code{NULL} to keep all rows. Ignored if \code{ref}
 has no \code{taxonRank} column.}
 
+\item{keep_cols}{Optional character vector of the names of other columns of
+\code{ref} to keep, such as \code{"nomenclaturalStatus"}. They are kept as they are
+(after \code{col_map} has been applied), and must all be in \code{ref}. Default
+\code{NULL}: only the columns listed above are kept.}
+
 \item{source}{Optional list describing where the data came from, for
 example \code{list(provider = "ITIS", version = "2026", license = "CC0")}.
 It is stored in the \code{ts_source} attribute of the result.}
@@ -40,9 +46,8 @@ It is stored in the \code{ts_source} attribute of the result.}
 A dataframe with columns \code{taxonID}, \code{acceptedNameUsageID},
 \code{taxonomicStatus} and \code{scientificName} (and \code{taxonRank}, if \code{ref} had it),
 plus any columns for the hierarchy of the names that \code{ref} had: higher
-ranks such as \code{family} and \code{parentNameUsageID}. Other columns are dropped.
-It
-has the \code{ts_source} attribute if \code{source} was given.
+ranks such as \code{family} and \code{parentNameUsageID}, and any columns named in
+\code{keep_cols}. Other columns are dropped. It has the \code{ts_source} attribute if \code{source} was given.
 }
 \description{
 Turns a table of taxonomic names in (or close to) Darwin Core format, for
@@ -62,7 +67,7 @@ these are combined.
 (see \code{drop_ranks}).
 \item Keeps the required columns, \code{taxonRank} and the columns that give the
 hierarchy (higher ranks such as \code{family}, and \code{parentNameUsageID}), and
-drops the rest. This lets \code{\link{ts_subset_ref}()} be used after
+drops the rest, except for any columns named in \code{keep_cols}. This lets \code{\link{ts_subset_ref}()} be used after
 \code{ts_format_ref()} for most tables (see its documentation for the
 exception).
 \item Tidies values: \code{taxonomicStatus} is lower-cased and trimmed, empty

@@ -191,6 +191,9 @@
 
 ## Minor improvements
 
+* New `keep_cols` argument of `ts_format_ref()` and `ts_load_ref()` to keep
+  extra columns of the reference, such as `nomenclaturalStatus` (#155).
+
 * `manual_match` in `ts_match_names()` now also works when `query` is a
   dataframe of names parsed with `ts_parse_names()` (#93), not only a character
   vector. The `query` values are compared with the `name` column.

@@ -76,6 +76,9 @@
 #'   \code{\link{ts_subset_ref}()}.
 #' @param col_map,drop_ranks Passed to \code{\link{ts_subset_ref}()} (`col_map`)
 #'   and \code{\link{ts_format_ref}()} (both). Not needed for named sources.
+#' @param keep_cols Passed to \code{\link{ts_format_ref}()}: names of other
+#'   columns to keep, such as `"nomenclaturalStatus"`. For named sources that
+#'   only read some columns of the file (such as `"wfo"`), these are read too.
 #' @param refresh Logical; download again even if the file is already in
 #'   `cache_dir`? Default `FALSE`.
 #'
@@ -112,6 +115,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
                         cache_dir = NULL, taxon = NULL, rank = NULL,
                         col_map = NULL,
                         drop_ranks = ts_ranks_above_species(),
+                        keep_cols = NULL,
                         refresh = FALSE) {
   .ts_check_load_args(source, url, file, version, cache_dir, refresh)
 
@@ -122,6 +126,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     version <- spec$version
     url <- spec$url
     keep <- spec$keep
+    if (!is.null(keep)) keep <- union(keep, keep_cols)
     info <- spec$info
   }
   if (!is.null(url)) {
@@ -146,7 +151,8 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
 
   out <- ts_format_ref(
     raw,
-    col_map = col_map, drop_ranks = drop_ranks, source = info
+    col_map = col_map, drop_ranks = drop_ranks, keep_cols = keep_cols,
+    source = info
   )
   .ts_load_report(out, info, source, url, file)
   out

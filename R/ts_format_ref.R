@@ -16,7 +16,7 @@
 #'    (see `drop_ranks`).
 #' 4. Keeps the required columns, `taxonRank` and the columns that give the
 #'    hierarchy (higher ranks such as `family`, and `parentNameUsageID`), and
-#'    drops the rest. This lets \code{\link{ts_subset_ref}()} be used after
+#'    drops the rest, except for any columns named in `keep_cols`. This lets \code{\link{ts_subset_ref}()} be used after
 #'    `ts_format_ref()` for most tables (see its documentation for the
 #'    exception).
 #' 5. Tidies values: `taxonomicStatus` is lower-cased and trimmed, empty
@@ -53,6 +53,10 @@
 #'   (kingdom to genus, and the ranks between them such as subfamily, tribe,
 #'   section and series). Use `NULL` to keep all rows. Ignored if `ref`
 #'   has no `taxonRank` column.
+#' @param keep_cols Optional character vector of the names of other columns of
+#'   `ref` to keep, such as `"nomenclaturalStatus"`. They are kept as they are
+#'   (after `col_map` has been applied), and must all be in `ref`. Default
+#'   `NULL`: only the columns listed above are kept.
 #' @param source Optional list describing where the data came from, for
 #'   example `list(provider = "ITIS", version = "2026", license = "CC0")`.
 #'   It is stored in the `ts_source` attribute of the result.
@@ -60,9 +64,8 @@
 #' @return A dataframe with columns `taxonID`, `acceptedNameUsageID`,
 #'   `taxonomicStatus` and `scientificName` (and `taxonRank`, if `ref` had it),
 #'   plus any columns for the hierarchy of the names that `ref` had: higher
-#'   ranks such as `family` and `parentNameUsageID`. Other columns are dropped.
-#'   It
-#'   has the `ts_source` attribute if `source` was given.
+#'   ranks such as `family` and `parentNameUsageID`, and any columns named in
+#'   `keep_cols`. Other columns are dropped. It has the `ts_source` attribute if `source` was given.
 #' @export
 #' @examples
 #' # A table with its own column names, and the author in a separate column
@@ -86,11 +89,13 @@
 ts_format_ref <- function(
   ref, col_map = NULL,
   drop_ranks = ts_ranks_above_species(),
+  keep_cols = NULL,
   source = NULL
 ) {
   assertthat::assert_that(
     inherits(ref, "data.frame"),
     is.null(drop_ranks) || is.character(drop_ranks),
+    is.null(keep_cols) || (is.character(keep_cols) && !anyNA(keep_cols)),
     is.null(source) || is.list(source)
   )
 
@@ -111,12 +116,21 @@ ts_format_ref <- function(
     )
   )
 
+  missing_keep <- setdiff(keep_cols, colnames(ref))
+  assertthat::assert_that(
+    length(missing_keep) == 0,
+    msg = paste0(
+      "`keep_cols` refers to columns not in `ref`: ",
+      toString(missing_keep)
+    )
+  )
+
   ref <- .ts_ref_tidy_text(ref, required)
   ref$taxonomicStatus <- tolower(ref$taxonomicStatus)
   ref <- .ts_ref_drop_ranks(ref, drop_ranks)
 
-  keep_cols <- c(required, "taxonRank", hierarchy_columns())
-  out <- ref[, intersect(keep_cols, colnames(ref)), drop = FALSE]
+  cols <- c(required, "taxonRank", hierarchy_columns())
+  out <- ref[, union(intersect(cols, colnames(ref)), keep_cols), drop = FALSE]
   out <- out[!duplicated(out), , drop = FALSE]
   # Some databases give no ID to synonyms. Resolving needs every name to have
   # one, so make up unique IDs for these.
