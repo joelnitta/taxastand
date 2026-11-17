@@ -152,3 +152,46 @@ test_that("missing taxonIDs get made-up unique ones and resolve", {
     ts_resolve_names("Foo baz Willd.", res)$resolved_name, "Foo bar L."
   )
 })
+
+test_that("keep_cols keeps extra columns, and errors if one is missing", {
+  raw2 <- raw
+  raw2$nomenclaturalStatus <- c("a", "b", "c", "d", "e", "a")
+  raw2$notes <- "x"
+  out <- ts_format_ref(raw2, col_map = map, keep_cols = "nomenclaturalStatus")
+  expect_identical(
+    colnames(out),
+    c("taxonID", "acceptedNameUsageID", "taxonomicStatus", "scientificName",
+      "taxonRank", "nomenclaturalStatus")
+  )
+  expect_identical(out$nomenclaturalStatus, c("a", "b", "e"))
+  # not kept by default
+  expect_false("nomenclaturalStatus" %in% colnames(ts_format_ref(raw2, map)))
+  expect_error(
+    ts_format_ref(raw, col_map = map, keep_cols = c("nope", "nada")),
+    "keep_cols.*nope, nada"
+  )
+})
+
+test_that("ts_load_ref() passes keep_cols on (also with taxon)", {
+  f <- withr::local_tempfile(fileext = ".csv")
+  write.csv(
+    data.frame(
+      taxonID = c("1", "2", "3"), acceptedNameUsageID = c("1", "1", "3"),
+      taxonomicStatus = c("accepted", "synonym", "accepted"),
+      scientificName = c(
+        "Polypodium vulgare L.", "Polypodium rotundatum Willd.",
+        "Asplenium nidus L."
+      ),
+      genus = c("Polypodium", "Polypodium", "Asplenium"),
+      nomenclaturalStatus = c("valid", "illegitimate", "valid")
+    ),
+    f, row.names = FALSE
+  )
+  out <- ts_load_ref(file = f, keep_cols = "nomenclaturalStatus")
+  expect_identical(out$nomenclaturalStatus, c("valid", "illegitimate", "valid"))
+  out2 <- ts_load_ref(
+    file = f, taxon = "Polypodium", rank = "genus",
+    keep_cols = "nomenclaturalStatus"
+  )
+  expect_identical(out2$nomenclaturalStatus, c("valid", "illegitimate"))
+})
