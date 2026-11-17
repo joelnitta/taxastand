@@ -334,12 +334,23 @@ ts_resolve_names <- function(
     "acceptedNameUsageID", "acceptedNameUsageID"
   )
   # Count of number of resolved, accepted names per query; only keep those
-  # that resolve to the same name
-  n_resolved <- ave(
-    as.integer(factor(syn$resolved_name, exclude = NULL)),
-    syn$query,
-    FUN = function(z) length(unique(z))
+  # that resolve to the same name. A query that also matched an accepted name
+  # counts that name too, so "accepted name + synonym of another name" is
+  # ambiguous (a failure), not silently resolved to the synonym.
+  acc <- classified[
+    !is_syn %in% TRUE & classified$result_type == "mult_match" &
+      classified$query %in% syn$query, ,
+    drop = FALSE
+  ]
+  all_resolved <- data.frame(
+    query = c(syn$query, acc$query),
+    resolved_name = c(syn$resolved_name, acc$reference)
   )
+  n_by_query <- tapply(
+    all_resolved$resolved_name, all_resolved$query,
+    function(z) length(unique(z))
+  )
+  n_resolved <- n_by_query[syn$query]
   syn <- syn[n_resolved == 1, , drop = FALSE]
   data.frame(
     query = syn$query,
