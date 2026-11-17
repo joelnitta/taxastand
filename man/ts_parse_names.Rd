@@ -36,7 +36,7 @@ prior behavior.}
 
 \item{exclude_placeholders}{Logical; if \code{TRUE} (default), names that are
 placeholders for an identification that stopped above species rank (\code{sp.},
-\code{spp.}, \code{indet.}, \code{stet.}, \code{inc.}, and their long forms; see References) are
+\code{spp.}, \code{indet.}, \code{stet.}, \code{inc.}, and the long forms of \code{indet.} and \code{stet.}; see References) are
 excluded from the results with a warning, like names that cannot be parsed.
 Otherwise \code{"Genus sp."} would be parsed as if \code{"sp"} were a real specific
 epithet and could then be fuzzy-matched to unrelated species.}
