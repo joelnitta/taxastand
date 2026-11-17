@@ -79,3 +79,29 @@ test_that("`ref_taxonomy` still works as an alias of `ref`", {
     "alias of `ref`"
   )
 })
+
+test_that("an accepted name and a synonym of another name is ambiguous", {
+  # "Pteris oppositipinnata Fee" matches (auto_punct) both the accepted
+  # "Pteris oppositipinnata Fée" and the synonym "Pteris oppositi-pinnata Fée"
+  # of a different accepted name; this must not resolve to the synonym's name
+  ref <- data.frame(
+    taxonID = c("1", "2", "3", "4"),
+    acceptedNameUsageID = c("3", NA, NA, "2"),
+    taxonomicStatus = c("synonym", "accepted", "accepted", "synonym"),
+    scientificName = c(
+      "Pteris oppositi-pinnata Fée", "Pteris oppositipinnata Fée",
+      "Ormopteris pinnata (Kaulf.) Lellinger",
+      "Pteris oppositi pinnata Fée"
+    ),
+    stringsAsFactors = FALSE
+  )
+  res <- ts_resolve_names("Pteris oppositipinnata Fee", ref[1:3, ])
+  expect_true(all(is.na(res$resolved_name)))
+  expect_setequal(
+    res$matched_name,
+    c("Pteris oppositi-pinnata Fée", "Pteris oppositipinnata Fée")
+  )
+  # an accepted name and a synonym of that same name still resolve
+  res2 <- ts_resolve_names("Pteris oppositipinnata Fee", ref[c(2, 4), ])
+  expect_identical(res2$resolved_name, "Pteris oppositipinnata Fée")
+})

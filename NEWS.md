@@ -168,6 +168,10 @@
 * `ts_parse_names()` no longer treats the epithet *incerta* as a placeholder, so
   real species such as *Dryopteris incerta* are kept (#153).
 
+* `ts_resolve_names()` no longer resolves a query to the accepted name of a
+  synonym when the query also matched a different accepted name (#154). Such
+  queries are now ambiguous, like any other match to several accepted names.
+
 * `ts_match_names()` checked the `match` names of `manual_match` against
   only the part of the reference whose genus could match a query (since the
   genus filter of #43). A `manual_match` table with rows for queries that are
