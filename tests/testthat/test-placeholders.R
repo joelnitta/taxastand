@@ -2,11 +2,12 @@ test_that("placeholder names are detected", {
   x <- c(
     "Pteris sp.", "Pteris spp.", "Pteris sp", "Pteris indet.", "Pteris stet.",
     "Pteris sp. inc.", "Pteris sp. indet.", "Pteris vittata L.",
-    "Pteris spinosa L.", "Pteris incana Sw.", "Pteris vittata subsp. spicata"
+    "Pteris spinosa L.", "Pteris incana Sw.", "Pteris vittata subsp. spicata",
+    "Dryopteris incerta Domin ex C.Chr."
   )
   expect_identical(
     .ts_is_placeholder(x),
-    c(rep(TRUE, 7), rep(FALSE, 4))
+    c(rep(TRUE, 7), rep(FALSE, 5))
   )
 })
 

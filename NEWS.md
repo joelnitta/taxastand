@@ -165,6 +165,9 @@
 
 ## Bug fixes
 
+* `ts_parse_names()` no longer treats the epithet *incerta* as a placeholder, so
+  real species such as *Dryopteris incerta* are kept (#153).
+
 * `ts_match_names()` checked the `match` names of `manual_match` against
   only the part of the reference whose genus could match a query (since the
   genus filter of #43). A `manual_match` table with rows for queries that are

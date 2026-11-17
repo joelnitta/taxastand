@@ -23,7 +23,7 @@
 #' prior behavior.
 #' @param exclude_placeholders Logical; if `TRUE` (default), names that are
 #' placeholders for an identification that stopped above species rank (`sp.`,
-#' `spp.`, `indet.`, `stet.`, `inc.`, and their long forms; see References) are
+#' `spp.`, `indet.`, `stet.`, `inc.`, and the long forms of `indet.` and `stet.`; see References) are
 #' excluded from the results with a warning, like names that cannot be parsed.
 #' Otherwise `"Genus sp."` would be parsed as if `"sp"` were a real specific
 #' epithet and could then be fuzzy-matched to unrelated species.
@@ -184,11 +184,12 @@ ts_parse_names <- function(
 }
 
 # Tokens marking an identification that stopped above species rank (open
-# nomenclature; Sigovini et al. 2016): sp./spp., inc./incerta, indet./
+# nomenclature; Sigovini et al. 2016): sp./spp., inc., indet./
 # indeterminabilis, stet./stetit. Whole whitespace-delimited tokens only.
+# Not "incerta": it is also a genuine epithet (Dryopteris incerta).
 .ts_placeholder_re <- paste0(
   "(?<=\\s)(",
-  "spp?\\.?|inc\\.?|incerta|indet\\.?|indeterminabilis|stet\\.?|stetit",
+  "spp?\\.?|inc\\.?|indet\\.?|indeterminabilis|stet\\.?|stetit",
   ")(?=\\s|$)"
 )
 
