@@ -182,7 +182,7 @@
 <h2 id="similar-work">Similar work<a class="anchor" aria-label="anchor" href="#similar-work"></a>
 </h2>
 <ul>
-<li><p><a href="https://github.com/camwebb/taxon-tools" class="external-link">taxon-tools</a> is a command-line interface program that was the inspiration for <code>taxastand</code>. <code>taxastand</code> originally required it as a dependency (removed in v2.0) and was a faithful port of its algorithms, but <code>taxastand</code> is now developed independently.</p></li>
+<li><p><a href="https://github.com/camwebb/taxon-tools" class="external-link">taxon-tools</a> by Cam Webb is a command-line interface program that was the inspiration for <code>taxastand</code>. <code>taxastand</code> originally required it as a dependency (removed in v2.0), and its pure-R name parsing and matching code was ported from taxon-tools. <code>taxastand</code> is now developed independently, but because that code is derived from taxon-tools, which is licensed under GPL-3, <code>taxastand</code> is also licensed under GPL-3 (see <a href="#license">License</a>).</p></li>
 <li><p><a href="https://github.com/ropensci/taxize" class="external-link">taxize</a> is the “granddaddy” of taxonomy packages in R. It can search around 20 different taxonomic databases for names and retrieve taxonomic information.</p></li>
 <li><p><a href="https://tnrs.biendata.org/" class="external-link">TNRS</a>, the Taxonomic Name Resolution Service, is a web application that resolves taxonomic names of plants against several databases.</p></li>
 <li><p><a href="https://github.com/ropensci/taxizedb" class="external-link">taxizedb</a> downloads taxonomic databases and provides tools to interface with them through SQL.</p></li>
@@ -216,6 +216,12 @@
 <p><a href="https://zenodo.org/badge/latestdoi/192684959" class="external-link"><img src="https://zenodo.org/badge/192684959.svg" alt="DOI"></a></p>
 <p>You can find DOIs for older versions by viewing the “Releases” menu on the right.</p>
 </div>
+<div class="section level2">
+<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+</h2>
+<p><code>taxastand</code> is licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.html" class="external-link">GPL-3</a>. Its name parsing and matching code was ported from <a href="https://github.com/camwebb/taxon-tools" class="external-link">taxon-tools</a>, copyright Cam Webb, 2018, GPL-3, and Cam Webb is listed as a copyright holder. Releases up to and including 2.0.0 were distributed under the MIT license.</p>
+<p>The reference data that <code><a href="reference/ts_load_ref.html">ts_load_ref()</a></code> downloads and the example data in this package have their own licenses; see <code><a href="reference/ts_show_ref_sources.html">ts_show_ref_sources()</a></code>.</p>
+</div>
 </div>
   </div>
 
@@ -232,7 +238,7 @@
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
-<li><small><a href="https://opensource.org/licenses/mit-license.php" class="external-link">MIT</a> + file <a href="LICENSE-text.html">LICENSE</a></small></li>
+<li><small><a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a></small></li>
 </ul>
 </div>
 
@@ -255,6 +261,7 @@
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Joel Nitta <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0000-0003-4719-7472" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
