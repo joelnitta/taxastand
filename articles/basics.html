@@ -239,20 +239,41 @@ elements is <code>Tagawa</code>.</li>
 <code>auto_in+</code>: Match after excluding all <em>in</em>
 elements from query.</li>
 <li>
+<code>auto_exauth-</code>: Match after excluding the first author of
+an <em>ex</em> citation from the reference, keeping the author after
+<em>ex</em>. For <code>Hook. ex Smith</code>, Smith validly published
+the name and is its author under the botanical Code, so
+<code>Hook. ex Smith</code> and <code>Smith</code> are the same name. A
+basionym author in parentheses is kept.</li>
+<li>
+<code>auto_exauth+</code>: Same, excluding the first author of an
+<em>ex</em> citation from the query.</li>
+<li>
+<code>auto_irank</code>: Match where all elements agree except for
+infraspecific rank.</li>
+<li>
+<code>auto_exauth_both</code>: Both names have an <em>ex</em>
+citation with the same author after <em>ex</em> but different authors
+before it (<code>Hook. ex Smith</code> and <code>DC. ex Smith</code>),
+or one has no author before it (<code>ex Smith</code>). Under the Code
+this is one name, but the two sources do not agree about who first
+ascribed it, so check these.</li>
+<li>
 <code>auto_ex-</code>: Match after excluding all <em>in</em> and
 <em>ex</em> elements from reference. An <em>ex</em> element refers to
 phrases such as <code>Rändel ex D.F.Murray</code>. The version excluding
-<em>ex</em> elements is <code>Rändel</code>.</li>
+<em>ex</em> elements is <code>Rändel</code>, the author who did
+<em>not</em> validly publish the name, so these matches are usually, but
+not always, the same name: check the reference name and author before
+accepting one. They are tried after <code>auto_exauth</code>, so a
+reference name with the author after <em>ex</em> is preferred.</li>
 <li>
 <code>auto_ex+</code>: Match after excluding all <em>in</em> and
 <em>ex</em> elements from query.</li>
 <li>
 <code>auto_basexin</code>: Match after excluding all basionym
 authors and all <em>in</em> and <em>ex</em> elements from query and
-reference.</li>
-<li>
-<code>auto_irank</code>: Match where all elements agree except for
-infraspecific rank.</li>
+reference. Like <code>auto_ex-</code>, check these matches.</li>
 <li>
 <code>auto_orthvar</code>: Match after folding standard Latin
 spelling variants in the epithets together
