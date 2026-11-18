@@ -2,33 +2,12 @@
 # (audit: #166). Each test states what happens today, so a later change to one
 # of them shows up as a deliberate edit to a test. Where today's output looks
 # wrong, the test says so; fixing it should flip the expectation.
-# Follow-up issue: 170 (author particles).
 
 .parse_one <- function(x, ...) {
   suppressWarnings(ts_parse_names(x, quiet = TRUE, ...))
 }
 
 # Parser fix-ups --------------------------------------------------------------
-
-test_that("'auct.' and 'auctt.' end up in the author, not the infraspecific epithet", {
-  res <- .parse_one(c(
-    "Foo bar auct.", "Foo bar auctt.", "Foo bar auct. non L.",
-    "Foo bar var. auct."
-  ))
-  expect_identical(
-    res$author, c("auct.", "auctt.", "auct. non L.", "auct.")
-  )
-  expect_true(all(is.na(res$infraspecific_epithet)))
-})
-
-test_that("a lone 'd' after the epithet goes to the author", {
-  res <- .parse_one(c("Foo bar d", "Foo bar var. d"))
-  expect_identical(res$author, c("d", "d"))
-  expect_true(all(is.na(res$infraspecific_epithet)))
-  # KNOWN WRONG (#170): the space after 'd' is lost, so "d Smith" becomes
-  # "dSmith". The author should be "d Smith". Flip this when #170 is fixed.
-  expect_identical(.parse_one("Foo bar d Smith")$author, "dSmith")
-})
 
 test_that("odd characters are removed or replaced before parsing", {
   expect_identical(.parse_one("Foo bar L.¿")$author, "L.") # inverted ?

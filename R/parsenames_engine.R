@@ -24,6 +24,32 @@
 #   \u00d7 = MULTIPLICATION SIGN (hybrid mark), \u00eb = e-diaeresis,
 #   \ufb02 = LATIN SMALL LIGATURE FL, \u2019 = RIGHT SINGLE QUOTATION MARK
 
+# Words that begin an author string although they are lowercase (#170). IPNI
+# author standard forms (65,409 authors, 2026-11) begin with de, van, d', del,
+# den, du, la, da, ten, von, di, ter or hort.; but queries need not come from
+# IPNI, so the list also has the other common particles of European names
+# (Romance, Germanic, Dutch, Scandinavian), and "der"/"den" for chains such as
+# "van der Werff". "auct." (auctorum) is added. The citation words "ex",
+# "sensu" and "non" also begin an author in some names but are not included
+# (#174). Without it the infraspecific
+# epithet group below would take the word as an epithet, so it is limited to a
+# closed list: a lowercase word counts as a particle only when a capital letter
+# or "(" follows it, with or without a space ("duQuesnay"), or when nothing
+# follows it (such a name is then rejected: see .tt_parse_failed()).
+.tt_particles <- paste(
+  c(
+    "de", "del", "della", "dell", "dei", "degli", "di", "da", "das", "dos",
+    "do", "du", "des", "van", "von", "vom", "der", "den", "ter", "ten", "te",
+    "la", "las", "le", "les", "lo", "los", "el", "af", "zu", "zur"
+  ),
+  collapse = "|"
+)
+.tt_particle_chain <- paste0("(?:", .tt_particles, ")(?: (?:", .tt_particles, "))*")
+.tt_author_particles <- paste0(
+  "(?:", .tt_particle_chain, "(?: (?:[[:upper:]]|\\()|(?=[[:upper:]])|$)",
+  "|d['\u2019]|d (?=[[:upper:]])|(?:auctt?|hort)\\.)"
+)
+
 # The single large parsing regex (parsenames line 61). Groups:
 #   1 genus hybrid | 2 genus | 3 species hybrid | 4 species |
 #   5 infraspecific rank | 6 infraspecific epithet | 7 author string
@@ -36,7 +62,7 @@
   # 5 rank
   "(var\\.|f\\.|forma|subf\\.|taxon|fo\\.|subsp\\.|prol\\.|nothovar\\.|",
   "lus\\.|\\[infrasp\\.unranked\\])? ?",
-  "([a-z\ufb02_-]+)? ?", # 6 infraspecific epithet
+  "(?!", .tt_author_particles, ")([a-z\ufb02_-]+)? ?", # 6 infraspecific epithet
   # 7 author: ']' placed first (literal), '-' last (literal); includes
   # [:alnum:] plus the combining diacritics used in author names
   "([] [().&;,\u2019'[:alnum:]\u0301 \u0300 \u0308 \u0306 \u030c ",
@@ -224,13 +250,8 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   # The big anchored parse regex (line 61); perl = TRUE to match gawk captures
   parsed <- sub(.tt_parse_re, "\\1|\\2|\\3|\\4|\\5|\\6|\\7", name, perl = TRUE)
 
-  # Fix-ups (lines 65, 73-78). The two lowercase-author rules below
-  # (`auct.`, `d'Urv.`) are needed because the regex above reads a lowercase
-  # word after the epithet as an infraspecific epithet; other particles such
-  # as "de" and "van" are not covered (#170).
+  # Fix-ups (lines 65, 73-78)
   parsed <- gsub(" +\\|", "|", parsed, perl = TRUE)
-  parsed <- gsub("\\|(auctt?)\\|\\.", "||\\1.", parsed, perl = TRUE)
-  parsed <- gsub("|d|", "||d", parsed, fixed = TRUE)
   parsed <- gsub("\\|[xX]\\|", "|\u00d7|", parsed, perl = TRUE)
   parsed <- gsub("^[xX]\\|", "\u00d7|", parsed, perl = TRUE)
 
@@ -255,7 +276,15 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
     gsub("\u00d7", "x", tt_depunct(remade), fixed = TRUE) ==
       gsub("\u00d7", "x", tt_depunct(name), fixed = TRUE)
 
+  # A particle alone ("Foo bar de") is not an author
+  author <- .tt_split_fields(parsed, 7L)[[7]]
+  only_particles <- grepl(
+    paste0("^", .tt_particle_chain, "$"), author,
+    perl = TRUE
+  )
+
   !matched |
+    only_particles |
     !grepl(.tt_v1, fields[[1]], perl = TRUE) |
     !grepl(.tt_v2, fields[[2]], perl = TRUE) |
     !grepl(.tt_v3, fields[[3]], perl = TRUE) |
