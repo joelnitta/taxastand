@@ -186,11 +186,11 @@ capitalization, and accented or other non-ASCII characters.
 the reference (\code{-}) or the query (\code{+}).
 \item \verb{auto_in-}, \verb{auto_in+}: identical once "in" elements (\verb{Tagawa in Morton}
 becomes \code{Tagawa}) are dropped from the reference or the query.
-\item \verb{auto_exauth-}, \verb{auto_exauth+}: identical once the first author of an
-"ex" citation is dropped, keeping the author after \emph{ex}, from the
-reference (\code{-}) or the query (\code{+}). In \verb{Hook. ex Smith}, Hook. proposed
-the name but Smith validly published it, so under the botanical Code the
-name belongs to Smith: \verb{Foo bar Hook. ex Smith} and \verb{Foo bar Smith} are
+\item \code{auto_exauth}: identical once the first author of an "ex" citation is
+dropped, keeping the author after \emph{ex}, in the query, the reference, or
+both. In \verb{Hook. ex Smith}, Hook. proposed the name but Smith validly
+published it, so under the botanical Code the name belongs to Smith:
+\verb{Foo bar Hook. ex Smith}, \verb{Foo bar DC. ex Smith} and \verb{Foo bar Smith} are
 the same name. A basionym author in parentheses is kept.
 \item \code{auto_irank}: identical except for the infraspecific rank (e.g. \code{var.}
 vs. \code{subsp.}).

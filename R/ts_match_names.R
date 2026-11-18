@@ -45,11 +45,11 @@
 #'   the reference (`-`) or the query (`+`).
 #' - `auto_in-`, `auto_in+`: identical once "in" elements (`Tagawa in Morton`
 #'   becomes `Tagawa`) are dropped from the reference or the query.
-#' - `auto_exauth-`, `auto_exauth+`: identical once the first author of an
-#'   "ex" citation is dropped, keeping the author after *ex*, from the
-#'   reference (`-`) or the query (`+`). In `Hook. ex Smith`, Hook. proposed
-#'   the name but Smith validly published it, so under the botanical Code the
-#'   name belongs to Smith: `Foo bar Hook. ex Smith` and `Foo bar Smith` are
+#' - `auto_exauth`: identical once the first author of an "ex" citation is
+#'   dropped, keeping the author after *ex*, in the query, the reference, or
+#'   both. In `Hook. ex Smith`, Hook. proposed the name but Smith validly
+#'   published it, so under the botanical Code the name belongs to Smith:
+#'   `Foo bar Hook. ex Smith`, `Foo bar DC. ex Smith` and `Foo bar Smith` are
 #'   the same name. A basionym author in parentheses is kept.
 #' - `auto_irank`: identical except for the infraspecific rank (e.g. `var.`
 #'   vs. `subsp.`).

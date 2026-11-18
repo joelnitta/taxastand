@@ -176,7 +176,8 @@
 * Matching now treats `Hook. ex Smith` and `Smith` as the same name. Under the
   botanical Code the author after *ex* is the author of the name, but only the
   author before *ex* was used, so `Foo bar Hook. ex Smith` did not match `Foo
-  bar Smith`. They now match as `auto_exauth+` / `auto_exauth-`, tried before
+  bar Smith`. They now match as `auto_exauth` (also when both names have an
+  *ex* author, or one is `ex Smith`), tried before
   the `exin` matches, so `Foo bar Hook. ex Smith` prefers `Foo bar Smith` to
   `Foo bar Hook.`. The documentation of the `exin` match types now says to
   check them.

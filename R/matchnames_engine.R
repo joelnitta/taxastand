@@ -113,8 +113,8 @@
       irank = derive(paste0(f$xg, f$g, f$xs, f$s, f$ssp, a)),
       basio = derive(paste0(namex, sub("^\\([^)]+\\)", "", a))),
       `in` = derive(paste0(namex, sub(" [iI]n .*$", "", a))),
-      # the author after "ex" (who validly published the name); a basionym
-      # author in parentheses is kept
+      # the author after "ex" (who validly published the name), on both sides;
+      # a basionym author in parentheses is kept
       exauth = derive(
         paste0(namex, sub("^(\\([^)]+\\) ?)?(.* )?[eE]x ", "\\1", a))
       ),
@@ -223,7 +223,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   .tt_stage_eq(m, "punct", "auto_punct")
   .tt_stage_pm(m, "basio")
   .tt_stage_pm(m, "in")
-  .tt_stage_pm(m, "exauth")
+  .tt_stage_eq(m, "exauth", "auto_exauth")
   .tt_stage_pm(m, "exin")
   .tt_stage_eq(m, "basexin", "auto_basexin")
   .tt_stage_eq(m, "irank", "auto_irank")
