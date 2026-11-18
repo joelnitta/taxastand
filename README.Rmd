@@ -150,6 +150,6 @@ the right.
 
 ## License
 
-`taxastand` is licensed under the [GPL-3](https://www.gnu.org/licenses/gpl-3.0.html). Its name parsing and matching code was ported from [taxon-tools](https://github.com/camwebb/taxon-tools), copyright Cam Webb, 2018, GPL-3, and Cam Webb is listed as a contributor and copyright holder. Releases up to and including 2.0.0 were distributed under the MIT license.
+`taxastand` is licensed under the [GPL-3](https://www.gnu.org/licenses/gpl-3.0.html). Its name parsing and matching code was ported from [taxon-tools](https://github.com/camwebb/taxon-tools), copyright Cam Webb, 2018, GPL-3, and Cam Webb is listed as a copyright holder. Releases up to and including 2.0.0 were distributed under the MIT license.
 
 The reference data that `ts_load_ref()` downloads and the example data in this package have their own licenses; see `ts_show_ref_sources()`.
