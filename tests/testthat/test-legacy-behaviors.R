@@ -2,8 +2,7 @@
 # (audit: #166). Each test states what happens today, so a later change to one
 # of them shows up as a deliberate edit to a test. Where today's output looks
 # wrong, the test says so; fixing it should flip the expectation.
-# Follow-up issues: 170 (author particles), 171 (diacritics), 172 (slash),
-# 173 (NULL).
+# Follow-up issues: 170 (author particles), 171 (diacritics).
 
 .parse_one <- function(x, ...) {
   suppressWarnings(ts_parse_names(x, quiet = TRUE, ...))
@@ -48,17 +47,16 @@ test_that("the ligature fl and e-diaeresis are accepted in names", {
 
 # Field cleaning in the matcher ------------------------------------------------
 
-test_that("an author written 'NULL' is erased before matching", {
-  # KNOWN WRONG (#173): the matcher blanks any field equal to "NULL" or "\\N"
-  # (SQL-dump nulls in the original's input files), so a real author "NULL"
-  # is lost. Flip the first two expectations when #173 is fixed.
+test_that("an author written 'NULL' or '\\N' is kept", {
+  # The original blanked these strings (SQL-dump nulls); that erased a real
+  # author "NULL" (#173), so they are now ordinary values.
   f <- .tt_clean_fields("1||Foo||bar|||NULL")
-  expect_identical(f$a, "")
+  expect_identical(f$a, "NULL")
   f <- .tt_clean_fields("1||Foo||bar|||\\N")
-  expect_identical(f$a, "")
-  # Only an exact match is blanked
-  f <- .tt_clean_fields("1||Foo||bar|||NULLA")
-  expect_identical(f$a, "NULLA")
+  expect_identical(f$a, "\\N")
+  # An author "NULL" is not the same as no author
+  res <- suppressMessages(ts_match_names("Foo bar NULL", "Foo bar"))
+  expect_false(res$match_type %in% c("exact", "auto_punct"))
 })
 
 # Diacritics --------------------------------------------------------------------

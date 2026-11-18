@@ -40,16 +40,14 @@
 }
 
 # Split a vector of parsed `id|...` lines into the fields matchnames needs and
-# clean them (read_data lines 154-158): blank out NULL / \N, cleanspaces.
-# Blanking NULL / \N serves the original's SQL-dump input files only, and
-# erases a real value such as an author "NULL" (#173).
+# clean them (read_data lines 154-158): cleanspaces. The original also blanked
+# the strings NULL and \N (SQL-dump nulls); that is not done here, as missing
+# values are written as empty fields and a real value such as an author
+# "NULL" must be kept (#173).
 .tt_clean_fields <- function(lines) {
   # Split into 8 fields (exactly 7 pipes); fields may be empty.
   fields <- .tt_split_fields(lines, 8L)
-  clean <- function(x) {
-    x[x == "NULL" | x == "\\N"] <- ""
-    .tt_cleanspaces(x)
-  }
+  clean <- .tt_cleanspaces
   list(
     code = fields[[1]],
     xg = clean(fields[[2]]), g = clean(fields[[3]]), xs = clean(fields[[4]]),

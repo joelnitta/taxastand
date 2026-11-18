@@ -165,6 +165,9 @@
 
 ## Bug fixes
 
+* Matching no longer erases an author written `NULL` (or `\N`). These strings
+  were treated as missing values, a leftover from the input files of the
+  original taxon-tools; missing values are empty fields (#173).
 * `ts_parse_names()` now reads a slash between authors as a space, so
   `Smith/Jones` gives the author `Smith Jones` instead of the fused
   `SmithJones` (#172).
