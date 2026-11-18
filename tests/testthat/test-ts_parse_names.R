@@ -115,6 +115,27 @@ test_that("particles that are not in IPNI author names are kept too (#170)", {
   expect_identical(res$infraspecific_epithet, c(rep(NA, 6), "baz"))
 })
 
+test_that("'ex', 'sensu' and 'non' at the start of the author stay in the author (#174)", {
+  taxa <- c(
+    "Verbesina conyzoides ex DC.",
+    "Mikania aschersonii sensu Pruski & non Hieron.",
+    "Blepharis acaulis non Lindau",
+    "Malvastrum grosulariifolium sensu Garke non Gray nec Gray & Harv.",
+    "Verbesina conyzoides var. conyzoides ex DC."
+  )
+  res <- suppressWarnings(ts_parse_names(taxa, quiet = TRUE))
+  expect_identical(
+    res$author,
+    c(
+      "ex DC.", "sensu Pruski & non Hieron.", "non Lindau",
+      "sensu Garke non Gray nec Gray & Harv.", "ex DC."
+    )
+  )
+  expect_identical(
+    res$infraspecific_epithet, c(NA, NA, NA, NA, "conyzoides")
+  )
+})
+
 test_that("a particle with no author after it cannot be parsed (#170)", {
   withr::local_options(taxastand.verbosity = "inform")
   expect_warning(
