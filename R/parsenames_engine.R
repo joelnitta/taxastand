@@ -1,5 +1,8 @@
 # Pure-R reimplementation of taxon-tools `parsenames`
 #
+# Copyright (c) Cam Webb, 2018 (taxon-tools, GPL-3), and Joel Nitta, 2026.
+# This file is part of taxastand, licensed under GPL-3 (see LICENSE.md).
+#
 # Originally ported from the gawk script `parsenames` in taxon-tools v1.3.0
 # (camwebb/taxon-tools, upstream commit 8f8b5e2). Strict fidelity to it is
 # NOT a goal: taxastand aims to be

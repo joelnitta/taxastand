@@ -2,6 +2,13 @@
 
 ## Major changes
 
+* **taxastand is now licensed under GPL-3 (was MIT) (#168).** The pure-R
+  name parsing and matching code was ported from taxon-tools (Cam Webb, GPL-3),
+  so it is a derivative work and must be distributed under the same license.
+  Cam Webb is now listed as a copyright holder in `DESCRIPTION`,
+  and the two ported files say so in their headers. Releases up to and
+  including 2.0.0 were distributed under the MIT license.
+
 * **New `ts_optimize_ref()` for repeated matching against a large
   reference (#44, #110).** Matching spends most of its time preparing the reference
   (finding the genus of every name, parsing, building match keys). Pass the

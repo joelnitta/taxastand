@@ -1,12 +1,16 @@
 Package: taxastand
 Title: Taxonomic Name Standardization
 Version: 2.0.0.9000
-Authors@R: 
+Authors@R: c(
     person(given = "Joel",
            family = "Nitta",
            role = c("aut", "cre", "cph"),
            email = "joelnitta@gmail.com",
-           comment = c(ORCID = "0000-0003-4719-7472"))
+           comment = c(ORCID = "0000-0003-4719-7472")),
+    person(given = "Cam",
+           family = "Webb",
+           role = "cph",
+           comment = "Author of taxon-tools, from which the name parsing and matching code was ported"))
 Description: Standardizes taxonomic names by matching species names to
     entries in a reference taxonomy, either downloaded from a named source
     (such as World Flora Online or the Pteridophyte Phylogeny Group
@@ -16,7 +20,7 @@ Description: Standardizes taxonomic names by matching species names to
     orthographic differences between the query and reference names.
     This facilitates reproducible joining of datasets that use different
     taxonomic synonyms for the same species.
-License: MIT + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
