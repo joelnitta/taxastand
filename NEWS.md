@@ -165,6 +165,11 @@
 
 ## Bug fixes
 
+* `ts_parse_names()` no longer reads `ex`, `sensu`, `non` or `nec` at the start of
+  the author as an infraspecific epithet: `Verbesina conyzoides ex DC.` now has
+  the author `ex DC.` (as `Hook. ex DC.` already did), and `Glycine javanica
+  sensu Backer, non L.` the author `sensu Backer, non L.` (about 180 WFO
+  names) (#174).
 * `ts_parse_names()` no longer mistakes a lowercase word at the start of the
   author for an infraspecific epithet. Authors such as `de Vriese`, `van der
   Werff`, `de la Sota`, `d'Urv.`, `hort.` and `auct.` are kept whole; before,
