@@ -168,6 +168,11 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
     name <- gsub(.tt_qualifier_re, "", name, perl = TRUE)
   }
 
+  # A slash separates people in an author string ("Smith/Jones"): make it a
+  # space, before the whitespace clean-up below (the original deleted it,
+  # which fused the two authors)
+  name <- gsub("/", " ", name, fixed = TRUE)
+
   # Main-block preprocessing (parsenames lines 14-18)
   name <- gsub(" {2,}", " ", name, perl = TRUE)
   name <- gsub("( +$|^ +)", "", name, perl = TRUE)
@@ -176,9 +181,8 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   # parse_taxon_name: clean characters that cannot be part of a name (lines
   # 54-56): inverted question mark and double quotes are removed, a
   # non-breaking space becomes a space and an em dash a hyphen (the upstream
-  # source links an issue about these in a names-resolver). A slash is also
-  # removed, which fuses two authors ("Smith/Jones"): see #172.
-  name <- gsub("[\u00bf/\"]", "", name, perl = TRUE) # remove \u00bf / "
+  # source links an issue about these in a names-resolver)
+  name <- gsub("[\u00bf\"]", "", name, perl = TRUE) # remove \u00bf and "
   name <- gsub("\u00a0", " ", name, fixed = TRUE) # non-breaking space -> space
   name <- gsub("\u2014", "-", name, fixed = TRUE) # em dash -> hyphen
 

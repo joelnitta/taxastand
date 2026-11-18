@@ -36,10 +36,9 @@ test_that("odd characters are removed or replaced before parsing", {
   expect_identical(.parse_one("Foo bar \"Smith\"")$author, "Smith") # quotes
   expect_identical(.parse_one("Foo bar Smith—Jones")$author, "Smith-Jones")
   expect_identical(.parse_one("Foo bar Smith")$author, "Smith") # nbsp
-  # KNOWN WRONG (#172): "/" is deleted instead of replaced by a space, so two
-  # authors are fused. The author should be "Smith Jones". Flip this when
-  # #172 is fixed.
-  expect_identical(.parse_one("Foo bar Smith/Jones")$author, "SmithJones")
+  # A slash between authors becomes a space (#172; it used to be deleted,
+  # which fused the authors into "SmithJones")
+  expect_identical(.parse_one("Foo bar Smith/Jones")$author, "Smith Jones")
 })
 
 test_that("the ligature fl and e-diaeresis are accepted in names", {

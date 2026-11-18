@@ -165,6 +165,9 @@
 
 ## Bug fixes
 
+* `ts_parse_names()` now reads a slash between authors as a space, so
+  `Smith/Jones` gives the author `Smith Jones` instead of the fused
+  `SmithJones` (#172).
 * Matching now treats "and" and "et" between author names as "&", as intended,
   so `Smith and Jones` and `Smith & Jones` match as punctuation-only
   differences (`auto_punct`) instead of falling through to a fuzzy match or
