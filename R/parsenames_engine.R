@@ -29,7 +29,9 @@
 # den, du, la, da, ten, von, di, ter or hort.; but queries need not come from
 # IPNI, so the list also has the other common particles of European names
 # (Romance, Germanic, Dutch, Scandinavian), and "der"/"den" for chains such as
-# "van der Werff". "auct." (auctorum) is added. Without it the infraspecific
+# "van der Werff". "auct." (auctorum) is added, and the words "ex", "sensu"
+# and "non", which also begin an author ("ex DC.", "sensu Smith", about 180
+# WFO names). Without it the infraspecific
 # epithet group below would take the word as an epithet, so it is limited to a
 # closed list: a lowercase word counts as a particle only when a capital letter
 # or "(" follows it, with or without a space ("duQuesnay"), or when nothing
@@ -38,7 +40,9 @@
   c(
     "de", "del", "della", "dell", "dei", "degli", "di", "da", "das", "dos",
     "do", "du", "des", "van", "von", "vom", "der", "den", "ter", "ten", "te",
-    "la", "las", "le", "les", "lo", "los", "el", "af", "zu", "zur"
+    "la", "las", "le", "les", "lo", "los", "el", "af", "zu", "zur",
+    # words that introduce an author: "ex DC.", "sensu Smith", "non L."
+    "ex", "sensu", "non"
   ),
   collapse = "|"
 )
