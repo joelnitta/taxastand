@@ -186,11 +186,11 @@ capitalization, and accented or other non-ASCII characters.
 the reference (\code{-}) or the query (\code{+}).
 \item \verb{auto_in-}, \verb{auto_in+}: identical once "in" elements (\verb{Tagawa in Morton}
 becomes \code{Tagawa}) are dropped from the reference or the query.
-\item \code{auto_exauth}: identical once the first author of an "ex" citation is
-dropped, keeping the author after \emph{ex}, in the query, the reference, or
-both. In \verb{Hook. ex Smith}, Hook. proposed the name but Smith validly
-published it, so under the botanical Code the name belongs to Smith:
-\verb{Foo bar Hook. ex Smith}, \verb{Foo bar DC. ex Smith} and \verb{Foo bar Smith} are
+\item \verb{auto_exauth-}, \verb{auto_exauth+}: identical once the first author of an
+"ex" citation is dropped, keeping the author after \emph{ex}, from the
+reference (\code{-}) or the query (\code{+}). In \verb{Hook. ex Smith}, Hook. proposed
+the name but Smith validly published it, so under the botanical Code the
+name belongs to Smith: \verb{Foo bar Hook. ex Smith} and \verb{Foo bar Smith} are
 the same name. A basionym author in parentheses is kept.
 \item \code{auto_irank}: identical except for the infraspecific rank (e.g. \code{var.}
 vs. \code{subsp.}).
@@ -207,6 +207,11 @@ this way, look at the reference name and its author to decide whether it is
 the name you meant. They are tried after \code{auto_exauth}, so a reference name
 with the author after \emph{ex} is preferred when there is one.
 \itemize{
+\item \code{auto_exauth_both}: both names have an "ex" citation with the same author
+after \emph{ex} but different authors before it (\verb{Hook. ex Smith} and
+\verb{DC. ex Smith}), or one has no author before it (\verb{ex Smith}). Under the
+Code this is one name, but the two sources do not agree about who first
+ascribed it.
 \item \verb{auto_ex-}, \verb{auto_ex+}: identical once "in" and "ex" elements are dropped
 from the reference (\code{-}) or the query (\code{+}): \verb{Willd. ex Schkuhr} becomes
 \code{Willd.}

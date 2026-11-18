@@ -45,11 +45,11 @@
 #'   the reference (`-`) or the query (`+`).
 #' - `auto_in-`, `auto_in+`: identical once "in" elements (`Tagawa in Morton`
 #'   becomes `Tagawa`) are dropped from the reference or the query.
-#' - `auto_exauth`: identical once the first author of an "ex" citation is
-#'   dropped, keeping the author after *ex*, in the query, the reference, or
-#'   both. In `Hook. ex Smith`, Hook. proposed the name but Smith validly
-#'   published it, so under the botanical Code the name belongs to Smith:
-#'   `Foo bar Hook. ex Smith`, `Foo bar DC. ex Smith` and `Foo bar Smith` are
+#' - `auto_exauth-`, `auto_exauth+`: identical once the first author of an
+#'   "ex" citation is dropped, keeping the author after *ex*, from the
+#'   reference (`-`) or the query (`+`). In `Hook. ex Smith`, Hook. proposed
+#'   the name but Smith validly published it, so under the botanical Code the
+#'   name belongs to Smith: `Foo bar Hook. ex Smith` and `Foo bar Smith` are
 #'   the same name. A basionym author in parentheses is kept.
 #' - `auto_irank`: identical except for the infraspecific rank (e.g. `var.`
 #'   vs. `subsp.`).
@@ -64,6 +64,11 @@
 #' this way, look at the reference name and its author to decide whether it is
 #' the name you meant. They are tried after `auto_exauth`, so a reference name
 #' with the author after *ex* is preferred when there is one.
+#' - `auto_exauth_both`: both names have an "ex" citation with the same author
+#'   after *ex* but different authors before it (`Hook. ex Smith` and
+#'   `DC. ex Smith`), or one has no author before it (`ex Smith`). Under the
+#'   Code this is one name, but the two sources do not agree about who first
+#'   ascribed it.
 #' - `auto_ex-`, `auto_ex+`: identical once "in" and "ex" elements are dropped
 #'   from the reference (`-`) or the query (`+`): `Willd. ex Schkuhr` becomes
 #'   `Willd.`
