@@ -15,6 +15,10 @@
 # Unicode-aware (so accented author names are captured, as under gawk's locale).
 # Input is normalized to UTF-8 first.
 
+# The regex accepts the ligature \ufb02 in epithets and e-diaeresis in genus
+# names, as the original did (no reason is recorded upstream); both parse
+# correctly and are pinned in test-legacy-behaviors.R.
+#
 # Character classes reused below, written to avoid backslash-in-bracket
 # ambiguity between gawk and TRE (hyphen placed last = literal hyphen):
 #   \u00d7 = MULTIPLICATION SIGN (hybrid mark), \u00eb = e-diaeresis,
@@ -169,7 +173,11 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   name <- gsub("( +$|^ +)", "", name, perl = TRUE)
   name <- gsub(" ssp. ", " subsp. ", name, fixed = TRUE)
 
-  # parse_taxon_name: clean bad chars (lines 54-56)
+  # parse_taxon_name: clean characters that cannot be part of a name (lines
+  # 54-56): inverted question mark and double quotes are removed, a
+  # non-breaking space becomes a space and an em dash a hyphen (the upstream
+  # source links an issue about these in a names-resolver). A slash is also
+  # removed, which fuses two authors ("Smith/Jones"): see #172.
   name <- gsub("[\u00bf/\"]", "", name, perl = TRUE) # remove \u00bf / "
   name <- gsub("\u00a0", " ", name, fixed = TRUE) # non-breaking space -> space
   name <- gsub("\u2014", "-", name, fixed = TRUE) # em dash -> hyphen
@@ -177,7 +185,10 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   # The big anchored parse regex (line 61); perl = TRUE to match gawk captures
   parsed <- sub(.tt_parse_re, "\\1|\\2|\\3|\\4|\\5|\\6|\\7", name, perl = TRUE)
 
-  # Fix-ups (lines 65, 73-78)
+  # Fix-ups (lines 65, 73-78). The two lowercase-author rules below
+  # (`auct.`, `d'Urv.`) are needed because the regex above reads a lowercase
+  # word after the epithet as an infraspecific epithet; other particles such
+  # as "de" and "van" are not covered (#170).
   parsed <- gsub(" +\\|", "|", parsed, perl = TRUE)
   parsed <- gsub("\\|(auctt?)\\|\\.", "||\\1.", parsed, perl = TRUE)
   parsed <- gsub("|d|", "||d", parsed, fixed = TRUE)
