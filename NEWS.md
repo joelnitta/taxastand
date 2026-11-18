@@ -169,7 +169,9 @@
   author for an infraspecific epithet. Authors such as `de Vriese`, `van der
   Werff`, `de la Sota`, `d'Urv.`, `hort.` and `auct.` are kept whole; before,
   `Angiopteris affinis de Vriese` was read as the infraspecific epithet `de`
-  with author `Vriese`, which also made matching ignore the particle (#170).
+  with author `Vriese`, which also made matching ignore the particle. A name
+  that ends in a particle with no author after it, such as `Foo bar de`, can
+  no longer be parsed (#170).
 * Matching now ignores accents on all the letters found in IPNI author names,
   not only Latin-1 ones. Letters such as `Š`, `ř`, `ł`, `ğ` and `ı` used to be
   deleted when names were compared, so `Dvorak` and `Dvořák` (or `Smarda` and

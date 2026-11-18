@@ -24,15 +24,28 @@
 #   \u00d7 = MULTIPLICATION SIGN (hybrid mark), \u00eb = e-diaeresis,
 #   \ufb02 = LATIN SMALL LIGATURE FL, \u2019 = RIGHT SINGLE QUOTATION MARK
 
-# Words that begin an author string although they are lowercase: particles
-# ("de Vriese", "van der Werff", "de la Sota"), "d'" ("d'Urv."), and the
-# abbreviations "auct." (auctorum) and "hort." (hortulanorum). Without this
-# the infraspecific epithet group below would take them (#170). A particle
-# only counts when a capital letter (or another particle) follows it.
+# Words that begin an author string although they are lowercase (#170). IPNI
+# author standard forms (65,409 authors, 2026-11) begin with de, van, d', del,
+# den, du, la, da, ten, von, di, ter or hort.; but queries need not come from
+# IPNI, so the list also has the other common particles of European names
+# (Romance, Germanic, Dutch, Scandinavian), and "der"/"den" for chains such as
+# "van der Werff". "auct." (auctorum) is added. Without it the infraspecific
+# epithet group below would take the word as an epithet, so it is limited to a
+# closed list: a lowercase word counts as a particle only when a capital letter
+# or "(" follows it, with or without a space ("duQuesnay"), or when nothing
+# follows it (such a name is then rejected: see .tt_parse_failed()).
+.tt_particles <- paste(
+  c(
+    "de", "del", "della", "dell", "dei", "degli", "di", "da", "das", "dos",
+    "do", "du", "des", "van", "von", "vom", "der", "den", "ter", "ten", "te",
+    "la", "las", "le", "les", "lo", "los", "el", "af", "zu", "zur"
+  ),
+  collapse = "|"
+)
+.tt_particle_chain <- paste0("(?:", .tt_particles, ")(?: (?:", .tt_particles, "))*")
 .tt_author_particles <- paste0(
-  "(?:(?:de|del|della|di|da|dos|du|van|von|der|den|ter|ten|la|le)",
-  "(?: (?:de|del|della|di|da|dos|du|van|von|der|den|ter|ten|la|le))*",
-  " (?:[[:upper:]]|\\()|d['\u2019]|d (?=[[:upper:]])|(?:auctt?|hort)\\.)"
+  "(?:", .tt_particle_chain, "(?: (?:[[:upper:]]|\\()|(?=[[:upper:]])|$)",
+  "|d['\u2019]|d (?=[[:upper:]])|(?:auctt?|hort)\\.)"
 )
 
 # The single large parsing regex (parsenames line 61). Groups:
@@ -261,7 +274,15 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
     gsub("\u00d7", "x", tt_depunct(remade), fixed = TRUE) ==
       gsub("\u00d7", "x", tt_depunct(name), fixed = TRUE)
 
+  # A particle alone ("Foo bar de") is not an author
+  author <- .tt_split_fields(parsed, 7L)[[7]]
+  only_particles <- grepl(
+    paste0("^", .tt_particle_chain, "$"), author,
+    perl = TRUE
+  )
+
   !matched |
+    only_particles |
     !grepl(.tt_v1, fields[[1]], perl = TRUE) |
     !grepl(.tt_v2, fields[[2]], perl = TRUE) |
     !grepl(.tt_v3, fields[[3]], perl = TRUE) |

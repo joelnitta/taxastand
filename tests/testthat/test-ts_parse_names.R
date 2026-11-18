@@ -97,10 +97,39 @@ test_that("lowercase author particles stay in the author (#170)", {
   )
 })
 
-test_that("a particle is an epithet when no author follows it (#170)", {
-  res <- suppressWarnings(ts_parse_names("Foo bar de", quiet = TRUE))
-  expect_identical(res$infraspecific_epithet, "de")
-  expect_true(is.na(res$author))
+test_that("particles that are not in IPNI author names are kept too (#170)", {
+  # Queries need not come from IPNI
+  taxa <- c(
+    "Foo bar dos Santos", "Foo bar della Torre", "Foo bar le Roux",
+    "Foo bar zu Pfeffer", "Foo bar von der Decken", "Foo bar af Ugglas",
+    "Foo bar var. baz el Hadidi"
+  )
+  res <- suppressWarnings(ts_parse_names(taxa, quiet = TRUE))
+  expect_identical(
+    res$author,
+    c(
+      "dos Santos", "della Torre", "le Roux", "zu Pfeffer", "von der Decken",
+      "af Ugglas", "el Hadidi"
+    )
+  )
+  expect_identical(res$infraspecific_epithet, c(rep(NA, 6), "baz"))
+})
+
+test_that("a particle with no author after it cannot be parsed (#170)", {
+  withr::local_options(taxastand.verbosity = "inform")
+  expect_warning(
+    res <- ts_parse_names(c("Foo bar de", "Foo bar var. van der", "Foo bar"),
+      exclude_placeholders = FALSE
+    ),
+    "could not be parsed"
+  )
+  expect_identical(res$name, "Foo bar")
+})
+
+test_that("a particle written directly before the capital stays in the author (#170)", {
+  res <- suppressWarnings(ts_parse_names("Foo bar duQuesnay", quiet = TRUE))
+  expect_identical(res$author, "duQuesnay")
+  expect_true(is.na(res$infraspecific_epithet))
 })
 
 test_that("real IPNI names with a lowercase author particle parse correctly (#170)", {
