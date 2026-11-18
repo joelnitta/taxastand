@@ -192,19 +192,26 @@ reference (\code{-}) or the query (\code{+}). In \verb{Hook. ex Smith}, Hook. pr
 the name but Smith validly published it, so under the botanical Code the
 name belongs to Smith: \verb{Foo bar Hook. ex Smith} and \verb{Foo bar Smith} are
 the same name. A basionym author in parentheses is kept.
-\item \verb{auto_ex-}, \verb{auto_ex+}: as \verb{auto_in-}/\verb{auto_in+}, dropping both "in" and
-"ex" elements (\verb{Willd. ex Schkuhr} becomes \code{Willd.}). \strong{Check these.}
-The author kept is the one before \emph{ex}, who did not validly publish the
-name, so the match is usually right but can pair two different names
-(\verb{Foo bar Willd.} is not necessarily the same name as \verb{Foo bar Willd. ex Schkuhr}). If a query matches this way, look at the reference name and
-author to decide whether it is the name you meant. When both a name
-with the author after \emph{ex} and one with the author before it are in the
-reference, the one with the author after \emph{ex} is chosen
-(\code{auto_exauth}).
-\item \code{auto_basexin}: identical once basionym authors and "in"/"ex" elements are
-dropped from both query and reference.
 \item \code{auto_irank}: identical except for the infraspecific rank (e.g. \code{var.}
 vs. \code{subsp.}).
+}
+
+\strong{The author before "ex" is used (check the result)}
+
+In an \emph{ex} citation such as \verb{Willd. ex Schkuhr}, the author before \emph{ex}
+proposed the name but did not validly publish it; under the botanical Code
+the author after \emph{ex} is the author of the name. These matches keep the
+author before \emph{ex}, so they are usually, but not always, the same name:
+\verb{Foo bar Willd.} could be a different name by Willd. If a query matches in
+this way, look at the reference name and its author to decide whether it is
+the name you meant. They are tried after \code{auto_exauth}, so a reference name
+with the author after \emph{ex} is preferred when there is one.
+\itemize{
+\item \verb{auto_ex-}, \verb{auto_ex+}: identical once "in" and "ex" elements are dropped
+from the reference (\code{-}) or the query (\code{+}): \verb{Willd. ex Schkuhr} becomes
+\code{Willd.}
+\item \code{auto_basexin}: identical once basionym authors and "in"/"ex" elements are
+dropped from both query and reference.
 }
 
 \strong{Canonical-name matches (the author is ignored; check the result)}
