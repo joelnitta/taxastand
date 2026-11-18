@@ -1,9 +1,9 @@
 # Pin the current output of behaviors inherited from the taxon-tools engines
 # (audit: #166). Each test states what happens today, so a later change to one
 # of them shows up as a deliberate edit to a test. Where today's output looks
-# wrong, the test says so; fixing it should flip the expectation. Follow-ups:
-# #170 (author particles, `auct.`, `d`), #171 (diacritics), #172 (`/`), #173
-# (`NULL`).
+# wrong, the test says so; fixing it should flip the expectation.
+# Follow-up issues: 170 (author particles), 171 (diacritics), 172 (slash),
+# 173 (NULL).
 
 .parse_one <- function(x, ...) {
   suppressWarnings(ts_parse_names(x, quiet = TRUE, ...))
