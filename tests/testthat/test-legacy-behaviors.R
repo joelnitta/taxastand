@@ -26,7 +26,8 @@ test_that("a lone 'd' after the epithet goes to the author", {
   res <- .parse_one(c("Foo bar d", "Foo bar var. d"))
   expect_identical(res$author, c("d", "d"))
   expect_true(all(is.na(res$infraspecific_epithet)))
-  # Today the space after 'd' is lost: "d Smith" becomes "dSmith". Looks wrong.
+  # KNOWN WRONG (#170): the space after 'd' is lost, so "d Smith" becomes
+  # "dSmith". The author should be "d Smith". Flip this when #170 is fixed.
   expect_identical(.parse_one("Foo bar d Smith")$author, "dSmith")
 })
 
@@ -35,7 +36,9 @@ test_that("odd characters are removed or replaced before parsing", {
   expect_identical(.parse_one("Foo bar \"Smith\"")$author, "Smith") # quotes
   expect_identical(.parse_one("Foo bar Smith—Jones")$author, "Smith-Jones")
   expect_identical(.parse_one("Foo bar Smith")$author, "Smith") # nbsp
-  # Today "/" is deleted, not replaced by a space: two authors are fused.
+  # KNOWN WRONG (#172): "/" is deleted instead of replaced by a space, so two
+  # authors are fused. The author should be "Smith Jones". Flip this when
+  # #172 is fixed.
   expect_identical(.parse_one("Foo bar Smith/Jones")$author, "SmithJones")
 })
 
@@ -47,8 +50,9 @@ test_that("the ligature fl and e-diaeresis are accepted in names", {
 # Field cleaning in the matcher ------------------------------------------------
 
 test_that("an author written 'NULL' is erased before matching", {
-  # Legacy: the matcher blanks any field equal to "NULL" or "\\N" (SQL-dump
-  # nulls in the original's input files). A real value is lost.
+  # KNOWN WRONG (#173): the matcher blanks any field equal to "NULL" or "\\N"
+  # (SQL-dump nulls in the original's input files), so a real author "NULL"
+  # is lost. Flip the first two expectations when #173 is fixed.
   f <- .tt_clean_fields("1||Foo||bar|||NULL")
   expect_identical(f$a, "")
   f <- .tt_clean_fields("1||Foo||bar|||\\N")
@@ -68,8 +72,9 @@ test_that("tt_depunct flattens the listed Latin-1 letters", {
 })
 
 test_that("tt_depunct drops letters outside its table (Latin Extended-A)", {
-  # Today these letters vanish instead of being flattened, so "Dvořák"
-  # becomes "dvoak" and does not match "Dvorak". Looks wrong: flatten them.
+  # KNOWN WRONG (#171): these letters vanish instead of being flattened, so
+  # "Dvořák" becomes "dvoak" and does not match "Dvorak". Expected: "smarda",
+  # "dvorak", "lukasz". Flip this when #171 is fixed.
   expect_identical(
     tt_depunct(c("Šmarda", "Dvořák", "Łukasz")),
     c("marda", "dvoak", "ukasz")
