@@ -70,28 +70,63 @@
   ")(?=\\s|$)"
 )
 
-# The letters with diacritics that tt_depunct() flattens, and what they become
-# (single letters are replaced as fixed strings, groups as character classes)
-.tt_diacritics <- local({
-  from <- c(
-    "[\u00f9\u00fa\u00fb\u00fc]", "\u00d1",
-    "[\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5]",
-    "[\u00ec\u00ed\u00ee\u00ef]",
-    "[\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8]",
-    "\u00c7", "\u00e6", "\u00d0", "[\u00fd\u00ff]",
-    "[\u00c8\u00c9\u00ca\u00cb]", "\u00f1",
-    "[\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5]",
-    "[\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8]", "\u00df",
-    "[\u00d9\u00da\u00db\u00dc]", "[\u00de\u00fe]", "[\u00e7\u010d]",
-    "[\u00cc\u00cd\u00ce\u00cf]", "\u00f0",
-    "[\u00e8\u00e9\u00ea\u00eb]", "\u00c6", "\u00dd"
+# The letters with diacritics that tt_depunct() flattens: for each plain
+# letter, the accented letters that become it. Covers Latin-1, Latin
+# Extended-A and every other letter found in the standard forms of the 65,409
+# IPNI author names (2026-11), so author names compare without their accents.
+# A letter that is not here is deleted by tt_depunct(), not flattened.
+.tt_diacritic_letters <- c(
+  a = paste0(
+    "\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5\u0101\u0103\u0105\u01ce",
+    "\u1ea7\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5\u0100\u0102\u0104"
+  ),
+  c = "\u00e7\u0107\u0109\u010b\u010d\u00c7\u0106\u0108\u010a\u010c",
+  d = "\u00f0\u010f\u0111\u00d0\u010e\u0110",
+  e = paste0(
+    "\u00e8\u00e9\u00ea\u00eb\u0113\u0115\u0117\u0119\u011b\u1ec5",
+    "\u00c8\u00c9\u00ca\u00cb\u0112\u0114\u0116\u0118\u011a"
+  ),
+  g = "\u011d\u011f\u0121\u0123\u011c\u011e\u0120\u0122",
+  h = "\u0125\u0127\u0124\u0126",
+  i = paste0(
+    "\u00ec\u00ed\u00ee\u00ef\u0129\u012b\u012d\u012f\u0131\u0268",
+    "\u00cc\u00cd\u00ce\u00cf\u0128\u012a\u012c\u012e\u0130"
+  ),
+  j = "\u0135\u0134",
+  k = "\u0137\u0136",
+  l = "\u013a\u013c\u013e\u0140\u0142\u0139\u013b\u013d\u013f\u0141",
+  n = "\u00f1\u0144\u0146\u0148\u00d1\u0143\u0145\u0147",
+  o = paste0(
+    "\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8\u014d\u014f\u0151\u01d1",
+    "\u00d2\u00d3\u00d4\u00d5\u00d6\u00d8\u014c\u014e\u0150\u043e"
+  ),
+  r = "\u0155\u0157\u0159\u0154\u0156\u0158",
+  s = "\u015b\u015d\u015f\u0161\u0219\u015a\u015c\u015e\u0160\u0218\u0421",
+  t = "\u0163\u0165\u0167\u021b\u0162\u0164\u0166\u021a",
+  u = paste0(
+    "\u00f9\u00fa\u00fb\u00fc\u0169\u016b\u016d\u016f\u0171\u0173",
+    "\u00d9\u00da\u00db\u00dc\u0168\u016a\u016c\u016e\u0170\u0172"
+  ),
+  w = "\u0175\u0174",
+  y = "\u00fd\u00ff\u0177\u00dd\u0176\u0178",
+  z = "\u017a\u017c\u017e\u0179\u017b\u017d"
+)
+
+# Letters that become two letters (not a one-for-one swap)
+.tt_diacritic_ligatures <- c(
+  "\u00e6" = "ae", "\u00c6" = "ae", "\u0153" = "oe", "\u0152" = "oe",
+  "\u00df" = "ss", "\u00fe" = "th", "\u00de" = "th",
+  "\u0133" = "ij", "\u0132" = "ij"
+)
+
+# The one-for-one swaps as a pair of strings for chartr()
+.tt_diacritics <- list(
+  from = paste(.tt_diacritic_letters, collapse = ""),
+  to = paste(
+    strrep(names(.tt_diacritic_letters), nchar(.tt_diacritic_letters)),
+    collapse = ""
   )
-  to <- c(
-    "u", "N", "A", "i", "O", "C", "ae", "D", "y", "E", "n", "a", "o", "b", "U",
-    "p", "c", "I", "d", "e", "Ae", "Y"
-  )
-  list(from = from, to = to, fixed = !startsWith(from, "["))
-})
+)
 
 #' Remove punctuation and flatten diacritics
 #'
@@ -107,11 +142,11 @@ tt_depunct <- function(x) {
   # that contain non-ASCII characters.
   nonascii <- which(nchar(x, type = "bytes") != nchar(x, type = "chars"))
   if (length(nonascii)) {
-    y <- x[nonascii]
-    for (i in seq_along(.tt_diacritics$from)) {
+    y <- chartr(.tt_diacritics$from, .tt_diacritics$to, x[nonascii])
+    for (i in seq_along(.tt_diacritic_ligatures)) {
       y <- gsub(
-        .tt_diacritics$from[i], .tt_diacritics$to[i], y,
-        fixed = .tt_diacritics$fixed[i]
+        names(.tt_diacritic_ligatures)[i], .tt_diacritic_ligatures[[i]], y,
+        fixed = TRUE
       )
     }
     x[nonascii] <- y

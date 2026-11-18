@@ -165,6 +165,12 @@
 
 ## Bug fixes
 
+* Matching now ignores accents on all the letters found in IPNI author names,
+  not only Latin-1 ones. Letters such as `Š`, `ř`, `ł`, `ğ` and `ı` used to be
+  deleted when names were compared, so `Dvorak` and `Dvořák` (or `Smarda` and
+  `Šmarda`) matched only fuzzily (`auto_fuzzy`); they now match as
+  punctuation-only differences (`auto_punct`). `ß` is now `ss` (it was `b`) and
+  `þ` is `th` (it was `p`) (#171).
 * Matching no longer erases an author written `NULL` (or `\N`). These strings
   were treated as missing values, a leftover from the input files of the
   original taxon-tools; missing values are empty fields (#173).
