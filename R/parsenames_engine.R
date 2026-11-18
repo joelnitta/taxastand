@@ -113,8 +113,8 @@ tt_depunct <- function(x) {
     x[nonascii] <- y
   }
 
-  # ' and / et ' to ' & '
-  x <- gsub(" (and|et.?)  ", " \\& ", x, perl = TRUE)
+  # ' and ' / ' et ' (also ' et. ') to ' & '
+  x <- gsub(" (and|et)\\.? ", " \\& ", x, perl = TRUE)
 
   # Keep only letters, digits, &, and the hybrid sign (parentheses and every
   # other character go); then lower-case

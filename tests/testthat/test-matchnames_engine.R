@@ -279,3 +279,19 @@ test_that("a reference key lookup returns all records and handles NA", {
   expect_equal(lengths(.tt_lookup(m, c("x", "y"), "exact")), c(0L, 0L),
                ignore_attr = TRUE)
 })
+
+test_that("tt_depunct treats 'and' and 'et' between authors as '&'", {
+  expect_identical(
+    tt_depunct(c("Smith and Jones", "Smith et Jones", "Smith et. Jones")),
+    rep("smith&jones", 3)
+  )
+  # Only whole words: names containing 'and' or 'et' are unchanged
+  expect_identical(tt_depunct("Anderson Fetid"), "andersonfetid")
+})
+
+test_that("authors written with 'and' match authors written with '&'", {
+  res <- suppressMessages(ts_match_names(
+    "Foo bar (Smith and Jones) Lee", "Foo bar (Smith & Jones) Lee"
+  ))
+  expect_identical(res$match_type, "auto_punct")
+})

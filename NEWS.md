@@ -165,6 +165,10 @@
 
 ## Bug fixes
 
+* Matching now treats "and" and "et" between author names as "&", as intended,
+  so `Smith and Jones` and `Smith & Jones` match as punctuation-only
+  differences (`auto_punct`) instead of falling through to a fuzzy match or
+  no match (#164).
 * `ts_parse_names()` no longer treats the epithet *incerta* as a placeholder, so
   real species such as *Dryopteris incerta* are kept (#153).
 
