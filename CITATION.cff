@@ -6,7 +6,7 @@
 cff-version: 1.2.0
 message: 'To cite package "taxastand" in publications use:'
 type: software
-license: MIT
+license: GPL-3.0-only
 title: 'taxastand: Taxonomic Name Standardization'
 version: 2.0.0
 doi: 10.5281/zenodo.5726390

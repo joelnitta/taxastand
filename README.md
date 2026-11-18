@@ -151,11 +151,14 @@ that have been resolved to the same reference taxonomy.
 
 ## Similar work
 
-- [taxon-tools](https://github.com/camwebb/taxon-tools) is a
+- [taxon-tools](https://github.com/camwebb/taxon-tools) by Cam Webb is a
   command-line interface program that was the inspiration for
   `taxastand`. `taxastand` originally required it as a dependency
-  (removed in v2.0) and was a faithful port of its algorithms, but
-  `taxastand` is now developed independently.
+  (removed in v2.0), and its pure-R name parsing and matching code was
+  ported from taxon-tools. `taxastand` is now developed independently,
+  but because that code is derived from taxon-tools, which is licensed
+  under GPL-3, `taxastand` is also licensed under GPL-3 (see
+  [License](#license)).
 
 - [taxize](https://github.com/ropensci/taxize) is the “granddaddy” of
   taxonomy packages in R. It can search around 20 different taxonomic
@@ -243,3 +246,16 @@ version of the package:
 
 You can find DOIs for older versions by viewing the “Releases” menu on
 the right.
+
+## License
+
+`taxastand` is licensed under the
+[GPL-3](https://www.gnu.org/licenses/gpl-3.0.html). Its name parsing and
+matching code was ported from
+[taxon-tools](https://github.com/camwebb/taxon-tools), copyright Cam
+Webb, 2018, GPL-3, and Cam Webb is listed as a contributor and copyright
+holder. Releases up to and including 2.0.0 were distributed under the
+MIT license.
+
+The reference data that `ts_load_ref()` downloads and the example data
+in this package have their own licenses; see `ts_show_ref_sources()`.
