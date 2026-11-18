@@ -19,7 +19,9 @@
 # Fuzzy matching uses base adist() (Levenshtein distance); a pair is a fuzzy
 # match when the distance is <= max_dist.
 
-# Collapse internal/leading/trailing spaces (matchnames `cleanspaces`)
+# Collapse internal/leading/trailing spaces (matchnames `cleanspaces`). Needed
+# because `query` and `ref` can be parsed data frames edited by the user, whose
+# fields may contain stray spaces (test-legacy-behaviors.R).
 .tt_cleanspaces <- function(x) {
   gsub("^ +| +$", "", gsub(" {2,}", " ", x, perl = TRUE), perl = TRUE)
 }
@@ -38,7 +40,9 @@
 }
 
 # Split a vector of parsed `id|...` lines into the fields matchnames needs and
-# clean them (read_data lines 154-158): blank out NULL / \N, cleanspaces
+# clean them (read_data lines 154-158): blank out NULL / \N, cleanspaces.
+# Blanking NULL / \N serves the original's SQL-dump input files only, and
+# erases a real value such as an author "NULL" (#173).
 .tt_clean_fields <- function(lines) {
   # Split into 8 fields (exactly 7 pipes); fields may be empty.
   fields <- .tt_split_fields(lines, 8L)
