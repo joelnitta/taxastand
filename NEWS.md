@@ -172,6 +172,14 @@
   with author `Vriese`, which also made matching ignore the particle. A name
   that ends in a particle with no author after it, such as `Foo bar de`, can
   no longer be parsed (#170).
+
+* Matching now treats `Hook. ex Smith` and `Smith` as the same name. Under the
+  botanical Code the author after *ex* is the author of the name, but only the
+  author before *ex* was used, so `Foo bar Hook. ex Smith` did not match `Foo
+  bar Smith`. They now match as `auto_exauth+` / `auto_exauth-`, tried before
+  the `exin` matches, so `Foo bar Hook. ex Smith` prefers `Foo bar Smith` to
+  `Foo bar Hook.`. The documentation of the `exin` match types now says to
+  check them.
 * Matching now ignores accents on all the letters found in IPNI author names,
   not only Latin-1 ones. Letters such as `Š`, `ř`, `ł`, `ğ` and `ı` used to be
   deleted when names were compared, so `Dvorak` and `Dvořák` (or `Smarda` and

@@ -45,8 +45,22 @@
 #'   the reference (`-`) or the query (`+`).
 #' - `auto_in-`, `auto_in+`: identical once "in" elements (`Tagawa in Morton`
 #'   becomes `Tagawa`) are dropped from the reference or the query.
-#' - `auto_ex-`, `auto_ex+`: as above, dropping both "in" and "ex" elements
-#'   (`Willd. ex Schkuhr` becomes `Willd.`).
+#' - `auto_exauth-`, `auto_exauth+`: identical once the first author of an
+#'   "ex" citation is dropped, keeping the author after *ex*, from the
+#'   reference (`-`) or the query (`+`). In `Hook. ex Smith`, Hook. proposed
+#'   the name but Smith validly published it, so under the botanical Code the
+#'   name belongs to Smith: `Foo bar Hook. ex Smith` and `Foo bar Smith` are
+#'   the same name. A basionym author in parentheses is kept.
+#' - `auto_ex-`, `auto_ex+`: as `auto_in-`/`auto_in+`, dropping both "in" and
+#'   "ex" elements (`Willd. ex Schkuhr` becomes `Willd.`). **Check these.**
+#'   The author kept is the one before *ex*, who did not validly publish the
+#'   name, so the match is usually right but can pair two different names
+#'   (`Foo bar Willd.` is not necessarily the same name as `Foo bar Willd. ex
+#'   Schkuhr`). If a query matches this way, look at the reference name and
+#'   author to decide whether it is the name you meant. When both a name
+#'   with the author after *ex* and one with the author before it are in the
+#'   reference, the one with the author after *ex* is chosen
+#'   (`auto_exauth`).
 #' - `auto_basexin`: identical once basionym authors and "in"/"ex" elements are
 #'   dropped from both query and reference.
 #' - `auto_irank`: identical except for the infraspecific rank (e.g. `var.`

@@ -34,6 +34,8 @@ test_that("tt_matchnames: ties at the author/form stages return all records", {
   cases <- list(
     auto_punct = list("q1||Foo||bar|||Willd,", c("r1||Foo||bar|||Willd.",
       "r2||Foo||bar|||Willd")),
+    `auto_exauth-` = list("q1||Foo||bar|||Less.",
+      c("r1||Foo||bar|||Willd. ex Less.", "r2||Foo||bar|||DC. ex Less.")),
     `auto_exin-` = list("q1||Foo||bar|||Willd.",
       c("r1||Foo||bar|||Willd. ex Less.", "r2||Foo||bar|||Willd. ex DC.")),
     `auto_in-` = list("q1||Foo||bar|||Willd.",
@@ -294,4 +296,41 @@ test_that("authors written with 'and' match authors written with '&'", {
     "Foo bar (Smith and Jones) Lee", "Foo bar (Smith & Jones) Lee"
   ))
   expect_identical(res$match_type, "auto_punct")
+})
+
+test_that("tt_matchnames: 'A ex B' matches 'B', the author who published it", {
+  # reference without the ex author, then query without it
+  res <- tt_matchnames("q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||Smith")
+  expect_identical(res$match_type, "auto_exauth+")
+  res <- tt_matchnames("q1||Foo||bar|||Smith", "r1||Foo||bar|||Hook. ex Smith")
+  expect_identical(res$match_type, "auto_exauth-")
+  # a basionym author stays; an author that is only "ex B" works too
+  res <- tt_matchnames(
+    "q1||Foo||bar|||(L.) Hook. ex Smith", "r1||Foo||bar|||(L.) Smith"
+  )
+  expect_identical(res$match_type, "auto_exauth+")
+  res <- tt_matchnames("q1||Foo||bar|||ex Smith", "r1||Foo||bar|||Smith")
+  expect_identical(res$match_type, "auto_exauth+")
+  # an author that merely contains the letters "ex" is not changed
+  res <- tt_matchnames("q1||Foo||bar|||Alex", "r1||Foo||bar|||Al")
+  expect_false(any(grepl("exauth", res$match_type)))
+})
+
+test_that("tt_matchnames: 'A ex B' prefers 'B' to 'A' when both are in the reference", {
+  res <- tt_matchnames(
+    "q1||Foo||bar|||Hook. ex Smith",
+    c("r1||Foo||bar|||Hook.", "r2||Foo||bar|||Smith")
+  )
+  expect_identical(res$id_ref, "r2")
+  expect_identical(res$match_type, "auto_exauth+")
+  # with only the first author in the reference, it still matches, as exin
+  res <- tt_matchnames("q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||Hook.")
+  expect_identical(res$match_type, "auto_exin+")
+})
+
+test_that("ts_match_names: 'A ex B' matches 'B'", {
+  res <- suppressMessages(
+    ts_match_names("Foo bar Hook. ex Smith", "Foo bar Smith")
+  )
+  expect_identical(res$match_type, "auto_exauth+")
 })

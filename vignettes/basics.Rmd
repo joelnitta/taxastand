@@ -109,7 +109,9 @@ Here is a summary of the values taken by `match_type` (also documented in the "M
 - `auto_basio+`: Match after excluding the basionym author from the query.
 - `auto_in-`: Match after excluding all *in* elements from reference. An *in* element refers to phrases such as `Tagawa in Morton`. The version excluding *in* elements is `Tagawa`.
 - `auto_in+`: Match after excluding all *in* elements from query.
-- `auto_ex-`: Match after excluding all *in* and *ex* elements from reference. An *ex* element refers to phrases such as `Rändel ex D.F.Murray`. The version excluding *ex* elements is `Rändel`.
+- `auto_exauth-`: Match after excluding the first author of an *ex* citation from the reference, keeping the author after *ex*. For `Hook. ex Smith`, Smith validly published the name and is its author under the botanical Code, so `Hook. ex Smith` and `Smith` are the same name. A basionym author in parentheses is kept.
+- `auto_exauth+`: Same, excluding the first author of an *ex* citation from the query.
+- `auto_ex-`: Match after excluding all *in* and *ex* elements from reference. An *ex* element refers to phrases such as `Rändel ex D.F.Murray`. The version excluding *ex* elements is `Rändel`, the author who did *not* validly publish the name, so check these matches: the reference name could be a different name by that author.
 - `auto_ex+`: Match after excluding all *in* and *ex* elements from query.
 - `auto_basexin`: Match after excluding all basionym authors and all *in* and *ex* elements from query and reference.
 - `auto_irank`: Match where all elements agree except for infraspecific rank.
