@@ -165,6 +165,11 @@
 
 ## Bug fixes
 
+* `ts_parse_names()` no longer mistakes a lowercase word at the start of the
+  author for an infraspecific epithet. Authors such as `de Vriese`, `van der
+  Werff`, `de la Sota`, `d'Urv.`, `hort.` and `auct.` are kept whole; before,
+  `Angiopteris affinis de Vriese` was read as the infraspecific epithet `de`
+  with author `Vriese`, which also made matching ignore the particle (#170).
 * Matching now ignores accents on all the letters found in IPNI author names,
   not only Latin-1 ones. Letters such as `Š`, `ř`, `ł`, `ğ` and `ı` used to be
   deleted when names were compared, so `Dvorak` and `Dvořák` (or `Smarda` and

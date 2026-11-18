@@ -66,3 +66,53 @@ test_that("strip_qualifiers = TRUE strips trailing sensu lato/stricto", {
   expect_identical(sstr_parsed$specific_epithet, "barspecies")
   expect_true(is.na(sstr_parsed$author))
 })
+
+test_that("lowercase author particles stay in the author (#170)", {
+  taxa <- c(
+    "Angiopteris affinis de Vriese",
+    "Aiouea grandifolia van der Werff",
+    "Thelypteris nubicola de la Sota",
+    "Allium graecum d'Urv.",
+    "Aceras pyramidale var. brachystachys (d'Urv.) Rchb.f.",
+    "Foo bar var. baz de Vriese",
+    "Foo bar d Smith",
+    "Abies carpatica hort.",
+    "Abies conica hort. ex Lav\u00e9e",
+    "Foo bar auct.",
+    "Foo bar auct. non L."
+  )
+  res <- suppressWarnings(ts_parse_names(taxa, quiet = TRUE))
+  expect_identical(res$name, taxa)
+  expect_identical(
+    res$author,
+    c(
+      "de Vriese", "van der Werff", "de la Sota", "d'Urv.",
+      "(d'Urv.) Rchb.f.", "de Vriese", "d Smith", "hort.",
+      "hort. ex Lav\u00e9e", "auct.", "auct. non L."
+    )
+  )
+  expect_identical(
+    res$infraspecific_epithet,
+    c(NA, NA, NA, NA, "brachystachys", "baz", rep(NA, 5))
+  )
+})
+
+test_that("a particle is an epithet when no author follows it (#170)", {
+  res <- suppressWarnings(ts_parse_names("Foo bar de", quiet = TRUE))
+  expect_identical(res$infraspecific_epithet, "de")
+  expect_true(is.na(res$author))
+})
+
+test_that("real IPNI names with a lowercase author particle parse correctly (#170)", {
+  # Names whose IPNI author starts with a lowercase word, made by
+  # data-raw/ipni-particle-names.R (kewr, 2026-11)
+  fx <- read.csv(
+    test_path("fixtures", "ipni-particle-names.csv"),
+    encoding = "UTF-8"
+  )
+  fx$full <- paste(fx$name, fx$authors)
+  fx <- fx[!duplicated(fx$full), ]
+  res <- suppressWarnings(ts_parse_names(fx$full, quiet = TRUE))
+  expect_identical(nrow(res), nrow(fx))
+  expect_identical(res$author, fx$authors[match(res$name, fx$full)])
+})

@@ -24,6 +24,17 @@
 #   \u00d7 = MULTIPLICATION SIGN (hybrid mark), \u00eb = e-diaeresis,
 #   \ufb02 = LATIN SMALL LIGATURE FL, \u2019 = RIGHT SINGLE QUOTATION MARK
 
+# Words that begin an author string although they are lowercase: particles
+# ("de Vriese", "van der Werff", "de la Sota"), "d'" ("d'Urv."), and the
+# abbreviations "auct." (auctorum) and "hort." (hortulanorum). Without this
+# the infraspecific epithet group below would take them (#170). A particle
+# only counts when a capital letter (or another particle) follows it.
+.tt_author_particles <- paste0(
+  "(?:(?:de|del|della|di|da|dos|du|van|von|der|den|ter|ten|la|le)",
+  "(?: (?:de|del|della|di|da|dos|du|van|von|der|den|ter|ten|la|le))*",
+  " (?:[[:upper:]]|\\()|d['\u2019]|d (?=[[:upper:]])|(?:auctt?|hort)\\.)"
+)
+
 # The single large parsing regex (parsenames line 61). Groups:
 #   1 genus hybrid | 2 genus | 3 species hybrid | 4 species |
 #   5 infraspecific rank | 6 infraspecific epithet | 7 author string
@@ -36,7 +47,7 @@
   # 5 rank
   "(var\\.|f\\.|forma|subf\\.|taxon|fo\\.|subsp\\.|prol\\.|nothovar\\.|",
   "lus\\.|\\[infrasp\\.unranked\\])? ?",
-  "([a-z\ufb02_-]+)? ?", # 6 infraspecific epithet
+  "(?!", .tt_author_particles, ")([a-z\ufb02_-]+)? ?", # 6 infraspecific epithet
   # 7 author: ']' placed first (literal), '-' last (literal); includes
   # [:alnum:] plus the combining diacritics used in author names
   "([] [().&;,\u2019'[:alnum:]\u0301 \u0300 \u0308 \u0306 \u030c ",
@@ -224,13 +235,8 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   # The big anchored parse regex (line 61); perl = TRUE to match gawk captures
   parsed <- sub(.tt_parse_re, "\\1|\\2|\\3|\\4|\\5|\\6|\\7", name, perl = TRUE)
 
-  # Fix-ups (lines 65, 73-78). The two lowercase-author rules below
-  # (`auct.`, `d'Urv.`) are needed because the regex above reads a lowercase
-  # word after the epithet as an infraspecific epithet; other particles such
-  # as "de" and "van" are not covered (#170).
+  # Fix-ups (lines 65, 73-78)
   parsed <- gsub(" +\\|", "|", parsed, perl = TRUE)
-  parsed <- gsub("\\|(auctt?)\\|\\.", "||\\1.", parsed, perl = TRUE)
-  parsed <- gsub("|d|", "||d", parsed, fixed = TRUE)
   parsed <- gsub("\\|[xX]\\|", "|\u00d7|", parsed, perl = TRUE)
   parsed <- gsub("^[xX]\\|", "\u00d7|", parsed, perl = TRUE)
 
