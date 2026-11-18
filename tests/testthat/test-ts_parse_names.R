@@ -133,8 +133,8 @@ test_that("a particle written directly before the capital stays in the author (#
 })
 
 test_that("real IPNI names with a lowercase author particle parse correctly (#170)", {
-  # Names whose IPNI author starts with a lowercase word, made by
-  # data-raw/ipni-particle-names.R (kewr, 2026-11)
+  # Names whose IPNI author starts with a lowercase word, made in November
+  # 2026 with the kewr package by the script in the data-raw folder
   fx <- read.csv(
     test_path("fixtures", "ipni-particle-names.csv"),
     encoding = "UTF-8"
