@@ -45,8 +45,9 @@
     "de", "del", "della", "dell", "dei", "degli", "di", "da", "das", "dos",
     "do", "du", "des", "van", "von", "vom", "der", "den", "ter", "ten", "te",
     "la", "las", "le", "les", "lo", "los", "el", "af", "zu", "zur",
-    # citation words that begin an author: "ex DC.", "sensu Smith", "non L."
-    "ex", "sensu", "non", "nec"
+    # citation words that begin an author: "ex DC.", "sensu Smith", "non L.",
+    # "in Piper" (IPNI writes the author this way when the first is unknown)
+    "ex", "in", "sensu", "non", "nec"
   ),
   collapse = "|"
 )
