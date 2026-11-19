@@ -98,7 +98,7 @@ test_that("collapsed autonyms that match exactly get match_type 'autonym'", {
   )
   expect_identical(
     res$match_type,
-    c("autonym", "exact", "autonym", "auto_fuzzy_canon")
+    c("autonym", "exact", "autonym", "fuzzy_canonical")
   )
   # the plain species name is still exact, and the queries keep their text
   expect_identical(res$reference[1:2], c("Blechnum lunare", "Blechnum lunare"))
@@ -394,7 +394,7 @@ test_that("`match_no_auth` still works as an alias of `match_canon`", {
     ts_match_names(q, ref, max_dist = 0)$match_type, "no_match"
   )
   old <- ts_match_names(q, ref, max_dist = 0, match_no_auth = TRUE)
-  expect_identical(old$match_type, "auto_canon")
+  expect_identical(old$match_type, "canonical")
   expect_identical(old, ts_match_names(q, ref, max_dist = 0,
     match_canon = TRUE))
   expect_identical(
@@ -433,7 +433,7 @@ test_that("match_autonyms also finds an autonym in the reference", {
     ref,
     match_autonyms = TRUE
   )
-  expect_identical(res$match_type, c("autonym", "auto_canon", "autonym",
+  expect_identical(res$match_type, c("autonym", "canonical", "autonym",
     "no_match"))
   expect_identical(res$reference[1:3], c(ref[1], ref[1], ref[2]))
   # the query columns describe the query, not the variant that was tried
@@ -485,7 +485,7 @@ test_that("ts_resolve_names resolves an autonym in the reference", {
 test_that("reference autonyms are found for spelling variants and all forms", {
   ref <- c("Foo silvestris var. silvestris L.", "Bar baz L.")
   res <- ts_match_names("Foo sylvestris L.", ref, match_autonyms = TRUE)
-  expect_identical(res$match_type, "auto_orthvar")
+  expect_identical(res$match_type, "orthvar")
   expect_identical(res$reference, ref[1])
   # the same result for a prepared reference and for parsed reference names
   prep <- ts_optimize_ref(ref)
@@ -527,4 +527,28 @@ test_that("match_autonyms leaves a query alone when no variant matches", {
     match_autonyms = TRUE, match_canon = FALSE, max_dist = 0
   )
   expect_identical(res$match_type, "no_match")
+})
+
+test_that("match_side says which name had the ignored element (#167)", {
+  res <- suppressMessages(ts_match_names(
+    c(
+      "Foo bar Hook. ex Smith", "Foo baz L.", "Foo qux Smith",
+      "Foo quux L.", "Foo corge Hook. ex Smith"
+    ),
+    c(
+      "Foo bar Smith", "Foo baz (L.) L.", "Foo qux Hook. ex Smith",
+      "Foo quux L.", "Foo corge DC. ex Smith"
+    )
+  ))
+  expect_identical(
+    res$match_type,
+    c("ex_validating", "basionym", "ex_validating", "exact", "ex_validating")
+  )
+  expect_identical(
+    res$match_side, c("query", "reference", "reference", NA, "both")
+  )
+  # ts_resolve_names() carries the column through, and simple = TRUE drops it
+  expect_false("match_side" %in% names(
+    suppressMessages(ts_match_names("Foo bar L.", "Foo bar L.", simple = TRUE))
+  ))
 })

@@ -41,5 +41,10 @@ Authors:
   \item Joel Nitta \email{joelnitta@gmail.com} (\href{https://orcid.org/0000-0003-4719-7472}{ORCID}) [copyright holder]
 }
 
+Other contributors:
+\itemize{
+  \item Cam Webb (Author of taxon-tools, from which the name parsing and matching code was ported) [copyright holder]
+}
+
 }
 \keyword{internal}

@@ -31,28 +31,38 @@
 #' first type that matches (for example, two names that differ only in an *ex*
 #' author), every one of them is returned, so the ambiguity is visible.
 #'
+#' For the types that ignore an element of the author (a basionym author, an
+#' *in* or *ex* citation), the `match_side` column says which name had it:
+#' `query`, `reference`, or `both`. It is `NA` for the other types. Most of the
+#' time the side does not matter, but it tells you where to look when a match
+#' needs checking (see the table at the end of this section).
+#'
 #' **Identical after normalization (safe to accept)**
 #' - `exact`: all parts of the name, including the author, are identical.
 #' - `autonym`: identical once an autonym (e.g. "Blechnum lunare var. lunare")
 #'   is collapsed to the species name, "Blechnum lunare" (only when
 #'   `match_autonyms` is `TRUE`).
-#' - `auto_punct`: identical after ignoring differences in spaces, periods,
+#' - `punct`: identical after ignoring differences in spaces, periods,
 #'   capitalization, and accented or other non-ASCII characters.
+#' - `manual`: matched by the `manual_match` argument.
 #'
 #' **Differences in how the author is cited (usually safe)**
-#' - `auto_basio-`, `auto_basio+`: identical once the basionym author, e.g.
-#'   `(Turcz.)` in `Cardaminopsis umbrosa (Turcz.) Czerep.`, is dropped from
-#'   the reference (`-`) or the query (`+`).
-#' - `auto_in-`, `auto_in+`: identical once "in" elements (`Tagawa in Morton`
-#'   becomes `Tagawa`) are dropped from the reference or the query.
-#' - `auto_exauth-`, `auto_exauth+`: identical once the first author of an
-#'   "ex" citation is dropped, keeping the author after *ex*, from the
-#'   reference (`-`) or the query (`+`). In `Hook. ex Smith`, Hook. proposed
-#'   the name but Smith validly published it, so under the botanical Code the
-#'   name belongs to Smith: `Foo bar Hook. ex Smith` and `Foo bar Smith` are
-#'   the same name. A basionym author in parentheses is kept.
-#' - `auto_irank`: identical except for the infraspecific rank (e.g. `var.`
-#'   vs. `subsp.`).
+#' - `basionym`: identical once the basionym author, e.g. `(Turcz.)` in
+#'   `Cardaminopsis umbrosa (Turcz.) Czerep.`, is dropped. `match_side` is the
+#'   name that has the basionym author.
+#' - `in_author`: identical once "in" elements (`Tagawa in Morton` becomes
+#'   `Tagawa`) are dropped. `match_side` is the name that has the "in" element.
+#' - `ex_validating`: identical once the first author of an "ex" citation is
+#'   dropped, keeping the author after *ex*. In `Hook. ex Smith`, Hook.
+#'   proposed the name but Smith validly published it, so under the botanical
+#'   Code the name belongs to Smith: `Foo bar Hook. ex Smith` and `Foo bar
+#'   Smith` are the same name. `match_side` is the name with the *ex*
+#'   citation, or `both` if both names have one with the same author after
+#'   *ex* but different authors before it (`Hook. ex Smith` and `DC. ex
+#'   Smith`; the sources disagree about who proposed the name, which does not
+#'   change the name). A basionym author in parentheses is kept.
+#' - `rank`: identical except for the infraspecific rank (e.g. `var.` vs.
+#'   `subsp.`).
 #'
 #' **The author before "ex" is used (check the result)**
 #'
@@ -62,29 +72,24 @@
 #' author before *ex*, so they are usually, but not always, the same name:
 #' `Foo bar Willd.` could be a different name by Willd. If a query matches in
 #' this way, look at the reference name and its author to decide whether it is
-#' the name you meant. They are tried after `auto_exauth`, so a reference name
-#' with the author after *ex* is preferred when there is one.
-#' - `auto_exauth_both`: both names have an "ex" citation with the same author
-#'   after *ex* but different authors before it (`Hook. ex Smith` and
-#'   `DC. ex Smith`), or one has no author before it (`ex Smith`). Under the
-#'   Code this is one name, but the two sources do not agree about who first
-#'   ascribed it.
-#' - `auto_ex-`, `auto_ex+`: identical once "in" and "ex" elements are dropped
-#'   from the reference (`-`) or the query (`+`): `Willd. ex Schkuhr` becomes
-#'   `Willd.`
-#' - `auto_basexin`: identical once basionym authors and "in"/"ex" elements are
-#'   dropped from both query and reference.
+#' the name you meant. They are tried after `ex_validating`, so a reference
+#' name with the author after *ex* is preferred when there is one.
+#' - `ex_first`: identical once "in" and "ex" elements are dropped from one
+#'   name: `Willd. ex Schkuhr` becomes `Willd.` `match_side` is the name with
+#'   the *ex* citation.
+#' - `basionym_in_ex`: identical once basionym authors and "in"/"ex" elements
+#'   are dropped from both query and reference (`match_side` is `both`).
 #'
 #' **Canonical-name matches (the author is ignored; check the result)**
 #'
 #' The canonical name is genus + specific epithet + infraspecific epithet.
-#' - `auto_canon`: canonical names are identical. Used automatically for
+#' - `canonical`: canonical names are identical. Used automatically for
 #'   queries without an author; for queries with an author, only when
 #'   `match_canon = TRUE`. Several reference names can share a canonical name
 #'   (homonyms), giving multiple hits.
 #'
 #' **Latin spelling variants (check the result)**
-#' - `auto_orthvar`: identical once standard Latin orthographic variants in the
+#' - `orthvar`: identical once standard Latin orthographic variants in the
 #'   epithets are folded together: `ae`/`oe` = `e`, `y` = `i`, `ph` = `f`,
 #'   `rh` = `r`, `th` = `t`, and a final `ii` = `i` (e.g. `sylvestris` and
 #'   `silvestris`, `caerulea` and `coerulea`). For queries without an author,
@@ -92,18 +97,33 @@
 #'   are genuinely different.
 #'
 #' **Fuzzy matches (misspellings; always verify)**
-#' - `auto_fuzzy`: query has an author; the whole name (author included) is
-#'   within `max_dist` of a reference name.
-#' - `auto_fuzzy_canon`: query has no author; the canonical names are within
+#' - `fuzzy`: query has an author; the whole name (author included) is within
+#'   `max_dist` of a reference name.
+#' - `fuzzy_canonical`: query has no author; the canonical names are within
 #'   `max_dist`.
 #'
 #' **Fuzzy genus matches (misspelled genus; always verify)**
-#' - `auto_fuzzy_genus`: the genus of the query is not in the reference, but is
+#' - `fuzzy_genus`: the genus of the query is not in the reference, but is
 #'   within `max_dist_genus` of a reference genus, and the rest of the name then
 #'   matches within `max_dist` (the total distance includes the genus edits).
 #'
 #' **No match**
 #' - `no_match`: nothing in the reference was close enough.
+#'
+#' **What to do next, by match type and side**
+#'
+#' | `match_type` | `match_side` | Confidence | What to do |
+#' |---|---|---|---|
+#' | `exact`, `punct`, `autonym`, `rank` | `NA` | High | Accept. |
+#' | `basionym`, `in_author` | `query` or `reference` | High | Accept. If the side is `query`, the reference lacks an element you supplied; if `reference`, your query lacks one. |
+#' | `ex_validating` | `query`, `reference` or `both` | High | Accept; the same name under the Code. |
+#' | `ex_first` | `query` | Check | The reference has only the author who proposed the name. Check that the reference name is not a different name by the same author; the reference may be incomplete. |
+#' | `ex_first` | `reference` | Check | Your query has only the author who proposed the name. Add the author who published it (after *ex*) if you can, and check the reference name. |
+#' | `basionym_in_ex` | `both` | Check | Both names differ in several author elements; compare the authors. |
+#' | `canonical`, `orthvar` | `NA` | Check | The author was ignored or an epithet spelling was folded; check the reference name and its author. |
+#' | `fuzzy`, `fuzzy_canonical`, `fuzzy_genus` | `NA` | Low | Misspelling is assumed; always verify, using `dist` as a guide. |
+#'
+#' The table gives the usual confidence, not a guarantee.
 #'
 #' Fuzzy matching is computed with the
 #' [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance)
@@ -136,7 +156,7 @@
 #' for queries whose genus is not in the reference; the candidates are then the
 #' names in reference genera within this distance, and the whole name (or the
 #' canonical name, for a query without an author) must still be within
-#' `max_dist`. Matches have the type `auto_fuzzy_genus`. Set to 0 to turn
+#' `max_dist`. Matches have the type `fuzzy_genus`. Set to 0 to turn
 #' genus-level fuzzy matching off. Default: 2.
 #' @param transpositions Logical; count a swap of two adjacent letters (e.g.
 #' `Qurecus` for `Quercus`, a common typing error) as one edit instead of two
@@ -181,7 +201,10 @@
 #' - reference: Matched reference name
 #' - match_type: Type of match (see the "Match types" section)
 #' - dist: Edit distance between query and reference for fuzzy matches
-#'   (`auto_fuzzy`, `auto_fuzzy_canon`, `auto_fuzzy_genus`), `NA` otherwise
+#'   (`fuzzy`, `fuzzy_canonical`, `fuzzy_genus`), `NA` otherwise
+#' - match_side: Which name had the element that the match type ignored
+#'   (`query`, `reference` or `both`), `NA` when not applicable (see the "Match
+#'   types" section). Not included if `simple` is `TRUE`.
 #' - id_query: Unique ID of query
 #' - id_ref: Unique ID of reference
 #' - genus_hybrid_sign_query: Genus hybrid sign in query
@@ -628,17 +651,17 @@ ts_match_names <- function(
   base <- results[!is_variant, ]
   hits <- results[is_variant, ]
   hits <- hits[hits$match_type != "no_match" &
-    !grepl("^auto_fuzzy", hits$match_type), ]
+    !grepl("^fuzzy", hits$match_type), ]
   if (nrow(hits) == 0) {
     return(base)
   }
   i <- match(hits$id_query, variants$parsed$id)
   hits$id_query <- variants$base_id[i]
   hits$match_type[!variants$literal[i] &
-    hits$match_type %in% c("exact", "auto_irank")] <- "autonym"
+    hits$match_type %in% c("exact", "rank")] <- "autonym"
   unresolved <- vapply(
     split(base$match_type, base$id_query),
-    function(x) all(x == "no_match" | grepl("^auto_fuzzy", x)),
+    function(x) all(x == "no_match" | grepl("^fuzzy", x)),
     logical(1)
   )
   hits <- hits[hits$id_query %in% names(unresolved)[unresolved], ]
@@ -694,7 +717,7 @@ ts_match_names <- function(
 
 # Put the main result columns first
 .ts_front_cols <- function(df) {
-  front <- c("query", "reference", "match_type", "dist")
+  front <- c("query", "reference", "match_type", "dist", "match_side")
   df[, c(front, setdiff(colnames(df), front))]
 }
 

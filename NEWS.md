@@ -2,6 +2,37 @@
 
 ## Major changes
 
+* **The `match_type` values are renamed and a `match_side` column is added
+  (#167, #163).** The labels were taxon-tools' and hard to read, and the
+  `+`/`-` suffix (which name had an extra element) was hard to remember. The
+  type now names only the rule, without the `auto_` prefix, and the new
+  `match_side` column says which name had the element that was ignored
+  (`query`, `reference`, `both`, or `NA` when not applicable). The "Match
+  types" section of `?ts_match_names` has a table of what each type and side
+  means and what to do next. This also fixes the documentation, which listed
+  `auto_ex-`/`auto_ex+` for the types the code returned as `auto_exin-`/
+  `auto_exin+`. Code that filters on `match_type` needs to be updated:
+
+  | Before | Now `match_type` | Now `match_side` |
+  |---|---|---|
+  | `auto_punct` | `punct` | `NA` |
+  | `auto_basio-` / `auto_basio+` | `basionym` | `reference` / `query` |
+  | `auto_in-` / `auto_in+` | `in_author` | `reference` / `query` |
+  | `auto_exauth-` / `auto_exauth+` | `ex_validating` | `reference` / `query` |
+  | `auto_exauth_both` | `ex_validating` | `both` |
+  | `auto_exin-` / `auto_exin+` | `ex_first` | `reference` / `query` |
+  | `auto_basexin` | `basionym_in_ex` | `both` |
+  | `auto_irank` | `rank` | `NA` |
+  | `auto_orthvar` | `orthvar` | `NA` |
+  | `auto_canon` | `canonical` | `NA` |
+  | `auto_fuzzy` | `fuzzy` | `NA` |
+  | `auto_fuzzy_canon` | `fuzzy_canonical` | `NA` |
+  | `auto_fuzzy_genus` | `fuzzy_genus` | `NA` |
+
+  `exact`, `autonym`, `manual` and `no_match` are unchanged. `match_side` is
+  also in the output of `ts_resolve_names()`, and is left out when `simple` is
+  `TRUE` in `ts_match_names()`.
+
 * **taxastand is now licensed under GPL-3 (was MIT) (#168).** The pure-R
   name parsing and matching code was ported from taxon-tools (Cam Webb, GPL-3),
   so it is a derivative work and must be distributed under the same license.

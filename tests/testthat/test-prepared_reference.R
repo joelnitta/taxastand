@@ -65,7 +65,7 @@ test_that("a prepared reference can be reused and fills in per genus", {
       simple = TRUE
     )
   )
-  expect_identical(res$match_type, c("auto_fuzzy", "exact"))
+  expect_identical(res$match_type, c("fuzzy", "exact"))
   expect_output(print(prepared), "genera parsed so far: 2")
 })
 

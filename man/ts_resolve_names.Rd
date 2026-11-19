@@ -54,7 +54,7 @@ and a genus in the reference, for correcting misspelled genera. Only used
 for queries whose genus is not in the reference; the candidates are then the
 names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
-\code{max_dist}. Matches have the type \code{auto_fuzzy_genus}. Set to 0 to turn
+\code{max_dist}. Matches have the type \code{fuzzy_genus}. Set to 0 to turn
 genus-level fuzzy matching off. See \code{\link{ts_match_names}()}.
 Default: 2.}
 
@@ -124,6 +124,9 @@ Includes the following columns:
 \code{\link{ts_match_names}()})
 \item \code{dist}: Edit distance between the query and the matched name for fuzzy
 matches, \code{NA} otherwise
+\item \code{match_side}: Which name had the element that the match type ignored
+(\code{query}, \code{reference} or \code{both}), \code{NA} when not applicable (see
+\code{\link{ts_match_names}()})
 }
 
 Names that could not be matched or resolve to multiple, different synonyms
