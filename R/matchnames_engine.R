@@ -122,8 +122,10 @@
         paste0(namex, sub("^(\\([^)]+\\) ?)?(.* )?[eE]x ", "\\1", a))
       ),
       exin = derive(paste0(namex, sub(" ([eE]x|[iI]n) .*$", "", a))),
+      # gsub(), not sub(): a name can have both a basionym author and an
+      # "ex"/"in" citation, and both must go
       basexin = derive(
-        paste0(namex, sub("(^\\([^)]+\\)| ([eE]x|[iI]n) .*$)", "", a))
+        paste0(namex, gsub("(^\\([^)]+\\)| ([eE]x|[iI]n) .*$)", "", a))
       ),
       orthvar = .tt_orth_key(key("punct"), f, method),
       canonorth = .tt_orth_key(key("canon"), f, method),

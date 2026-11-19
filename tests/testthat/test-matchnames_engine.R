@@ -351,3 +351,16 @@ test_that("ts_match_names: 'A ex B' matches 'B'", {
   )
   expect_identical(res$match_type, "auto_exauth+")
 })
+
+test_that("basexin drops both the basionym author and the ex/in citation (#174)", {
+  # Real name from the Catalogue of Life (filmy_taxonomy). The reference has
+  # a basionym author and an "ex" citation; sub() removed only the first.
+  res <- suppressMessages(ts_match_names(
+    c(
+      "Hymenophyllum magellanicum Willd.",
+      "Hymenophyllum magellanicum Willd. ex Kunze"
+    ),
+    "Hymenophyllum magellanicum (Desv.) Willd. ex Kunze"
+  ))
+  expect_identical(res$match_type, c("auto_basexin", "auto_basio-"))
+})

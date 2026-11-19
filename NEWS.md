@@ -172,6 +172,15 @@
 
 ## Bug fixes
 
+* `ts_parse_names()` also keeps `in` at the start of the author in the author,
+  as IPNI writes it when the author before *in* is unknown: `Mertensia
+  cusickii in Piper` no longer has the infraspecific epithet `in` (#174).
+
+* Matching now removes both the basionym author and the "ex"/"in" citation in
+  the `auto_basexin` match. When a name had both, as in `Hymenophyllum
+  magellanicum (Desv.) Willd. ex Kunze`, only the basionym author was removed,
+  so it did not match `Hymenophyllum magellanicum Willd.` (#174).
+
 * `ts_parse_names()` no longer reads `ex`, `sensu`, `non` or `nec` at the start of
   the author as an infraspecific epithet: `Verbesina conyzoides ex DC.` now has
   the author `ex DC.` (as `Hook. ex DC.` already did), and `Glycine javanica

@@ -136,6 +136,29 @@ test_that("'ex', 'sensu' and 'non' at the start of the author stay in the author
   )
 })
 
+test_that("'in' at the start of the author stays in the author (#174)", {
+  # IPNI writes " in Piper" when the author before "in" is unknown
+  res <- suppressWarnings(ts_parse_names(
+    c("Mertensia cusickii in Piper", "Draba uruguayana in Arechav.",
+      "Mertensia cusickii var. cusickii in Piper", "Foo bar Tagawa in Morton"),
+    quiet = TRUE
+  ))
+  expect_identical(
+    res$author,
+    c("in Piper", "in Arechav.", "in Piper", "Tagawa in Morton")
+  )
+  expect_identical(
+    res$infraspecific_epithet, c(NA, NA, "cusickii", NA)
+  )
+  # An epithet that begins with "in" is still an epithet
+  expect_identical(
+    suppressWarnings(
+      ts_parse_names("Foo bar var. inermis Smith", quiet = TRUE)
+    )$infraspecific_epithet,
+    "inermis"
+  )
+})
+
 test_that("a particle with no author after it cannot be parsed (#170)", {
   withr::local_options(taxastand.verbosity = "inform")
   expect_warning(
