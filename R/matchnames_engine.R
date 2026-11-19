@@ -204,9 +204,9 @@
 #'   edit (optimal string alignment distance) instead of two (Levenshtein).
 #' @return Data frame of character columns, one row per match (a query with
 #'   several fuzzy hits gets several rows; an unmatched query gets one row with
-#'   `match_type` "no_match"), with the 18 columns documented in
+#'   `match_type` "no_match"), with the 19 columns documented in
 #'   `ts_match_names()` (`id_query`, `id_ref`, `match_type`, `dist` (integer
-#'   edit distance of fuzzy hits, else `NA`), then the seven parsed name fields
+#'   edit distance of fuzzy hits, else `NA`), `match_side`, then the seven parsed name fields
 #'   suffixed `_query` and `_ref`). Empty values are `NA`.
 #' @keywords internal
 #' @importFrom stats setNames
@@ -225,15 +225,15 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   )
   # Exact and rule-based stages, most certain first
   .tt_stage_eq(m, "exact", "exact")
-  .tt_stage_eq(m, "punct", "auto_punct")
-  .tt_stage_pm(m, "basio")
-  .tt_stage_pm(m, "in")
-  .tt_stage_pm(m, "exauth")
-  .tt_stage_eq(m, "exauth", "auto_exauth_both")
-  .tt_stage_pm(m, "exin")
-  .tt_stage_eq(m, "basexin", "auto_basexin")
-  .tt_stage_eq(m, "irank", "auto_irank")
-  .tt_stage_eq(m, "orthvar", "auto_orthvar")
+  .tt_stage_eq(m, "punct", "punct")
+  .tt_stage_pm(m, "basio", "basionym")
+  .tt_stage_pm(m, "in", "in_author")
+  .tt_stage_pm(m, "exauth", "ex_validating")
+  .tt_stage_eq(m, "exauth", "ex_validating", "both")
+  .tt_stage_pm(m, "exin", "ex_first")
+  .tt_stage_eq(m, "basexin", "basionym_in_ex", "both")
+  .tt_stage_eq(m, "irank", "rank")
+  .tt_stage_eq(m, "orthvar", "orthvar")
 
   .tt_stages_canon_fuzzy(m, match_canon)
 
@@ -251,7 +251,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   if (cfo && length(auct)) {
     .tt_accept(
       m, auct, .tt_lookup(m, A$key("canon")[auct], "canon"),
-      "auto_canon"
+      "canonical"
     )
   }
 
@@ -269,7 +269,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   if (cfo && length(others)) {
     .tt_accept(
       m, others, .tt_lookup(m, A$key("canon")[others], "canon"),
-      "auto_canon"
+      "canonical"
     )
   }
 
@@ -282,8 +282,9 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # ---- Matching state and stages -----------------------------------------------
 # The state lives in an environment `m` so the stage functions can update the
 # per-query results without `<<-`: `res_code` (list of matched ref codes),
-# `res_type`, `res_dist` (list of fuzzy distances) and `pending` (queries not
-# yet matched).
+# `res_type`, `res_side` (which name had the element the rule ignored: "query",
+# "reference", "both", or NA), `res_dist` (list of fuzzy distances) and
+# `pending` (queries not yet matched).
 .tt_new_match <- function(A, B, max_dist, max_dist_genus, transpositions) {
   m <- new.env(parent = emptyenv())
   m$A <- A
@@ -294,6 +295,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   n_q <- length(A$code)
   m$res_code <- vector("list", n_q)
   m$res_type <- rep(NA_character_, n_q)
+  m$res_side <- rep(NA_character_, n_q)
   m$res_dist <- vector("list", n_q)
   m$pending <- seq_len(n_q)
   m$genus_rows <- NULL
@@ -317,7 +319,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 
 # Accept matches (not to the query itself) for queries `idx`; `rc` is a list of
 # candidate ref codes per query (see .tt_lookup())
-.tt_accept <- function(m, idx, rc, type) {
+.tt_accept <- function(m, idx, rc, type, side = NA_character_) {
   rc <- Map(
     function(codes, self) unique(codes[codes != self]), rc,
     m$A$code[idx]
@@ -326,6 +328,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   if (any(ok)) {
     m$res_code[idx[ok]] <- rc[ok]
     m$res_type[idx[ok]] <- type
+    m$res_side[idx[ok]] <- side
     m$pending <- setdiff(m$pending, idx[ok])
   }
 }
@@ -346,28 +349,33 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 }
 
 # Stage: query[method] key present in the reference
-.tt_stage_eq <- function(m, method, outtype) {
+.tt_stage_eq <- function(m, method, outtype, side = NA_character_) {
   idx <- m$pending
   if (length(idx)) {
-    .tt_accept(m, idx, .tt_lookup(m, m$A$key(method)[idx], method), outtype)
+    .tt_accept(
+      m, idx, .tt_lookup(m, m$A$key(method)[idx], method), outtype, side
+    )
   }
 }
 
-# Stage: plus/minus variants using the punct key on the opposite side
-.tt_stage_pm <- function(m, method) {
+# Stage: the `method` key of one name equals the punct key of the other, i.e.
+# one name has an element that the rule ignores. The side says which: the
+# reference (the `method` key of the reference is compared with the punct key
+# of the query) or the query.
+.tt_stage_pm <- function(m, method, outtype) {
   idx <- m$pending
   if (!length(idx)) {
     return(invisible())
   }
   .tt_accept(
     m, idx, .tt_lookup(m, m$A$key("punct")[idx], method),
-    paste0("auto_", method, "-")
+    outtype, "reference"
   )
   idx <- m$pending
   if (length(idx)) {
     .tt_accept(
       m, idx, .tt_lookup(m, m$A$key(method)[idx], "punct"),
-      paste0("auto_", method, "+")
+      outtype, "query"
     )
   }
 }
@@ -423,9 +431,9 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # Stage: a query without an author is compared with the reference on canonical
 # name (genus + epithet + infraspecific epithet) so that the author string does
 # not count towards the distance. All same-genus refs with an identical
-# canonical name are returned ("auto_canon"); failing that, those whose
-# canonical name differs only by Latin spelling variants ("auto_orthvar");
-# failing that, all within max_dist ("auto_fuzzy_canon").
+# canonical name are returned ("canonical"); failing that, those whose
+# canonical name differs only by Latin spelling variants ("orthvar");
+# failing that, all within max_dist ("fuzzy_canonical").
 .tt_stage_canonfuzzy <- function(m, idx) {
   rcf <- m$B$key("canon")
   qcf <- m$A$key("canon")
@@ -436,7 +444,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     d <- .tt_fuzzy_dist(m, qcf[qi], rcf[rows])
     if (any(d == 0L, na.rm = TRUE)) {
       keep <- !is.na(d) & d == 0L
-      type <- "auto_canon"
+      type <- "canonical"
     } else {
       if (is.null(orth)) {
         orth <- list(q = m$A$key("canonorth"), r = m$B$key("canonorth"))
@@ -444,16 +452,16 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
       same <- !is.na(orth$r[rows]) & orth$r[rows] == orth$q[qi]
       if (any(same)) {
         keep <- same
-        type <- "auto_orthvar"
+        type <- "orthvar"
       } else {
         keep <- !is.na(d) & d <= m$max_dist
-        type <- "auto_fuzzy_canon"
+        type <- "fuzzy_canonical"
       }
     }
     if (any(keep)) {
       .tt_record_hits(
         m, qi, m$B$code[rows][keep], type,
-        if (type == "auto_fuzzy_canon") d[keep]
+        if (type == "fuzzy_canonical") d[keep]
       )
     }
   }
@@ -470,7 +478,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     d <- .tt_fuzzy_dist(m, qpunct[qi], rpunct[rows])
     keep <- !is.na(d) & d <= m$max_dist
     if (any(keep)) {
-      .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy", d[keep])
+      .tt_record_hits(m, qi, m$B$code[rows][keep], "fuzzy", d[keep])
     }
   }
   .tt_sync_pending(m)
@@ -481,7 +489,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
 # query genus; they are then compared with the query as in the other fuzzy
 # stages (author-less queries on the canonical name, others on the whole name),
 # with the total distance, genus edits included, limited by `max_dist`. Match
-# type "auto_fuzzy_genus".
+# type "fuzzy_genus".
 .tt_stage_genusfuzzy <- function(m, idx) {
   ref_genera <- unique(m$B$genus)
   ref_genera_key <- tt_depunct(ref_genera)
@@ -503,7 +511,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     d <- .tt_fuzzy_dist(m, k$q[qi], k$r[rows])
     keep <- !is.na(d) & d <= m$max_dist
     if (any(keep)) {
-      .tt_record_hits(m, qi, m$B$code[rows][keep], "auto_fuzzy_genus", d[keep])
+      .tt_record_hits(m, qi, m$B$code[rows][keep], "fuzzy_genus", d[keep])
     }
   }
   .tt_sync_pending(m)
@@ -522,6 +530,7 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
   qi <- rep(seq_len(n_q), n_hits)
   rc <- unlist(m$res_code, use.names = FALSE)
   type <- rep(m$res_type, n_hits)
+  side <- rep(m$res_side, n_hits)
   dist <- unlist(
     lapply(seq_len(n_q), function(i) {
       if (is.null(m$res_dist[[i]])) {
@@ -546,7 +555,8 @@ tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
     id_query = A$code[qi],
     id_ref = rc,
     match_type = type,
-    dist = dist
+    dist = dist,
+    match_side = side
   )
   for (k in seq_along(.tt_field_suffixes)) {
     out[[paste0(.tt_field_suffixes[k], "_query")]] <- A$fields[[k]][qi]

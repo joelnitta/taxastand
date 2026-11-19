@@ -35,7 +35,7 @@ test_that("an author written 'NULL' or '\\N' is kept", {
   expect_identical(f$a, "\\N")
   # An author "NULL" is not the same as no author
   res <- suppressMessages(ts_match_names("Foo bar NULL", "Foo bar"))
-  expect_false(res$match_type %in% c("exact", "auto_punct"))
+  expect_false(res$match_type %in% c("exact", "punct"))
 })
 
 # Diacritics --------------------------------------------------------------------
@@ -83,11 +83,11 @@ test_that("names that differ only in accents match as punctuation (#171)", {
     c("Foo bar Dvorak", "Foo bar Smarda"),
     c("Foo bar Dvo\u0159\u00e1k", "Foo bar \u0160marda")
   ))
-  expect_identical(res$match_type, c("auto_punct", "auto_punct"))
+  expect_identical(res$match_type, c("punct", "punct"))
 })
 
 test_that("stray spaces in a user-supplied parsed data frame are cleaned", {
-  # Without .tt_cleanspaces() this would only be an "auto_punct" match.
+  # Without .tt_cleanspaces() this would only be an "punct" match.
   ref <- "Foo bar (Smith) Lee"
   query <- ts_parse_names(ref)
   query$author <- "(Smith)   Lee "

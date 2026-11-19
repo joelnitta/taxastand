@@ -137,17 +137,18 @@ res[c("query", "resolved_name", "matched_status", "match_type")]
 #> 1          Hymenophyllum wilsonii Hook.         Hymenophyllum wilsonii Hook.
 #> 2 Crepidomanes minutum (Blume) K.Iwats. Crepidomanes minutum (Bl.) K. Iwats.
 #> 3                    Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.
-#>   matched_status       match_type
-#> 1  accepted name            exact
-#> 2  accepted name     auto_basexin
-#> 3        synonym auto_fuzzy_canon
+#>   matched_status      match_type
+#> 1  accepted name           exact
+#> 2  accepted name  basionym_in_ex
+#> 3        synonym fuzzy_canonical
 ```
 
 `resolved_name` is the accepted name for each query, and `match_type`
-says how it was found (`exact`, or one of the `auto_*` types for matches
-that needed some tolerance; see `?ts_match_names`). The `resolved_name`
-column can be used for downstream analyses joining on other datasets
-that have been resolved to the same reference taxonomy.
+says how it was found (`exact`, or one of the other types for matches
+that needed some tolerance, such as `punct` or `fuzzy`; see
+`?ts_match_names`). The `resolved_name` column can be used for
+downstream analyses joining on other datasets that have been resolved to
+the same reference taxonomy.
 
 ## Similar work
 

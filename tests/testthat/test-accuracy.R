@@ -132,7 +132,7 @@ test_that("misspelled genus matches", {
   res <- suppressWarnings(
     ts_match_names("Aspelnium nidus L.", ref$scientificName, simple = TRUE)
   )
-  expect_identical(res$match_type, "auto_fuzzy_genus")
+  expect_identical(res$match_type, "fuzzy_genus")
   # can be switched off
   res0 <- suppressWarnings(
     ts_match_names(
@@ -166,10 +166,10 @@ test_that("Latin spelling variants match without fuzzy matching", {
   r1 <- suppressWarnings(
     ts_match_names("Quercus pirenaica Willd.", ref2, simple = TRUE)
   )
-  expect_identical(r1$match_type, "auto_orthvar")
+  expect_identical(r1$match_type, "orthvar")
   expect_identical(r1$reference, "Quercus pyrenaica Willd.")
   r2 <- suppressWarnings(ts_match_names("Silene coerulea", ref2, simple = TRUE))
-  expect_identical(r2$match_type, "auto_orthvar")
+  expect_identical(r2$match_type, "orthvar")
   expect_identical(r2$reference, "Silene caerulea L.")
 })
 

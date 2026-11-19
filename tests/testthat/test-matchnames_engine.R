@@ -17,7 +17,7 @@ test_that("tt_matchnames returns the documented columns", {
   expect_identical(res$id_ref, "r1")
   expect_identical(res$author_ref, "L.")
   expect_true(is.na(res$infraspecific_rank_ref))
-  expect_identical(ncol(res), 18L)
+  expect_identical(ncol(res), 19L)
   expect_true(is.na(res$dist))
 })
 
@@ -31,26 +31,27 @@ test_that("tt_matchnames: every reference record sharing a key is returned", {
 })
 
 test_that("tt_matchnames: ties at the author/form stages return all records", {
+  # Each case: type, side, query, reference
   cases <- list(
-    auto_punct = list("q1||Foo||bar|||Willd,", c("r1||Foo||bar|||Willd.",
-      "r2||Foo||bar|||Willd")),
-    `auto_exauth-` = list("q1||Foo||bar|||Less.",
+    list("punct", NA, "q1||Foo||bar|||Willd,",
+      c("r1||Foo||bar|||Willd.", "r2||Foo||bar|||Willd")),
+    list("ex_validating", "reference", "q1||Foo||bar|||Less.",
       c("r1||Foo||bar|||Willd. ex Less.", "r2||Foo||bar|||DC. ex Less.")),
-    `auto_exin-` = list("q1||Foo||bar|||Willd.",
+    list("ex_first", "reference", "q1||Foo||bar|||Willd.",
       c("r1||Foo||bar|||Willd. ex Less.", "r2||Foo||bar|||Willd. ex DC.")),
-    `auto_in-` = list("q1||Foo||bar|||Willd.",
+    list("in_author", "reference", "q1||Foo||bar|||Willd.",
       c("r1||Foo||bar|||Willd. in Less.", "r2||Foo||bar|||Willd. in DC.")),
-    `auto_basio-` = list("q1||Foo||bar|||Willd.",
+    list("basionym", "reference", "q1||Foo||bar|||Willd.",
       c("r1||Foo||bar|||(L.) Willd.", "r2||Foo||bar|||(DC.) Willd.")),
-    auto_irank = list("q1||Foo||bar|f.|baz|Willd.",
+    list("rank", NA, "q1||Foo||bar|f.|baz|Willd.",
       c("r1||Foo||bar|var.|baz|Willd.", "r2||Foo||bar|subsp.|baz|Willd."))
   )
-  for (type in names(cases)) {
-    ref <- cases[[type]][[2]]
-    for (r in list(ref, rev(ref))) {
-      res <- tt_matchnames(cases[[type]][[1]], r)
+  for (case in cases) {
+    for (r in list(case[[4]], rev(case[[4]]))) {
+      res <- tt_matchnames(case[[3]], r)
       expect_setequal(res$id_ref, c("r1", "r2"))
-      expect_true(all(res$match_type == type), info = type)
+      expect_true(all(res$match_type == case[[1]]), info = case[[1]])
+      expect_true(all(res$match_side %in% case[[2]]), info = case[[1]])
     }
   }
 })
@@ -68,7 +69,7 @@ test_that("tt_matchnames: unmatched query gives one no_match row", {
 test_that("tt_matchnames: fuzzy matches can return several rows per query", {
   ref <- c("r1||Foo||bart|||L.", "r2||Foo||barn|||L.", "r3||Foo||zzzzzz|||L.")
   res <- tt_matchnames("q1||Foo||bar|||L.", ref, max_dist = 3)
-  expect_identical(res$match_type, c("auto_fuzzy", "auto_fuzzy"))
+  expect_identical(res$match_type, c("fuzzy", "fuzzy"))
   expect_setequal(res$id_ref, c("r1", "r2"))
 })
 
@@ -97,12 +98,12 @@ test_that("tt_matchnames: author-less queries match on canonical name", {
   )
   # Misspelled, author-less: author differences must not count
   res <- tt_matchnames("q1||Foo||bar|||", ref, max_dist = 1)
-  expect_identical(res$match_type, c("auto_fuzzy_canon", "auto_fuzzy_canon"))
+  expect_identical(res$match_type, c("fuzzy_canonical", "fuzzy_canonical"))
   expect_identical(res$id_ref, c("r1", "r2"))
   # Exact canonical name wins over looser hits and all of them are returned
   ref2 <- c(ref, "r4||Foo||bar|||Brown", "r5||Foo||bar|||Green")
   res2 <- tt_matchnames("q1||Foo||bar|||", ref2, max_dist = 3)
-  expect_identical(res2$match_type, c("auto_canon", "auto_canon"))
+  expect_identical(res2$match_type, c("canonical", "canonical"))
   expect_identical(res2$id_ref, c("r4", "r5"))
   # With an author, matching is still on the whole name (author counts)
   res3 <- tt_matchnames("q1||Foo||bar|||Smyth", ref2, max_dist = 1)
@@ -113,10 +114,10 @@ test_that("tt_matchnames: plain Levenshtein distance, no trailing penalty", {
   # The reference is the query plus extra trailing text, so the distance is
   # exactly max_dist. taxon-tools' gawk amatch() added +1 here and rejected it.
   res <- tt_matchnames("q1||Foo||bar|||Sm", "r1||Foo||bar|||Smit", max_dist = 2)
-  expect_identical(res$match_type, "auto_fuzzy")
+  expect_identical(res$match_type, "fuzzy")
   res2 <- tt_matchnames("q1||Foo||bar|||Sm", "r1||Foo||bar|||Smith",
     max_dist = 3)
-  expect_identical(res2$match_type, "auto_fuzzy")
+  expect_identical(res2$match_type, "fuzzy")
   # One below the distance is still a non-match
   res3 <- tt_matchnames("q1||Foo||bar|||Sm", "r1||Foo||bar|||Smith",
     max_dist = 2)
@@ -136,7 +137,7 @@ test_that("tt_matchnames: dist column and swap-aware distance", {
   ref <- c("r1||Foo||quercus|||L.", "r2||Foo||quercxx|||L.")
   q <- "q1||Foo||qurecus|||L."
   swap <- tt_matchnames(q, ref, max_dist = 1, transpositions = TRUE)
-  expect_identical(swap$match_type, "auto_fuzzy")
+  expect_identical(swap$match_type, "fuzzy")
   expect_identical(swap$id_ref, "r1")
   expect_identical(swap$dist, 1L)
   # plain Levenshtein (the default): a swap is two edits
@@ -153,12 +154,12 @@ test_that("tt_matchnames: dist is set for author-less and genus fuzzy hits", {
   canon <- tt_matchnames(
     "q1||Foo||qurecus|||", ref, max_dist = 2, transpositions = TRUE
   )
-  expect_identical(canon$match_type, "auto_fuzzy_canon")
+  expect_identical(canon$match_type, "fuzzy_canonical")
   expect_identical(canon$dist, 1L)
   genus <- tt_matchnames(
     "q1||Fo||quercus|||L.", ref, max_dist = 3, max_dist_genus = 2
   )
-  expect_identical(genus$match_type, "auto_fuzzy_genus")
+  expect_identical(genus$match_type, "fuzzy_genus")
   expect_identical(genus$dist, 1L)
 })
 
@@ -174,16 +175,16 @@ test_that(".tt_orthfold folds Latin spelling variants", {
   expect_identical(.tt_orthfold("iinus"), "iinus")
 })
 
-test_that("tt_matchnames: auto_orthvar for Latin spelling variants", {
+test_that("tt_matchnames: orthvar for Latin spelling variants", {
   ref <- c("r1||Foo||sylvestris|||L.", "r2||Foo||caeruleus|||Sm.")
   # with the same author
   res <- tt_matchnames("q1||Foo||silvestris|||L.", ref)
-  expect_identical(res$match_type, "auto_orthvar")
+  expect_identical(res$match_type, "orthvar")
   expect_identical(res$id_ref, "r1")
   expect_true(is.na(res$dist))
   # without an author (canonical name)
   res <- tt_matchnames("q1||Foo||coeruleus|||", ref)
-  expect_identical(res$match_type, "auto_orthvar")
+  expect_identical(res$match_type, "orthvar")
   expect_identical(res$id_ref, "r2")
   # identical names stay exact; spelling variants never override exact
   res <- tt_matchnames(c("q1||Foo||sylvestris|||L.",
@@ -196,7 +197,7 @@ test_that("tt_matchnames: auto_orthvar for Latin spelling variants", {
 test_that("tt_matchnames: orthvar also applies to infraspecific epithets", {
   ref <- "r1||Foo||bar|var.|sylvestris|L."
   res <- tt_matchnames("q1||Foo||bar|var.|silvestris|L.", ref)
-  expect_identical(res$match_type, "auto_orthvar")
+  expect_identical(res$match_type, "orthvar")
 })
 
 test_that("tt_matchnames: match_canon matches on canonical name only", {
@@ -204,13 +205,13 @@ test_that("tt_matchnames: match_canon matches on canonical name only", {
   far <- "q1||Foo||bar|||Zzzzzzzzzzz."
   expect_identical(tt_matchnames(far, ref)$match_type, "no_match")
   res <- tt_matchnames(far, ref, match_canon = TRUE)
-  expect_identical(res$match_type, "auto_canon")
+  expect_identical(res$match_type, "canonical")
   expect_identical(res$id_ref, "r1")
   # auct. queries are never fuzzy-matched, only canonically (if allowed)
   auct <- "q1||Foo||bar|||auct."
   expect_identical(tt_matchnames(auct, ref)$match_type, "no_match")
   expect_identical(tt_matchnames(auct, ref, match_canon = TRUE)$match_type,
-    "auto_canon")
+    "canonical")
 })
 
 test_that("tt_matchnames: a name never matches itself", {
@@ -222,7 +223,7 @@ test_that("tt_matchnames: a name never matches itself", {
 test_that("tt_matchnames handles no queries; .tt_osa handles empty strings", {
   res <- tt_matchnames(character(0), "r1||Foo||bar|||L.")
   expect_identical(nrow(res), 0L)
-  expect_identical(ncol(res), 18L)
+  expect_identical(ncol(res), 19L)
   expect_identical(.tt_osa(character(0), "ab"), 2L)
   expect_identical(.tt_osa(c("a", "b"), ""), 2L)
 })
@@ -295,24 +296,28 @@ test_that("authors written with 'and' match authors written with '&'", {
   res <- suppressMessages(ts_match_names(
     "Foo bar (Smith and Jones) Lee", "Foo bar (Smith & Jones) Lee"
   ))
-  expect_identical(res$match_type, "auto_punct")
+  expect_identical(res$match_type, "punct")
 })
 
 test_that("tt_matchnames: 'A ex B' matches 'B', the author who published it", {
   res <- tt_matchnames("q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||Smith")
-  expect_identical(res$match_type, "auto_exauth+")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "query")
   res <- tt_matchnames("q1||Foo||bar|||Smith", "r1||Foo||bar|||Hook. ex Smith")
-  expect_identical(res$match_type, "auto_exauth-")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "reference")
   # a basionym author stays; an author that is only "ex B" works too
   res <- tt_matchnames(
     "q1||Foo||bar|||(L.) Hook. ex Smith", "r1||Foo||bar|||(L.) Smith"
   )
-  expect_identical(res$match_type, "auto_exauth+")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "query")
   res <- tt_matchnames("q1||Foo||bar|||ex Smith", "r1||Foo||bar|||Smith")
-  expect_identical(res$match_type, "auto_exauth+")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "query")
   # an author that merely contains the letters "ex" is not changed
   res <- tt_matchnames("q1||Foo||bar|||Alex", "r1||Foo||bar|||Al")
-  expect_false(any(grepl("exauth", res$match_type)))
+  expect_false(any(grepl("ex_validating", res$match_type)))
 })
 
 test_that("tt_matchnames: both names with an ex author and the same published author", {
@@ -320,17 +325,19 @@ test_that("tt_matchnames: both names with an ex author and the same published au
   res <- tt_matchnames(
     "q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||DC. ex Smith"
   )
-  expect_identical(res$match_type, "auto_exauth_both")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "both")
   # first author missing in one of them
   res <- tt_matchnames(
     "q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||ex Smith"
   )
-  expect_identical(res$match_type, "auto_exauth_both")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "both")
   # different published authors do not match
   res <- tt_matchnames(
     "q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||Hook. ex Jones"
   )
-  expect_false(any(grepl("exauth", res$match_type)))
+  expect_false(any(grepl("ex_validating", res$match_type)))
 })
 
 test_that("tt_matchnames: 'A ex B' prefers 'B' to 'A' when both are in the reference", {
@@ -339,17 +346,20 @@ test_that("tt_matchnames: 'A ex B' prefers 'B' to 'A' when both are in the refer
     c("r1||Foo||bar|||Hook.", "r2||Foo||bar|||Smith")
   )
   expect_identical(res$id_ref, "r2")
-  expect_identical(res$match_type, "auto_exauth+")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "query")
   # with only the first author in the reference, it still matches, as exin
   res <- tt_matchnames("q1||Foo||bar|||Hook. ex Smith", "r1||Foo||bar|||Hook.")
-  expect_identical(res$match_type, "auto_exin+")
+  expect_identical(res$match_type, "ex_first")
+  expect_identical(res$match_side, "query")
 })
 
 test_that("ts_match_names: 'A ex B' matches 'B'", {
   res <- suppressMessages(
     ts_match_names("Foo bar Hook. ex Smith", "Foo bar Smith")
   )
-  expect_identical(res$match_type, "auto_exauth+")
+  expect_identical(res$match_type, "ex_validating")
+  expect_identical(res$match_side, "query")
 })
 
 test_that("basexin drops both the basionym author and the ex/in citation (#174)", {
@@ -362,5 +372,5 @@ test_that("basexin drops both the basionym author and the ex/in citation (#174)"
     ),
     "Hymenophyllum magellanicum (Desv.) Willd. ex Kunze"
   ))
-  expect_identical(res$match_type, c("auto_basexin", "auto_basio-"))
+  expect_identical(res$match_type, c("basionym_in_ex", "basionym"))
 })
