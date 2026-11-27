@@ -209,26 +209,21 @@ tt_depunct <- function(x) {
 
 #' Parse taxonomic names
 #'
-#' Faithful pure-R port. Takes a character vector of `id|name` records and
-#' returns a character vector of `id|g_hybrid|genus|s_hybrid|species|rank|
-#' infrasp|author` records. Names that fail validation are returned as `id|`
-#' (all parsed fields empty), exactly as the original tool emits them.
+#' Pure-R port. Takes a character vector of names and returns a data frame with
+#' one row per name and the seven parts as character columns: genus hybrid
+#' sign, genus, species hybrid sign, specific epithet, infraspecific rank,
+#' infraspecific epithet and author. A part that is absent is `NA`. Names that
+#' fail validation have all parts `NA`.
 #'
-#' @param records Character vector of `id|name` lines.
+#' @param names Character vector of names.
 #' @param strip_qualifiers Logical; if `TRUE`, remove standalone
 #' open-nomenclature qualifier tokens (`cf.`, `aff.`, `s.l.`/`sensu lato`,
 #' `s.str.`/`sensu stricto`) before parsing. Off by default.
-#' @return Character vector of parsed `|`-delimited lines.
+#' @return Data frame with the columns in `.ts_name_parts`.
 #' @keywords internal
 #' @noRd
-tt_parsenames <- function(records, strip_qualifiers = FALSE) {
-  if (length(records) == 0) {
-    return(character(0))
-  }
-
-  records <- enc2utf8(records)
-  id <- sub("\\|.*$", "", records, perl = TRUE)
-  name <- sub("^[^|]*\\|", "", records, perl = TRUE)
+tt_parsenames <- function(names, strip_qualifiers = FALSE) {
+  name <- enc2utf8(names)
 
   # Optional taxastand extension: strip open-nomenclature qualifiers before
   # the whitespace clean-up below removes the double space left behind.
@@ -250,53 +245,65 @@ tt_parsenames <- function(records, strip_qualifiers = FALSE) {
   # 54-56): inverted question mark and double quotes are removed, a
   # non-breaking space becomes a space and an em dash a hyphen (the upstream
   # source links an issue about these in a names-resolver)
-  name <- gsub("[\u00bf\"]", "", name, perl = TRUE) # remove \u00bf and "
-  name <- gsub("\u00a0", " ", name, fixed = TRUE) # non-breaking space -> space
-  name <- gsub("\u2014", "-", name, fixed = TRUE) # em dash -> hyphen
+  name <- gsub("[¿\"]", "", name, perl = TRUE) # remove ¿ and "
+  name <- gsub(" ", " ", name, fixed = TRUE) # non-breaking space -> space
+  name <- gsub("—", "-", name, fixed = TRUE) # em dash -> hyphen
 
-  # The big anchored parse regex (line 61); perl = TRUE to match gawk captures
-  parsed <- sub(.tt_parse_re, "\\1|\\2|\\3|\\4|\\5|\\6|\\7", name, perl = TRUE)
+  # The big anchored parse regex (line 61); perl = TRUE to match gawk captures.
+  # The seven capture groups are the parts of the name; a group that did not
+  # take part in the match, or a name that did not match, gives "".
+  m <- regexpr(.tt_parse_re, name, perl = TRUE)
+  start <- attr(m, "capture.start")
+  len <- attr(m, "capture.length")
+  parts <- lapply(seq_len(7L), function(i) {
+    ifelse(start[, i] < 1L, "", substr(name, start[, i], start[, i] + len[, i] - 1L))
+  })
+  matched <- m > 0L
 
-  # Fix-ups (lines 65, 73-78)
-  parsed <- gsub(" +\\|", "|", parsed, perl = TRUE)
-  parsed <- gsub("\\|[xX]\\|", "|\u00d7|", parsed, perl = TRUE)
-  parsed <- gsub("^[xX]\\|", "\u00d7|", parsed, perl = TRUE)
+  # Fix-ups (lines 65, 73-78): spaces before a separator are dropped, and a
+  # lone x is the hybrid sign
+  parts[1:6] <- lapply(parts[1:6], function(x) {
+    x <- sub(" +$", "", x, perl = TRUE)
+    x[x %in% c("x", "X")] <- "×"
+    x
+  })
 
-  fail <- .tt_parse_failed(parsed, name)
+  fail <- .tt_parse_failed(parts, name, matched)
 
-  # On failure the original returns "" -> output line is just `id|`
-  out_parsed <- ifelse(fail, "", parsed)
-  paste0(id, "|", out_parsed)
+  # A failed name has all parts empty
+  parsed <- lapply(parts, function(x) {
+    x[fail | x == ""] <- NA_character_
+    x
+  })
+  names(parsed) <- .ts_name_parts
+  as.data.frame(parsed, stringsAsFactors = FALSE)
 }
 
-# Validation (test = 1; lines 87-101). A name fails if it produced no pipe,
-# any field regex fails, or the depuncted re-made string differs from input.
-.tt_parse_failed <- function(parsed, name) {
-  matched <- grepl("|", parsed, fixed = TRUE)
-
-  remade <- gsub("|", " ", parsed, fixed = TRUE)
+# Validation (test = 1; lines 87-101). A name fails if it did not match, any
+# field regex fails, or the depuncted re-made string differs from the input.
+# `parts` is a list of the seven fields as character vectors ("" if empty).
+.tt_parse_failed <- function(parts, name, matched) {
+  remade <- do.call(paste, c(parts, sep = " "))
   remade <- gsub(" {2,}", " ", remade, perl = TRUE)
   remade <- gsub("(^ | $)", "", remade, perl = TRUE)
 
-  fields <- .tt_split_fields(parsed, 6L)
   depunct_eq <-
-    gsub("\u00d7", "x", tt_depunct(remade), fixed = TRUE) ==
-      gsub("\u00d7", "x", tt_depunct(name), fixed = TRUE)
+    gsub("×", "x", tt_depunct(remade), fixed = TRUE) ==
+      gsub("×", "x", tt_depunct(name), fixed = TRUE)
 
   # A particle alone ("Foo bar de") is not an author
-  author <- .tt_split_fields(parsed, 7L)[[7]]
   only_particles <- grepl(
-    paste0("^", .tt_particle_chain, "$"), author,
+    paste0("^", .tt_particle_chain, "$"), parts[[7]],
     perl = TRUE
   )
 
   !matched |
     only_particles |
-    !grepl(.tt_v1, fields[[1]], perl = TRUE) |
-    !grepl(.tt_v2, fields[[2]], perl = TRUE) |
-    !grepl(.tt_v3, fields[[3]], perl = TRUE) |
-    !grepl(.tt_v4, fields[[4]], perl = TRUE) |
-    !grepl(.tt_v5, fields[[5]], perl = TRUE) |
-    !grepl(.tt_v6, fields[[6]], perl = TRUE) |
+    !grepl(.tt_v1, parts[[1]], perl = TRUE) |
+    !grepl(.tt_v2, parts[[2]], perl = TRUE) |
+    !grepl(.tt_v3, parts[[3]], perl = TRUE) |
+    !grepl(.tt_v4, parts[[4]], perl = TRUE) |
+    !grepl(.tt_v5, parts[[5]], perl = TRUE) |
+    !grepl(.tt_v6, parts[[6]], perl = TRUE) |
     !depunct_eq
 }
