@@ -28,8 +28,7 @@ URL: https://joelnitta.github.io/taxastand/,
     https://github.com/joelnitta/taxastand
 BugReports: https://github.com/joelnitta/taxastand/issues
 Imports:
-    assertthat,
-    digest
+    assertthat
 Roxygen: list(
     markdown = TRUE,
     roclets = c("collate", "namespace", "rd"))

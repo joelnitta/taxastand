@@ -265,15 +265,25 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
   cache_dir
 }
 
+# Short, deterministic hash of a string: 8 hex digits, the same in every
+# session (so a persistent cache is reused). Not cryptographic; it only has to
+# keep files with the same name from different URLs apart.
+.ts_url_hash <- function(x) {
+  h <- 5381
+  for (ch in utf8ToInt(x)) {
+    # stays below 2^53, so the arithmetic is exact in doubles
+    h <- (h * 33 + ch) %% 4294967291
+  }
+  sprintf("%04x%04x", h %/% 65536, h %% 65536)
+}
+
 # Download `url` into the cache (unless it is already there); return the path
 .ts_cached_download <- function(url, cache_dir, refresh) {
   dir <- .ts_cache_dir(cache_dir)
   name <- basename(sub("[?#].*$", "", url))
   if (!nzchar(name)) name <- "download"
   # the hash keeps files with the same name from different URLs apart
-  dest <- file.path(
-    dir, paste0(substr(digest::digest(url, algo = "md5"), 1, 8), "-", name)
-  )
+  dest <- file.path(dir, paste0(.ts_url_hash(url), "-", name))
   if (file.exists(dest) && !refresh) {
     return(dest)
   }

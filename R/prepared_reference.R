@@ -142,7 +142,7 @@ print.ts_reference <- function(x, ...) {
   # back to their position in the reference. The ID encodes that position.
   rows <- rows[match(parsed$name, ref$names[rows])]
   parsed$id <- sprintf("ref-%d", rows)
-  batch <- .tt_record_keys(.ts_parsed_lines(parsed, rows))
+  batch <- .tt_record_keys(.ts_parsed_lines(parsed))
   st$loaded <- c(st$loaded, cold)
   st$row <- c(st$row, rows)
   st$genus_key <- c(st$genus_key, ref$genus_key[rows])

@@ -5,8 +5,8 @@
     Output
                        query            reference      match_type dist match_side
       1 Crepidomanes minutus Crepidomanes minutum fuzzy_canonical    1       <NA>
-          id_query id_ref genus_hybrid_sign_query genus_name_query
-      1 c1ad73ec-1  ref-1                    <NA>     Crepidomanes
+        id_query id_ref genus_hybrid_sign_query genus_name_query
+      1        1  ref-1                    <NA>     Crepidomanes
         species_hybrid_sign_query specific_epithet_query infraspecific_rank_query
       1                      <NA>                minutus                     <NA>
         infraspecific_epithet_query author_query genus_hybrid_sign_ref genus_name_ref
