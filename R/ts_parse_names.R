@@ -83,19 +83,12 @@ ts_parse_names <- function(
     msg = "Input taxa must be unique"
   )
 
-  # Format input names for parsing as `id|taxon_name` records, for example
-  # nolint start: commented_code_linter.
-  # `x-234|Foogenus x barspecies var. foosubsp (L.) F. Bar`
-  # nolint end
   taxa_tbl <- ts_make_name_df(taxa)
-  taxa_tbl$record <- paste(taxa_tbl$id, taxa_tbl$name, sep = "|")
 
   # Parse names
-  parsed_lines <- tt_parsenames(
-    taxa_tbl$record,
-    strip_qualifiers = strip_qualifiers
-  )
-  parsed_names <- .ts_read_parsed(parsed_lines)
+  parsed_names <- tt_parsenames(taxa_tbl$name, strip_qualifiers)
+  parsed_names$id <- taxa_tbl$id
+  parsed_names$fail <- rowSums(!is.na(parsed_names[, .ts_name_parts])) == 0
   parsed_names <- .ts_drop_unparsed(
     parsed_names, taxa_tbl, exclude_placeholders, quiet
   )
@@ -120,23 +113,6 @@ ts_parse_names <- function(
   "infraspecific_epithet",
   "author"
 )
-
-# Read the output of the parser (one record per line, with fields separated by
-# '|' (pipe symbol)) as a dataframe: the id and the name parts, with NA if that
-# name part is missing, and a "fail" column that is TRUE if all name parts are
-# missing (couldn't be parsed properly)
-.ts_read_parsed <- function(parsed_lines) {
-  # Split into the id and the name parts (8 fields; fields may be empty)
-  fields <- .tt_split_fields(parsed_lines, length(.ts_name_parts) + 1L)
-  parsed_names <- data.frame(id = fields[[1]])
-  for (i in seq_along(.ts_name_parts)) {
-    field <- fields[[i + 1L]]
-    field[field == ""] <- NA_character_
-    parsed_names[[.ts_name_parts[i]]] <- field
-  }
-  parsed_names$fail <- rowSums(!is.na(parsed_names[, .ts_name_parts])) == 0
-  parsed_names
-}
 
 # Remove the names that failed to parse and the placeholders (with a warning
 # unless `quiet`), and add back in the original name

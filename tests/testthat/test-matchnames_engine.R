@@ -228,8 +228,28 @@ test_that("tt_matchnames handles no queries; .tt_osa handles empty strings", {
   expect_identical(.tt_osa(c("a", "b"), ""), 2L)
 })
 
-test_that("tt_parsenames returns nothing for no records", {
-  expect_identical(tt_parsenames(character(0)), character(0))
+test_that("tt_parsenames returns the seven parts, NA where absent or failed", {
+  res <- tt_parsenames(c(
+    "Foo x bar var. baz (L.) Sm.", "Foo bar", "Foo", "Foo bar|baz L.", "x Foo bar"
+  ))
+  expect_identical(colnames(res), .ts_name_parts)
+  expect_identical(
+    unlist(res[1, ], use.names = FALSE),
+    c(NA, "Foo", "\u00d7", "bar", "var.", "baz", "(L.) Sm.")
+  )
+  expect_identical(
+    unlist(res[2, ], use.names = FALSE),
+    c(NA, "Foo", NA, "bar", NA, NA, NA)
+  )
+  # no species epithet, a pipe in the name: not parsed
+  expect_true(all(is.na(res[3:4, ])))
+  expect_identical(res$genus_hybrid_sign[5], "\u00d7")
+})
+
+test_that("tt_parsenames returns nothing for no names", {
+  res <- tt_parsenames(character(0))
+  expect_identical(nrow(res), 0L)
+  expect_identical(colnames(res), .ts_name_parts)
 })
 
 # ---- Speed-ups that must not change results ----------------------------------
