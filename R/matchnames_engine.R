@@ -14,9 +14,9 @@
 # (A, B, Bmap, etc.) still mirror the gawk source's array names.
 # nolint start: object_name_linter.
 #
-# Input is the parsed pipe-delimited format produced by tt_parsenames /
-# ts_write_names, with the fields id, g_hybrid, genus, s_hybrid, species, rank,
-# infrasp and author separated by pipes.
+# Input is a data frame of parsed names, as made by ts_parse_names(): the
+# columns id, genus_hybrid_sign, genus_name, species_hybrid_sign,
+# specific_epithet, infraspecific_rank, infraspecific_epithet and author.
 # Output is the 18-field result format documented in ts_match_names().
 #
 # Fuzzy matching uses base adist() (Levenshtein distance); a pair is a fuzzy
@@ -42,21 +42,34 @@
   gsub("th", "t", x, fixed = TRUE)
 }
 
-# Split a vector of parsed `id|...` lines into the fields matchnames needs and
-# clean them (read_data lines 154-158): cleanspaces. The original also blanked
-# the strings NULL and \N (SQL-dump nulls); that is not done here, as missing
-# values are written as empty fields and a real value such as an author
-# "NULL" must be kept (#173).
-.tt_clean_fields <- function(lines) {
-  # Split into 8 fields (exactly 7 pipes); fields may be empty.
-  fields <- .tt_split_fields(lines, 8L)
-  clean <- .tt_cleanspaces
+# Take the fields matchnames needs from a data frame of parsed names and clean
+# them (read_data lines 154-158): cleanspaces; missing values become "". The
+# original also blanked the strings NULL and \N (SQL-dump nulls); that is not
+# done here, as a real value such as an author "NULL" must be kept (#173).
+.tt_clean_fields <- function(parsed) {
+  assertthat::assert_that(
+    inherits(parsed, "data.frame"),
+    msg = "df must be of class 'data.frame'"
+  )
+  needed <- c("id", .ts_name_parts)
+  assertthat::assert_that(
+    isTRUE(all(needed %in% colnames(parsed))),
+    msg = paste0(
+      "df must include the following columns: ",
+      toString(needed)
+    )
+  )
+  field <- function(x) {
+    x <- as.character(x)
+    x[is.na(x)] <- ""
+    .tt_cleanspaces(enc2utf8(x))
+  }
   list(
-    code = fields[[1]],
-    xg = clean(fields[[2]]), g = clean(fields[[3]]), xs = clean(fields[[4]]),
-    s = clean(fields[[5]]), st = clean(fields[[6]]), ssp = clean(fields[[7]]),
-    # the author keeps everything after the 7th pipe
-    a = clean(sub("^([^|]*\\|){7}(.*)$", "\\2", lines, perl = TRUE))
+    code = enc2utf8(as.character(parsed$id)),
+    xg = field(parsed$genus_hybrid_sign), g = field(parsed$genus_name),
+    xs = field(parsed$species_hybrid_sign), s = field(parsed$specific_epithet),
+    st = field(parsed$infraspecific_rank),
+    ssp = field(parsed$infraspecific_epithet), a = field(parsed$author)
   )
 }
 
@@ -83,12 +96,12 @@
   out
 }
 
-# Parse a vector of parsed `id|...` lines into the fields matchnames needs.
+# Take the fields matchnames needs from a data frame of parsed names.
 # Returns a list of equal-length vectors plus `key(method)`, which computes
 # (and memoizes) the comparison key for a match method only when first asked
 # for, so a method no query ever reaches costs nothing.
-.tt_record_keys <- function(lines) {
-  f <- .tt_clean_fields(enc2utf8(lines))
+.tt_record_keys <- function(parsed) {
+  f <- .tt_clean_fields(parsed)
   a <- f$a
   namex <- paste0(f$xg, f$g, f$xs, f$s, f$st, f$ssp) # all parts, no author
   exact <- .tt_cleanspaces(paste(f$xg, f$g, f$xs, f$s, f$st, f$ssp, a))
@@ -192,9 +205,9 @@
 #' Non-interactive all-fuzzy matching of parsed query names against parsed
 #' reference names.
 #'
-#' @param query_lines,ref_lines Character vectors of parsed `id|...` lines.
+#' @param query,ref Data frames of parsed names (see `ts_parse_names()`).
 #' @param ref_keys Optional output of `.tt_record_keys()` for the reference
-#'   (e.g. memoized by a prepared reference); used instead of `ref_lines`.
+#'   (e.g. memoized by a prepared reference); used instead of `ref`.
 #' @param max_dist Integer; max Levenshtein distance for fuzzy matching.
 #' @param match_canon Logical; the `-c` option (CFO / canonical-form match).
 #' @param max_dist_genus Integer; max Levenshtein distance between the query
@@ -212,13 +225,13 @@
 #' @importFrom stats setNames
 #' @importFrom utils adist
 #' @noRd
-tt_matchnames <- function(query_lines, ref_lines, max_dist = 3,
+tt_matchnames <- function(query, ref, max_dist = 3,
                           match_canon = FALSE,
                           max_dist_genus = 0,
                           transpositions = FALSE, ref_keys = NULL) {
   m <- .tt_new_match(
-    A = .tt_record_keys(query_lines),
-    B = if (is.null(ref_keys)) .tt_record_keys(ref_lines) else ref_keys,
+    A = .tt_record_keys(query),
+    B = if (is.null(ref_keys)) .tt_record_keys(ref) else ref_keys,
     max_dist = as.numeric(max_dist),
     max_dist_genus = as.numeric(max_dist_genus),
     transpositions = transpositions
