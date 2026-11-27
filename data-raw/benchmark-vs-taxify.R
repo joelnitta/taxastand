@@ -137,7 +137,7 @@ make_taxastand <- function(reference, closest = FALSE) {
     m <- m[m$match_type != "no_match", ]
     if (closest) {
       # keep only the fuzzy hits at the smallest distance of each query
-      fuzzy <- grepl("^auto_fuzzy", m$match_type)
+      fuzzy <- grepl("^fuzzy", m$match_type)
       min_dist <- ave(
         ifelse(fuzzy, m$dist, NA_integer_), m$query,
         FUN = function(x) suppressWarnings(min(x, na.rm = TRUE))

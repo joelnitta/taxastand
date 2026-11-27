@@ -122,8 +122,8 @@ res[match(queries, res$query), c("query", "resolved_name", "matched_status", "ma
 #>                               resolved_name matched_status match_type
 #> 1                     Polypodium vulgare L.       accepted      exact
 #> 4 Microsorum scolopendria (Burm. f.) Copel.        synonym      exact
-#> 2 Microsorum scolopendria (Burm. f.) Copel.       accepted auto_canon
-#> 3              Polypodium pellucidum Kaulf.       accepted auto_fuzzy
+#> 2 Microsorum scolopendria (Burm. f.) Copel.       accepted  canonical
+#> 3              Polypodium pellucidum Kaulf.       accepted      fuzzy
 ```
 
 Some sources are Parquet files. These need the [nanoparquet](https://nanoparquet.r-lib.org/) or [duckdb](https://r.duckdb.org/) package; with duckdb, `taxon` is applied while reading, which is faster for very large files. `ts_load_ref()` says which package to install if neither is available.

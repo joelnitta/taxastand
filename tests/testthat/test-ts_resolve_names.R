@@ -81,7 +81,7 @@ test_that("`ref_taxonomy` still works as an alias of `ref`", {
 })
 
 test_that("an accepted name and a synonym of another name is ambiguous", {
-  # "Pteris oppositipinnata Fee" matches (auto_punct) both the accepted
+  # "Pteris oppositipinnata Fee" matches (punct) both the accepted
   # "Pteris oppositipinnata Fée" and the synonym "Pteris oppositi-pinnata Fée"
   # of a different accepted name; this must not resolve to the synonym's name
   ref <- data.frame(

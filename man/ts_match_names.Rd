@@ -53,7 +53,7 @@ and a genus in the reference, for correcting misspelled genera. Only used
 for queries whose genus is not in the reference; the candidates are then the
 names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
-\code{max_dist}. Matches have the type \code{auto_fuzzy_genus}. Set to 0 to turn
+\code{max_dist}. Matches have the type \code{fuzzy_genus}. Set to 0 to turn
 genus-level fuzzy matching off. Default: 2.}
 
 \item{transpositions}{Logical; count a swap of two adjacent letters (e.g.
@@ -112,7 +112,10 @@ Dataframe with the following columns (if \code{simple} is \code{FALSE}):
 \item reference: Matched reference name
 \item match_type: Type of match (see the "Match types" section)
 \item dist: Edit distance between query and reference for fuzzy matches
-(\code{auto_fuzzy}, \code{auto_fuzzy_canon}, \code{auto_fuzzy_genus}), \code{NA} otherwise
+(\code{fuzzy}, \code{fuzzy_canonical}, \code{fuzzy_genus}), \code{NA} otherwise
+\item match_side: Which name had the element that the match type ignored
+(\code{query}, \code{reference} or \code{both}), \code{NA} when not applicable (see the "Match
+types" section). Not included if \code{simple} is \code{TRUE}.
 \item id_query: Unique ID of query
 \item id_ref: Unique ID of reference
 \item genus_hybrid_sign_query: Genus hybrid sign in query
@@ -164,10 +167,17 @@ epithet (autonyms).
 
 The \code{match_type} column says how a query was matched. Types are tried in
 the order listed below, and the first one that finds a match is reported, so
-earlier types are more certain than later ones. Always check results that
-are not \code{exact}. If several reference records are equally good at the
+earlier types are more certain than later ones. How much checking a result
+needs depends on its type and side; see the table at the end of this
+section. If several reference records are equally good at the
 first type that matches (for example, two names that differ only in an \emph{ex}
 author), every one of them is returned, so the ambiguity is visible.
+
+For the types that ignore an element of the author (a basionym author, an
+\emph{in} or \emph{ex} citation), the \code{match_side} column says which name had it:
+\code{query}, \code{reference}, or \code{both}. It is \code{NA} for the other types. Most of the
+time the side does not matter, but it tells you where to look when a match
+needs checking (see the table at the end of this section).
 
 \strong{Identical after normalization (safe to accept)}
 \itemize{
@@ -175,25 +185,27 @@ author), every one of them is returned, so the ambiguity is visible.
 \item \code{autonym}: identical once an autonym (e.g. "Blechnum lunare var. lunare")
 is collapsed to the species name, "Blechnum lunare" (only when
 \code{match_autonyms} is \code{TRUE}).
-\item \code{auto_punct}: identical after ignoring differences in spaces, periods,
+\item \code{punct}: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.
+\item \code{manual}: matched by the \code{manual_match} argument.
 }
 
 \strong{Differences in how the author is cited (usually safe)}
 \itemize{
-\item \verb{auto_basio-}, \verb{auto_basio+}: identical once the basionym author, e.g.
-\code{(Turcz.)} in \verb{Cardaminopsis umbrosa (Turcz.) Czerep.}, is dropped from
-the reference (\code{-}) or the query (\code{+}).
-\item \verb{auto_in-}, \verb{auto_in+}: identical once "in" elements (\verb{Tagawa in Morton}
-becomes \code{Tagawa}) are dropped from the reference or the query.
-\item \verb{auto_exauth-}, \verb{auto_exauth+}: identical once the first author of an
-"ex" citation is dropped, keeping the author after \emph{ex}, from the
-reference (\code{-}) or the query (\code{+}). In \verb{Hook. ex Smith}, Hook. proposed
-the name but Smith validly published it, so under the botanical Code the
-name belongs to Smith: \verb{Foo bar Hook. ex Smith} and \verb{Foo bar Smith} are
-the same name. A basionym author in parentheses is kept.
-\item \code{auto_irank}: identical except for the infraspecific rank (e.g. \code{var.}
-vs. \code{subsp.}).
+\item \code{basionym}: identical once the basionym author, e.g. \code{(Turcz.)} in
+\verb{Cardaminopsis umbrosa (Turcz.) Czerep.}, is dropped. \code{match_side} is the
+name that has the basionym author.
+\item \code{in_author}: identical once "in" elements (\verb{Tagawa in Morton} becomes
+\code{Tagawa}) are dropped. \code{match_side} is the name that has the "in" element.
+\item \code{ex_validating}: identical once the first author of an "ex" citation is
+dropped, keeping the author after \emph{ex}. In \verb{Hook. ex Smith}, Hook.
+proposed the name but Smith validly published it, so under the botanical
+Code the name belongs to Smith: \verb{Foo bar Hook. ex Smith} and \verb{Foo bar Smith} are the same name. \code{match_side} is the name with the \emph{ex}
+citation, or \code{both} if both names have one with the same author after
+\emph{ex} but different authors before it (\verb{Hook. ex Smith} and \verb{DC. ex Smith}; the sources disagree about who proposed the name, which does not
+change the name). A basionym author in parentheses is kept.
+\item \code{rank}: identical except for the infraspecific rank (e.g. \code{var.} vs.
+\code{subsp.}).
 }
 
 \strong{The author before "ex" is used (check the result)}
@@ -204,26 +216,21 @@ the author after \emph{ex} is the author of the name. These matches keep the
 author before \emph{ex}, so they are usually, but not always, the same name:
 \verb{Foo bar Willd.} could be a different name by Willd. If a query matches in
 this way, look at the reference name and its author to decide whether it is
-the name you meant. They are tried after \code{auto_exauth}, so a reference name
-with the author after \emph{ex} is preferred when there is one.
+the name you meant. They are tried after \code{ex_validating}, so a reference
+name with the author after \emph{ex} is preferred when there is one.
 \itemize{
-\item \code{auto_exauth_both}: both names have an "ex" citation with the same author
-after \emph{ex} but different authors before it (\verb{Hook. ex Smith} and
-\verb{DC. ex Smith}), or one has no author before it (\verb{ex Smith}). Under the
-Code this is one name, but the two sources do not agree about who first
-ascribed it.
-\item \verb{auto_ex-}, \verb{auto_ex+}: identical once "in" and "ex" elements are dropped
-from the reference (\code{-}) or the query (\code{+}): \verb{Willd. ex Schkuhr} becomes
-\code{Willd.}
-\item \code{auto_basexin}: identical once basionym authors and "in"/"ex" elements are
-dropped from both query and reference.
+\item \code{ex_first}: identical once "in" and "ex" elements are dropped from one
+name: \verb{Willd. ex Schkuhr} becomes \code{Willd.} \code{match_side} is the name with
+the \emph{ex} citation.
+\item \code{basionym_in_ex}: identical once basionym authors and "in"/"ex" elements
+are dropped from both query and reference (\code{match_side} is \code{both}).
 }
 
 \strong{Canonical-name matches (the author is ignored; check the result)}
 
 The canonical name is genus + specific epithet + infraspecific epithet.
 \itemize{
-\item \code{auto_canon}: canonical names are identical. Used automatically for
+\item \code{canonical}: canonical names are identical. Used automatically for
 queries without an author; for queries with an author, only when
 \code{match_canon = TRUE}. Several reference names can share a canonical name
 (homonyms), giving multiple hits.
@@ -231,7 +238,7 @@ queries without an author; for queries with an author, only when
 
 \strong{Latin spelling variants (check the result)}
 \itemize{
-\item \code{auto_orthvar}: identical once standard Latin orthographic variants in the
+\item \code{orthvar}: identical once standard Latin orthographic variants in the
 epithets are folded together: \code{ae}/\code{oe} = \code{e}, \code{y} = \code{i}, \code{ph} = \code{f},
 \code{rh} = \code{r}, \code{th} = \code{t}, and a final \code{ii} = \code{i} (e.g. \code{sylvestris} and
 \code{silvestris}, \code{caerulea} and \code{coerulea}). For queries without an author,
@@ -241,15 +248,15 @@ are genuinely different.
 
 \strong{Fuzzy matches (misspellings; always verify)}
 \itemize{
-\item \code{auto_fuzzy}: query has an author; the whole name (author included) is
-within \code{max_dist} of a reference name.
-\item \code{auto_fuzzy_canon}: query has no author; the canonical names are within
+\item \code{fuzzy}: query has an author; the whole name (author included) is within
+\code{max_dist} of a reference name.
+\item \code{fuzzy_canonical}: query has no author; the canonical names are within
 \code{max_dist}.
 }
 
 \strong{Fuzzy genus matches (misspelled genus; always verify)}
 \itemize{
-\item \code{auto_fuzzy_genus}: the genus of the query is not in the reference, but is
+\item \code{fuzzy_genus}: the genus of the query is not in the reference, but is
 within \code{max_dist_genus} of a reference genus, and the rest of the name then
 matches within \code{max_dist} (the total distance includes the genus edits).
 }
@@ -258,6 +265,21 @@ matches within \code{max_dist} (the total distance includes the genus edits).
 \itemize{
 \item \code{no_match}: nothing in the reference was close enough.
 }
+
+\strong{What to do next, by match type and side}\tabular{llll}{
+   \code{match_type} \tab \code{match_side} \tab Confidence \tab What to do \cr
+   \code{exact}, \code{punct}, \code{autonym}, \code{rank} \tab \code{NA} \tab High \tab Accept. \cr
+   \code{basionym}, \code{in_author} \tab \code{query} or \code{reference} \tab High \tab Accept. If the side is \code{query}, the reference lacks an element you supplied; if \code{reference}, your query lacks one. \cr
+   \code{ex_validating} \tab \code{query}, \code{reference} or \code{both} \tab High \tab Accept; the same name under the Code. \cr
+   \code{ex_first} \tab \code{query} \tab Check \tab The reference has only the author who proposed the name. Check that the reference name is not a different name by the same author; the reference may be incomplete. \cr
+   \code{ex_first} \tab \code{reference} \tab Check \tab Your query has only the author who proposed the name. Add the author who published it (after \emph{ex}) if you can, and check the reference name. \cr
+   \code{basionym_in_ex} \tab \code{both} \tab Check \tab Both names differ in several author elements; compare the authors. \cr
+   \code{canonical}, \code{orthvar} \tab \code{NA} \tab Check \tab The author was ignored or an epithet spelling was folded; check the reference name and its author. \cr
+   \code{fuzzy}, \code{fuzzy_canonical}, \code{fuzzy_genus} \tab \code{NA} \tab Low \tab Misspelling is assumed; always verify, using \code{dist} as a guide. \cr
+}
+
+
+The table gives the usual confidence, not a guarantee.
 
 Fuzzy matching is computed with the
 \href{https://en.wikipedia.org/wiki/Levenshtein_distance}{Levenshtein distance}
