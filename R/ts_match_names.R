@@ -423,9 +423,9 @@ ts_match_names <- function(
     parsed_all <- rbind(query_parsed_df, variants$parsed)
   }
   results <- tt_matchnames(
-    query_lines = .ts_parsed_lines(parsed_all, query),
+    query_lines = .ts_parsed_lines(parsed_all),
     ref_lines = if (is.null(ref_prep$keys)) {
-      .ts_parsed_lines(ref_prep$parsed, ref)
+      .ts_parsed_lines(ref_prep$parsed)
     },
     ref_keys = ref_prep$keys,
     max_dist = max_dist,
@@ -693,6 +693,9 @@ ts_match_names <- function(
   reference, query_parsed_df, max_dist_genus, strip_qualifiers
 ) {
   if (inherits(reference, "data.frame")) {
+    # IDs from ts_parse_names() are plain integers, the same as the query's, so
+    # label the reference rows as the character path does ("ref-<row>")
+    reference$id <- sprintf("ref-%d", seq_len(nrow(reference)))
     keep_keys <- .ts_genus_keep_keys(
       query_parsed_df, tt_depunct(reference$genus_name), max_dist_genus
     )
@@ -709,8 +712,8 @@ ts_match_names <- function(
 
 # Parsed names as the pipe-delimited lines the matching engine reads (written
 # via a temporary file, as ts_write_names() does)
-.ts_parsed_lines <- function(parsed_df, key) {
-  path <- tempfile(pattern = digest::digest(key), fileext = ".txt")
+.ts_parsed_lines <- function(parsed_df) {
+  path <- tempfile(fileext = ".txt")
   on.exit(unlink(path), add = TRUE)
   ts_write_names(parsed_df, path)
   readLines(path)

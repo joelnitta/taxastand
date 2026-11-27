@@ -21,12 +21,10 @@ ts_make_name_df <- function(taxa) {
     msg = "Input taxa must be unique"
   )
 
-  # Format input names as data frame with unique ID
-  # ID is combination of first 8 chars of hash of the
-  # input (taxa), followed by "-" and integer
+  # Format input names as data frame with unique ID (the position of the name
+  # in the input, as a string: the engine appends suffixes such as "-autonym")
   taxa_df <- data.frame(name = taxa)
-  taxa_df$id <- seq_len(nrow(taxa_df))
-  taxa_df$id <- paste(substr(digest::digest(taxa), 1, 8), taxa_df$id, sep = "-")
+  taxa_df$id <- as.character(seq_len(nrow(taxa_df)))
 
   taxa_df[, c("id", "name")]
 }
