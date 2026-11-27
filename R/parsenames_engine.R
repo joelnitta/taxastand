@@ -245,9 +245,9 @@ tt_parsenames <- function(names, strip_qualifiers = FALSE) {
   # 54-56): inverted question mark and double quotes are removed, a
   # non-breaking space becomes a space and an em dash a hyphen (the upstream
   # source links an issue about these in a names-resolver)
-  name <- gsub("[¿\"]", "", name, perl = TRUE) # remove ¿ and "
-  name <- gsub(" ", " ", name, fixed = TRUE) # non-breaking space -> space
-  name <- gsub("—", "-", name, fixed = TRUE) # em dash -> hyphen
+  name <- gsub("[\u00bf\"]", "", name, perl = TRUE) # remove \u00bf and "
+  name <- gsub("\u00a0", " ", name, fixed = TRUE) # non-breaking space -> space
+  name <- gsub("\u2014", "-", name, fixed = TRUE) # em dash -> hyphen
 
   # The big anchored parse regex (line 61); perl = TRUE to match gawk captures.
   # The seven capture groups are the parts of the name; a group that did not
@@ -264,7 +264,7 @@ tt_parsenames <- function(names, strip_qualifiers = FALSE) {
   # lone x is the hybrid sign
   parts[1:6] <- lapply(parts[1:6], function(x) {
     x <- sub(" +$", "", x, perl = TRUE)
-    x[x %in% c("x", "X")] <- "×"
+    x[x %in% c("x", "X")] <- "\u00d7"
     x
   })
 
@@ -288,8 +288,8 @@ tt_parsenames <- function(names, strip_qualifiers = FALSE) {
   remade <- gsub("(^ | $)", "", remade, perl = TRUE)
 
   depunct_eq <-
-    gsub("×", "x", tt_depunct(remade), fixed = TRUE) ==
-      gsub("×", "x", tt_depunct(name), fixed = TRUE)
+    gsub("\u00d7", "x", tt_depunct(remade), fixed = TRUE) ==
+      gsub("\u00d7", "x", tt_depunct(name), fixed = TRUE)
 
   # A particle alone ("Foo bar de") is not an author
   only_particles <- grepl(
