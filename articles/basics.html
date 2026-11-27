@@ -129,12 +129,12 @@ Iwatsuki (<code>K. Iwats.</code>).</p>
 and returns a dataframe:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_parse_names.html">ts_parse_names</a></span><span class="op">(</span><span class="va">example_name</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                   name         id genus_hybrid_sign</span></span>
-<span><span class="co">#&gt; 1 Crepidomanes minutum (Bl.) K. Iwats. d6ec2820-1              &lt;NA&gt;</span></span>
-<span><span class="co">#&gt;     genus_name species_hybrid_sign specific_epithet infraspecific_rank</span></span>
-<span><span class="co">#&gt; 1 Crepidomanes                &lt;NA&gt;          minutum               &lt;NA&gt;</span></span>
-<span><span class="co">#&gt;   infraspecific_epithet          author</span></span>
-<span><span class="co">#&gt; 1                  &lt;NA&gt; (Bl.) K. Iwats.</span></span></code></pre></div>
+<span><span class="co">#&gt;                                   name id genus_hybrid_sign   genus_name</span></span>
+<span><span class="co">#&gt; 1 Crepidomanes minutum (Bl.) K. Iwats.  1              &lt;NA&gt; Crepidomanes</span></span>
+<span><span class="co">#&gt;   species_hybrid_sign specific_epithet infraspecific_rank infraspecific_epithet</span></span>
+<span><span class="co">#&gt; 1                &lt;NA&gt;          minutum               &lt;NA&gt;                  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt;            author</span></span>
+<span><span class="co">#&gt; 1 (Bl.) K. Iwats.</span></span></code></pre></div>
 <p>The first column, <code>name</code>, is the original input name.
 <code>id</code> is a unique identifier attached to the name. The rest of
 the columns are <a href="https://joelnitta.github.io/taxastand/reference/ts_parse_names.html#value">the
