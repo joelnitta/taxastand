@@ -167,8 +167,9 @@ epithet (autonyms).
 
 The \code{match_type} column says how a query was matched. Types are tried in
 the order listed below, and the first one that finds a match is reported, so
-earlier types are more certain than later ones. Always check results that
-are not \code{exact}. If several reference records are equally good at the
+earlier types are more certain than later ones. How much checking a result
+needs depends on its type and side; see the table at the end of this
+section. If several reference records are equally good at the
 first type that matches (for example, two names that differ only in an \emph{ex}
 author), every one of them is returned, so the ambiguity is visible.
 

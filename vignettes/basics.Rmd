@@ -98,7 +98,7 @@ ts_match_names(
 )
 ```
 
-The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `basionym` means a match after ignoring the basionym author, and `match_side` (`reference`) says that it was the reference name that had it. **It is recommended to always check any results that weren't identical** (`exact`) to verify that the matching algorithm worked correctly, especially for fuzzy matches (`fuzzy`). 
+The name matching algorithm was able to narrow the match down to `Hymenophyllum taiwanense (Tagawa) C. V. Morton` even though the query lacked `(Tagawa)`. Furthermore, the `match_type` tells us how the matching was done: `basionym` means a match after ignoring the basionym author, and `match_side` (`reference`) says that it was the reference name that had it. **Results that weren't identical** (`exact`) **should be checked according to their type**: some, like `basionym`, are usually safe to accept, while others, especially fuzzy matches (`fuzzy`), always need to be verified. The table in `?ts_match_names` ("What to do next, by match type and side") gives guidance for each type. 
 
 Here is a summary of the values taken by `match_type` (also documented in the "Match types" section of `?ts_match_names`, ordered by how much each can be trusted):
 
