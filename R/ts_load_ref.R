@@ -274,7 +274,7 @@ ts_load_ref <- function(source = NULL, url = NULL, file = NULL, version = NULL,
     # stays below 2^53, so the arithmetic is exact in doubles
     h <- (h * 33 + ch) %% 4294967291
   }
-  sprintf("%08x", h)
+  sprintf("%04x%04x", h %/% 65536, h %% 65536)
 }
 
 # Download `url` into the cache (unless it is already there); return the path
