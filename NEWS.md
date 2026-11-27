@@ -282,6 +282,10 @@
   dataframe now gets `id_ref` values `ref-1`, `ref-2`, ..., as a character
   reference does (#159).
 
+* `digest` is no longer imported: the names of downloaded reference files now
+  use a short hash computed in base R (#159). Files cached by an earlier
+  development version are not recognized by `ts_show_ref_cache()`.
+
 * New `keep_cols` argument of `ts_format_ref()` and `ts_load_ref()` to keep
   extra columns of the reference, such as `nomenclaturalStatus` (#155).
 

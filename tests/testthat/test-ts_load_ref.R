@@ -671,3 +671,12 @@ test_that("unreadable version information gives informative errors", {
   .ts_state$taxadb_manifests <- NULL
   expect_error(.ts_taxadb_manifests(refresh = TRUE), "Could not find any taxadb")
 })
+
+test_that("the URL hash is deterministic, 8 hex digits, and varies with the URL", {
+  h <- taxastand:::.ts_url_hash("https://example.org/a/ref.zip")
+  expect_match(h, "^[0-9a-f]{8}$")
+  expect_identical(h, taxastand:::.ts_url_hash("https://example.org/a/ref.zip"))
+  expect_false(h == taxastand:::.ts_url_hash("https://example.org/b/ref.zip"))
+  # fixed value: the hash must not change between sessions or versions
+  expect_identical(taxastand:::.ts_url_hash("abc"), "0b885c8b")
+})

@@ -59,19 +59,6 @@ references:
   year: '2026'
   doi: 10.32614/CRAN.package.assertthat
 - type: software
-  title: digest
-  abstract: 'digest: Create Compact Hash Digests of R Objects'
-  notes: Imports
-  url: https://eddelbuettel.github.io/digest/
-  repository: https://CRAN.R-project.org/package=digest
-  authors:
-  - family-names: Eddelbuettel
-    given-names: Dirk
-    email: edd@debian.org
-    orcid: https://orcid.org/0000-0001-6419-907X
-  year: '2026'
-  doi: 10.32614/CRAN.package.digest
-- type: software
   title: dplyr
   abstract: 'dplyr: A Grammar of Data Manipulation'
   notes: Imports
