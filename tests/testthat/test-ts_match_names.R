@@ -552,3 +552,51 @@ test_that("match_side says which name had the ignored element (#167)", {
     suppressMessages(ts_match_names("Foo bar L.", "Foo bar L.", simple = TRUE))
   ))
 })
+
+test_that("documented match types are exactly the types that can be returned (#163)", {
+  # One query/reference pair per match type
+  cases <- list(
+    exact = c("Foo bar L.", "Foo bar L."),
+    autonym = c("Foo baz var. baz", "Foo baz"),
+    punct = c("Foo qux Smith", "Foo qux  smith"),
+    basionym = c("Foo quux (Hook.) Sm.", "Foo quux Sm."),
+    in_author = c("Foo corge Tagawa in Morton", "Foo corge Tagawa"),
+    ex_validating = c("Foo grault Hook. ex Smith", "Foo grault Smith"),
+    rank = c("Foo garply var. alba Kunth", "Foo garply subsp. alba Kunth"),
+    ex_first = c("Foo waldo Willd.", "Foo waldo Willd. ex Schkuhr"),
+    basionym_in_ex = c("Foo fred (A.) Hook. ex Smith", "Foo fred (B.) Hook."),
+    canonical = c("Foo plugh", "Foo plugh Sw."),
+    orthvar = c("Foo sylvestris", "Foo silvestris"),
+    fuzzy = c("Foo thud L.", "Foo thude L."),
+    fuzzy_canonical = c("Foo thud", "Foo thude"),
+    fuzzy_genus = c("Fooo xyzzy", "Foo xyzzy"),
+    no_match = c("Zzz nomatch", "Foo bar L.")
+  )
+  returned <- vapply(names(cases), function(type) {
+    res <- ts_match_names(
+      cases[[type]][1], cases[[type]][2],
+      match_autonyms = TRUE, max_dist = 2, max_dist_genus = 2
+    )
+    res$match_type[1]
+  }, character(1))
+  expect_equal(unname(returned), names(cases))
+
+  manual <- ts_match_names(
+    "Zzz nomatch", "Foo bar L.",
+    manual_match = data.frame(query = "Zzz nomatch", match = "Foo bar L.")
+  )
+  expect_equal(manual$match_type, "manual")
+
+  # Types listed in the help page for ts_match_names()
+  rd <- tryCatch(
+    tools::Rd_db("taxastand")[["ts_match_names.Rd"]],
+    error = function(e) NULL
+  )
+  skip_if(is.null(rd), "taxastand is not installed; cannot read its help")
+  rd_text <- paste(as.character(rd), collapse = "")
+  documented <- unique(regmatches(
+    rd_text,
+    gregexpr("(?<=\\\\item \\\\code\\{)[a-z_]+(?=\\}: )", rd_text, perl = TRUE)
+  )[[1]])
+  expect_setequal(documented, c(names(cases), "manual"))
+})
