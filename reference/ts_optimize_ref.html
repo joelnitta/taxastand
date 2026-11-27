@@ -129,15 +129,15 @@ with use, up to the size of the whole parsed reference.</p>
 <span class="r-in"><span><span class="co"># Reuse for several calls</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="ts_match_names.html">ts_match_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span>, simple <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query              reference                      match_type      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocormus minutum Gonocormus minutus (Bl.) Bosch auto_fuzzy_canon</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   query              reference                      match_type     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocormus minutum Gonocormus minutus (Bl.) Bosch fuzzy_canonical</span>
 <span class="r-in"><span><span class="fu"><a href="ts_resolve_names.html">ts_resolve_names</a></span><span class="op">(</span><span class="st">"Gonocormus minutum"</span>, <span class="va">ref</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   query     resolved_name matched_name resolved_status matched_status match_type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocorm… Crepidomanes… Gonocormus … accepted name   synonym        auto_fuzz…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: dist &lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Gonocorm… Crepidomanes… Gonocormus … accepted name   synonym        fuzzy_can…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: dist &lt;int&gt;, match_side &lt;chr&gt;</span></span>
 </code></pre></div>
     </div>
   </div>

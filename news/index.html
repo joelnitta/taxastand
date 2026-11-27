@@ -67,7 +67,71 @@
 <h2 class="page-header" data-toc-text="2.0.0.9000" id="taxastand-2009000">taxastand 2.0.0.9000<a class="anchor" aria-label="anchor" href="#taxastand-2009000"></a></h2>
 <div class="section level3">
 <h3 id="major-changes-2-0-0-9000">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-2-0-0-9000"></a></h3>
-<ul><li><p><strong>taxastand is now licensed under GPL-3 (was MIT) (<a href="https://github.com/joelnitta/taxastand/issues/168" class="external-link">#168</a>).</strong> The pure-R name parsing and matching code was ported from taxon-tools (Cam Webb, GPL-3), so it is a derivative work and must be distributed under the same license. Cam Webb is now listed as a copyright holder in <code>DESCRIPTION</code>, and the two ported files say so in their headers. Releases up to and including 2.0.0 were distributed under the MIT license.</p></li>
+<ul><li>
+<p><strong>The <code>match_type</code> values are renamed and a <code>match_side</code> column is added (<a href="https://github.com/joelnitta/taxastand/issues/167" class="external-link">#167</a>, <a href="https://github.com/joelnitta/taxastand/issues/163" class="external-link">#163</a>).</strong> The labels were taxon-tools’ and hard to read, and the <code>+</code>/<code>-</code> suffix (which name had an extra element) was hard to remember. The type now names only the rule, without the <code>auto_</code> prefix, and the new <code>match_side</code> column says which name had the element that was ignored (<code>query</code>, <code>reference</code>, <code>both</code>, or <code>NA</code> when not applicable). The “Match types” section of <code><a href="../reference/ts_match_names.html">?ts_match_names</a></code> has a table of what each type and side means and what to do next. This also fixes the documentation, which listed <code>auto_ex-</code>/<code>auto_ex+</code> for the types the code returned as <code>auto_exin-</code>/ <code>auto_exin+</code>. Code that filters on <code>match_type</code> needs to be updated:</p>
+<table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Before</th>
+<th>Now <code>match_type</code>
+</th>
+<th>Now <code>match_side</code>
+</th>
+</tr></thead><tbody><tr><td><code>auto_punct</code></td>
+<td><code>punct</code></td>
+<td><code>NA</code></td>
+</tr><tr><td>
+<code>auto_basio-</code> / <code>auto_basio+</code>
+</td>
+<td><code>basionym</code></td>
+<td>
+<code>reference</code> / <code>query</code>
+</td>
+</tr><tr><td>
+<code>auto_in-</code> / <code>auto_in+</code>
+</td>
+<td><code>in_author</code></td>
+<td>
+<code>reference</code> / <code>query</code>
+</td>
+</tr><tr><td>
+<code>auto_exauth-</code> / <code>auto_exauth+</code>
+</td>
+<td><code>ex_validating</code></td>
+<td>
+<code>reference</code> / <code>query</code>
+</td>
+</tr><tr><td><code>auto_exauth_both</code></td>
+<td><code>ex_validating</code></td>
+<td><code>both</code></td>
+</tr><tr><td>
+<code>auto_exin-</code> / <code>auto_exin+</code>
+</td>
+<td><code>ex_first</code></td>
+<td>
+<code>reference</code> / <code>query</code>
+</td>
+</tr><tr><td><code>auto_basexin</code></td>
+<td><code>basionym_in_ex</code></td>
+<td><code>both</code></td>
+</tr><tr><td><code>auto_irank</code></td>
+<td><code>rank</code></td>
+<td><code>NA</code></td>
+</tr><tr><td><code>auto_orthvar</code></td>
+<td><code>orthvar</code></td>
+<td><code>NA</code></td>
+</tr><tr><td><code>auto_canon</code></td>
+<td><code>canonical</code></td>
+<td><code>NA</code></td>
+</tr><tr><td><code>auto_fuzzy</code></td>
+<td><code>fuzzy</code></td>
+<td><code>NA</code></td>
+</tr><tr><td><code>auto_fuzzy_canon</code></td>
+<td><code>fuzzy_canonical</code></td>
+<td><code>NA</code></td>
+</tr><tr><td><code>auto_fuzzy_genus</code></td>
+<td><code>fuzzy_genus</code></td>
+<td><code>NA</code></td>
+</tr></tbody></table><p><code>exact</code>, <code>autonym</code>, <code>manual</code> and <code>no_match</code> are unchanged. <code>match_side</code> is also in the output of <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code>, and is left out when <code>simple</code> is <code>TRUE</code> in <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code>.</p>
+</li>
+<li><p><strong>taxastand is now licensed under GPL-3 (was MIT) (<a href="https://github.com/joelnitta/taxastand/issues/168" class="external-link">#168</a>).</strong> The pure-R name parsing and matching code was ported from taxon-tools (Cam Webb, GPL-3), so it is a derivative work and must be distributed under the same license. Cam Webb is now listed as a copyright holder in <code>DESCRIPTION</code>, and the two ported files say so in their headers. Releases up to and including 2.0.0 were distributed under the MIT license.</p></li>
 <li><p><strong>New <code><a href="../reference/ts_optimize_ref.html">ts_optimize_ref()</a></code> for repeated matching against a large reference (<a href="https://github.com/joelnitta/taxastand/issues/44" class="external-link">#44</a>, <a href="https://github.com/joelnitta/taxastand/issues/110" class="external-link">#110</a>).</strong> Matching spends most of its time preparing the reference (finding the genus of every name, parsing, building match keys). Pass the result of <code>ts_optimize_ref(reference)</code> to <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> (as <code>reference</code>) or <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code> (as <code>ref_taxonomy</code>) and that work is done once and reused: the genus of every name is found when the reference is prepared, and each genus is parsed and keyed the first time a query needs it. Results are identical. Against a 1.6M-name WFO reference, 100 queries take about 0.2 s and 1000 queries about 1.2 s with a prepared reference once the genera are cached, versus about 4 s and 11 s without; the first call that uses a genus pays for parsing it, as before. A prepared reference holds what it has built, so it grows with use.</p></li>
 <li>
 <p><strong>New functions to set up a reference (<a href="https://github.com/joelnitta/taxastand/issues/109" class="external-link">#109</a>).</strong> A reference is no longer something you must prepare yourself.</p>
@@ -100,7 +164,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="performance-2-0-0-9000">Performance<a class="anchor" aria-label="anchor" href="#performance-2-0-0-9000"></a></h3>
-<ul><li>Name matching is much faster for large references (e.g. ~20 s to ~1 s for 5 queries against the 78k-name PPG taxonomy). <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> and <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code> now ignore reference names whose genus cannot match any query genus before parsing the reference (<a href="https://github.com/joelnitta/taxastand/issues/43" class="external-link">#43</a>); match keys are computed lazily and looked up in vectorised passes instead of per-key hash maps (<a href="https://github.com/joelnitta/taxastand/issues/45" class="external-link">#45</a>); and matching returns a data frame instead of delimited strings (<a href="https://github.com/joelnitta/taxastand/issues/46" class="external-link">#46</a>). <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> is also about twice as fast, because the per-row failure check and <code><a href="https://tidyr.tidyverse.org/reference/separate.html" class="external-link">tidyr::separate()</a></code> were replaced with vectorised base R (<a href="https://github.com/joelnitta/taxastand/issues/44" class="external-link">#44</a>). Results are unchanged, except that multiple fuzzy matches to one query are now returned in reference order.</li>
+<ul><li>Name matching is much faster for large references (e.g. ~20 s to ~1 s for 5 queries against the 78k-name PPG taxonomy). <code><a href="../reference/ts_match_names.html">ts_match_names()</a></code> and <code><a href="../reference/ts_resolve_names.html">ts_resolve_names()</a></code> now ignore reference names whose genus cannot match any query genus before parsing the reference (<a href="https://github.com/joelnitta/taxastand/issues/43" class="external-link">#43</a>); match keys are computed lazily and looked up in vectorised passes instead of per-key hash maps (<a href="https://github.com/joelnitta/taxastand/issues/45" class="external-link">#45</a>); and matching returns a data frame instead of delimited strings (<a href="https://github.com/joelnitta/taxastand/issues/46" class="external-link">#46</a>). <code><a href="../reference/ts_parse_names.html">ts_parse_names()</a></code> is also about twice as fast, because the per-row failure check and <code>tidyr::separate()</code> were replaced with vectorised base R (<a href="https://github.com/joelnitta/taxastand/issues/44" class="external-link">#44</a>). Results are unchanged, except that multiple fuzzy matches to one query are now returned in reference order.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-2-0-0-9000">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-0-9000"></a></h3>

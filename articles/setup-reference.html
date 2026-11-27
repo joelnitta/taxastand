@@ -134,7 +134,7 @@ a separate column, <code>scientificNameAuthorship</code>;
 <code><a href="../reference/ts_load_ref.html">ts_load_ref()</a></code> can download, with their licenses:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_show_ref_sources.html">ts_show_ref_sources</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">source</span>, <span class="va">name</span>, <span class="va">license</span><span class="op">)</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">source</span>, <span class="va">name</span>, <span class="va">license</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   source                                                 name      license</span></span>
 <span><span class="co">#&gt; 1    wfo                        World Flora Online Plant List      CC0 1.0</span></span>
 <span><span class="co">#&gt; 2    ppg Pteridophyte Phylogeny Group classification (PPG II)    CC BY 4.0</span></span>
@@ -152,7 +152,7 @@ lycophytes) is small, so it makes a good first try:</p>
 <span><span class="co">#&gt; Downloading https://raw.githubusercontent.com/pteridogroup/ppg/v2.1.0/data/ppg.csv</span></span>
 <span><span class="co">#&gt; Loaded 74784 names from Pteridophyte Phylogeny Group classification (PPG II) (version v2.1.0), license CC BY 4.0.</span></span>
 <span><span class="co">#&gt; Please cite: Pteridophyte Phylogeny Group. PPG taxonomic database. https://doi.org/10.5281/zenodo.22760360</span></span>
-<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">ppg</span>, <span class="va">taxonomicStatus</span><span class="op">)</span></span>
+<span><span class="fu">count</span><span class="op">(</span><span class="va">ppg</span>, <span class="va">taxonomicStatus</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   taxonomicStatus     n</span></span>
 <span><span class="co">#&gt; 1        accepted 15219</span></span>
 <span><span class="co">#&gt; 2         synonym 55064</span></span>
@@ -207,8 +207,8 @@ its synonyms:</p>
 <span><span class="co">#&gt;                               resolved_name matched_status match_type</span></span>
 <span><span class="co">#&gt; 1                     Polypodium vulgare L.       accepted      exact</span></span>
 <span><span class="co">#&gt; 4 Microsorum scolopendria (Burm. f.) Copel.        synonym      exact</span></span>
-<span><span class="co">#&gt; 2 Microsorum scolopendria (Burm. f.) Copel.       accepted auto_canon</span></span>
-<span><span class="co">#&gt; 3              Polypodium pellucidum Kaulf.       accepted auto_fuzzy</span></span></code></pre></div>
+<span><span class="co">#&gt; 2 Microsorum scolopendria (Burm. f.) Copel.       accepted  canonical</span></span>
+<span><span class="co">#&gt; 3              Polypodium pellucidum Kaulf.       accepted      fuzzy</span></span></code></pre></div>
 <p>Some sources are Parquet files. These need the <a href="https://nanoparquet.r-lib.org/" class="external-link">nanoparquet</a> or <a href="https://r.duckdb.org/" class="external-link">duckdb</a> package; with duckdb,
 <code>taxon</code> is applied while reading, which is faster for very
 large files. <code><a href="../reference/ts_load_ref.html">ts_load_ref()</a></code> says which package to install if
@@ -282,7 +282,7 @@ species that are needed to find the members of a taxon.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">own</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/ts_subset_ref.html">ts_subset_ref</a></span><span class="op">(</span><span class="st">"Pteridaceae"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">taxonID</span>, <span class="va">scientificName</span>, <span class="va">family</span><span class="op">)</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">taxonID</span>, <span class="va">scientificName</span>, <span class="va">family</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   taxonID    scientificName      family</span></span>
 <span><span class="co">#&gt; 3       3 Pteris vittata L. Pteridaceae</span></span></code></pre></div>
 </div>
@@ -297,8 +297,8 @@ others). Ask taxadb for the Darwin Core (<code>dwc</code>) schema:</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">taxadb</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">taxadb_itis</span> <span class="op">&lt;-</span> <span class="fu">taxa_tbl</span><span class="op">(</span>provider <span class="op">=</span> <span class="st">"itis"</span>, schema <span class="op">=</span> <span class="st">"dwc"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">family</span> <span class="op">==</span> <span class="st">"Polypodiaceae"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">family</span> <span class="op">==</span> <span class="st">"Polypodiaceae"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">collect</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/ts_format_ref.html">ts_format_ref</a></span><span class="op">(</span>source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>provider <span class="op">=</span> <span class="st">"ITIS"</span>, version <span class="op">=</span> <span class="st">"2026 (via taxadb)"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">taxadb_itis</span><span class="op">)</span></span>

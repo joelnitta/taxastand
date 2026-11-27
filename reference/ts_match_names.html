@@ -133,7 +133,7 @@ and a genus in the reference, for correcting misspelled genera. Only used
 for queries whose genus is not in the reference; the candidates are then the
 names in reference genera within this distance, and the whole name (or the
 canonical name, for a query without an author) must still be within
-<code>max_dist</code>. Matches have the type <code>auto_fuzzy_genus</code>. Set to 0 to turn
+<code>max_dist</code>. Matches have the type <code>fuzzy_genus</code>. Set to 0 to turn
 genus-level fuzzy matching off. Default: 2.</p></dd>
 
 
@@ -214,7 +214,10 @@ have an author.</p></dd>
 <li><p>reference: Matched reference name</p></li>
 <li><p>match_type: Type of match (see the "Match types" section)</p></li>
 <li><p>dist: Edit distance between query and reference for fuzzy matches
-(<code>auto_fuzzy</code>, <code>auto_fuzzy_canon</code>, <code>auto_fuzzy_genus</code>), <code>NA</code> otherwise</p></li>
+(<code>fuzzy</code>, <code>fuzzy_canonical</code>, <code>fuzzy_genus</code>), <code>NA</code> otherwise</p></li>
+<li><p>match_side: Which name had the element that the match type ignored
+(<code>query</code>, <code>reference</code> or <code>both</code>), <code>NA</code> when not applicable (see the "Match
+types" section). Not included if <code>simple</code> is <code>TRUE</code>.</p></li>
 <li><p>id_query: Unique ID of query</p></li>
 <li><p>id_ref: Unique ID of reference</p></li>
 <li><p>genus_hybrid_sign_query: Genus hybrid sign in query</p></li>
@@ -258,29 +261,37 @@ epithet (autonyms).</p>
 
 <p>The <code>match_type</code> column says how a query was matched. Types are tried in
 the order listed below, and the first one that finds a match is reported, so
-earlier types are more certain than later ones. Always check results that
-are not <code>exact</code>. If several reference records are equally good at the
+earlier types are more certain than later ones. How much checking a result
+needs depends on its type and side; see the table at the end of this
+section. If several reference records are equally good at the
 first type that matches (for example, two names that differ only in an <em>ex</em>
 author), every one of them is returned, so the ambiguity is visible.</p>
+<p>For the types that ignore an element of the author (a basionym author, an
+<em>in</em> or <em>ex</em> citation), the <code>match_side</code> column says which name had it:
+<code>query</code>, <code>reference</code>, or <code>both</code>. It is <code>NA</code> for the other types. Most of the
+time the side does not matter, but it tells you where to look when a match
+needs checking (see the table at the end of this section).</p>
 <p><strong>Identical after normalization (safe to accept)</strong></p><ul><li><p><code>exact</code>: all parts of the name, including the author, are identical.</p></li>
 <li><p><code>autonym</code>: identical once an autonym (e.g. "Blechnum lunare var. lunare")
 is collapsed to the species name, "Blechnum lunare" (only when
 <code>match_autonyms</code> is <code>TRUE</code>).</p></li>
-<li><p><code>auto_punct</code>: identical after ignoring differences in spaces, periods,
+<li><p><code>punct</code>: identical after ignoring differences in spaces, periods,
 capitalization, and accented or other non-ASCII characters.</p></li>
-</ul><p><strong>Differences in how the author is cited (usually safe)</strong></p><ul><li><p><code>auto_basio-</code>, <code>auto_basio+</code>: identical once the basionym author, e.g.
-<code>(Turcz.)</code> in <code>Cardaminopsis umbrosa (Turcz.) Czerep.</code>, is dropped from
-the reference (<code>-</code>) or the query (<code>+</code>).</p></li>
-<li><p><code>auto_in-</code>, <code>auto_in+</code>: identical once "in" elements (<code>Tagawa in Morton</code>
-becomes <code>Tagawa</code>) are dropped from the reference or the query.</p></li>
-<li><p><code>auto_exauth-</code>, <code>auto_exauth+</code>: identical once the first author of an
-"ex" citation is dropped, keeping the author after <em>ex</em>, from the
-reference (<code>-</code>) or the query (<code>+</code>). In <code>Hook. ex Smith</code>, Hook. proposed
-the name but Smith validly published it, so under the botanical Code the
-name belongs to Smith: <code>Foo bar Hook. ex Smith</code> and <code>Foo bar Smith</code> are
-the same name. A basionym author in parentheses is kept.</p></li>
-<li><p><code>auto_irank</code>: identical except for the infraspecific rank (e.g. <code>var.</code>
-vs. <code>subsp.</code>).</p></li>
+<li><p><code>manual</code>: matched by the <code>manual_match</code> argument.</p></li>
+</ul><p><strong>Differences in how the author is cited (usually safe)</strong></p><ul><li><p><code>basionym</code>: identical once the basionym author, e.g. <code>(Turcz.)</code> in
+<code>Cardaminopsis umbrosa (Turcz.) Czerep.</code>, is dropped. <code>match_side</code> is the
+name that has the basionym author.</p></li>
+<li><p><code>in_author</code>: identical once "in" elements (<code>Tagawa in Morton</code> becomes
+<code>Tagawa</code>) are dropped. <code>match_side</code> is the name that has the "in" element.</p></li>
+<li><p><code>ex_validating</code>: identical once the first author of an "ex" citation is
+dropped, keeping the author after <em>ex</em>. In <code>Hook. ex Smith</code>, Hook.
+proposed the name but Smith validly published it, so under the botanical
+Code the name belongs to Smith: <code>Foo bar Hook. ex Smith</code> and <code>Foo bar Smith</code> are the same name. <code>match_side</code> is the name with the <em>ex</em>
+citation, or <code>both</code> if both names have one with the same author after
+<em>ex</em> but different authors before it (<code>Hook. ex Smith</code> and <code>DC. ex Smith</code>; the sources disagree about who proposed the name, which does not
+change the name). A basionym author in parentheses is kept.</p></li>
+<li><p><code>rank</code>: identical except for the infraspecific rank (e.g. <code>var.</code> vs.
+<code>subsp.</code>).</p></li>
 </ul><p><strong>The author before "ex" is used (check the result)</strong></p>
 <p>In an <em>ex</em> citation such as <code>Willd. ex Schkuhr</code>, the author before <em>ex</em>
 proposed the name but did not validly publish it; under the botanical Code
@@ -288,37 +299,33 @@ the author after <em>ex</em> is the author of the name. These matches keep the
 author before <em>ex</em>, so they are usually, but not always, the same name:
 <code>Foo bar Willd.</code> could be a different name by Willd. If a query matches in
 this way, look at the reference name and its author to decide whether it is
-the name you meant. They are tried after <code>auto_exauth</code>, so a reference name
-with the author after <em>ex</em> is preferred when there is one.</p><ul><li><p><code>auto_exauth_both</code>: both names have an "ex" citation with the same author
-after <em>ex</em> but different authors before it (<code>Hook. ex Smith</code> and
-<code>DC. ex Smith</code>), or one has no author before it (<code>ex Smith</code>). Under the
-Code this is one name, but the two sources do not agree about who first
-ascribed it.</p></li>
-<li><p><code>auto_ex-</code>, <code>auto_ex+</code>: identical once "in" and "ex" elements are dropped
-from the reference (<code>-</code>) or the query (<code>+</code>): <code>Willd. ex Schkuhr</code> becomes
-<code>Willd.</code></p></li>
-<li><p><code>auto_basexin</code>: identical once basionym authors and "in"/"ex" elements are
-dropped from both query and reference.</p></li>
+the name you meant. They are tried after <code>ex_validating</code>, so a reference
+name with the author after <em>ex</em> is preferred when there is one.</p><ul><li><p><code>ex_first</code>: identical once "in" and "ex" elements are dropped from one
+name: <code>Willd. ex Schkuhr</code> becomes <code>Willd.</code> <code>match_side</code> is the name with
+the <em>ex</em> citation.</p></li>
+<li><p><code>basionym_in_ex</code>: identical once basionym authors and "in"/"ex" elements
+are dropped from both query and reference (<code>match_side</code> is <code>both</code>).</p></li>
 </ul><p><strong>Canonical-name matches (the author is ignored; check the result)</strong></p>
-<p>The canonical name is genus + specific epithet + infraspecific epithet.</p><ul><li><p><code>auto_canon</code>: canonical names are identical. Used automatically for
+<p>The canonical name is genus + specific epithet + infraspecific epithet.</p><ul><li><p><code>canonical</code>: canonical names are identical. Used automatically for
 queries without an author; for queries with an author, only when
 <code>match_canon = TRUE</code>. Several reference names can share a canonical name
 (homonyms), giving multiple hits.</p></li>
-</ul><p><strong>Latin spelling variants (check the result)</strong></p><ul><li><p><code>auto_orthvar</code>: identical once standard Latin orthographic variants in the
+</ul><p><strong>Latin spelling variants (check the result)</strong></p><ul><li><p><code>orthvar</code>: identical once standard Latin orthographic variants in the
 epithets are folded together: <code>ae</code>/<code>oe</code> = <code>e</code>, <code>y</code> = <code>i</code>, <code>ph</code> = <code>f</code>,
 <code>rh</code> = <code>r</code>, <code>th</code> = <code>t</code>, and a final <code>ii</code> = <code>i</code> (e.g. <code>sylvestris</code> and
 <code>silvestris</code>, <code>caerulea</code> and <code>coerulea</code>). For queries without an author,
 canonical names are compared. This can occasionally merge epithets that
 are genuinely different.</p></li>
-</ul><p><strong>Fuzzy matches (misspellings; always verify)</strong></p><ul><li><p><code>auto_fuzzy</code>: query has an author; the whole name (author included) is
-within <code>max_dist</code> of a reference name.</p></li>
-<li><p><code>auto_fuzzy_canon</code>: query has no author; the canonical names are within
+</ul><p><strong>Fuzzy matches (misspellings; always verify)</strong></p><ul><li><p><code>fuzzy</code>: query has an author; the whole name (author included) is within
+<code>max_dist</code> of a reference name.</p></li>
+<li><p><code>fuzzy_canonical</code>: query has no author; the canonical names are within
 <code>max_dist</code>.</p></li>
-</ul><p><strong>Fuzzy genus matches (misspelled genus; always verify)</strong></p><ul><li><p><code>auto_fuzzy_genus</code>: the genus of the query is not in the reference, but is
+</ul><p><strong>Fuzzy genus matches (misspelled genus; always verify)</strong></p><ul><li><p><code>fuzzy_genus</code>: the genus of the query is not in the reference, but is
 within <code>max_dist_genus</code> of a reference genus, and the rest of the name then
 matches within <code>max_dist</code> (the total distance includes the genus edits).</p></li>
 </ul><p><strong>No match</strong></p><ul><li><p><code>no_match</code>: nothing in the reference was close enough.</p></li>
-</ul><p>Fuzzy matching is computed with the
+</ul><p><strong>What to do next, by match type and side</strong></p><table class="table table"><tr><td><code>match_type</code></td><td><code>match_side</code></td><td>Confidence</td><td>What to do</td></tr><tr><td><code>exact</code>, <code>punct</code>, <code>autonym</code>, <code>rank</code></td><td><code>NA</code></td><td>High</td><td>Accept.</td></tr><tr><td><code>basionym</code>, <code>in_author</code></td><td><code>query</code> or <code>reference</code></td><td>High</td><td>Accept. If the side is <code>query</code>, the reference lacks an element you supplied; if <code>reference</code>, your query lacks one.</td></tr><tr><td><code>ex_validating</code></td><td><code>query</code>, <code>reference</code> or <code>both</code></td><td>High</td><td>Accept; the same name under the Code.</td></tr><tr><td><code>ex_first</code></td><td><code>query</code></td><td>Check</td><td>The reference has only the author who proposed the name. Check that the reference name is not a different name by the same author; the reference may be incomplete.</td></tr><tr><td><code>ex_first</code></td><td><code>reference</code></td><td>Check</td><td>Your query has only the author who proposed the name. Add the author who published it (after <em>ex</em>) if you can, and check the reference name.</td></tr><tr><td><code>basionym_in_ex</code></td><td><code>both</code></td><td>Check</td><td>Both names differ in several author elements; compare the authors.</td></tr><tr><td><code>canonical</code>, <code>orthvar</code></td><td><code>NA</code></td><td>Check</td><td>The author was ignored or an epithet spelling was folded; check the reference name and its author.</td></tr><tr><td><code>fuzzy</code>, <code>fuzzy_canonical</code>, <code>fuzzy_genus</code></td><td><code>NA</code></td><td>Low</td><td>Misspelling is assumed; always verify, using <code>dist</code> as a guide.</td></tr></table><p>The table gives the usual confidence, not a guarantee.</p>
+<p>Fuzzy matching is computed with the
 <a href="https://en.wikipedia.org/wiki/Levenshtein_distance" class="external-link">Levenshtein distance</a>
 (total insertions, deletions, and substitutions). The rules for authorship
 fit plants, algae, and fungi, where the basionym author is given in
@@ -339,8 +346,8 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Crepidomanes minutum"</span>, <span class="st">"Hymenophyllum polyanthos"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  simple <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  query            reference       match_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Crepidomanes minutus Crepidomanes minutum auto_fuzzy_canon</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  query            reference      match_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Crepidomanes minutus Crepidomanes minutum fuzzy_canonical</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># If names are too distant, they won't match</span></span></span>
 <span class="r-in"><span><span class="fu">ts_match_names</span><span class="op">(</span></span></span>
@@ -371,17 +378,17 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-in"><span>  <span class="st">"Crepidomanes minutus"</span>,</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Crepidomanes minutum"</span>, <span class="st">"Hymenophyllum polyanthos"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 20</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query        reference match_type  dist id_query id_ref genus_hybrid_sign_qu…¹</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomane… Crepidom… auto_fuzz…     1 c1ad73e… ref-1  <span style="color: #BB0000;">NA</span>                    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ abbreviated name: ¹​genus_hybrid_sign_query</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 13 more variables: genus_name_query &lt;chr&gt;, species_hybrid_sign_query &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   specific_epithet_query &lt;chr&gt;, infraspecific_rank_query &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_epithet_query &lt;chr&gt;, author_query &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   genus_hybrid_sign_ref &lt;chr&gt;, genus_name_ref &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 21</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   query                reference     match_type  dist match_side id_query id_ref</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomanes minutus Crepidomanes… fuzzy_can…     1 <span style="color: #BB0000;">NA</span>         c1ad73e… ref-1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 14 more variables: genus_hybrid_sign_query &lt;chr&gt;, genus_name_query &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   species_hybrid_sign_query &lt;chr&gt;, specific_epithet_query &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_rank_query &lt;chr&gt;, infraspecific_epithet_query &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   author_query &lt;chr&gt;, genus_hybrid_sign_ref &lt;chr&gt;, genus_name_ref &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   species_hybrid_sign_ref &lt;chr&gt;, specific_epithet_ref &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_rank_ref &lt;chr&gt;, infraspecific_epithet_ref &lt;chr&gt;, …</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   infraspecific_rank_ref &lt;chr&gt;, infraspecific_epithet_ref &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   author_ref &lt;chr&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Example using the match_autonyms argument</span></span></span>
 <span class="r-in"><span><span class="fu">ts_match_names</span><span class="op">(</span></span></span>
@@ -398,13 +405,13 @@ Nomenclature in the biodiversity era. Methods in Ecology and Evolution,
 <span class="r-in"><span>  simple <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   query                       reference            match_type      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomanes minutus        Crepidomanes minutum auto_fuzzy_canon</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechnum lunare var. lunare Blechnum lunare      autonym         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blechnum lunare             Blechnum lunare      exact           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar foo var. foo            Bar foo              auto_fuzzy_canon</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar foo                     Bar foo              exact           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   query                       reference            match_type     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Crepidomanes minutus        Crepidomanes minutum fuzzy_canonical</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Blechnum lunare var. lunare Blechnum lunare      autonym        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Blechnum lunare             Blechnum lunare      exact          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Bar foo var. foo            Bar foo              fuzzy_canonical</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Bar foo                     Bar foo              exact          </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

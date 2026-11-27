@@ -172,11 +172,11 @@
 <span><span class="co">#&gt; 1          Hymenophyllum wilsonii Hook.         Hymenophyllum wilsonii Hook.</span></span>
 <span><span class="co">#&gt; 2 Crepidomanes minutum (Blume) K.Iwats. Crepidomanes minutum (Bl.) K. Iwats.</span></span>
 <span><span class="co">#&gt; 3                    Gonocormus minutum Crepidomanes minutum (Bl.) K. Iwats.</span></span>
-<span><span class="co">#&gt;   matched_status       match_type</span></span>
-<span><span class="co">#&gt; 1  accepted name            exact</span></span>
-<span><span class="co">#&gt; 2  accepted name     auto_basexin</span></span>
-<span><span class="co">#&gt; 3        synonym auto_fuzzy_canon</span></span></code></pre></div>
-<p><code>resolved_name</code> is the accepted name for each query, and <code>match_type</code> says how it was found (<code>exact</code>, or one of the <code>auto_*</code> types for matches that needed some tolerance; see <code><a href="reference/ts_match_names.html">?ts_match_names</a></code>). The <code>resolved_name</code> column can be used for downstream analyses joining on other datasets that have been resolved to the same reference taxonomy.</p>
+<span><span class="co">#&gt;   matched_status      match_type</span></span>
+<span><span class="co">#&gt; 1  accepted name           exact</span></span>
+<span><span class="co">#&gt; 2  accepted name  basionym_in_ex</span></span>
+<span><span class="co">#&gt; 3        synonym fuzzy_canonical</span></span></code></pre></div>
+<p><code>resolved_name</code> is the accepted name for each query, and <code>match_type</code> says how it was found (<code>exact</code>, or one of the other types for matches that needed some tolerance, such as <code>punct</code> or <code>fuzzy</code>; see <code><a href="reference/ts_match_names.html">?ts_match_names</a></code>). The <code>resolved_name</code> column can be used for downstream analyses joining on other datasets that have been resolved to the same reference taxonomy.</p>
 </div>
 <div class="section level2">
 <h2 id="similar-work">Similar work<a class="anchor" aria-label="anchor" href="#similar-work"></a>
