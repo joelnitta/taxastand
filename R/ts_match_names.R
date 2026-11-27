@@ -423,10 +423,8 @@ ts_match_names <- function(
     parsed_all <- rbind(query_parsed_df, variants$parsed)
   }
   results <- tt_matchnames(
-    query_lines = .ts_parsed_lines(parsed_all),
-    ref_lines = if (is.null(ref_prep$keys)) {
-      .ts_parsed_lines(ref_prep$parsed)
-    },
+    query = parsed_all,
+    ref = ref_prep$parsed,
     ref_keys = ref_prep$keys,
     max_dist = max_dist,
     match_canon = match_canon,
@@ -708,15 +706,6 @@ ts_match_names <- function(
     reference <- .ts_new_reference(reference, strip_qualifiers)
   }
   .ts_ref_subset(reference, query_parsed_df, max_dist_genus)
-}
-
-# Parsed names as the pipe-delimited lines the matching engine reads (written
-# via a temporary file, as ts_write_names() does)
-.ts_parsed_lines <- function(parsed_df) {
-  path <- tempfile(fileext = ".txt")
-  on.exit(unlink(path), add = TRUE)
-  ts_write_names(parsed_df, path)
-  readLines(path)
 }
 
 # Put the main result columns first

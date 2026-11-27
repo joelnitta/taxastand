@@ -89,7 +89,7 @@ print.ts_reference <- function(x, ...) {
   taxonomy = NULL
 ) {
   genus_key <- .ts_raw_genus_key(names)
-  empty <- .tt_record_keys(character())
+  empty <- .tt_record_keys(.ts_empty_parsed_df())
   state <- new.env(parent = emptyenv())
   state$loaded <- character()
   state$row <- integer()
@@ -142,7 +142,7 @@ print.ts_reference <- function(x, ...) {
   # back to their position in the reference. The ID encodes that position.
   rows <- rows[match(parsed$name, ref$names[rows])]
   parsed$id <- sprintf("ref-%d", rows)
-  batch <- .tt_record_keys(.ts_parsed_lines(parsed))
+  batch <- .tt_record_keys(parsed)
   st$loaded <- c(st$loaded, cold)
   st$row <- c(st$row, rows)
   st$genus_key <- c(st$genus_key, ref$genus_key[rows])

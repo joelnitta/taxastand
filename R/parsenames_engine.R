@@ -194,19 +194,6 @@ tt_depunct <- function(x) {
   tolower(x)
 }
 
-# Fields 1..n of `|`-delimited lines, as a list of n character vectors. Fields
-# may be empty, and a line with fewer than n fields (e.g. a name that could not
-# be parsed) yields "" for the missing ones.
-.tt_split_fields <- function(x, n) {
-  if (!length(x)) {
-    return(rep(list(character(0)), n))
-  }
-  pieces <- strsplit(paste0(x, strrep("|", n)), "|", fixed = TRUE)
-  flat <- unlist(pieces, use.names = FALSE)
-  start <- cumsum(c(0L, lengths(pieces)[-length(pieces)]))
-  lapply(seq_len(n), function(i) flat[start + i])
-}
-
 #' Parse taxonomic names
 #'
 #' Pure-R port. Takes a character vector of names and returns a data frame with

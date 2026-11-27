@@ -29,9 +29,9 @@ test_that("the ligature fl and e-diaeresis are accepted in names", {
 test_that("an author written 'NULL' or '\\N' is kept", {
   # The original blanked these strings (SQL-dump nulls); that erased a real
   # author "NULL" (#173), so they are now ordinary values.
-  f <- .tt_clean_fields("1||Foo||bar|||NULL")
+  f <- .tt_clean_fields(rec("1||Foo||bar|||NULL"))
   expect_identical(f$a, "NULL")
-  f <- .tt_clean_fields("1||Foo||bar|||\\N")
+  f <- .tt_clean_fields(rec("1||Foo||bar|||\\N"))
   expect_identical(f$a, "\\N")
   # An author "NULL" is not the same as no author
   res <- suppressMessages(ts_match_names("Foo bar NULL", "Foo bar"))
